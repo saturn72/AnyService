@@ -1,5 +1,6 @@
 # AnyService
 Create asp.net core services FAST 🐱‍🏍 
+
 Made with 💕 using asp.net core
 
 `AnyService` is simple framework for creating CRUD asp.net core service.
@@ -8,7 +9,7 @@ The boilerplate code is already in place. All you have to do now is to create so
 ## Goal
 `AnyService` main goal is to provide extremely easy and fast way to create CRUD based microservice using asp.net core technology.
 
-## CRUD Floww
+## CRUD Flow
 ### Create
 TBD
 ### Read By Id
