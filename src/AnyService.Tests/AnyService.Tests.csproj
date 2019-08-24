@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AnyService\AnyService.csproj" />
-    <ProjectReference Include="..\..\..\Saturn72\Saturn72.ObjectExtensions\Saturn72.ObjectExtensions.csproj" />
   </ItemGroup>
 
 </Project>

@@ -12208,11 +12208,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.SampleApp\\AnyService.SampleApp.csproj",
+      "projectUniqueName": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.SampleApp\\AnyService.SampleApp.csproj",
       "projectName": "AnyService.SampleApp",
-      "projectPath": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.SampleApp\\AnyService.SampleApp.csproj",
+      "projectPath": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.SampleApp\\AnyService.SampleApp.csproj",
       "packagesPath": "C:\\Users\\Roi\\.nuget\\packages\\",
-      "outputPath": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.SampleApp\\obj\\",
+      "outputPath": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.SampleApp\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -12231,11 +12231,11 @@
       "frameworks": {
         "netcoreapp2.2": {
           "projectReferences": {
-            "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyServiceModules\\AnyService.LiteDbRepository\\AnyService.LiteDbRepository.csproj": {
-              "projectPath": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyServiceModules\\AnyService.LiteDbRepository\\AnyService.LiteDbRepository.csproj"
+            "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyServiceModules\\AnyService.LiteDbRepository\\AnyService.LiteDbRepository.csproj": {
+              "projectPath": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyServiceModules\\AnyService.LiteDbRepository\\AnyService.LiteDbRepository.csproj"
             },
-            "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService\\AnyService.csproj": {
-              "projectPath": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService\\AnyService.csproj"
+            "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService\\AnyService.csproj": {
+              "projectPath": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService\\AnyService.csproj"
             }
           }
         }

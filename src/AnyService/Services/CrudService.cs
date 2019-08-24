@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using AnyService.Audity;
+using AnyService.Events;
 
 namespace AnyService.Services
 {

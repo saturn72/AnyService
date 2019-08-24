@@ -13,8 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AnyService\AnyService.csproj" />
-    <ProjectReference Include="..\..\..\Saturn72\Saturn72.Common\Saturn72.Common.csproj" />
-    <ProjectReference Include="..\..\..\Saturn72\Persistency\Persistency.LiteDB\Persistency.LiteDB.csproj" />
     <ProjectReference Include="..\AnyServiceModules\AnyService.LiteDbRepository\AnyService.LiteDbRepository.csproj" />
   </ItemGroup>
 

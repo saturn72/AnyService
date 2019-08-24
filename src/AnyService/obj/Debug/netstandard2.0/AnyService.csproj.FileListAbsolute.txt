@@ -1,0 +1,9 @@
+C:\dev\bitbucket\janus\src\submodules\AnyService\src\AnyService\bin\Debug\netstandard2.0\AnyService.deps.json
+C:\dev\bitbucket\janus\src\submodules\AnyService\src\AnyService\bin\Debug\netstandard2.0\AnyService.dll
+C:\dev\bitbucket\janus\src\submodules\AnyService\src\AnyService\bin\Debug\netstandard2.0\AnyService.pdb
+C:\dev\bitbucket\janus\src\submodules\AnyService\src\AnyService\obj\Debug\netstandard2.0\AnyService.csprojAssemblyReference.cache
+C:\dev\bitbucket\janus\src\submodules\AnyService\src\AnyService\obj\Debug\netstandard2.0\AnyService.csproj.CoreCompileInputs.cache
+C:\dev\bitbucket\janus\src\submodules\AnyService\src\AnyService\obj\Debug\netstandard2.0\AnyService.AssemblyInfoInputs.cache
+C:\dev\bitbucket\janus\src\submodules\AnyService\src\AnyService\obj\Debug\netstandard2.0\AnyService.AssemblyInfo.cs
+C:\dev\bitbucket\janus\src\submodules\AnyService\src\AnyService\obj\Debug\netstandard2.0\AnyService.dll
+C:\dev\bitbucket\janus\src\submodules\AnyService\src\AnyService\obj\Debug\netstandard2.0\AnyService.pdb

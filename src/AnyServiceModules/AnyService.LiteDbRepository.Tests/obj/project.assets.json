@@ -7021,11 +7021,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyServiceModules\\AnyService.LiteDbRepository.Tests\\AnyService.LiteDbRepository.Tests.csproj",
+      "projectUniqueName": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyServiceModules\\AnyService.LiteDbRepository.Tests\\AnyService.LiteDbRepository.Tests.csproj",
       "projectName": "AnyService.LiteDbRepository.Tests",
-      "projectPath": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyServiceModules\\AnyService.LiteDbRepository.Tests\\AnyService.LiteDbRepository.Tests.csproj",
+      "projectPath": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyServiceModules\\AnyService.LiteDbRepository.Tests\\AnyService.LiteDbRepository.Tests.csproj",
       "packagesPath": "C:\\Users\\Roi\\.nuget\\packages\\",
-      "outputPath": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyServiceModules\\AnyService.LiteDbRepository.Tests\\obj\\",
+      "outputPath": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyServiceModules\\AnyService.LiteDbRepository.Tests\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -7044,8 +7044,8 @@
       "frameworks": {
         "netcoreapp2.2": {
           "projectReferences": {
-            "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyServiceModules\\AnyService.LiteDbRepository\\AnyService.LiteDbRepository.csproj": {
-              "projectPath": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyServiceModules\\AnyService.LiteDbRepository\\AnyService.LiteDbRepository.csproj"
+            "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyServiceModules\\AnyService.LiteDbRepository\\AnyService.LiteDbRepository.csproj": {
+              "projectPath": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyServiceModules\\AnyService.LiteDbRepository\\AnyService.LiteDbRepository.csproj"
             }
           }
         }

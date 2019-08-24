@@ -6,6 +6,7 @@ using AnyService.Audity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AnyService.Controllers;
+using AnyService.Events;
 
 namespace AnyService
 {

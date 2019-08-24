@@ -75,19 +75,5 @@ namespace AnyService.E2E
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
 
         }
-
-        [Fact]
-        public async Task GetAll()
-        {
-            var url = "entity";
-
-            var client = _factory.CreateClient();
-            // Act
-            var response = await client.GetAsync(url);
-
-            // Assert
-            response.EnsureSuccessStatusCode(); // Status Code 200-299
-            throw new System.NotImplementedException();
-        }
     }
 }

@@ -7043,11 +7043,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.Tests\\AnyService.Tests.csproj",
+      "projectUniqueName": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.Tests\\AnyService.Tests.csproj",
       "projectName": "AnyService.Tests",
-      "projectPath": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.Tests\\AnyService.Tests.csproj",
+      "projectPath": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.Tests\\AnyService.Tests.csproj",
       "packagesPath": "C:\\Users\\Roi\\.nuget\\packages\\",
-      "outputPath": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.Tests\\obj\\",
+      "outputPath": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.Tests\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -7066,8 +7066,8 @@
       "frameworks": {
         "netcoreapp2.2": {
           "projectReferences": {
-            "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService\\AnyService.csproj": {
-              "projectPath": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService\\AnyService.csproj"
+            "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService\\AnyService.csproj": {
+              "projectPath": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService\\AnyService.csproj"
             }
           }
         }

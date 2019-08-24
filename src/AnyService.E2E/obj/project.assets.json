@@ -2,6 +2,41 @@
   "version": 3,
   "targets": {
     ".NETCoreApp,Version=v2.2": {
+      "Autofac/4.9.1": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/Autofac.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/Autofac.dll": {}
+        }
+      },
+      "Autofac.Extensions.DependencyInjection/4.4.0": {
+        "type": "package",
+        "dependencies": {
+          "Autofac": "4.9.1",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "2.1.0"
+        },
+        "compile": {
+          "lib/netstandard2.0/Autofac.Extensions.DependencyInjection.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/Autofac.Extensions.DependencyInjection.dll": {}
+        }
+      },
+      "LiteDB/4.1.4": {
+        "type": "package",
+        "dependencies": {
+          "System.Reflection": "4.3.0",
+          "System.Reflection.TypeExtensions": "4.3.0"
+        },
+        "compile": {
+          "lib/netstandard2.0/LiteDB.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/LiteDB.dll": {}
+        }
+      },
       "Microsoft.AspNet.WebApi.Client/5.2.6": {
         "type": "package",
         "dependencies": {
@@ -926,7 +961,7 @@
           "lib/netstandard2.0/Microsoft.AspNetCore.Mvc.ApiExplorer.dll": {}
         }
       },
-      "Microsoft.AspNetCore.Mvc.Core/2.2.0": {
+      "Microsoft.AspNetCore.Mvc.Core/2.2.5": {
         "type": "package",
         "dependencies": {
           "Microsoft.AspNetCore.Authentication.Core": "2.2.0",
@@ -5060,10 +5095,109 @@
         "build": {
           "build/netcoreapp1.0/xunit.runner.visualstudio.props": {}
         }
+      },
+      "AnyService/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.0",
+        "dependencies": {
+          "Autofac.Extensions.DependencyInjection": "4.4.0",
+          "Microsoft.AspNetCore.Http.Abstractions": "2.2.0",
+          "Microsoft.AspNetCore.Mvc.Core": "2.2.5"
+        },
+        "compile": {
+          "bin/placeholder/AnyService.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/AnyService.dll": {}
+        }
+      },
+      "AnyService.LiteDbRepository/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.0",
+        "dependencies": {
+          "AnyService": "1.0.0",
+          "litedb": "4.1.4"
+        },
+        "compile": {
+          "bin/placeholder/AnyService.LiteDbRepository.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/AnyService.LiteDbRepository.dll": {}
+        }
+      },
+      "AnyService.SampleApp/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v2.2",
+        "dependencies": {
+          "AnyService": "1.0.0",
+          "AnyService.LiteDbRepository": "1.0.0",
+          "LiteDb": "4.1.4"
+        },
+        "compile": {
+          "bin/placeholder/AnyService.SampleApp.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/AnyService.SampleApp.dll": {}
+        }
       }
     }
   },
   "libraries": {
+    "Autofac/4.9.1": {
+      "sha512": "Dk3UQD94XM2HBjquOZoPWrQBUcv9G/K24K/qTiUJi13Fz/0X/wxcQi8z3K1ProCPxuZvadSgrzbpbni2HX1YTg==",
+      "type": "package",
+      "path": "autofac/4.9.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "autofac.4.9.1.nupkg.sha512",
+        "autofac.nuspec",
+        "lib/net45/Autofac.dll",
+        "lib/net45/Autofac.pdb",
+        "lib/net45/Autofac.xml",
+        "lib/netstandard1.1/Autofac.dll",
+        "lib/netstandard1.1/Autofac.pdb",
+        "lib/netstandard1.1/Autofac.xml",
+        "lib/netstandard2.0/Autofac.dll",
+        "lib/netstandard2.0/Autofac.pdb",
+        "lib/netstandard2.0/Autofac.xml"
+      ]
+    },
+    "Autofac.Extensions.DependencyInjection/4.4.0": {
+      "sha512": "XO9Zk1zIUv9FyuGg9biGlGTPrSamdZKSZ+lHGTxnOaKkTmW1iWP276nlQ/l2V3XoVk86+SHyRnzH5MmhULGamg==",
+      "type": "package",
+      "path": "autofac.extensions.dependencyinjection/4.4.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "autofac.extensions.dependencyinjection.4.4.0.nupkg.sha512",
+        "autofac.extensions.dependencyinjection.nuspec",
+        "lib/netstandard1.1/Autofac.Extensions.DependencyInjection.dll",
+        "lib/netstandard1.1/Autofac.Extensions.DependencyInjection.pdb",
+        "lib/netstandard1.1/Autofac.Extensions.DependencyInjection.xml",
+        "lib/netstandard2.0/Autofac.Extensions.DependencyInjection.dll",
+        "lib/netstandard2.0/Autofac.Extensions.DependencyInjection.pdb",
+        "lib/netstandard2.0/Autofac.Extensions.DependencyInjection.xml"
+      ]
+    },
+    "LiteDB/4.1.4": {
+      "sha512": "g4g9JlHzRBZl+Gd2UbiRdszZ7t8wozU2wX7+5xY5uE79tmcgcDhha+ubAP84G1VLbwQmhBGCzRfIx+epLmJciQ==",
+      "type": "package",
+      "path": "litedb/4.1.4",
+      "files": [
+        ".nupkg.metadata",
+        "lib/net35/LiteDB.dll",
+        "lib/net35/LiteDB.xml",
+        "lib/net40/LiteDB.dll",
+        "lib/net40/LiteDB.xml",
+        "lib/netstandard1.3/LiteDB.dll",
+        "lib/netstandard1.3/LiteDB.xml",
+        "lib/netstandard2.0/LiteDB.dll",
+        "lib/netstandard2.0/LiteDB.xml",
+        "litedb.4.1.4.nupkg.sha512",
+        "litedb.nuspec"
+      ]
+    },
     "Microsoft.AspNet.WebApi.Client/5.2.6": {
       "sha512": "owAlEIUZXWSnkK8Z1c+zR47A0X6ykF4XjbPok4lQKNuciUfHLGPd6QnI+rt/8KlQ17PmF+I4S3f+m+Qe4IvViw==",
       "type": "package",
@@ -5777,16 +5911,16 @@
         "microsoft.aspnetcore.mvc.apiexplorer.nuspec"
       ]
     },
-    "Microsoft.AspNetCore.Mvc.Core/2.2.0": {
-      "sha512": "Wh2wexgnnkn/f2cKSiGi/TDTMCe7KI5MgzYLAAjohkQu1oWlHWVMwlkMr5mJVZA3Es+msmKT9ogjfTt+KWq1uQ==",
+    "Microsoft.AspNetCore.Mvc.Core/2.2.5": {
+      "sha512": "Id6yaz5a9XZih0vllyNiKC2Aht5cQcLhmtSggowMkQCyMwPWMk9KyC+BKZB01bfOJzODOW0adQymigmILmj7rw==",
       "type": "package",
-      "path": "microsoft.aspnetcore.mvc.core/2.2.0",
+      "path": "microsoft.aspnetcore.mvc.core/2.2.5",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "lib/netstandard2.0/Microsoft.AspNetCore.Mvc.Core.dll",
         "lib/netstandard2.0/Microsoft.AspNetCore.Mvc.Core.xml",
-        "microsoft.aspnetcore.mvc.core.2.2.0.nupkg.sha512",
+        "microsoft.aspnetcore.mvc.core.2.2.5.nupkg.sha512",
         "microsoft.aspnetcore.mvc.core.nuspec"
       ]
     },
@@ -13690,10 +13824,26 @@
         "xunit.runner.visualstudio.2.4.0.nupkg.sha512",
         "xunit.runner.visualstudio.nuspec"
       ]
+    },
+    "AnyService/1.0.0": {
+      "type": "project",
+      "path": "../AnyService/AnyService.csproj",
+      "msbuildProject": "../AnyService/AnyService.csproj"
+    },
+    "AnyService.LiteDbRepository/1.0.0": {
+      "type": "project",
+      "path": "../AnyServiceModules/AnyService.LiteDbRepository/AnyService.LiteDbRepository.csproj",
+      "msbuildProject": "../AnyServiceModules/AnyService.LiteDbRepository/AnyService.LiteDbRepository.csproj"
+    },
+    "AnyService.SampleApp/1.0.0": {
+      "type": "project",
+      "path": "../AnyService.SampleApp/AnyService.SampleApp.csproj",
+      "msbuildProject": "../AnyService.SampleApp/AnyService.SampleApp.csproj"
     }
   },
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v2.2": [
+      "AnyService.SampleApp >= 1.0.0",
       "Microsoft.AspNetCore.App >= 2.2.0",
       "Microsoft.AspNetCore.Mvc.Testing >= 2.2.0",
       "Microsoft.NET.Test.Sdk >= 15.9.0",
@@ -13710,11 +13860,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.E2E\\AnyService.E2E.csproj",
+      "projectUniqueName": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.E2E\\AnyService.E2E.csproj",
       "projectName": "AnyService.E2E",
-      "projectPath": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.E2E\\AnyService.E2E.csproj",
+      "projectPath": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.E2E\\AnyService.E2E.csproj",
       "packagesPath": "C:\\Users\\Roi\\.nuget\\packages\\",
-      "outputPath": "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.E2E\\obj\\",
+      "outputPath": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.E2E\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -13732,7 +13882,11 @@
       },
       "frameworks": {
         "netcoreapp2.2": {
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.SampleApp\\AnyService.SampleApp.csproj": {
+              "projectPath": "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.SampleApp\\AnyService.SampleApp.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
