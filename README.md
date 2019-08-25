@@ -24,11 +24,27 @@ TBD
 TDB
 
 ## Getting Started
-Before you begin, this is part of the `AnyService.SampleApp` project.
+*Note: fully configured example may be found in `AnyService.SampleApp` project.
+
+init step - Create new `webapi` project by using `dotnet new webapi --name AnyService.SampleApp`
 
 1. Add reference to `AnyService` ***Note: nuget package would be created in near future, meanwhile create git submodule in your project***
-2. Create your dependent model 
-3. Create validator
+2. Create your dependent model. This dependent model would be use for `CRUD` operations
+```
+{    
+  public class DependentModel : IDomainModelBase //this must be implemented for Repository operations
+  {
+      public string Id { get; set; }
+      public string Value { get; set; }
+  }
+}
+```
+3. Create validator. The validator role is to provide the busines logic for `CRUD` operations.
+```
+{
+  TBD
+}
+```
 4. Add `AnyService` components to `Startup.cs` file.
 In `ConfigureServices` method, add the follwing lines:
 ```
