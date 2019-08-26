@@ -7,7 +7,7 @@
 using System;
 using System.Reflection;
 
-[assembly: Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryContentRootAttribute("AnyService.SampleApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "C:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.SampleApp", "AnyService.SampleApp.csproj", "0")]
+[assembly: Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryContentRootAttribute("AnyService.SampleApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "c:\\dev\\bitbucket\\janus\\src\\submodules\\AnyService\\src\\AnyService.SampleApp", "AnyService.SampleApp.csproj", "0")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("AnyService.E2E")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]

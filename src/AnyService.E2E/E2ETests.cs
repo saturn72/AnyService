@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AnyService.SampleApp;
@@ -65,8 +66,7 @@ namespace AnyService.E2E
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
 
-
-            //update
+            //delete
             res = await _client.DeleteAsync("dependent/" + id);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
@@ -74,6 +74,9 @@ namespace AnyService.E2E
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
 
+            //get deleted
+            res = await _client.GetAsync("dependent/" + id);
+            res.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         }
     }
 }
