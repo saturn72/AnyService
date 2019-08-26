@@ -1,4 +1,3 @@
-
 #Ignore thumbnails created by Windows
 Thumbs.db
 #Ignore files built by Visual Studio
@@ -21,7 +20,6 @@ Thumbs.db
 *.ilk
 *.log
 [Bb]in
-[Dd]ebug*/
 *.lib
 *.sbr
 obj/
@@ -31,5 +29,8 @@ _ReSharper*/
 **/.vs/
 #Nuget packages folder
 packages/
-**/obj/*/
-**/[Bb]in/*/
+[Bb]in/
+
+[Dd]ebug*/
+.vs/
+/src/AnyService.E2E/bin/Debug/netcoreapp2.2/AnyService.dll
