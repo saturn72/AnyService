@@ -50,7 +50,7 @@ public class DependentModelValidator : ICrudValidator<DependentModel>
     }
 }
 ```
-4. Add `AnyService` components to `Startup.cs` file: In `ConfigureServices` method, add the follwing lines:
+4. Add `AnyService` components to `Startup.cs` file: In `ConfigureServices` method, add the following lines:
 ```
 public void ConfigureServices(IServiceCollection services)
 {
@@ -63,8 +63,9 @@ public void ConfigureServices(IServiceCollection services)
   ...
 }
 ```
-5. Configure your `IRepository` implementation by adding the following to `ConfigureServices` method (below is `LiteDb` `IRepository` implementation)
+5. Configure your `IRepository` implementation by adding the following to `ConfigureServices` method (this is `LiteDb` `IRepository` pattern implementation)
 ```
+public void ConfigureServices(IServiceCollection services)
 {
   ...
   var liteDbName = "anyservice-testsapp.db";
@@ -77,8 +78,9 @@ public void ConfigureServices(IServiceCollection services)
   ...
 }
 ```
-6. Add `AnyService` middleware by adding the following line to `Configure` method of `Startup.cs`
+6. Last step is to add `AnyService` middleware to middlewares pipeline. Add the following line to `Configure` method of `Startup.cs`
 ```
+public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 {
   ...
   app.UseMiddleware<AnyServiceMiddleware>();
@@ -86,7 +88,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-TBD
+Now start your application and perform *CRUD* operations on `dependent` URI.
 
 ## CRUD Flow
 ### Create
