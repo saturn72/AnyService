@@ -9,19 +9,6 @@ The boilerplate code is already in place. All you have to do now is to create so
 ## Goal
 `AnyService` main goal is to provide extremely easy and fast way to create CRUD based microservice using asp.net core technology.
 
-## CRUD Flow
-### Create
-TBD
-### Read By Id
-TBD
-### Read All (with filter)
-TBD
-### Update
-TBD
-### Patch
-TBD
-### Delete
-TDB
 
 ## Getting Started
 *Note: fully configured example may be found in `AnyService.SampleApp` project.
@@ -83,6 +70,21 @@ In `ConfigureServices` method, add the follwing lines:
 
 TBD
 
+## CRUD Flow
+### Create
+TBD
+### Read By Id
+TBD
+### Read All (with filter)
+TBD
+### Update
+TBD
+### Patch
+TBD
+### Delete
+TDB
+
+## Authentication and Authorization
 ## Combine Custom Controllers with `AnyEntity` Middleware
 TBD
 
