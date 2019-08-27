@@ -1,8 +1,6 @@
 using System;
-using System.Linq;
 using System.Collections;
 using System.Threading.Tasks;
-using AnyService.Audity;
 using System.Collections.Generic;
 
 namespace AnyService.Services
@@ -51,29 +49,14 @@ namespace AnyService.Services
                 return data;
             }
 
-            var isEnumerable = data is IEnumerable;
-            if (data == null
-                || (data is IDeletableAudit && (data as IDeletableAudit).Deleted)
-                || (isEnumerable && (data as IEnumerable).IsNullOrEmpty()))
+            if (data == null || (data is IEnumerable && (data as IEnumerable).IsNullOrEmpty()))
             {
                 serviceResponse.Result = ServiceResult.NotFound;
                 serviceResponse.Message = "Item not found in repository";
             }
 
-            var temp = new List<object>();
-            if (isEnumerable)
-            {
-                foreach (var item in data as IEnumerable)
-                {
-                    if (item is IDeletableAudit && (item as IDeletableAudit).Deleted)
-                        continue;
-                    temp.Add(item);
-                }
-            }
-
-            var finalData = isEnumerable ? temp : data as object;
-            serviceResponse.Data = finalData;
-            return (TResult)finalData;
+            serviceResponse.Data = data;
+            return data;
         }
     }
 }

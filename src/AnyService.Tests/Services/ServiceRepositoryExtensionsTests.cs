@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AnyService.Services;
 using Moq;
@@ -13,6 +14,70 @@ namespace AnyService.Tests.Services
         {
             public string Id { get; set; }
         }
+        #region Query
+        [Fact]
+        public async Task Query_RepositoryThrows()
+        {
+            var repo = new Mock<IRepository<TestClass>>();
+            repo.Setup(r => r.GetById(It.IsAny<string>())).Throws<Exception>();
+            var sr = new ServiceResponse();
+
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetById("some-id"), sr);
+            res.ShouldBeNull();
+            sr.Data.ShouldBeNull();
+            sr.Result.ShouldBe(ServiceResult.Error);
+            sr.Message.ShouldNotBeNullOrEmpty();
+        }
+        [Fact]
+        public async Task Query_NotFound_SingleItem()
+        {
+            var repo = new Mock<IRepository<TestClass>>();
+            repo.Setup(r => r.GetById(It.IsAny<string>())).ReturnsAsync(null as TestClass);
+            var sr = new ServiceResponse();
+
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetById("some-id"), sr);
+            res.ShouldBeNull();
+            sr.Data.ShouldBeNull();
+            sr.Result.ShouldBe(ServiceResult.NotFound);
+            sr.Message.ShouldNotBeNullOrEmpty();
+        }
+
+        public static IEnumerable<object[]> Query_NotFound_DATA =>
+    new[]{
+        new object[]{ null as IEnumerable<TestClass>},
+        new object[]{ new TestClass[]{}},
+};
+        [Theory]
+        [MemberData(nameof(Query_NotFound_DATA))]
+        public async Task Query_NotFound_Collection(IEnumerable<TestClass> dbData)
+        {
+            var repo = new Mock<IRepository<TestClass>>();
+            repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
+            var sr = new ServiceResponse();
+
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(), sr);
+            res.ShouldBe(dbData);
+            sr.Data.ShouldBe(dbData);
+            sr.Result.ShouldBe(ServiceResult.NotFound);
+            sr.Message.ShouldNotBeNullOrEmpty();
+        }
+
+        [Fact]
+        public async Task Query_Found()
+        {
+            var dbData = new[] { new TestClass() };
+            var repo = new Mock<IRepository<TestClass>>();
+            repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
+            var sr = new ServiceResponse();
+
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(), sr);
+            res.ShouldBe(dbData);
+            sr.Data.ShouldBe(dbData);
+            sr.Result.ShouldBe(ServiceResult.NotSet);
+            sr.Message.ShouldBeNullOrEmpty();
+        }
+
+        #endregion#region Command
         [Fact]
         public async Task Command_RepositoryThrows()
         {

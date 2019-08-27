@@ -76,7 +76,9 @@ namespace AnyService.E2E
 
             //get deleted
             res = await _client.GetAsync("dependent/" + id);
-            res.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jObj["data"]["deleted"].Value<bool>().ShouldBeTrue();
         }
     }
 }
