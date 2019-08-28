@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Saturn72.Extensions\src\Saturn72.Extensions\Saturn72.Extensions.csproj" />
   </ItemGroup>
 
 </Project>

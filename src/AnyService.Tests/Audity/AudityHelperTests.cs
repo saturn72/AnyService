@@ -20,7 +20,7 @@ namespace AnyService.Tests.Audity
 
             a.CreatedByUserId.ShouldBe(userId);
             a.CreatedOnUtc.ShouldBeGreaterThan(null);
-            a.CreatedOnUtc.ShouldBeLessThanOrEqualTo(DateTime.UtcNow.ToIso8601());
+            a.CreatedOnUtc.ShouldBeLessThanOrEqualTo(DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssK"));
         }
         [Fact]
         public void PrepareForUpdateTest()
@@ -40,7 +40,7 @@ namespace AnyService.Tests.Audity
             var uRec = a.UpdateRecords.First();
             uRec.UpdatedByUserId.ShouldBe(userId);
             uRec.UpdatedOnUtc.ShouldBeGreaterThan(null);
-            uRec.UpdatedOnUtc.ShouldBeLessThanOrEqualTo(DateTime.UtcNow.ToIso8601());
+            uRec.UpdatedOnUtc.ShouldBeLessThanOrEqualTo(DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssK"));
 
             a.CreatedByUserId.ShouldBe(dbModel.CreatedByUserId);
             a.CreatedOnUtc.ShouldBe(dbModel.CreatedOnUtc);
@@ -57,7 +57,7 @@ namespace AnyService.Tests.Audity
             a.Deleted.ShouldBeTrue();
             a.DeletedByUserId.ShouldBe(userId);
             a.DeletedOnUtc.ShouldBeGreaterThan(null);
-            a.DeletedOnUtc.ShouldBeLessThanOrEqualTo(DateTime.UtcNow.ToIso8601());
+            a.DeletedOnUtc.ShouldBeLessThanOrEqualTo(DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssK"));
         }
     }
 

@@ -18,7 +18,7 @@ namespace AnyService.Tests.Audity
 
             a[0].CreatedByUserId.ShouldBe(userId);
             a[0].CreatedOnUtc.ShouldBeGreaterThan(null);
-            a[0].CreatedOnUtc.ShouldBeLessThanOrEqualTo(DateTime.UtcNow.ToIso8601());
+            a[0].CreatedOnUtc.ShouldBeLessThanOrEqualTo(DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssK"));
         }
     }
 }
