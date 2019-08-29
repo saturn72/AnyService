@@ -55,7 +55,10 @@ public class DependentModelValidator : ICrudValidator<DependentModel>
 public void ConfigureServices(IServiceCollection services)
 {
   ...
-  services.AddControllersAsServices(); //resolve controllers dynamically using dependency injection
+  services
+    .AddMvc()
+    .AddControllersAsServices(); //resolve controllers dynamically using dependency injection
+    
   var entities = new[] { typeof(DependentModel) };
   var validators = new[] { new DependentModelValidator() };
     
