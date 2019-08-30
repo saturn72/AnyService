@@ -83,8 +83,8 @@ namespace AnyService.Services
             var serviceResponse = new ServiceResponse();
             if (!await _validator.ValidateForGet(serviceResponse))
                 return serviceResponse;
-            var data = await _repository.Query(r => r.GetAll(), serviceResponse);
-            if (data != null && serviceResponse.Result == ServiceResult.NotSet)
+            var data = await _repository.Query(r => r.GetAll(), serviceResponse) ?? new TDomainModel[] { };
+            if (serviceResponse.Result == ServiceResult.NotSet)
             {
                 serviceResponse.Data = data;
                 serviceResponse.Result = ServiceResult.Ok;

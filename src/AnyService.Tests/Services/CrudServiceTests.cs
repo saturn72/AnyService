@@ -97,7 +97,7 @@ namespace AnyService.Tests.Services
             res.Data.ShouldBe(id);
         }
         [Fact]
-        public async Task GetById_ReturnesNullResponseFromDB()
+        public async Task GetById_Returns_NullResponseFromDB()
         {
             var model = new TestModel();
             var repo = new Mock<IRepository<TestModel>>();
@@ -117,7 +117,7 @@ namespace AnyService.Tests.Services
             res.Data.ShouldBeNull();
         }
         [Fact]
-        public async Task GetById_ReturnesResponseFromDB()
+        public async Task GetById_Returns_ResponseFromDB()
         {
             var model = new TestModel();
             var repo = new Mock<IRepository<TestModel>>();
@@ -159,7 +159,7 @@ namespace AnyService.Tests.Services
             res.Data.ShouldBeNull();
         }
         [Fact]
-        public async Task GetAll_ReturnesNullResponseFromDB()
+        public async Task GetAll_Returns_NullResponseFromDB()
         {
             var model = new TestModel();
             var repo = new Mock<IRepository<TestModel>>();
@@ -173,11 +173,17 @@ namespace AnyService.Tests.Services
             var ah = new Mock<AuditHelper>();
 
             var eb = new Mock<IEventBus>();
+            var ekr = new EventKeyRecord(null, "read", null, null);
 
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, null);
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr);
             var res = await cSrv.GetAll();
-            res.Result.ShouldBe(ServiceResult.NotFound);
-            res.Data.ShouldBeNull();
+            res.Result.ShouldBe(ServiceResult.Ok);
+            res.Data.ShouldBeOfType<TestModel[]>().Length.ShouldBe(0);
+            eb.Verify(e => e.Publish(
+              It.Is<string>(k => k == ekr.Read),
+              It.Is<EventData>(ed =>
+                  ed.Data.GetPropertyValueByName<IEnumerable<TestModel>>("Data").Count() == 0
+                  && ed.Data.GetPropertyValueByName<string>("CurrentUserId") == _wc.CurrentUserId)), Times.Once);
         }
         [Fact]
         public async Task GetAll_ReturnesResponseFromDB()

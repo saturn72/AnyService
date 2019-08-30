@@ -42,14 +42,14 @@ namespace AnyService.Tests.Services
             sr.Message.ShouldNotBeNullOrEmpty();
         }
 
-        public static IEnumerable<object[]> Query_NotFound_DATA =>
+        public static IEnumerable<object[]> Query_Empty_Collection_DATA =>
     new[]{
         new object[]{ null as IEnumerable<TestClass>},
         new object[]{ new TestClass[]{}},
 };
         [Theory]
-        [MemberData(nameof(Query_NotFound_DATA))]
-        public async Task Query_NotFound_Collection(IEnumerable<TestClass> dbData)
+        [MemberData(nameof(Query_Empty_Collection_DATA))]
+        public async Task Query_Empty_Collection(IEnumerable<TestClass> dbData)
         {
             var repo = new Mock<IRepository<TestClass>>();
             repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
@@ -58,8 +58,8 @@ namespace AnyService.Tests.Services
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(), sr);
             res.ShouldBe(dbData);
             sr.Data.ShouldBe(dbData);
-            sr.Result.ShouldBe(ServiceResult.NotFound);
-            sr.Message.ShouldNotBeNullOrEmpty();
+            sr.Result.ShouldBe(ServiceResult.NotSet);
+            sr.Message.ShouldBeNullOrEmpty();
         }
 
         [Fact]

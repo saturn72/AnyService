@@ -49,7 +49,7 @@ namespace AnyService.Services
                 return data;
             }
 
-            if (data == null || (data is IEnumerable && (data as IEnumerable).IsNullOrEmpty()))
+            if (data == null && !typeof(IEnumerable).IsAssignableFrom(typeof(TResult)))
             {
                 serviceResponse.Result = ServiceResult.NotFound;
                 serviceResponse.Message = "Item not found in repository";
