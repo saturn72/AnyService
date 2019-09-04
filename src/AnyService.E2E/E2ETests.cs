@@ -1,9 +1,14 @@
+using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using AnyService.SampleApp;
+using AnyService.SampleApp.Models;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shouldly;
 using Xunit;
@@ -79,6 +84,47 @@ namespace AnyService.E2E
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
             jObj["data"]["deleted"].Value<bool>().ShouldBeTrue();
+        }
+
+        [Fact]
+        public async Task FormRequest()
+        {
+            //non form request
+            var multiForm = new MultipartFormDataContent();
+            var res = await _client.PostAsJsonAsync("form/form", multiForm);
+            res.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+            //multipart request
+            var filePath = Path.Combine(AppContext.BaseDirectory, "resources", "dog.jpg");
+
+            //data 
+            var model = new
+            {
+                firstName = "Roi",
+                lastName = "Shabtai"
+            };
+            //convert data to string
+            var dataString = JsonConvert.SerializeObject(model);
+            //add to form under key "model"
+            multiForm.Add(new StringContent(dataString), "model");
+
+            var fileStream = new FileStream(filePath, FileMode.Open);
+            multiForm.Add(new StreamContent(fileStream), nameof(FormModel.Files), Path.GetFileName(filePath));
+            res = await _client.PostAsync("form/form", multiForm);
+            res.EnsureSuccessStatusCode();
+
+            var content = await res.Content.ReadAsStringAsync();
+            var jObj = JObject.Parse(content);
+            var id = jObj["data"]["id"].Value<string>();
+            id.ShouldNotBeNullOrEmpty();
+
+            res = await _client.GetAsync("form/" + id);
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jObj["data"]["id"].Value<string>().ShouldBe(id);
+            jObj["data"]["firstName"].Value<string>().ShouldBe(model.firstName);
+            (jObj["data"]["files"] as JArray).First["containerId"].Value<string>().ShouldBe(id);
         }
     }
 }

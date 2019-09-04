@@ -1,7 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using AnyService.Services;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace AnyService.Controllers
@@ -15,6 +20,7 @@ namespace AnyService.Controllers
         private readonly AnyServiceWorkContext _workContext;
         private static MethodInfo CreateMethodInfo;
         private static MethodInfo UpdateMethodInfo;
+        private static IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
         #endregion
         #region ctor
         public CrudController(dynamic crudService, AnyServiceWorkContext workContext)
@@ -34,9 +40,34 @@ namespace AnyService.Controllers
                     data = model
                 });
             var typedModel = model.ToObject(_workContext.CurrentType);
-            var cmi = CreateMethodInfo ?? (CreateMethodInfo = _crudService.GetType().GetMethod("Create"));
-            var res = await cmi.Invoke(_crudService, new[] { typedModel });
-            return (res as ServiceResponse).ToActionResult();
+            return await Create(typedModel);
+        }
+        [HttpPost("form")]
+        public async Task<IActionResult> PostForm()
+        {
+            if (!Request.HasFormContentType) return BadRequest();
+            var curType = _workContext.CurrentType;
+            var form = Request.Form;
+            var typedModel = JsonConvert.DeserializeObject(form["model"], curType);
+
+            var fileList = new List<FileModel>();
+            foreach (var ff in form.Files)
+            {
+                var fileModel = new FileModel
+                {
+                    FileName = ff.FileName,
+                    Stream = new MemoryStream(),
+                    ContainerKey = curType.FullName,
+                };
+                await ff.CopyToAsync(fileModel.Stream);
+                fileList.Add(fileModel);
+            }
+
+            var filesPropertyInfo = FilesPropertyInfos.TryGetValue(curType, out PropertyInfo pi) ? pi : (pi = FilesPropertyInfos[curType] = curType.GetProperty("Files"));
+
+            filesPropertyInfo.SetValue(typedModel, fileList);
+
+            return await Create(typedModel);
         }
 
         [HttpGet("{id}")]
@@ -71,5 +102,14 @@ namespace AnyService.Controllers
             var res = await _crudService.Delete(id);
             return (res as ServiceResponse).ToActionResult();
         }
+
+        #region Utilities
+        private async Task<IActionResult> Create(object model)
+        {
+            var cmi = CreateMethodInfo ?? (CreateMethodInfo = _crudService.GetType().GetMethod("Create"));
+            var res = await cmi.Invoke(_crudService, new[] { model });
+            return (res as ServiceResponse).ToActionResult();
+        }
+        #endregion
     }
 }
