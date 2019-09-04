@@ -38,7 +38,7 @@ namespace AnyService.LiteDbRepository
         }
         public async Task<TDomainModel> Insert(TDomainModel entity)
         {
-            entity.Id = Guid.NewGuid().ToString() + "-" + DateTime.UtcNow.ToIso8601();
+            entity.Id = DateTime.UtcNow.ToString("yyyyMMddTHHmmssK") + "-" + Guid.NewGuid().ToString();
             await Task.Run(() => Command(db => db.GetCollection<TDomainModel>().Insert(entity)));
             return entity;
         }
