@@ -18,4 +18,7 @@
     <ProjectReference Include="..\AnyService.SampleApp\AnyService.SampleApp.csproj" />
   </ItemGroup>
 
+<ItemGroup>
+  <None Update="Resources\**" CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup>
 </Project>

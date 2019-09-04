@@ -38,9 +38,37 @@ namespace AnyService.LiteDbRepository
         }
         public async Task<TDomainModel> Insert(TDomainModel entity)
         {
-            entity.Id = DateTime.UtcNow.ToString("yyyyMMddTHHmmssK") + "-" + Guid.NewGuid().ToString();
-            await Task.Run(() => Command(db => db.GetCollection<TDomainModel>().Insert(entity)));
+            entity.Id = AssignId();
+            await Task.Run(() => Command(db =>
+            {
+                ICollection<FileModel> fileList = new List<FileModel>();
+                if (entity is IFileContainer)
+                {
+                    var e = (entity as IFileContainer);
+                    foreach (var f in e.Files)
+                    {
+                        f.ContainerId = entity.Id;
+                        f.Id = AssignId();
+
+                        fileList.Add(new FileModel { Id = f.Id, FileName = f.FileName, Stream = f.Stream });
+                        f.Stream = null;
+                    }
+                }
+
+                db.GetCollection<TDomainModel>().Insert(entity);
+                if (fileList.IsNullOrEmpty())
+                    return;
+                foreach (var f in fileList)
+                {
+                    db.FileStorage.Upload(f.Id, f.FileName, f.Stream);
+                    f.Stream.Dispose();
+                }
+            }));
             return entity;
+            string AssignId()
+            {
+                return DateTime.UtcNow.ToString("yyyyMMddTHHmmssK") + "-" + Guid.NewGuid().ToString();
+            }
         }
         public async Task<TDomainModel> Update(TDomainModel entity)
         {

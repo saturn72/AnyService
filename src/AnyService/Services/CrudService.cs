@@ -41,7 +41,6 @@ namespace AnyService.Services
 
             if (entity is ICreatableAudit)
                 _auditHelper.PrepareForCreate(entity as ICreatableAudit, _workContext.CurrentUserId);
-
             var dbData = await _repository.Command(r => r.Insert(entity), serviceResponse);
 
             if (dbData == null)

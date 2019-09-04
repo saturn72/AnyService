@@ -26,18 +26,29 @@ namespace AnyService.SampleApp
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
                 .AddControllersAsServices();
-            var entities = new[] { typeof(DependentModel) };
-            var validators = new[] { new DependentModelValidator() };
+            var entities = new[]
+            {
+                typeof(DependentModel),
+                typeof(FormModel)
+            };
+            var validators = new ICrudValidator[]
+            {
+                new DependentModelValidator(),
+                new FormModelValidator(),
+            };
             services.AddAnyService(Configuration, entities, validators);
 
             var liteDbName = "anyservice-testsapp.db";
+
+            //configure db repositories
             services.AddTransient<IRepository<DependentModel>>(sp => new AnyService.LiteDbRepository.Repository<DependentModel>(liteDbName));
+            services.AddTransient<IRepository<FormModel>>(sp => new AnyService.LiteDbRepository.Repository<FormModel>(liteDbName));
             using (var db = new LiteDatabase(liteDbName))
             {
-                // db.GetCollection<DependentModel>().EnsureIndex(nameof(DependentModel.Id), true);
                 var mapper = BsonMapper.Global;
 
                 mapper.Entity<DependentModel>().Id(d => d.Id);
+                mapper.Entity<FormModel>().Id(d => d.Id);
             }
         }
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
