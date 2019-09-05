@@ -1,6 +1,9 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AnyService.Audity;
 using AnyService.Events;
+using AnyService.Services.FileStorage;
 
 namespace AnyService.Services
 {
@@ -13,6 +16,7 @@ namespace AnyService.Services
         private readonly WorkContext _workContext;
         private readonly IEventBus _eventBus;
         private readonly EventKeyRecord _eventKeyRecord;
+        private readonly IFileStoreManager _fileStorageManager;
         #endregion
         #region ctor
         public CrudService(
@@ -21,7 +25,8 @@ namespace AnyService.Services
             AuditHelper auditHelper,
             WorkContext workContext,
             IEventBus eventBus,
-            EventKeyRecord eventKeyRecord)
+            EventKeyRecord eventKeyRecord,
+            IFileStoreManager fileStorageManager)
         {
             _repository = repository;
             _validator = validator;
@@ -29,6 +34,7 @@ namespace AnyService.Services
             _workContext = workContext;
             _eventBus = eventBus;
             _eventKeyRecord = eventKeyRecord;
+            _fileStorageManager = fileStorageManager;
         }
 
         #endregion
@@ -41,17 +47,24 @@ namespace AnyService.Services
 
             if (entity is ICreatableAudit)
                 _auditHelper.PrepareForCreate(entity as ICreatableAudit, _workContext.CurrentUserId);
+
             var dbData = await _repository.Command(r => r.Insert(entity), serviceResponse);
 
             if (dbData == null)
                 return serviceResponse;
-
-            serviceResponse.Result = ServiceResult.Ok;
             _eventBus.Publish(_eventKeyRecord.Create, new EventData
             {
                 Data = dbData,
                 CurrentUserId = _workContext.CurrentUserId
             });
+            serviceResponse.Result = ServiceResult.Ok;
+
+            if (entity is IFileContainer)
+            {
+                var uploadResponses = await _fileStorageManager.Upload((dbData as IFileContainer).Files);
+                serviceResponse.Data = new { entity = serviceResponse.Data, filesUploadStatus = uploadResponses };
+            }
+
             return serviceResponse;
         }
         public async Task<ServiceResponse> GetById(string id)

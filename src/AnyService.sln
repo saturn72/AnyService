@@ -13,9 +13,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.SampleApp", "Any
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AnyServiceModules", "AnyServiceModules", "{1B2B45B1-9CDC-4D19-84F8-EDCD50B1867A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.LiteDbRepository", "AnyServiceModules\AnyService.LiteDbRepository\AnyService.LiteDbRepository.csproj", "{9EFF3BE6-585F-4CD8-9FEA-775E44BB87FA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.LiteDb", "AnyServiceModules\AnyService.LiteDb\AnyService.LiteDb.csproj", "{9EFF3BE6-585F-4CD8-9FEA-775E44BB87FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.LiteDbRepository.Tests", "AnyServiceModules\AnyService.LiteDbRepository.Tests\AnyService.LiteDbRepository.Tests.csproj", "{8BEB21AB-43C1-41F9-824F-22EC2C105181}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.LiteDb.Tests", "AnyServiceModules\AnyService.LiteDb.Tests\AnyService.LiteDb.Tests.csproj", "{8BEB21AB-43C1-41F9-824F-22EC2C105181}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

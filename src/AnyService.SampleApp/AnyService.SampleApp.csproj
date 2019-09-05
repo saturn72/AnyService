@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AnyService\AnyService.csproj" />
-    <ProjectReference Include="..\AnyServiceModules\AnyService.LiteDbRepository\AnyService.LiteDbRepository.csproj" />
+    <ProjectReference Include="..\AnyServiceModules\AnyService.LiteDb\AnyService.LiteDb.csproj" />
   </ItemGroup>
 
 </Project>

@@ -8,9 +8,14 @@ using AnyService.Audity;
 using AnyService.Events;
 using Shouldly;
 using Xunit;
+using AnyService.Services.FileStorage;
 
 namespace AnyService.Tests.Services
 {
+    public class TestFileContainer : TestModel, IFileContainer
+    {
+        public IEnumerable<FileModel> Files { get; set; }
+    }
     public class TestModel : IDomainModelBase, IFullAudit
     {
         public string Id { get; set; }
@@ -32,7 +37,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForCreate(It.IsAny<TestModel>(), It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(false)
                 .Callback<TestModel, ServiceResponse>((ep, sr) => sr.Result = ServiceResult.BadOrMissingData);
-            var cSrv = new CrudService<TestModel>(null, v.Object, null, null, null, null);
+            var cSrv = new CrudService<TestModel>(null, v.Object, null, null, null, null, null);
             var res = await cSrv.Create(new TestModel());
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
         }
@@ -49,7 +54,7 @@ namespace AnyService.Tests.Services
             var ah = new Mock<AuditHelper>();
 
             var eb = new Mock<IEventBus>();
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, null);
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, null, null);
             var model = new TestModel();
             var res = await cSrv.Create(model);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
@@ -71,15 +76,51 @@ namespace AnyService.Tests.Services
 
             var ah = new Mock<AuditHelper>();
             var eb = new Mock<IEventBus>();
-
             var ekr = new EventKeyRecord("created", null, null, null);
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr);
+            var fsm = new Mock<IFileStoreManager>();
+
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, fsm.Object);
             var res = await cSrv.Create(model);
             res.Result.ShouldBe(ServiceResult.Ok);
             res.Data.ShouldBe(model);
 
             ah.Verify(a => a.PrepareForCreate(It.Is<TestModel>(e => e == model), It.Is<string>(s => s == _wc.CurrentUserId)), Times.Once);
             eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<EventData>()), Times.Once);
+            fsm.Verify(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()), Times.Never);
+        }
+        [Fact]
+        public async Task GetById_Returns_CallsFileStorage()
+        {
+            var file = new FileModel { FileName = "this is fileName" };
+            var model = new TestFileContainer
+            {
+                Files = new[] { file }
+            };
+            var repo = new Mock<IRepository<TestFileContainer>>();
+            repo.Setup(r => r.Insert(It.IsAny<TestFileContainer>())).ReturnsAsync(model);
+
+            var v = new Mock<ICrudValidator<TestFileContainer>>();
+            v.Setup(i => i.ValidateForCreate(It.IsAny<TestFileContainer>(), It.IsAny<ServiceResponse>()))
+                .ReturnsAsync(true);
+
+            var ah = new Mock<AuditHelper>();
+            var eb = new Mock<IEventBus>();
+            var ekr = new EventKeyRecord("created", null, null, null);
+            var fsm = new Mock<IFileStoreManager>();
+            fsm.Setup(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()))
+            .ReturnsAsync
+            (new[]{ new  FileUploadResponse
+            {
+                File  = file,
+                Status = UploadStatus.Uploaded
+            }});
+            var cSrv = new CrudService<TestFileContainer>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, fsm.Object);
+            var res = await cSrv.Create(model);
+            res.Result.ShouldBe(ServiceResult.Ok);
+
+            ah.Verify(a => a.PrepareForCreate(It.Is<TestFileContainer>(e => e == model), It.Is<string>(s => s == _wc.CurrentUserId)), Times.Once);
+            eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<EventData>()), Times.Once);
+            fsm.Verify(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()), Times.Once);
         }
         #endregion
         #region read by id
@@ -90,7 +131,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(false)
                 .Callback<ServiceResponse>(sr => sr.Result = ServiceResult.BadOrMissingData);
-            var cSrv = new CrudService<TestModel>(null, v.Object, null, null, null, null);
+            var cSrv = new CrudService<TestModel>(null, v.Object, null, null, null, null, null);
             var id = "some-id";
             var res = await cSrv.GetById(id);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
@@ -111,7 +152,7 @@ namespace AnyService.Tests.Services
             var ah = new Mock<AuditHelper>();
 
             var eb = new Mock<IEventBus>();
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, null);
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, null, null);
             var res = await cSrv.GetById("123");
             res.Result.ShouldBe(ServiceResult.NotFound);
             res.Data.ShouldBeNull();
@@ -129,11 +170,10 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(true);
 
             var ah = new Mock<AuditHelper>();
-
             var eb = new Mock<IEventBus>();
-
             var ekr = new EventKeyRecord(null, "read", null, null);
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr);
+
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, null);
             var res = await cSrv.GetById("123");
             res.Result.ShouldBe(ServiceResult.Ok);
             res.Data.ShouldBe(model);
@@ -153,7 +193,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(false)
                 .Callback<ServiceResponse>(sr => sr.Result = ServiceResult.BadOrMissingData);
-            var cSrv = new CrudService<TestModel>(null, v.Object, null, null, null, null);
+            var cSrv = new CrudService<TestModel>(null, v.Object, null, null, null, null, null);
             var res = await cSrv.GetAll();
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
             res.Data.ShouldBeNull();
@@ -175,7 +215,7 @@ namespace AnyService.Tests.Services
             var eb = new Mock<IEventBus>();
             var ekr = new EventKeyRecord(null, "read", null, null);
 
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr);
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, null);
             var res = await cSrv.GetAll();
             res.Result.ShouldBe(ServiceResult.Ok);
             res.Data.ShouldBeOfType<TestModel[]>().Length.ShouldBe(0);
@@ -202,7 +242,7 @@ namespace AnyService.Tests.Services
             var eb = new Mock<IEventBus>();
 
             var ekr = new EventKeyRecord(null, "read", null, null);
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr);
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, null);
             var res = await cSrv.GetAll();
             res.Result.ShouldBe(ServiceResult.Ok);
             (res.Data as IEnumerable<TestModel>).ShouldContain(model);
@@ -222,7 +262,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForUpdate(It.IsAny<TestModel>(), It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(false)
                 .Callback<TestModel, ServiceResponse>((m, sr) => sr.Result = ServiceResult.BadOrMissingData);
-            var cSrv = new CrudService<TestModel>(null, v.Object, null, null, null, null);
+            var cSrv = new CrudService<TestModel>(null, v.Object, null, null, null, null, null);
             var res = await cSrv.Update("123", entity);
 
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
@@ -240,7 +280,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetById(It.IsAny<string>()))
                 .ReturnsAsync(null as TestModel);
 
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, null, null, null, null);
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, null, null, null, null, null);
             var res = await cSrv.Update(id, entity);
             res.Result.ShouldBe(ServiceResult.NotFound);
         }
@@ -264,7 +304,7 @@ namespace AnyService.Tests.Services
 
             var ah = new Mock<AuditHelper>();
             var eb = new Mock<IEventBus>();
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, null);
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, null, null);
             var res = await cSrv.Update(id, entity);
             var ekr = new EventKeyRecord(null, null, "update", null);
 
@@ -295,7 +335,7 @@ namespace AnyService.Tests.Services
             var ah = new Mock<AuditHelper>();
             var eb = new Mock<IEventBus>();
             var ekr = new EventKeyRecord(null, null, "update", null);
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr);
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, null);
             var res = await cSrv.Update(id, entity);
 
             res.Result.ShouldBe(ServiceResult.Ok);
@@ -313,7 +353,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(false)
                 .Callback<string, ServiceResponse>((ep, sr) => sr.Result = ServiceResult.Unauthorized);
-            var cSrv = new CrudService<TestModel>(null, v.Object, null, null, null, null);
+            var cSrv = new CrudService<TestModel>(null, v.Object, null, null, null, null, null);
             var epId = "some-id";
             var res = await cSrv.Delete(epId);
             res.Result.ShouldBe(ServiceResult.Unauthorized);
@@ -329,7 +369,7 @@ namespace AnyService.Tests.Services
             var v = new Mock<ICrudValidator<TestModel>>();
             v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, null, null, null, null);
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, null, null, null, null, null);
             var epId = "some-id";
             var res = await cSrv.Delete(epId);
             res.Result.ShouldBe(ServiceResult.NotFound);
@@ -350,7 +390,7 @@ namespace AnyService.Tests.Services
             var v = new Mock<ICrudValidator<TestModel>>();
             v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, null, null);
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, null, null, null);
             var id = "some-id";
             var res = await cSrv.Delete(id);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
@@ -376,7 +416,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
             var ekr = new EventKeyRecord(null, null, null, "delete");
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr);
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, null);
             var id = "some-id";
             var res = await cSrv.Delete(id);
             res.Result.ShouldBe(ServiceResult.Ok);

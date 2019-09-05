@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using AnyService.Services;
+using AnyService.Services.FileStorage;
 
 namespace AnyService.SampleApp.Models
 {
