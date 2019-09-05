@@ -1,5 +1,10 @@
 using System;
 using Xunit;
+using AnyService.Services;
+using System.Runtime.CompilerServices;
+using System.Diagnostics;
+using Shouldly;
+using System.Threading.Tasks;
 
 namespace AnyService.LiteDb.Tests
 {

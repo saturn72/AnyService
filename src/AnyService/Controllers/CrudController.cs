@@ -57,21 +57,19 @@ namespace AnyService.Controllers
                 var fileModel = new FileModel
                 {
                     FileName = ff.FileName,
-                    Stream = new MemoryStream(),
                     ParentKey = curType.FullName,
                 };
-                await ff.CopyToAsync(fileModel.Stream);
+                using (var memoryStream = new MemoryStream())
+                {
+                    await ff.CopyToAsync(memoryStream);
+                    fileModel.Bytes = memoryStream.ToArray();
+                }
                 fileList.Add(fileModel);
             }
 
             var filesPropertyInfo = FilesPropertyInfos.TryGetValue(curType, out PropertyInfo pi) ? pi : (pi = FilesPropertyInfos[curType] = curType.GetProperty("Files"));
-
             filesPropertyInfo.SetValue(typedModel, fileList);
-
-            var res = await Create(typedModel);
-            foreach (var f in fileList)
-                f.Stream.Dispose();
-            return res;
+            return await Create(typedModel);
         }
 
         [HttpGet("{id}")]

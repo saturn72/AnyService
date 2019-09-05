@@ -110,7 +110,7 @@ namespace AnyService.E2E
 
             var content = await res.Content.ReadAsStringAsync();
             var jObj = JObject.Parse(content);
-            var id = jObj["data"]["id"].Value<string>();
+            var id = jObj["data"]["entity"]["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
 
             res = await _client.GetAsync("multipartSample/" + id);
@@ -119,7 +119,7 @@ namespace AnyService.E2E
             jObj = JObject.Parse(content);
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["firstName"].Value<string>().ShouldBe(model.firstName);
-            (jObj["data"]["files"] as JArray).First["containerId"].Value<string>().ShouldBe(id);
+            (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
         }
     }
 }

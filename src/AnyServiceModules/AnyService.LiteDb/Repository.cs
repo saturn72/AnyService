@@ -35,15 +35,15 @@ namespace AnyService.LiteDb
                         f.ParentId = entity.Id;
                         f.Id = AssignId();
 
-                        fileList.Add(new FileModel { Id = f.Id, FileName = f.FileName, Stream = f.Stream });
-                        f.Stream = null;
+                        fileList.Add(new FileModel { Id = f.Id, FileName = f.FileName, Bytes = f.Bytes });
+                        f.Bytes = null;
                     }
                 }
                 db.GetCollection<TDomainModel>().Insert(entity);
                 if (isFileContainer)
                 {
                     foreach (var f in (entity as IFileContainer).Files)
-                        f.Stream = fileList.First(i => i.Id == f.Id).Stream;
+                        f.Bytes = fileList.First(i => i.Id == f.Id).Bytes;
                 }
             }));
             return entity;

@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
-
 namespace AnyService.Services
 {
     public interface IDomainModelBase
