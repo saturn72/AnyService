@@ -23,7 +23,7 @@ namespace AnyService.Tests.Services
     }
     public class CrudServiceTests
     {
-        AnyServiceWorkContext _wc = new AnyServiceWorkContext { CurrentUserId = "some-user-id" };
+        WorkContext _wc = new WorkContext { CurrentUserId = "some-user-id" };
         #region Create
         [Fact]
         public async Task Create_BadRequest_OnValidatorFailure()

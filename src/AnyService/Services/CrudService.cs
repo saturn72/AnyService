@@ -10,7 +10,7 @@ namespace AnyService.Services
         private readonly IRepository<TDomainModel> _repository;
         private readonly ICrudValidator<TDomainModel> _validator;
         private readonly AuditHelper _auditHelper;
-        private readonly AnyServiceWorkContext _workContext;
+        private readonly WorkContext _workContext;
         private readonly IEventBus _eventBus;
         private readonly EventKeyRecord _eventKeyRecord;
         #endregion
@@ -19,7 +19,7 @@ namespace AnyService.Services
             IRepository<TDomainModel> repository,
             ICrudValidator<TDomainModel> validator,
             AuditHelper auditHelper,
-            AnyServiceWorkContext workContext,
+            WorkContext workContext,
             IEventBus eventBus,
             EventKeyRecord eventKeyRecord)
         {

@@ -41,7 +41,7 @@ namespace AnyService
 
             services.AddTransient<CrudController>(sp =>
             {
-                var wc = sp.GetService<AnyServiceWorkContext>();
+                var wc = sp.GetService<WorkContext>();
 
                 var genericType = crudServiceType.MakeGenericType(wc.CurrentType);
                 var srv = sp.GetService(genericType);
@@ -59,11 +59,11 @@ namespace AnyService
 
             var routeMapper = new RouteMapper(typeConfigRecords);
             services.AddSingleton<RouteMapper>(routeMapper);
-            services.AddScoped<AnyServiceWorkContext>();
+            services.AddScoped<WorkContext>();
             services.AddScoped<EventKeyRecord>(sp =>
             {
                 var ek = sp.GetService<EventKeys>();
-                var wc = sp.GetService<AnyServiceWorkContext>();
+                var wc = sp.GetService<WorkContext>();
                 return ek[wc.CurrentType];
             });
 

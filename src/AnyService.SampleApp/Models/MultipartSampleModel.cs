@@ -3,7 +3,7 @@ using AnyService.Services;
 
 namespace AnyService.SampleApp.Models
 {
-    public class FormModel : IFileContainer
+    public class MultipartSampleModel : IFileContainer
     {
         public string Id { get; set; }
         public string FirstName { get; set; }
