@@ -5,11 +5,11 @@ using AnyService.SampleApp.Models;
 
 namespace AnyService.SampleApp.Validators
 {
-    public class FormModelValidator : ICrudValidator<FormModel>
+    public class MultipartSampleValidator : ICrudValidator<MultipartSampleModel>
     {
-        public Type Type => typeof(FormModel);
+        public Type Type => typeof(MultipartSampleModel);
 
-        public Task<bool> ValidateForCreate(FormModel model, ServiceResponse serviceResponse)
+        public Task<bool> ValidateForCreate(MultipartSampleModel model, ServiceResponse serviceResponse)
         {
             return Task.FromResult(true);
         }
@@ -24,7 +24,7 @@ namespace AnyService.SampleApp.Validators
             return Task.FromResult(true);
         }
 
-        public Task<bool> ValidateForUpdate(FormModel model, ServiceResponse serviceResponse)
+        public Task<bool> ValidateForUpdate(MultipartSampleModel model, ServiceResponse serviceResponse)
         {
             return Task.FromResult(true);
         }

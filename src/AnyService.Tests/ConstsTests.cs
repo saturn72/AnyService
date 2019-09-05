@@ -9,6 +9,7 @@ namespace AnyService.Tests
         public void AllConsts()
         {
             Consts.AnyServiceControllerName.ShouldBe("_anyservice");
+            Consts.MultipartSuffix.ShouldBe("_multipart");
         }
     }
 }

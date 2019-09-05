@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using AnyService.Services;
@@ -17,13 +16,13 @@ namespace AnyService.Controllers
     {
         #region fields
         private readonly dynamic _crudService;
-        private readonly AnyServiceWorkContext _workContext;
+        private readonly WorkContext _workContext;
         private static MethodInfo CreateMethodInfo;
         private static MethodInfo UpdateMethodInfo;
         private static IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
         #endregion
         #region ctor
-        public CrudController(dynamic crudService, AnyServiceWorkContext workContext)
+        public CrudController(dynamic crudService, WorkContext workContext)
         {
             _crudService = crudService;
             _workContext = workContext;
@@ -42,7 +41,7 @@ namespace AnyService.Controllers
             var typedModel = model.ToObject(_workContext.CurrentType);
             return await Create(typedModel);
         }
-        [HttpPost("form")]
+        [HttpPost(Consts.MultipartSuffix)]
         public async Task<IActionResult> PostForm()
         {
             if (!Request.HasFormContentType) return BadRequest();

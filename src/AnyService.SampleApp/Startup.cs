@@ -29,12 +29,12 @@ namespace AnyService.SampleApp
             var entities = new[]
             {
                 typeof(DependentModel),
-                typeof(FormModel)
+                typeof(MultipartSampleModel)
             };
             var validators = new ICrudValidator[]
             {
                 new DependentModelValidator(),
-                new FormModelValidator(),
+                new MultipartSampleValidator(),
             };
             services.AddAnyService(Configuration, entities, validators);
 
@@ -42,13 +42,13 @@ namespace AnyService.SampleApp
 
             //configure db repositories
             services.AddTransient<IRepository<DependentModel>>(sp => new AnyService.LiteDbRepository.Repository<DependentModel>(liteDbName));
-            services.AddTransient<IRepository<FormModel>>(sp => new AnyService.LiteDbRepository.Repository<FormModel>(liteDbName));
+            services.AddTransient<IRepository<MultipartSampleModel>>(sp => new AnyService.LiteDbRepository.Repository<MultipartSampleModel>(liteDbName));
             using (var db = new LiteDatabase(liteDbName))
             {
                 var mapper = BsonMapper.Global;
 
                 mapper.Entity<DependentModel>().Id(d => d.Id);
-                mapper.Entity<FormModel>().Id(d => d.Id);
+                mapper.Entity<MultipartSampleModel>().Id(d => d.Id);
             }
         }
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)

@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AnyService.SampleApp;
@@ -34,8 +33,9 @@ namespace AnyService.E2E
 
             //create
             var res = await _client.PostAsJsonAsync("dependent", model);
-            res.EnsureSuccessStatusCode();
             var content = await res.Content.ReadAsStringAsync();
+            Console.WriteLine(content);
+            res.EnsureSuccessStatusCode();
             var jObj = JObject.Parse(content);
             var id = jObj["data"]["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
@@ -87,14 +87,9 @@ namespace AnyService.E2E
         }
 
         [Fact]
-        public async Task FormRequest()
+        public async Task MultipartSampleFlow()
         {
-            //non form request
             var multiForm = new MultipartFormDataContent();
-            var res = await _client.PostAsJsonAsync("form/form", multiForm);
-            res.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-
-            //multipart request
             var filePath = Path.Combine(AppContext.BaseDirectory, "resources", "dog.jpg");
 
             //data 
@@ -109,8 +104,8 @@ namespace AnyService.E2E
             multiForm.Add(new StringContent(dataString), "model");
 
             var fileStream = new FileStream(filePath, FileMode.Open);
-            multiForm.Add(new StreamContent(fileStream), nameof(FormModel.Files), Path.GetFileName(filePath));
-            res = await _client.PostAsync("form/form", multiForm);
+            multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), Path.GetFileName(filePath));
+            var res = await _client.PostAsync("multipartSample", multiForm);
             res.EnsureSuccessStatusCode();
 
             var content = await res.Content.ReadAsStringAsync();
@@ -118,7 +113,7 @@ namespace AnyService.E2E
             var id = jObj["data"]["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
 
-            res = await _client.GetAsync("form/" + id);
+            res = await _client.GetAsync("multipartSample/" + id);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);

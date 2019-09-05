@@ -114,8 +114,8 @@ TBD
 ## Audity
 TBD
 
-## Caching
-TBD
+## Reserve Paths
+Any resource that starts with `__`
 
 ## Contact Me
 Feel free to write me directly to roi@saturn72.com 📧
