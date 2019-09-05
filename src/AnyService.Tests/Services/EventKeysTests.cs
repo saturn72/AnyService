@@ -10,7 +10,7 @@ namespace AnyService.Tests.Services
         public void ReturnAllKeys()
         {
             var ekr = new EventKeyRecord("i_create", "i_read", "i_update", "i_delete");
-            var iTcr = new TypeConfigRecord(typeof(int), "some-route-prefix", "some-cache-prefix", ekr);
+            var iTcr = new TypeConfigRecord(typeof(int), "some-route-prefix", ekr);
             var tcr = new[] { iTcr };
             var ek = new EventKeys(tcr);
 

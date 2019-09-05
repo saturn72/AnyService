@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using AnyService.SampleApp;
 using AnyService.SampleApp.Models;
@@ -81,6 +80,7 @@ namespace AnyService.E2E
 
             //get deleted
             res = await _client.GetAsync("dependent/" + id);
+            res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
             jObj["data"]["deleted"].Value<bool>().ShouldBeTrue();

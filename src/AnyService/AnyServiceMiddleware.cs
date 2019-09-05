@@ -16,7 +16,7 @@ namespace AnyService
             _next = next;
         }
 
-        public async Task InvokeAsync(HttpContext context, AnyServiceWorkContext workContext, AnyServiceRouteMapper routeMapper)
+        public async Task InvokeAsync(HttpContext context, AnyServiceWorkContext workContext, RouteMapper routeMapper)
         {
             var request = context.Request;
             var path = request.Path;

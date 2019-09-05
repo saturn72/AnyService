@@ -26,7 +26,7 @@ namespace AnyService
                 if (route.EndsWith(ModelSuffix, StringComparison.InvariantCultureIgnoreCase) && route != ModelSuffix)
                     route = route.Substring(0, route.LastIndexOf(ModelSuffix, StringComparison.InvariantCultureIgnoreCase));
 
-                return new TypeConfigRecord(v, "/" + route, v.FullName, ekr);
+                return new TypeConfigRecord(v, "/" + route, ekr);
             });
             return AddAnyService(services, configuration, typeConfigRecords, validators);
         }
@@ -57,8 +57,8 @@ namespace AnyService
                     services.AddTransient(vt, vType);
             }
 
-            var routeMapper = new AnyServiceRouteMapper(typeConfigRecords);
-            services.AddSingleton<AnyServiceRouteMapper>(routeMapper);
+            var routeMapper = new RouteMapper(typeConfigRecords);
+            services.AddSingleton<RouteMapper>(routeMapper);
             services.AddScoped<AnyServiceWorkContext>();
             services.AddScoped<EventKeyRecord>(sp =>
             {
