@@ -15,13 +15,16 @@ namespace AnyService.Tests.Controllers
         {
             var type = typeof(CrudController);
             var route = type.GetCustomAttributes(typeof(RouteAttribute)).First() as RouteAttribute;
-            route.Template.ShouldBe("_anyservice/{entityName}");
+            route.Template.ShouldBe("__anyservice");
         }
         [Theory]
-        [InlineData("Post", "POST", "")]
-        [InlineData("GetAll", "GET", "")]
-        [InlineData("Get", "GET", "{id}")]
-        [InlineData("Put", "PUT", "{id}")]
+        [InlineData("Post", "POST", "{entityName}")]
+        [InlineData("Post", "POST", "{entityName}")]
+        [InlineData("PostMultipart", "POST", "__multipart/{entityName}")]
+        [InlineData("PostMultipartStream", "POST", "__multipart/{entityName}/__stream")]
+        [InlineData("GetAll", "GET", "{entityName}")]
+        [InlineData("Get", "GET", "{entityName}/{id}")]
+        [InlineData("Put", "PUT", "{entityName}/{id}")]
         public void ValidateVerbs(string methodName, string expHttpVerb, string expTemplate)
         {
             var type = typeof(CrudController);

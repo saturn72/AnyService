@@ -87,7 +87,7 @@ namespace AnyService.E2E
         }
 
         [Fact]
-        public async Task MultipartSampleFlow()
+        public async Task MultipartFormSampleFlow()
         {
             var multiForm = new MultipartFormDataContent();
             var filePath = Path.Combine(AppContext.BaseDirectory, "resources", "dog.jpg");
@@ -106,6 +106,41 @@ namespace AnyService.E2E
             var fileStream = new FileStream(filePath, FileMode.Open);
             multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), Path.GetFileName(filePath));
             var res = await _client.PostAsync("multipartSample", multiForm);
+            res.EnsureSuccessStatusCode();
+
+            var content = await res.Content.ReadAsStringAsync();
+            var jObj = JObject.Parse(content);
+            var id = jObj["data"]["entity"]["id"].Value<string>();
+            id.ShouldNotBeNullOrEmpty();
+
+            res = await _client.GetAsync("multipartSample/" + id);
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jObj["data"]["id"].Value<string>().ShouldBe(id);
+            jObj["data"]["firstName"].Value<string>().ShouldBe(model.firstName);
+            (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
+        }
+        [Fact]
+        public async Task MultipartFormStreamSampleFlow()
+        {
+            var multiForm = new MultipartFormDataContent();
+            var filePath = Path.Combine(AppContext.BaseDirectory, "resources", "video.mp4");
+
+            //data 
+            var model = new
+            {
+                firstName = "Roi",
+                lastName = "Shabtai"
+            };
+            //convert data to string
+            var dataString = JsonConvert.SerializeObject(model);
+            //add to form under key "model"
+            multiForm.Add(new StringContent(dataString), "model");
+
+            var fileStream = new FileStream(filePath, FileMode.Open);
+            multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), Path.GetFileName(filePath));
+            var res = await _client.PostAsync("multipartSample/__stream", multiForm);
             res.EnsureSuccessStatusCode();
 
             var content = await res.Content.ReadAsStringAsync();

@@ -12,7 +12,7 @@ using Newtonsoft.Json.Linq;
 
 namespace AnyService.Controllers
 {
-    [Route(Consts.AnyServiceControllerName + "/{entityName}")]
+    [Route(Consts.AnyServiceControllerName)]
     [ApiController]
     public class CrudController : ControllerBase
     {
@@ -31,7 +31,7 @@ namespace AnyService.Controllers
         }
         #endregion
 
-        [HttpPost("")]
+        [HttpPost("{entityName}")]
         public async Task<IActionResult> Post([FromBody] JObject model)
         {
             if (!ModelState.IsValid || model == null)
@@ -43,7 +43,8 @@ namespace AnyService.Controllers
             var typedModel = model.ToObject(_workContext.CurrentType);
             return await Create(typedModel);
         }
-        [HttpPost(Consts.MultipartSuffix)]
+
+        [HttpPost(Consts.MultipartPrefix + "/{entityName}")]
         public async Task<IActionResult> PostMultipart()
         {
             if (!Request.HasFormContentType) return BadRequest();
@@ -71,20 +72,25 @@ namespace AnyService.Controllers
             filesPropertyInfo.SetValue(typedModel, fileList);
             return await Create(typedModel);
         }
+        [HttpPost(Consts.MultipartPrefix + "/{entityName}" + "/" + Consts.StreamSuffix)]
+        public async Task<IActionResult> PostMultipartStream()
+        {
+            throw new NotImplementedException();
+        }
 
-        [HttpGet("{id}")]
+        [HttpGet("{entityName}/{id}")]
         public async Task<IActionResult> Get(string id)
         {
             var res = await _crudService.GetById(id);
             return (res as ServiceResponse).ToActionResult();
         }
-        [HttpGet("")]
+        [HttpGet("{entityName}")]
         public async Task<IActionResult> GetAll()
         {
             var res = await _crudService.GetAll();
             return (res as ServiceResponse).ToActionResult();
         }
-        [HttpPut("{id}")]
+        [HttpPut("{entityName}/{id}")]
         public async Task<IActionResult> Put(string id, [FromBody] JObject model)
         {
             if (!ModelState.IsValid || model == null)
@@ -98,7 +104,7 @@ namespace AnyService.Controllers
             var res = await umi.Invoke(_crudService, new[] { id, typedModel });
             return (res as ServiceResponse).ToActionResult();
         }
-        [HttpDelete("{id}")]
+        [HttpDelete("{entityName}/{id}")]
         public async Task<IActionResult> Delete(string id)
         {
             var res = await _crudService.Delete(id);

@@ -11,7 +11,7 @@ namespace AnyService
         private readonly RequestDelegate _next;
         private static readonly KeyValuePair<string, Type> DefaultKeyValuePair = new KeyValuePair<string, Type>();
         private static readonly PathString AnyServicePath = new PathString("/" + Consts.AnyServiceControllerName);
-        private const string Multipart = "/" + Consts.MultipartSuffix;
+        private const string Multipart = "/" + Consts.MultipartPrefix;
         public AnyServiceMiddleware(RequestDelegate next)
         {
             _next = next;
@@ -26,8 +26,8 @@ namespace AnyService
             {
                 workContext.CurrentType = stringToTypePair.Value;
                 workContext.CurrentUserId = "some-user-id";
-                var mpSuffix = request.HasFormContentType ? Multipart : "";
-                request.Path = AnyServicePath.Add(path + mpSuffix);
+                var mpPrefix = request.HasFormContentType ? Multipart : "";
+                request.Path = AnyServicePath.Add(mpPrefix + path);
             }
             await _next(context);
         }
