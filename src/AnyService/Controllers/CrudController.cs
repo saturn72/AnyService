@@ -72,6 +72,8 @@ namespace AnyService.Controllers
             filesPropertyInfo.SetValue(typedModel, fileList);
             return await Create(typedModel);
         }
+
+        [DisableFormValueModelBinding]
         [HttpPost(Consts.MultipartPrefix + "/{entityName}" + "/" + Consts.StreamSuffix)]
         public async Task<IActionResult> PostMultipartStream()
         {
