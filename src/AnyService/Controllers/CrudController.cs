@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using AnyService.Services;
 using AnyService.Services.FileStorage;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -19,15 +21,17 @@ namespace AnyService.Controllers
         #region fields
         private readonly dynamic _crudService;
         private readonly WorkContext _workContext;
+        private readonly AnyServiceConfig _config;
         private static MethodInfo CreateMethodInfo;
         private static MethodInfo UpdateMethodInfo;
         private static IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
         #endregion
         #region ctor
-        public CrudController(dynamic crudService, WorkContext workContext)
+        public CrudController(dynamic crudService, WorkContext workContext, AnyServiceConfig config)
         {
             _crudService = crudService;
             _workContext = workContext;
+            _config = config;
         }
         #endregion
 
@@ -77,6 +81,94 @@ namespace AnyService.Controllers
         [HttpPost(Consts.MultipartPrefix + "/{entityName}" + "/" + Consts.StreamSuffix)]
         public async Task<IActionResult> PostMultipartStream()
         {
+            // Used to accumulate all the form url encoded key value pairs in the 
+            // request.
+            var formAccumulator = new KeyValueAccumulator();
+            string targetFilePath = null;
+
+            var contentType = MediaTypeHeaderValue.Parse(Request.ContentType);
+            var boundary = MultipartRequestHelper.GetBoundary(contentType, _config.MaxMultipartBoundaryLength);
+            var reader = new MultipartReader(boundary.Value, HttpContext.Request.Body);
+
+            var section = await reader.ReadNextSectionAsync();
+            while (section != null)
+            {
+                ContentDispositionHeaderValue contentDisposition;
+                var hasContentDispositionHeader = ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out contentDisposition);
+
+                if (hasContentDispositionHeader)
+                {
+                    if (MultipartRequestHelper.HasFileContentDisposition(contentDisposition))
+                    {
+                        targetFilePath = Path.GetTempFileName();
+                        using (var targetStream = System.IO.File.Create(targetFilePath))
+                        {
+                            await section.Body.CopyToAsync(targetStream);
+                        }
+                    }
+                    else if (MultipartRequestHelper.HasFormDataContentDisposition(contentDisposition))
+                    {
+                        // Content-Disposition: form-data; name="key"
+                        //
+                        // value
+
+                        // Do not limit the key name length here because the 
+                        // multipart headers length limit is already in effect.
+                        var key = HeaderUtilities.RemoveQuotes(contentDisposition.Name);
+                        var encoding = MultipartRequestHelper.GetEncoding(section);
+                        using (var streamReader = new StreamReader(
+                            section.Body,
+                            encoding,
+                            detectEncodingFromByteOrderMarks: true,
+                            bufferSize: 1024,
+                            leaveOpen: true))
+                        {
+                            // The value length limit is enforced by MultipartBodyLengthLimit
+                            var value = await streamReader.ReadToEndAsync();
+                            if (String.Equals(value, "undefined", StringComparison.OrdinalIgnoreCase))
+                            {
+                                value = String.Empty;
+                            }
+                            formAccumulator.Append(key.Value, value);
+
+                            if (formAccumulator.ValueCount > _config.MaxValueCount)
+                            {
+                                throw new InvalidDataException($"Form key count limit {_config.MaxValueCount} exceeded.");
+                            }
+                        }
+                    }
+                }
+
+                // Drains any remaining section body that has not been consumed and
+                // reads the headers for the next section.
+                section = await reader.ReadNextSectionAsync();
+            }
+
+            // // Bind form data to a model
+            // var user = new User();
+            // var formValueProvider = new FormValueProvider(
+            //     BindingSource.Form,
+            //     new FormCollection(formAccumulator.GetResults()),
+            //     CultureInfo.CurrentCulture);
+
+            // var bindingSuccessful = await TryUpdateModelAsync(user, prefix: "",
+            //     valueProvider: formValueProvider);
+            // if (!bindingSuccessful)
+            // {
+            //     if (!ModelState.IsValid)
+            //     {
+            //         return BadRequest(ModelState);
+            //     }
+            // }
+
+            // var uploadedData = new UploadedData()
+            // {
+            //     Name = user.Name,
+            //     Age = user.Age,
+            //     Zipcode = user.Zipcode,
+            //     FilePath = targetFilePath
+            // };
+            // return Json(uploadedData);
             throw new NotImplementedException();
         }
 

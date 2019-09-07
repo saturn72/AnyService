@@ -39,14 +39,19 @@ namespace AnyService
             var createMethodInfo = crudServiceType.GetMethod("Create");
             services.AddTransient(crudServiceType);
 
+            var anyServiceConfig = new AnyServiceConfig();
+            configuration.GetSection("anyservice").Bind(anyServiceConfig);
+            services.AddSingleton<AnyServiceConfig>(anyServiceConfig);
+
             services.AddTransient<CrudController>(sp =>
             {
                 var wc = sp.GetService<WorkContext>();
 
                 var genericType = crudServiceType.MakeGenericType(wc.CurrentType);
                 var srv = sp.GetService(genericType);
+                var c = sp.GetService<AnyServiceConfig>();
 
-                return new CrudController(srv, wc);
+                return new CrudController(srv, wc, c);
             });
             var validatorFactory = new ValidatorFactory(validators);
             services.AddSingleton(validatorFactory);
