@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using AnyService.Services;
 using AnyService.Services.FileStorage;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
@@ -93,8 +96,7 @@ namespace AnyService.Controllers
             var section = await reader.ReadNextSectionAsync();
             while (section != null)
             {
-                ContentDispositionHeaderValue contentDisposition;
-                var hasContentDispositionHeader = ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out contentDisposition);
+                var hasContentDispositionHeader = ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out ContentDispositionHeaderValue contentDisposition);
 
                 if (hasContentDispositionHeader)
                 {
@@ -143,9 +145,10 @@ namespace AnyService.Controllers
                 // reads the headers for the next section.
                 section = await reader.ReadNextSectionAsync();
             }
+            var modelJson = formAccumulator.GetResults()["model"].ToString();
+            var model = JsonConvert.DeserializeObject(modelJson, _workContext.CurrentType);
 
             // // Bind form data to a model
-            // var user = new User();
             // var formValueProvider = new FormValueProvider(
             //     BindingSource.Form,
             //     new FormCollection(formAccumulator.GetResults()),
