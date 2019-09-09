@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,7 +22,9 @@ namespace AnyService.LiteDb
             {
                 foreach (var f in files)
                 {
-                    using (var stream = new MemoryStream(f.Bytes.ToArray()))
+                    using (var stream = f.TempPath.HasValue()
+                        ? File.OpenRead(f.TempPath)
+                        : new MemoryStream(f.Bytes.ToArray()) as Stream)
                     {
                         var lfi = db.FileStorage.Upload(f.Id, f.FileName, stream);
                         furList.Add(new FileUploadResponse { File = f, Status = UploadStatus.Uploaded });

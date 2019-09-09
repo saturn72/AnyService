@@ -59,6 +59,7 @@ namespace Microsoft.AspNetCore.Mvc
             };
         public static IActionResult ToActionResult(this ServiceResponse serviceResponse)
         {
+            serviceResponse.Data = mapper
             return ConversionFuncs[serviceResponse.Result](serviceResponse);
         }
     }

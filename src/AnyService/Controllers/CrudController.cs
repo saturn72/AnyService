@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -9,7 +8,6 @@ using AnyService.Services;
 using AnyService.Services.FileStorage;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
@@ -75,7 +73,9 @@ namespace AnyService.Controllers
                 fileList.Add(fileModel);
             }
 
-            var filesPropertyInfo = FilesPropertyInfos.TryGetValue(curType, out PropertyInfo pi) ? pi : (pi = FilesPropertyInfos[curType] = curType.GetProperty("Files"));
+            var filesPropertyInfo = FilesPropertyInfos.TryGetValue(curType, out PropertyInfo pi)
+                ? pi
+                : (pi = FilesPropertyInfos[curType] = curType.GetProperty(nameof(IFileContainer.Files)));
             filesPropertyInfo.SetValue(typedModel, fileList);
             return await Create(typedModel);
         }
@@ -87,7 +87,7 @@ namespace AnyService.Controllers
             // Used to accumulate all the form url encoded key value pairs in the 
             // request.
             var formAccumulator = new KeyValueAccumulator();
-            string targetFilePath = null;
+            var files = new List<FileModel>();
 
             var contentType = MediaTypeHeaderValue.Parse(Request.ContentType);
             var boundary = MultipartRequestHelper.GetBoundary(contentType, _config.MaxMultipartBoundaryLength);
@@ -102,11 +102,13 @@ namespace AnyService.Controllers
                 {
                     if (MultipartRequestHelper.HasFileContentDisposition(contentDisposition))
                     {
-                        targetFilePath = Path.GetTempFileName();
-                        using (var targetStream = System.IO.File.Create(targetFilePath))
+                        var curFile = new FileModel();
+                        curFile.TempPath = Path.GetTempFileName();
+                        using (var targetStream = System.IO.File.Create(curFile.TempPath))
                         {
                             await section.Body.CopyToAsync(targetStream);
                         }
+                        files.Add(curFile);
                     }
                     else if (MultipartRequestHelper.HasFormDataContentDisposition(contentDisposition))
                     {
@@ -147,32 +149,8 @@ namespace AnyService.Controllers
             }
             var modelJson = formAccumulator.GetResults()["model"].ToString();
             var model = JsonConvert.DeserializeObject(modelJson, _workContext.CurrentType);
-
-            // // Bind form data to a model
-            // var formValueProvider = new FormValueProvider(
-            //     BindingSource.Form,
-            //     new FormCollection(formAccumulator.GetResults()),
-            //     CultureInfo.CurrentCulture);
-
-            // var bindingSuccessful = await TryUpdateModelAsync(user, prefix: "",
-            //     valueProvider: formValueProvider);
-            // if (!bindingSuccessful)
-            // {
-            //     if (!ModelState.IsValid)
-            //     {
-            //         return BadRequest(ModelState);
-            //     }
-            // }
-
-            // var uploadedData = new UploadedData()
-            // {
-            //     Name = user.Name,
-            //     Age = user.Age,
-            //     Zipcode = user.Zipcode,
-            //     FilePath = targetFilePath
-            // };
-            // return Json(uploadedData);
-            throw new NotImplementedException();
+            _workContext.CurrentType.GetProperty(nameof(IFileContainer.Files)).SetValue(model, files);
+            return await Create(model);
         }
 
         [HttpGet("{entityName}/{id}")]
@@ -197,7 +175,7 @@ namespace AnyService.Controllers
                     data = model
                 });
             var typedModel = model.ToObject(_workContext.CurrentType);
-            var umi = UpdateMethodInfo ?? (UpdateMethodInfo = _crudService.GetType().GetMethod("Update"));
+            var umi = UpdateMethodInfo ?? (UpdateMethodInfo = _crudService.GetType().GetMethod(nameof(CrudService<IDomainModelBase>.Update)));
             var res = await umi.Invoke(_crudService, new[] { id, typedModel });
             return (res as ServiceResponse).ToActionResult();
         }
@@ -211,7 +189,7 @@ namespace AnyService.Controllers
         #region Utilities
         private async Task<IActionResult> Create(object model)
         {
-            var cmi = CreateMethodInfo ?? (CreateMethodInfo = _crudService.GetType().GetMethod("Create"));
+            var cmi = CreateMethodInfo ?? (CreateMethodInfo = _crudService.GetType().GetMethod(nameof(CrudService<IDomainModelBase>.Create)));
             var res = await cmi.Invoke(_crudService, new[] { model });
             return (res as ServiceResponse).ToActionResult();
         }
