@@ -8,24 +8,25 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AnyService.Services.FileStorage;
+using Microsoft.Extensions.Hosting;
 
 namespace AnyService.SampleApp
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration, IHostingEnvironment env)
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
             _env = env;
         }
 
         public IConfiguration Configuration { get; }
-        private IHostingEnvironment _env;
+        private IWebHostEnvironment _env;
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
                 .AddControllersAsServices();
             var entities = new[]
             {
@@ -53,8 +54,14 @@ namespace AnyService.SampleApp
                 mapper.Entity<DependentModel>().Id(d => d.Id);
                 mapper.Entity<MultipartSampleModel>().Id(d => d.Id);
             }
+
+            //MappingExtensions.Configure(cfg =>
+            //{
+            //    new DomainAutoMapperConfigurar().Configure(cfg);
+            //});
+
         }
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -66,8 +73,11 @@ namespace AnyService.SampleApp
             }
 
             app.UseHttpsRedirection();
+            app.UseRouting();
             app.UseMiddleware<AnyServiceMiddleware>();
-            app.UseMvc();
+            app.UseEndpoints(endpoints => {
+                endpoints.MapControllers();
+            });
         }
     }
 }

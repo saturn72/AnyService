@@ -12,13 +12,14 @@ namespace AnyService.Services
         public const string Ok = "ok";
         public const string Unauthorized = "unauthorized";
 
-        public static IEnumerable<string> All => new[]{
-            Accepted,
-            BadOrMissingData ,
-            Error ,
-            NotFound ,
-            NotSet ,
-            Ok ,
+        public static readonly IEnumerable<string> All = new[]
+        {
+            Accepted ,
+            BadOrMissingData,
+            Error,
+            NotFound,
+            NotSet,
+            Ok,
             Unauthorized,
         };
     }

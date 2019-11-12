@@ -19,7 +19,6 @@ namespace AnyService.Tests.Controllers
         }
         [Theory]
         [InlineData("Post", "POST", "{entityName}")]
-        [InlineData("Post", "POST", "{entityName}")]
         [InlineData("PostMultipart", "POST", "__multipart/{entityName}")]
         [InlineData("PostMultipartStream", "POST", "__multipart/{entityName}/__stream")]
         [InlineData("GetAll", "GET", "{entityName}")]

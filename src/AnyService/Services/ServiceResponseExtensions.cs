@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AnyService;
 using AnyService.Services;
 using Microsoft.AspNetCore.Http;
 
@@ -7,7 +8,7 @@ namespace Microsoft.AspNetCore.Mvc
 {
     public static class ServiceResponseExtensions
     {
-        private static readonly IDictionary<string, Func<ServiceResponse, IActionResult>> ConversionFuncs =
+        public static readonly IDictionary<string, Func<ServiceResponse, IActionResult>> ConversionFuncs =
             new Dictionary<string, Func<ServiceResponse, IActionResult>>
             {
                 {
@@ -57,9 +58,21 @@ namespace Microsoft.AspNetCore.Mvc
                         new UnauthorizedResult() as IActionResult
                 },
             };
+        public static IActionResult ToActionResult<TSource, TDestination>(this ServiceResponse serviceResponse)
+          where TSource : class
+          where TDestination : class
+        {
+            if (serviceResponse.Data != null)
+            {
+                if (!typeof(TSource).IsAssignableFrom(serviceResponse.Data.GetType()))
+                    throw new InvalidOperationException($"Cannot map from {serviceResponse.Data.GetType()} to {typeof(TSource)}");
+                serviceResponse.Data = serviceResponse.Data.Map<TDestination>();
+            }
+
+            return ToActionResult(serviceResponse);
+        }
         public static IActionResult ToActionResult(this ServiceResponse serviceResponse)
         {
-            serviceResponse.Data = mapper
             return ConversionFuncs[serviceResponse.Result](serviceResponse);
         }
     }
