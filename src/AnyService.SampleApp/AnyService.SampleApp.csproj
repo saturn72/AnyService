@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="LiteDb" Version="4.1.4" />
+    <PackageReference Include="System.Text.Json" Version="4.6.0" />
   </ItemGroup>
 
   <ItemGroup>

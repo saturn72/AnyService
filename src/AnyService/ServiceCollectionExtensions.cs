@@ -41,9 +41,9 @@ namespace AnyService
 
             var anyServiceConfig = new AnyServiceConfig();
             configuration.GetSection("anyservice").Bind(anyServiceConfig);
-            services.AddSingleton<AnyServiceConfig>(anyServiceConfig);
+            services.AddSingleton(anyServiceConfig);
 
-            services.AddTransient<CrudController>(sp =>
+            services.AddTransient(sp =>
             {
                 var wc = sp.GetService<WorkContext>();
 
@@ -62,10 +62,9 @@ namespace AnyService
                     services.AddTransient(vt, vType);
             }
 
-            var routeMapper = new RouteMapper(typeConfigRecords);
-            services.AddSingleton<RouteMapper>(routeMapper);
+            services.AddSingleton(new RouteMapper(typeConfigRecords));
             services.AddScoped<WorkContext>();
-            services.AddScoped<EventKeyRecord>(sp =>
+            services.AddScoped(sp =>
             {
                 var ek = sp.GetService<EventKeys>();
                 var wc = sp.GetService<WorkContext>();
@@ -74,7 +73,7 @@ namespace AnyService
 
 
             var eventKeys = new EventKeys(typeConfigRecords.Select(tcr => tcr.Value));
-            services.AddSingleton<EventKeys>(c => eventKeys);
+            services.AddSingleton(c => eventKeys);
             services.AddScoped<AuditHelper>();
             services.AddSingleton<IEventBus, EventBus>();
 
