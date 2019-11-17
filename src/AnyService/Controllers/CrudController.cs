@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AnyService.Services;
 using AnyService.Services.FileStorage;
@@ -23,7 +23,7 @@ namespace AnyService.Controllers
         private readonly WorkContext _workContext;
         private readonly AnyServiceConfig _config;
         private static MethodInfo CreateMethodInfo;
-        private static readonly MethodInfo UpdateMethodInfo;
+        private static MethodInfo UpdateMethodInfo;
         private static IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
         #endregion
         #region ctor
@@ -44,15 +44,7 @@ namespace AnyService.Controllers
                     message = "Bad or missing data",
                     data = model
                 });
-            var o = new JsonSerializerOptions
-            {
-                AllowTrailingCommas = true
-            };
 
-
-            var m = JsonSerializer.Deserialize(model.ToString(), _workContext.CurrentType, o);
-            
-            throw new NotImplementedException();
             var typedModel = model.ToObject(_workContext.CurrentType);
             return await Create(typedModel);
         }
@@ -63,30 +55,29 @@ namespace AnyService.Controllers
             if (!Request.HasFormContentType) return BadRequest();
             var curType = _workContext.CurrentType;
             var form = Request.Form;
-            throw new NotImplementedException();
-            // var typedModel = JsonConvert.DeserializeObject(form["model"], curType);
+            var typedModel = form["model"].ToString().ToObject(curType);
 
-            //var fileList = new List<FileModel>();
-            //foreach (var ff in form.Files.Where(f => f.Length > 0))
-            //{
-            //    var fileModel = new FileModel
-            //    {
-            //        FileName = ff.FileName,
-            //        ParentKey = curType.FullName,
-            //    };
-            //    using (var memoryStream = new MemoryStream())
-            //    {
-            //        await ff.CopyToAsync(memoryStream);
-            //        fileModel.Bytes = memoryStream.ToArray();
-            //    }
-            //    fileList.Add(fileModel);
-            //}
+            var fileList = new List<FileModel>();
+            foreach (var ff in form.Files.Where(f => f.Length > 0))
+            {
+                var fileModel = new FileModel
+                {
+                    FileName = ff.FileName,
+                    ParentKey = curType.FullName,
+                };
+                using (var memoryStream = new MemoryStream())
+                {
+                    await ff.CopyToAsync(memoryStream);
+                    fileModel.Bytes = memoryStream.ToArray();
+                }
+                fileList.Add(fileModel);
+            }
 
-            //var filesPropertyInfo = FilesPropertyInfos.TryGetValue(curType, out PropertyInfo pi)
-            //    ? pi
-            //    : (pi = FilesPropertyInfos[curType] = curType.GetProperty(nameof(IFileContainer.Files)));
-            //filesPropertyInfo.SetValue(typedModel, fileList);
-            //return await Create(typedModel);
+            var filesPropertyInfo = FilesPropertyInfos.TryGetValue(curType, out PropertyInfo pi)
+                ? pi
+                : (pi = FilesPropertyInfos[curType] = curType.GetProperty(nameof(IFileContainer.Files)));
+            filesPropertyInfo.SetValue(typedModel, fileList);
+            return await Create(typedModel);
         }
 
         [DisableFormValueModelBinding]
@@ -158,12 +149,10 @@ namespace AnyService.Controllers
             }
             var modelJson = formAccumulator.GetResults()["model"].ToString();
 
-            throw new NotImplementedException();
-            //var model = JsonConvert.DeserializeObject(modelJson, _workContext.CurrentType);
-            //_workContext.CurrentType.GetProperty(nameof(IFileContainer.Files)).SetValue(model, files);
-            //return await Create(model);
+            var model = modelJson.ToObject(_workContext.CurrentType);
+            _workContext.CurrentType.GetProperty(nameof(IFileContainer.Files)).SetValue(model, files);
+            return await Create(model);
         }
-
         [HttpGet("{entityName}/{id}")]
         public async Task<IActionResult> Get(string id)
         {
@@ -177,19 +166,18 @@ namespace AnyService.Controllers
             return (res as ServiceResponse).ToActionResult();
         }
         [HttpPut("{entityName}/{id}")]
-        public async Task<IActionResult> Put(string id, [FromBody] object model)
+        public async Task<IActionResult> Put(string id, [FromBody] JsonElement model)
         {
-            if (!ModelState.IsValid || model == null)
+            if (!ModelState.IsValid || model.Equals(default))
                 return new BadRequestObjectResult(new
                 {
                     message = "Bad or missing data",
                     data = model
                 });
-            throw new NotImplementedException();
-            //var typedModel = model.ToObject(_workContext.CurrentType);
-            //var umi = UpdateMethodInfo ?? (UpdateMethodInfo = _crudService.GetType().GetMethod(nameof(CrudService<IDomainModelBase>.Update)));
-            //var res = await umi.Invoke(_crudService, new[] { id, typedModel });
-            //return (res as ServiceResponse).ToActionResult();
+            var typedModel = model.ToObject(_workContext.CurrentType);
+            var umi = UpdateMethodInfo ?? (UpdateMethodInfo = _crudService.GetType().GetMethod(nameof(CrudService<IDomainModelBase>.Update)));
+            var res = await umi.Invoke(_crudService, new[] { id, typedModel });
+            return (res as ServiceResponse).ToActionResult();
         }
         [HttpDelete("{entityName}/{id}")]
         public async Task<IActionResult> Delete(string id)

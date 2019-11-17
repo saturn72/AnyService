@@ -34,7 +34,6 @@ namespace AnyService.E2E
             //create
             var res = await _client.PostAsJsonAsync("dependent", model);
             var content = await res.Content.ReadAsStringAsync();
-            Console.WriteLine(content);
             res.EnsureSuccessStatusCode();
             var jObj = JObject.Parse(content);
             var id = jObj["data"]["id"].Value<string>();
