@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Shouldly;
 using Xunit;
@@ -15,18 +16,19 @@ namespace AnyService.Tests
         [Fact]
         public void RouteMapper_CreatedTests()
         {
-            var type = typeof(AnyService.RouteMapper);
+            var type = typeof(RouteMapper);
             var allCtors = type.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
             var ctor = allCtors[0];
             var expType = typeof(Myclass);
             var expRoutePrefix = "some-route-prefix";
-            var maps = new Dictionary<Type, TypeConfigRecord>
+            var maps = new[]
             {
-                {expType, new TypeConfigRecord(expType, expRoutePrefix, null)}
+              new TypeConfigRecord(expType, expRoutePrefix, null),
             };
+
             var instance = ctor.Invoke(new object[] { maps });
-            (instance as RouteMapper).Maps.Count.ShouldBe(1);
-            (instance as RouteMapper).Maps[expRoutePrefix].ShouldBe(expType);
+            (instance as RouteMapper).Maps.Count().ShouldBe(1);
+            (instance as RouteMapper).Maps.First(c => c.RoutePrefix.Equals(expRoutePrefix, StringComparison.InvariantCultureIgnoreCase)).Type.ShouldBe(expType);
         }
     }
 }

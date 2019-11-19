@@ -17,11 +17,11 @@ namespace Microsoft.Extensions.DependencyInjection
             IEnumerable<Type> entities,
             IEnumerable<ICrudValidator> validators)
         {
-            var typeConfigRecords = entities.ToDictionary(k => k, v =>
+            var typeConfigRecords = entities.Select(e =>
             {
-                var fn = v.FullName.ToLower();
+                var fn = e.FullName.ToLower();
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-                return new TypeConfigRecord(v, "/" + v.Name, ekr);
+                return new TypeConfigRecord(e, "/" + e.Name, ekr);
             });
             return AddAnyService(services, mvcBuilder, configuration, typeConfigRecords, validators);
         }
@@ -29,11 +29,11 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IServiceCollection AddAnyService(this IServiceCollection services,
             IMvcBuilder mvcBuilder,
             IConfiguration configuration,
-            IReadOnlyDictionary<Type, TypeConfigRecord> typeConfigRecords,
+            IEnumerable<TypeConfigRecord> typeConfigRecords,
             IEnumerable<ICrudValidator> validators)
         {
             mvcBuilder.ConfigureApplicationPartManager(apm =>
-                apm.FeatureProviders.Add(new GenericControllerFeatureProvider(typeConfigRecords.Keys)));
+                apm.FeatureProviders.Add(new GenericControllerFeatureProvider(typeConfigRecords.Select(e =>e.Type))));
             services.AddTransient(typeof(CrudService<>));
 
             var anyServiceConfig = new AnyServiceConfig();
@@ -58,7 +58,7 @@ namespace Microsoft.Extensions.DependencyInjection
             });
 
 
-            var eventKeys = new EventKeys(typeConfigRecords.Select(tcr => tcr.Value));
+            var eventKeys = new EventKeys(typeConfigRecords);
             services.AddSingleton(c => eventKeys);
             services.AddScoped<AuditHelper>();
             services.AddSingleton<IEventBus, EventBus>();

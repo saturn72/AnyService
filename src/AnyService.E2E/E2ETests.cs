@@ -145,5 +145,67 @@ namespace AnyService.E2E
             jObj["data"]["firstName"].Value<string>().ShouldBe(model.firstName);
             (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
         }
+
+        [Test]
+        public async Task CRUD_ControllerRouteOverwrite()
+        {
+            var uri = "dependent2/";
+            var model = new
+            {
+                Value = "init value"
+            };
+            //create
+            var res = await Client.PostAsJsonAsync(uri, model);
+            var content = await res.Content.ReadAsStringAsync();
+            res.EnsureSuccessStatusCode();
+            var jObj = JObject.Parse(content);
+            var id = jObj["data"]["id"].Value<string>();
+            id.ShouldNotBeNullOrEmpty();
+            jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
+
+            //read
+            res = await Client.GetAsync(uri + id);
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jObj["data"]["id"].Value<string>().ShouldBe(id);
+            jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
+
+            //read all
+            res = await Client.GetAsync(uri);
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            var jArr = jObj["data"] as JArray;
+            jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
+            jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
+
+            //update
+            var updateModel = new
+            {
+                Value = "new Value"
+            };
+            res = await Client.PutAsJsonAsync(uri + id, updateModel);
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jObj["data"]["id"].Value<string>().ShouldBe(id);
+            jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
+
+            //delete
+            res = await Client.DeleteAsync(uri + id);
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jObj["data"]["id"].Value<string>().ShouldBe(id);
+            jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
+
+            //get deleted
+            res = await Client.GetAsync(uri + id);
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jObj["data"]["deleted"].Value<bool>().ShouldBeTrue();
+        }
     }
 }
