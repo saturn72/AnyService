@@ -35,7 +35,7 @@ namespace AnyService.LiteDb
                         f.ParentId = entity.Id;
                         f.Id = AssignId();
 
-                        fileList.Add(new FileModel { Id = f.Id, FileName = f.FileName, Bytes = f.Bytes });
+                        fileList.Add(new FileModel { Id = f.Id, DisplayFileName = f.DisplayFileName, Bytes = f.Bytes });
                         f.Bytes = null;
                     }
                 }

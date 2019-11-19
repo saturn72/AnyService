@@ -91,7 +91,7 @@ namespace AnyService.Tests.Services
         [Fact]
         public async Task GetById_Returns_CallsFileStorage()
         {
-            var file = new FileModel { FileName = "this is fileName" };
+            var file = new FileModel { DisplayFileName = "this is fileName" };
             var model = new TestFileContainer
             {
                 Files = new[] { file }

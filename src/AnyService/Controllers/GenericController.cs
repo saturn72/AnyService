@@ -11,32 +11,31 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net;
 
 namespace AnyService.Controllers
 {
-    [Route(Consts.AnyServiceControllerName)]
-    [ApiController]
-    public class CrudController : ControllerBase
+    [Route("[controller]")]
+    [GenericControllerNameConvention]
+    public class GenericController<TDomainModel> : ControllerBase where TDomainModel : IDomainModelBase
     {
         #region fields
-        private readonly dynamic _crudService;
-        private readonly WorkContext _workContext;
+        private readonly CrudService<TDomainModel> _crudService;
         private readonly AnyServiceConfig _config;
-        private static MethodInfo CreateMethodInfo;
-        private static MethodInfo UpdateMethodInfo;
-        private static IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
+        private readonly Type _curType;
+        private static readonly IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
         #endregion
         #region ctor
-        public CrudController(dynamic crudService, WorkContext workContext, AnyServiceConfig config)
+        public GenericController(IServiceProvider serviceProvider, AnyServiceConfig config)
         {
-            _crudService = crudService;
-            _workContext = workContext;
+            _crudService = serviceProvider.GetService<CrudService<TDomainModel>>();
             _config = config;
+            _curType = typeof(TDomainModel);
         }
         #endregion
-
-        [HttpPost("{entityName}")]
-        public async Task<IActionResult> Post([FromBody] JsonElement model)
+        [HttpPost]
+        public async Task<IActionResult> Post([FromBody] TDomainModel model)
         {
             if (!ModelState.IsValid || model.Equals(default))
                 return new BadRequestObjectResult(new
@@ -45,25 +44,26 @@ namespace AnyService.Controllers
                     data = model
                 });
 
-            var typedModel = model.ToObject(_workContext.CurrentType);
-            return await Create(typedModel);
+            var res = await _crudService.Create(model); 
+            return res.ToActionResult();
         }
 
-        [HttpPost(Consts.MultipartPrefix + "/{entityName}")]
+        [HttpPost(Consts.MultipartSuffix)]
         public async Task<IActionResult> PostMultipart()
         {
             if (!Request.HasFormContentType) return BadRequest();
-            var curType = _workContext.CurrentType;
             var form = Request.Form;
-            var typedModel = form["model"].ToString().ToObject(curType);
+            var model = form["model"].ToString().ToObject<TDomainModel>();
 
             var fileList = new List<FileModel>();
             foreach (var ff in form.Files.Where(f => f.Length > 0))
             {
                 var fileModel = new FileModel
                 {
-                    FileName = ff.FileName,
-                    ParentKey = curType.FullName,
+                    UntrustedFileName = Path.GetFileName(ff.FileName),
+                    DisplayFileName = WebUtility.HtmlEncode(ff.FileName),
+                    StoredFileName = Path.GetRandomFileName(),
+                    ParentKey = _curType.FullName,
                 };
                 using (var memoryStream = new MemoryStream())
                 {
@@ -73,15 +73,16 @@ namespace AnyService.Controllers
                 fileList.Add(fileModel);
             }
 
-            var filesPropertyInfo = FilesPropertyInfos.TryGetValue(curType, out PropertyInfo pi)
+            var filesPropertyInfo = FilesPropertyInfos.TryGetValue(_curType, out PropertyInfo pi)
                 ? pi
-                : (pi = FilesPropertyInfos[curType] = curType.GetProperty(nameof(IFileContainer.Files)));
-            filesPropertyInfo.SetValue(typedModel, fileList);
-            return await Create(typedModel);
+                : (pi = FilesPropertyInfos[_curType] = _curType.GetProperty(nameof(IFileContainer.Files)));
+            filesPropertyInfo.SetValue(model, fileList);
+            var res = await _crudService.Create(model);
+            return res.ToActionResult();
         }
 
         [DisableFormValueModelBinding]
-        [HttpPost(Consts.MultipartPrefix + "/{entityName}" + "/" + Consts.StreamSuffix)]
+        [HttpPost(Consts.StreamSuffix)]
         public async Task<IActionResult> PostMultipartStream()
         {
             // Used to accumulate all the form url encoded key value pairs in the 
@@ -102,8 +103,10 @@ namespace AnyService.Controllers
                 {
                     if (MultipartRequestHelper.HasFileContentDisposition(contentDisposition))
                     {
-                        var curFile = new FileModel();
-                        curFile.TempPath = Path.GetTempFileName();
+                        var curFile = new FileModel
+                        {
+                            TempPath = Path.GetRandomFileName(),
+                        };
                         using (var targetStream = System.IO.File.Create(curFile.TempPath))
                         {
                             await section.Body.CopyToAsync(targetStream);
@@ -120,25 +123,23 @@ namespace AnyService.Controllers
                         // multipart headers length limit is already in effect.
                         var key = HeaderUtilities.RemoveQuotes(contentDisposition.Name);
                         var encoding = MultipartRequestHelper.GetEncoding(section);
-                        using (var streamReader = new StreamReader(
+                        using var streamReader = new StreamReader(
                             section.Body,
                             encoding,
                             detectEncodingFromByteOrderMarks: true,
                             bufferSize: 1024,
-                            leaveOpen: true))
+                            leaveOpen: true);
+                        // The value length limit is enforced by MultipartBodyLengthLimit
+                        var value = await streamReader.ReadToEndAsync();
+                        if (string.Equals(value, "undefined", StringComparison.OrdinalIgnoreCase))
                         {
-                            // The value length limit is enforced by MultipartBodyLengthLimit
-                            var value = await streamReader.ReadToEndAsync();
-                            if (String.Equals(value, "undefined", StringComparison.OrdinalIgnoreCase))
-                            {
-                                value = String.Empty;
-                            }
-                            formAccumulator.Append(key.Value, value);
+                            value = string.Empty;
+                        }
+                        formAccumulator.Append(key.Value, value);
 
-                            if (formAccumulator.ValueCount > _config.MaxValueCount)
-                            {
-                                throw new InvalidDataException($"Form key count limit {_config.MaxValueCount} exceeded.");
-                            }
+                        if (formAccumulator.ValueCount > _config.MaxValueCount)
+                        {
+                            throw new InvalidDataException($"Form key count limit {_config.MaxValueCount} exceeded.");
                         }
                     }
                 }
@@ -149,24 +150,25 @@ namespace AnyService.Controllers
             }
             var modelJson = formAccumulator.GetResults()["model"].ToString();
 
-            var model = modelJson.ToObject(_workContext.CurrentType);
-            _workContext.CurrentType.GetProperty(nameof(IFileContainer.Files)).SetValue(model, files);
-            return await Create(model);
+            var model = modelJson.ToObject<TDomainModel>();
+            _curType.GetProperty(nameof(IFileContainer.Files)).SetValue(model, files);
+            var res = await _crudService.Create(model);
+            return res.ToActionResult();
         }
-        [HttpGet("{entityName}/{id}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
         {
             var res = await _crudService.GetById(id);
             return (res as ServiceResponse).ToActionResult();
         }
-        [HttpGet("{entityName}")]
+        [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var res = await _crudService.GetAll();
             return (res as ServiceResponse).ToActionResult();
         }
-        [HttpPut("{entityName}/{id}")]
-        public async Task<IActionResult> Put(string id, [FromBody] JsonElement model)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put(string id, [FromBody] TDomainModel model)
         {
             if (!ModelState.IsValid || model.Equals(default))
                 return new BadRequestObjectResult(new
@@ -174,25 +176,15 @@ namespace AnyService.Controllers
                     message = "Bad or missing data",
                     data = model
                 });
-            var typedModel = model.ToObject(_workContext.CurrentType);
-            var umi = UpdateMethodInfo ?? (UpdateMethodInfo = _crudService.GetType().GetMethod(nameof(CrudService<IDomainModelBase>.Update)));
-            var res = await umi.Invoke(_crudService, new[] { id, typedModel });
+
+            var res = await _crudService.Update(id, model);
             return (res as ServiceResponse).ToActionResult();
         }
-        [HttpDelete("{entityName}/{id}")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
             var res = await _crudService.Delete(id);
             return (res as ServiceResponse).ToActionResult();
         }
-
-        #region Utilities
-        private async Task<IActionResult> Create(object model)
-        {
-            var cmi = CreateMethodInfo ?? (CreateMethodInfo = _crudService.GetType().GetMethod(nameof(CrudService<IDomainModelBase>.Create)));
-            var res = await cmi.Invoke(_crudService, new[] { model });
-            return (res as ServiceResponse).ToActionResult();
-        }
-        #endregion
     }
 }

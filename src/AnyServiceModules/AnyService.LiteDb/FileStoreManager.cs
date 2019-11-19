@@ -26,7 +26,7 @@ namespace AnyService.LiteDb
                         ? File.OpenRead(f.TempPath)
                         : new MemoryStream(f.Bytes.ToArray()) as Stream)
                     {
-                        var lfi = db.FileStorage.Upload(f.Id, f.FileName, stream);
+                        var lfi = db.FileStorage.Upload(f.Id, f.StoredFileName, stream);
                         furList.Add(new FileUploadResponse { File = f, Status = UploadStatus.Uploaded });
                     }
                 }

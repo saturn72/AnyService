@@ -1,21 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29509.3
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.E2E", "AnyService.E2E\AnyService.E2E.csproj", "{5E78324F-9319-45C5-BE63-27CD38B30BAA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService", "AnyService\AnyService.csproj", "{356DE5F9-C785-4596-B524-CDF49305A5B8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService", "AnyService\AnyService.csproj", "{356DE5F9-C785-4596-B524-CDF49305A5B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.Tests", "AnyService.Tests\AnyService.Tests.csproj", "{36AA9895-6AA1-4A9C-8FC1-C0008E7CF208}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.Tests", "AnyService.Tests\AnyService.Tests.csproj", "{36AA9895-6AA1-4A9C-8FC1-C0008E7CF208}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.SampleApp", "AnyService.SampleApp\AnyService.SampleApp.csproj", "{2F6D9E79-F311-411B-A6AA-BC32D9123067}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.SampleApp", "AnyService.SampleApp\AnyService.SampleApp.csproj", "{2F6D9E79-F311-411B-A6AA-BC32D9123067}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AnyServiceModules", "AnyServiceModules", "{1B2B45B1-9CDC-4D19-84F8-EDCD50B1867A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.LiteDb", "AnyServiceModules\AnyService.LiteDb\AnyService.LiteDb.csproj", "{9EFF3BE6-585F-4CD8-9FEA-775E44BB87FA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.LiteDb", "AnyServiceModules\AnyService.LiteDb\AnyService.LiteDb.csproj", "{9EFF3BE6-585F-4CD8-9FEA-775E44BB87FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.LiteDb.Tests", "AnyServiceModules\AnyService.LiteDb.Tests\AnyService.LiteDb.Tests.csproj", "{86F5FF26-D7DC-41E1-A0DC-A2115CA58FE8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.LiteDb.Tests", "AnyServiceModules\AnyService.LiteDb.Tests\AnyService.LiteDb.Tests.csproj", "{86F5FF26-D7DC-41E1-A0DC-A2115CA58FE8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Anyservice.E2E", "Anyservice.E2E\Anyservice.E2E.csproj", "{27B7A974-F0E0-4732-85FA-1051155A4D5A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,22 +26,7 @@ Global
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5E78324F-9319-45C5-BE63-27CD38B30BAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5E78324F-9319-45C5-BE63-27CD38B30BAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5E78324F-9319-45C5-BE63-27CD38B30BAA}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{5E78324F-9319-45C5-BE63-27CD38B30BAA}.Debug|x64.Build.0 = Debug|Any CPU
-		{5E78324F-9319-45C5-BE63-27CD38B30BAA}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{5E78324F-9319-45C5-BE63-27CD38B30BAA}.Debug|x86.Build.0 = Debug|Any CPU
-		{5E78324F-9319-45C5-BE63-27CD38B30BAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5E78324F-9319-45C5-BE63-27CD38B30BAA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5E78324F-9319-45C5-BE63-27CD38B30BAA}.Release|x64.ActiveCfg = Release|Any CPU
-		{5E78324F-9319-45C5-BE63-27CD38B30BAA}.Release|x64.Build.0 = Release|Any CPU
-		{5E78324F-9319-45C5-BE63-27CD38B30BAA}.Release|x86.ActiveCfg = Release|Any CPU
-		{5E78324F-9319-45C5-BE63-27CD38B30BAA}.Release|x86.Build.0 = Release|Any CPU
 		{356DE5F9-C785-4596-B524-CDF49305A5B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{356DE5F9-C785-4596-B524-CDF49305A5B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{356DE5F9-C785-4596-B524-CDF49305A5B8}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -102,9 +87,27 @@ Global
 		{86F5FF26-D7DC-41E1-A0DC-A2115CA58FE8}.Release|x64.Build.0 = Release|Any CPU
 		{86F5FF26-D7DC-41E1-A0DC-A2115CA58FE8}.Release|x86.ActiveCfg = Release|Any CPU
 		{86F5FF26-D7DC-41E1-A0DC-A2115CA58FE8}.Release|x86.Build.0 = Release|Any CPU
+		{27B7A974-F0E0-4732-85FA-1051155A4D5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27B7A974-F0E0-4732-85FA-1051155A4D5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27B7A974-F0E0-4732-85FA-1051155A4D5A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{27B7A974-F0E0-4732-85FA-1051155A4D5A}.Debug|x64.Build.0 = Debug|Any CPU
+		{27B7A974-F0E0-4732-85FA-1051155A4D5A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{27B7A974-F0E0-4732-85FA-1051155A4D5A}.Debug|x86.Build.0 = Debug|Any CPU
+		{27B7A974-F0E0-4732-85FA-1051155A4D5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27B7A974-F0E0-4732-85FA-1051155A4D5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27B7A974-F0E0-4732-85FA-1051155A4D5A}.Release|x64.ActiveCfg = Release|Any CPU
+		{27B7A974-F0E0-4732-85FA-1051155A4D5A}.Release|x64.Build.0 = Release|Any CPU
+		{27B7A974-F0E0-4732-85FA-1051155A4D5A}.Release|x86.ActiveCfg = Release|Any CPU
+		{27B7A974-F0E0-4732-85FA-1051155A4D5A}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9EFF3BE6-585F-4CD8-9FEA-775E44BB87FA} = {1B2B45B1-9CDC-4D19-84F8-EDCD50B1867A}
 		{86F5FF26-D7DC-41E1-A0DC-A2115CA58FE8} = {1B2B45B1-9CDC-4D19-84F8-EDCD50B1867A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0EDF42B2-F92E-4DF1-92EF-88C2E8C14479}
 	EndGlobalSection
 EndGlobal

@@ -8,25 +8,25 @@ using Xunit;
 
 namespace AnyService.Tests.Controllers
 {
-    public class CrudControllerTests
+    public class GenericControllerTests
     {
         [Fact]
         public void ValidateRoute()
         {
-            var type = typeof(CrudController);
+            var type = typeof(GenericController<>);
             var route = type.GetCustomAttributes(typeof(RouteAttribute)).First() as RouteAttribute;
-            route.Template.ShouldBe("__anyservice");
+            route.Template.ShouldBe("[controller]");
         }
         [Theory]
-        [InlineData("Post", "POST", "{entityName}")]
-        [InlineData("PostMultipart", "POST", "__multipart/{entityName}")]
-        [InlineData("PostMultipartStream", "POST", "__multipart/{entityName}/__stream")]
-        [InlineData("GetAll", "GET", "{entityName}")]
-        [InlineData("Get", "GET", "{entityName}/{id}")]
-        [InlineData("Put", "PUT", "{entityName}/{id}")]
+        [InlineData("Post", "POST", null)]
+        [InlineData("PostMultipart", "POST", "__multipart")]
+        [InlineData("PostMultipartStream", "POST", "__stream")]
+        [InlineData("GetAll", "GET", null)]
+        [InlineData("Get", "GET", "{id}")]
+        [InlineData("Put", "PUT", "{id}")]
         public void ValidateVerbs(string methodName, string expHttpVerb, string expTemplate)
         {
-            var type = typeof(CrudController);
+            var type = typeof(GenericController<>);
             var mi = type.GetMethod(methodName);
             var att = mi.GetCustomAttributes(typeof(HttpMethodAttribute)).First() as HttpMethodAttribute;
             att.HttpMethods.First().ShouldBe(expHttpVerb);

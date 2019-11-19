@@ -8,8 +8,7 @@ namespace AnyService.Tests
         [Fact]
         public void AllConsts()
         {
-            Consts.AnyServiceControllerName.ShouldBe("__anyservice");
-            Consts.MultipartPrefix.ShouldBe("__multipart");
+            Consts.MultipartSuffix.ShouldBe("__multipart");
             Consts.StreamSuffix.ShouldBe("__stream");
         }
     }

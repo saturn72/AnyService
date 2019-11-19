@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AnyService.Audity;
 using AnyService.Events;
@@ -69,8 +67,10 @@ namespace AnyService.Services
         }
         public async Task<ServiceResponse> GetById(string id)
         {
-            var serviceResponse = new ServiceResponse();
-            serviceResponse.Data = id;
+            var serviceResponse = new ServiceResponse
+            {
+                Data = id
+            };
             if (!await _validator.ValidateForGet(serviceResponse))
                 return serviceResponse;
 
@@ -84,7 +84,7 @@ namespace AnyService.Services
                     Data = new
                     {
                         Data = data,
-                        CurrentUserId = _workContext.CurrentUserId
+                        _workContext.CurrentUserId
                     }
                 });
             }
@@ -105,7 +105,7 @@ namespace AnyService.Services
                     Data = new
                     {
                         Data = data,
-                        CurrentUserId = _workContext.CurrentUserId
+                        _workContext.CurrentUserId
                     }
                 });
             }
@@ -135,7 +135,7 @@ namespace AnyService.Services
                     Data = new
                     {
                         Data = updateResponse,
-                        CurrentUserId = _workContext.CurrentUserId
+                        _workContext.CurrentUserId
                     }
                 });
                 serviceResponse.Result = ServiceResult.Ok;
@@ -171,7 +171,7 @@ namespace AnyService.Services
                 Data = new
                 {
                     Data = deletedModel,
-                    CurrentUserId = _workContext.CurrentUserId
+                    _workContext.CurrentUserId
                 }
             });
             serviceResponse.Result = ServiceResult.Ok;
