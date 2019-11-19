@@ -9,7 +9,8 @@ namespace AnyService
 
         public TypeConfigRecord(Type type, string routePrefix, EventKeyRecord eventKeyRecord)
         {
-            RoutePrefix = routePrefix;
+            routePrefix = $"/{routePrefix}";
+            RoutePrefix = routePrefix.Replace("//", "/");
             Type = type;
             EventKeyRecord = eventKeyRecord;
         }

@@ -28,7 +28,7 @@ namespace AnyService.Tests
 
             var instance = ctor.Invoke(new object[] { maps });
             (instance as RouteMapper).Maps.Count().ShouldBe(1);
-            (instance as RouteMapper).Maps.First(c => c.RoutePrefix.Equals(expRoutePrefix, StringComparison.InvariantCultureIgnoreCase)).Type.ShouldBe(expType);
+            (instance as RouteMapper).Maps.First(c => c.RoutePrefix.Equals("/" + expRoutePrefix, StringComparison.InvariantCultureIgnoreCase)).Type.ShouldBe(expType);
         }
     }
 }
