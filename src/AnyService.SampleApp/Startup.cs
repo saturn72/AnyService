@@ -44,7 +44,7 @@ namespace AnyService.SampleApp
             {
                 var fn = e.FullName.ToLower();
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-                var routePrefix = "/" + e.Name;
+                var routePrefix = e.Name;
                 if (e.Equals(typeof(Dependent2Model)))
                     routePrefix =  routePrefix.Replace("model", "", System.StringComparison.InvariantCultureIgnoreCase);
                 return new TypeConfigRecord(e, routePrefix, ekr);

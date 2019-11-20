@@ -1,4 +1,4 @@
-﻿using AnyService.Controllers;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using System;
@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace AnyService
+namespace AnyService.Controllers
 {
     public class GenericControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
     {
@@ -19,17 +19,14 @@ namespace AnyService
 
         public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
         {
-            // This is designed to run after the default ControllerTypeProvider, 
-            // so the list of 'real' controllers has already been populated.
             foreach (var entityType in _entities)
             {
                 var typeName = entityType.Name + "Controller";
                 if (!feature.Controllers.Any(t => t.Name == typeName))
                 {
-                    // There's no controller for this entity, so add the generic version.
                     var controllerType = typeof(GenericController<>)
-                        .MakeGenericType(entityType).GetTypeInfo();
-                    feature.Controllers.Add(controllerType);
+                        .MakeGenericType(entityType);
+                    feature.Controllers.Add(controllerType.GetTypeInfo());
                 }
             }
         }

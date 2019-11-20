@@ -17,8 +17,8 @@ namespace AnyService.Tests
         public void RouteMapper_CreatedTests()
         {
             var type = typeof(RouteMapper);
-            var allCtors = type.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
-            var ctor = allCtors[0];
+            var pi = type.GetProperty("TypeConfigRecords");
+
             var expType = typeof(Myclass);
             var expRoutePrefix = "some-route-prefix";
             var maps = new[]
@@ -26,9 +26,9 @@ namespace AnyService.Tests
               new TypeConfigRecord(expType, expRoutePrefix, null),
             };
 
-            var instance = ctor.Invoke(new object[] { maps });
-            (instance as RouteMapper).Maps.Count().ShouldBe(1);
-            (instance as RouteMapper).Maps.First(c => c.RoutePrefix.Equals("/" + expRoutePrefix, StringComparison.InvariantCultureIgnoreCase)).Type.ShouldBe(expType);
+            pi.SetValue(null, maps);
+            RouteMapper.TypeConfigRecords.Count().ShouldBe(1);
+            RouteMapper.TypeConfigRecords.First(c => c.RoutePrefix.Equals(expRoutePrefix, StringComparison.InvariantCultureIgnoreCase)).Type.ShouldBe(expType);
         }
     }
 }

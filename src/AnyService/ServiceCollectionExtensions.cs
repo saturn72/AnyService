@@ -6,6 +6,7 @@ using AnyService.Audity;
 using Microsoft.Extensions.Configuration;
 using AnyService.Events;
 using AnyService;
+using AnyService.Controllers;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -47,8 +48,8 @@ namespace Microsoft.Extensions.DependencyInjection
                 foreach (var vt in vType.GetInterfaces())
                     services.AddTransient(vt, vType);
             }
-
-            services.AddSingleton(new RouteMapper(typeConfigRecords));
+            
+            RouteMapper.TypeConfigRecords = typeConfigRecords;
             services.AddScoped<WorkContext>();
             services.AddScoped(sp =>
             {
@@ -56,7 +57,6 @@ namespace Microsoft.Extensions.DependencyInjection
                 var wc = sp.GetService<WorkContext>();
                 return ek[wc.CurrentType];
             });
-
 
             var eventKeys = new EventKeys(typeConfigRecords);
             services.AddSingleton(c => eventKeys);

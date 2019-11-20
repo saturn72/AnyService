@@ -1,8 +1,8 @@
-﻿using AnyService.Controllers;
-using Microsoft.AspNetCore.Mvc.ApplicationModels;
+﻿using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using System;
+using System.Linq;
 
-namespace AnyService
+namespace AnyService.Controllers
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class GenericControllerNameConvention : Attribute, IControllerModelConvention
@@ -14,9 +14,8 @@ namespace AnyService
             {
                 return;
             }
-
             var entityType = controller.ControllerType.GenericTypeArguments[0];
-            controller.ControllerName = entityType.Name;
+            controller.ControllerName = RouteMapper.TypeConfigRecords.FirstOrDefault(t => t.Type == entityType)?.RoutePrefix ?? entityType.Name;
         }
     }
 }
