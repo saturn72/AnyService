@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using AnyService.Events;
 using AnyService;
 using AnyService.Controllers;
+using AnyService.Services.Security;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -22,7 +23,9 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 var fn = e.FullName.ToLower();
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-                return new TypeConfigRecord(e, "/" + e.Name, ekr);
+                var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
+
+                return new TypeConfigRecord(e, "/" + e.Name, ekr, pr, fn);
             });
             return AddAnyService(services, mvcBuilder, configuration, typeConfigRecords, validators);
         }
@@ -49,17 +52,23 @@ namespace Microsoft.Extensions.DependencyInjection
                     services.AddTransient(vt, vType);
             }
             
-            RouteMapper.TypeConfigRecords = typeConfigRecords;
+            TypeConfigRecordManager.TypeConfigRecords = typeConfigRecords;
             services.AddScoped<WorkContext>();
-            services.AddScoped(sp =>
-            {
-                var ek = sp.GetService<EventKeys>();
-                var wc = sp.GetService<WorkContext>();
-                return ek[wc.CurrentType];
-            });
+            services.AddScoped<IPermissionManager, PermissionManager>();
 
-            var eventKeys = new EventKeys(typeConfigRecords);
-            services.AddSingleton(c => eventKeys);
+            //services.AddScoped(sp =>
+            //{
+            //    var wc = sp.GetService<WorkContext>();
+            //    var ct = wc.CurrentType;
+            //    return TypeConfigRecordManager.GetRecord(ct).EventKeyRecord;
+            //});
+            //services.AddScoped(sp =>
+            //{
+            //    var wc = sp.GetService<WorkContext>();
+            //    var ct = wc.CurrentType;
+            //    return TypeConfigRecordManager.GetRecord(ct).PermissionRecord;
+            //});
+
             services.AddScoped<AuditHelper>();
             services.AddSingleton<IEventBus, EventBus>();
 

@@ -16,19 +16,20 @@ namespace AnyService.Tests
         [Fact]
         public void RouteMapper_CreatedTests()
         {
-            var type = typeof(RouteMapper);
+            var type = typeof(TypeConfigRecordManager);
             var pi = type.GetProperty("TypeConfigRecords");
 
             var expType = typeof(Myclass);
             var expRoutePrefix = "some-route-prefix";
             var maps = new[]
             {
-              new TypeConfigRecord(expType, expRoutePrefix, null),
+              new TypeConfigRecord(expType, expRoutePrefix, null, null, null),
             };
 
             pi.SetValue(null, maps);
-            RouteMapper.TypeConfigRecords.Count().ShouldBe(1);
-            RouteMapper.TypeConfigRecords.First(c => c.RoutePrefix.Equals(expRoutePrefix, StringComparison.InvariantCultureIgnoreCase)).Type.ShouldBe(expType);
+            TypeConfigRecordManager.TypeConfigRecords.Count().ShouldBe(1);
+            TypeConfigRecordManager.TypeConfigRecords.First(c => c.RoutePrefix.Equals(expRoutePrefix, StringComparison.InvariantCultureIgnoreCase)).Type.ShouldBe(expType);
+            TypeConfigRecordManager.GetRecord(expType).RoutePrefix.ShouldBe(expRoutePrefix);
         }
     }
 }

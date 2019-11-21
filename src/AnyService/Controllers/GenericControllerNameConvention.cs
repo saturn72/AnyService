@@ -15,7 +15,7 @@ namespace AnyService.Controllers
                 return;
             }
             var entityType = controller.ControllerType.GenericTypeArguments[0];
-            controller.ControllerName = RouteMapper.TypeConfigRecords.FirstOrDefault(t => t.Type == entityType)?.RoutePrefix ?? entityType.Name;
+            controller.ControllerName = TypeConfigRecordManager.TypeConfigRecords.FirstOrDefault(t => t.Type == entityType)?.RoutePrefix ?? entityType.Name;
         }
     }
 }

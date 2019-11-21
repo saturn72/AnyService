@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 
-namespace AnyService
+namespace AnyService.Middlewares
 {
-    public class AnyServiceMiddleware
+    public class AnyServiceWorkContextMiddleware
     {
         private readonly RequestDelegate _next;
         private static readonly IDictionary<string, TypeConfigRecord> RouteMaps = new Dictionary<string, TypeConfigRecord>();
-        public AnyServiceMiddleware(RequestDelegate next)
+        public AnyServiceWorkContextMiddleware(RequestDelegate next)
         {
             _next = next;
         }
@@ -33,7 +32,7 @@ namespace AnyService
             if (RouteMaps.TryGetValue(path, out TypeConfigRecord value))
                 return value;
 
-            value = RouteMapper.TypeConfigRecords.FirstOrDefault(r => path.StartsWithSegments("/" + r.RoutePrefix, StringComparison.CurrentCultureIgnoreCase));
+            value = TypeConfigRecordManager.TypeConfigRecords.FirstOrDefault(r => path.StartsWithSegments("/" + r.RoutePrefix, StringComparison.CurrentCultureIgnoreCase));
 
             return (RouteMaps[path] = value);
         }

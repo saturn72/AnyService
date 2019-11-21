@@ -1,6 +1,8 @@
-﻿using AnyService.Services;
+﻿using AnyService.Middlewares;
 using AnyService.SampleApp.Models;
 using AnyService.SampleApp.Validators;
+using AnyService.Services;
+using AnyService.Services.Security;
 using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -47,7 +49,9 @@ namespace AnyService.SampleApp
                 var routePrefix = e.Name;
                 if (e.Equals(typeof(Dependent2Model)))
                     routePrefix =  routePrefix.Replace("model", "", System.StringComparison.InvariantCultureIgnoreCase);
-                return new TypeConfigRecord(e, routePrefix, ekr);
+
+                var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
+                return new TypeConfigRecord(e, routePrefix, ekr, pr, fn);
             });
 
             services.AddAnyService(builder, Configuration, typeConfigRecords, validators);
@@ -83,7 +87,11 @@ namespace AnyService.SampleApp
 
             app.UseHttpsRedirection();
             app.UseRouting();
-            app.UseMiddleware<AnyServiceMiddleware>();
+
+            //you may use app.UseAnyService() to setup anyservice pipeline instead the two lines below
+            app.UseMiddleware<AnyServiceWorkContextMiddleware>();
+            app.UseMiddleware<AnyServicePermissionMiddleware>();
+            
             app.UseMvc();
         }
     }
