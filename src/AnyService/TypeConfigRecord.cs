@@ -1,6 +1,6 @@
 using System;
 using AnyService.Services;
-using AnyService.Services.Security;
+using AnyService.Core.Security;
 
 namespace AnyService
 {

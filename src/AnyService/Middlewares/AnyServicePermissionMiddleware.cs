@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AnyService.Services.Security;
+using AnyService.Core.Security;
 using Microsoft.AspNetCore.Http;
 
 namespace AnyService.Middlewares

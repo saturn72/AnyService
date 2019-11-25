@@ -1,4 +1,4 @@
-﻿namespace AnyService.Services.Security
+﻿namespace AnyService.Core.Security
 {
     public sealed class PermissionRecord
     {

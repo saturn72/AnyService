@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace AnyService.Services.Security
+namespace AnyService.Core.Security
 {
     public interface IUserPermissionsRepository
     {

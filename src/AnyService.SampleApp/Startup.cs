@@ -11,6 +11,11 @@ using Microsoft.Extensions.DependencyInjection;
 using AnyService.Services.FileStorage;
 using Microsoft.Extensions.Hosting;
 using System.Linq;
+using System;
+using AnyService.EasyCaching;
+using AnyService.Core.Caching;
+using AnyService.Core.Security;
+using AnyService.LiteDb;
 
 namespace AnyService.SampleApp
 {
@@ -38,7 +43,7 @@ namespace AnyService.SampleApp
                 new Dependent2ModelValidator(),
                 new MultipartSampleValidator(),
             };
-            
+
             //use this command when route== entity name
             //services.AddAnyService(builder, Configuration, entities, validators);
 
@@ -48,19 +53,35 @@ namespace AnyService.SampleApp
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
                 var routePrefix = e.Name;
                 if (e.Equals(typeof(Dependent2Model)))
-                    routePrefix =  routePrefix.Replace("model", "", System.StringComparison.InvariantCultureIgnoreCase);
+                    routePrefix = routePrefix.Replace("model", "", System.StringComparison.InvariantCultureIgnoreCase);
 
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
                 return new TypeConfigRecord(e, routePrefix, ekr, pr, fn);
             });
 
             services.AddAnyService(builder, Configuration, typeConfigRecords, validators);
+
             ConfigureLiteDb(services);
+            ConfigureCaching(services);
         }
+
+        private void ConfigureCaching(IServiceCollection services)
+        {
+            services.AddSingleton<ICacheManager, EasyCachingCacheManager>();
+            services.AddEasyCaching(options => options.UseInMemory("default"));
+
+            var easycachingconfig = new EasyCachingConfig();
+            Configuration.GetSection("caching").Bind(easycachingconfig);
+
+            services.AddSingleton(easycachingconfig);
+            services.AddSingleton<ICacheManager, EasyCachingCacheManager>();
+        }
+
         private void ConfigureLiteDb(IServiceCollection services)
         {
             var liteDbName = "anyservice-testsapp.db";
-            services.AddTransient<IFileStoreManager>(sp => new LiteDb.FileStoreManager(liteDbName));
+            services.AddSingleton<IUserPermissionsRepository, UserPermissionRepository>();
+            services.AddTransient<IFileStoreManager>(sp => new FileStoreManager(liteDbName));
             //configure db repositories
             services.AddTransient<IRepository<DependentModel>>(sp => new LiteDb.Repository<DependentModel>(liteDbName));
             services.AddTransient<IRepository<Dependent2Model>>(sp => new LiteDb.Repository<Dependent2Model>(liteDbName));
@@ -91,7 +112,7 @@ namespace AnyService.SampleApp
             //you may use app.UseAnyService() to setup anyservice pipeline instead the two lines below
             app.UseMiddleware<AnyServiceWorkContextMiddleware>();
             app.UseMiddleware<AnyServicePermissionMiddleware>();
-            
+
             app.UseMvc();
         }
     }

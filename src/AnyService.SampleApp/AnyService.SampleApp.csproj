@@ -6,11 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="EasyCaching.InMemory" Version="0.8.0" />
     <PackageReference Include="LiteDb" Version="4.1.4" />
     <PackageReference Include="System.Text.Json" Version="4.6.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AnyServiceModules\AnyService.EasyCaching\AnyService.EasyCaching.csproj" />
     <ProjectReference Include="..\AnyService\AnyService.csproj" />
     <ProjectReference Include="..\AnyServiceModules\AnyService.LiteDb\AnyService.LiteDb.csproj" />
   </ItemGroup>

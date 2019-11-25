@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using AnyService.Events;
 using AnyService;
 using AnyService.Controllers;
+using AnyService.Core.Security;
 using AnyService.Services.Security;
 
 namespace Microsoft.Extensions.DependencyInjection
