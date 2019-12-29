@@ -28,9 +28,7 @@ namespace Microsoft.AspNetCore.Mvc
                     sr => {
                         if(sr.Data!=null || sr.Message.HasValue())
                         {
-                            var res = new ObjectResult(new{ sr.Message, sr.Data});
-                            res.StatusCode = StatusCodes.Status500InternalServerError;
-                            return res;
+                            return new ObjectResult(new{ sr.Message, sr.Data}) { StatusCode = StatusCodes.Status500InternalServerError };
                         }
                         return new StatusCodeResult(StatusCodes.Status500InternalServerError);
                     }

@@ -8,7 +8,6 @@
   <ItemGroup>
     <PackageReference Include="EasyCaching.InMemory" Version="0.8.0" />
     <PackageReference Include="LiteDb" Version="4.1.4" />
-    <PackageReference Include="System.Text.Json" Version="4.6.0" />
   </ItemGroup>
 
   <ItemGroup>

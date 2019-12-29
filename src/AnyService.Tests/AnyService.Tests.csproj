@@ -11,13 +11,13 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
     <PackageReference Include="Moq" Version="4.12.0" />
     <PackageReference Include="Shouldly" Version="3.0.2" />
+    <PackageReference Include="System.Text.Json" Version="4.7.0" />
     <PackageReference Include="xunit" Version="2.4.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\AnyService\AnyService.csproj" />
-    <ProjectReference Include="..\..\..\Saturn72.Extensions\src\Saturn72.Extensions\Saturn72.Extensions.csproj" />
   </ItemGroup>
 
 </Project>

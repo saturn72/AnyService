@@ -15,11 +15,11 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.0.0" />
-    <PackageReference Include="System.Text.Json" Version="4.6.0" />
+    <PackageReference Include="System.Text.Json" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Saturn72.Extensions\src\Saturn72.Extensions\Saturn72.Extensions.csproj" />
+    <ProjectReference Include="..\..\..\saturn72.extensions\src\Saturn72.Extensions\Saturn72.Extensions.csproj" />
     <ProjectReference Include="..\AnyService.Core\AnyService.Core.csproj" />
   </ItemGroup>
 
