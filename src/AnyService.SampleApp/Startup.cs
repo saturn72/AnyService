@@ -2,7 +2,6 @@
 using AnyService.SampleApp.Models;
 using AnyService.SampleApp.Validators;
 using AnyService.Services;
-using AnyService.Services.Security;
 using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -11,7 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using AnyService.Services.FileStorage;
 using Microsoft.Extensions.Hosting;
 using System.Linq;
-using System;
 using AnyService.EasyCaching;
 using AnyService.Core.Caching;
 using AnyService.Core.Security;
@@ -80,7 +78,7 @@ namespace AnyService.SampleApp
         private void ConfigureLiteDb(IServiceCollection services)
         {
             var liteDbName = "anyservice-testsapp.db";
-            services.AddSingleton<IUserPermissionsRepository, UserPermissionRepository>();
+            services.AddSingleton<IUserPermissionsRepository>(p => new UserPermissionRepository(liteDbName));
             services.AddTransient<IFileStoreManager>(sp => new FileStoreManager(liteDbName));
             //configure db repositories
             services.AddTransient<IRepository<DependentModel>>(sp => new LiteDb.Repository<DependentModel>(liteDbName));

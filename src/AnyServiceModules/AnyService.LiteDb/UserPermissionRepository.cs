@@ -6,9 +6,14 @@ namespace AnyService.LiteDb
 {
     public class UserPermissionRepository : IUserPermissionsRepository
     {
-        public Task<IEnumerable<UserPermissions>> GetUserPermissions(string userId)
+        private readonly string _dbName;
+        public UserPermissionRepository(string dbName)
         {
-            throw new System.NotImplementedException();
+            _dbName = dbName;
+        }
+        public async Task<IEnumerable<UserPermissions>> GetUserPermissions(string userId)
+        {
+            return await Task.Run(() => LiteDbUtility.Query(_dbName, db => db.GetCollection<UserPermissions>().Find(up => up.UserId == userId)));
         }
     }
 }

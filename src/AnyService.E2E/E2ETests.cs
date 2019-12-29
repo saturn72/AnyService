@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AnyService.SampleApp.Models;
@@ -147,6 +148,36 @@ namespace AnyService.E2E
         }
 
         [Test]
+        public async Task CRUD_NotPertmitted()
+        {
+            var uri = "dependent2/";
+            var model = new
+            {
+                Value = "init value"
+            };
+            //create
+            var res = await Client.PostAsJsonAsync(uri, model);
+            res.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+            //read any
+            res = await Client.GetAsync(uri + "123");
+            res.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+
+            //read all
+            res = await Client.GetAsync(uri);
+            res.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+            //update
+            var updateModel = new
+            {
+                Value = "new Value"
+            };
+            res = await Client.PutAsJsonAsync(uri + "123", updateModel);
+            res.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+
+            //delete
+            res = await Client.DeleteAsync(uri + "123");
+            res.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        }
+        [Test]
         public async Task CRUD_ControllerRouteOverwrite()
         {
             var uri = "dependent2/";
@@ -156,6 +187,8 @@ namespace AnyService.E2E
             };
             //create
             var res = await Client.PostAsJsonAsync(uri, model);
+            res.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+
             var content = await res.Content.ReadAsStringAsync();
             res.EnsureSuccessStatusCode();
             var jObj = JObject.Parse(content);

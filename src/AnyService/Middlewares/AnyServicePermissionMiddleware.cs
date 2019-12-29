@@ -32,7 +32,7 @@ namespace AnyService.Middlewares
             var typeConfigRecord = TypeConfigRecordManager.GetRecord(workContext.CurrentType);
             var httpMethod = context.Request.Method;
             var permissionKey = HttpMethodToPerMissionKey[httpMethod](typeConfigRecord);
-
+            ff
             var id = context.Request.Query["id"].ToString();
             var isPost = httpMethod.Equals(HttpMethods.Post, StringComparison.InvariantCultureIgnoreCase);
             if (string.IsNullOrEmpty(id) && !isPost)
