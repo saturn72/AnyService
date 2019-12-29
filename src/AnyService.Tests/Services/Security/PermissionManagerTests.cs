@@ -1,4 +1,5 @@
 ﻿using AnyService.Core.Caching;
+using AnyService.Core.Security;
 using AnyService.Services.Security;
 using Moq;
 using Shouldly;

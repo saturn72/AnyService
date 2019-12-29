@@ -16,6 +16,7 @@ using System.Net;
 
 namespace AnyService.Controllers
 {
+    [ApiController]
     [Route("[controller]")]
     [GenericControllerNameConvention]
     public class GenericController<TDomainModel> : ControllerBase where TDomainModel : IDomainModelBase
