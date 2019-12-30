@@ -132,15 +132,20 @@ TDB
 
 ## Authentication
 
-Authentication is fully handled by `asp.net core`. Please refer to `asp.net core` documentation to implement you authentication model.
+Authentication is fully handled by `asp.net core`. Please refer to `asp.net core` documentation to implement your authentication model.
 
 ## Authorization
 
 Unlike authentication, authorization is fully handled by `AnyService`.
 Authorization has 2 aspects addressed by `AnyService`:
 
-- Can the current user perform CRUD operation on given URI?
-- Given that a user has the permission to perform CRUD operation on URI, can it access CRUD operation on specific item? In other words: can the user read/update/delete an entity with specific ID?
+1. Configuring user's access to specific resource (URI) aka _Can user perform CRUD operation on a given URI?_
+
+2. Manage CRUD Permissions on authorized resource (URI) aka _Given that a user has permission to perform CRUD operation on given URI, can the user perform read/update/delete operations on specific entity?_
+
+### Configuring user's access to specific resource (URI)
+
+### Manage CRUD Permissions on authorized resource (URI)
 
 ## Combine Custom Controllers with `AnyEntity` Middleware
 
