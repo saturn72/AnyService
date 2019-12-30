@@ -141,11 +141,22 @@ Authorization has 2 aspects addressed by `AnyService`:
 
 1. Configuring user's access to specific resource (URI) aka _Can user perform CRUD operation on a given URI?_
 
-2. Manage CRUD Permissions on authorized resource (URI) aka _Given that a user has permission to perform CRUD operation on given URI, can the user perform read/update/delete operations on specific entity?_
+2. Manage CRUD Permissions on an authorized resource (URI) aka _Given that a user has permission to perform CRUD operation on given URI, can the user perform read/update/delete operations on specific entity?_
 
 ### Configuring user's access to specific resource (URI)
 
-### Manage CRUD Permissions on authorized resource (URI)
+Configuring authrozation for specific controller is done by sending an instance of `AuthorizeAttribute` to the registration of you model.
+You may set authorization to controller and override each CRUD method.
+
+TBD - add example for controller authorization
+TBD - add example for controller authorization with CRUD method override
+TBD - add example for CRUD method authorization
+
+### Manage CRUD Permissions on an authorized resource (URI)
+
+By default once a user creates an entity on a resource, `AnyService` takes care to manage permissions over the created entity. Once entity is created, the creator, and only the creator has the previliges to perform CRUD operations on it, while other users are blocked.
+
+TBD - Show how to disable the authz behavior in configuration
 
 ## Combine Custom Controllers with `AnyEntity` Middleware
 
