@@ -158,11 +158,19 @@ By default once a user creates an entity on a resource, `AnyService` takes care 
 
 TBD - Show how to disable the authz behavior in configuration
 
-## Combine Custom Controllers with `AnyEntity` Middleware
+## Model Validation
+
+Whe `POST` and `PUT` Http methods are used, the data within request's body is called model.
+By default `AnyService` does not perform any model validation, and leaves it to the client side.
+If you want to perform model validation, you should implement `ICrudValidator<T>` generic interface.
+
+TBD - add example here
+
+## Audity
 
 TBD
 
-## Audity
+## Combine Custom Controllers with `AnyEntity` Middleware
 
 TBD
 
