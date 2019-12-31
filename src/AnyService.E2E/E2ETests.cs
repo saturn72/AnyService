@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using AnyService.SampleApp;
 using AnyService.SampleApp.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -12,7 +13,7 @@ using Shouldly;
 
 namespace AnyService.E2E
 {
-    public class E2ETests : WebApplicationFactoryFixture
+    public class E2ETests : E2ETestBase<Startup>
     {
         [Test]
         public async Task CRUD_Dependent()

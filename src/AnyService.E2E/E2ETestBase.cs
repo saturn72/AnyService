@@ -6,9 +6,9 @@ using System.Net.Http;
 namespace AnyService.E2E
 {
     [TestFixture]
-    public class WebApplicationFactoryFixture : WebApplicationFactory<Startup>
+    public class E2ETestBase<TStartup> : WebApplicationFactory<TStartup> where TStartup : class
     {
-        protected WebApplicationFactory<Startup> Factory;
+        protected WebApplicationFactory<TStartup> Factory;
 
         protected HttpClient Client;
 
@@ -16,7 +16,7 @@ namespace AnyService.E2E
         [OneTimeSetUp]
         public void Init()
         {
-            Factory = new WebApplicationFactory<Startup>();
+            Factory = new WebApplicationFactory<TStartup>();
             Client = Factory.CreateClient();
         }
         [OneTimeTearDown]

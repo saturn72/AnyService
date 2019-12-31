@@ -4,7 +4,7 @@ using AnyService.Audity;
 
 namespace AnyService.SampleApp.Models
 {
-    public class Dependent2Model : IDomainModelBase, IFullAudit
+    public class Dependent2 : IDomainModelBase, IFullAudit
     {
         public string Id { get; set; }
         public string Value { get; set; }

@@ -5,10 +5,10 @@ using AnyService.SampleApp.Models;
 
 namespace AnyService.SampleApp.Validators
 {
-    public class Dependent2ModelValidator : ICrudValidator<Dependent2Model>
+    public class Dependent2ModelValidator : ICrudValidator<Dependent2>
     {
-        public Type Type => typeof(Dependent2Model);
-        public Task<bool> ValidateForCreate(Dependent2Model model, ServiceResponse serviceResponse)
+        public Type Type => typeof(Dependent2);
+        public Task<bool> ValidateForCreate(Dependent2 model, ServiceResponse serviceResponse)
         {
             return Task.FromResult(true);
         }
@@ -23,7 +23,7 @@ namespace AnyService.SampleApp.Validators
             return Task.FromResult(true);
         }
 
-        public Task<bool> ValidateForUpdate(Dependent2Model model, ServiceResponse serviceResponse)
+        public Task<bool> ValidateForUpdate(Dependent2 model, ServiceResponse serviceResponse)
         {
             return Task.FromResult(true);
         }

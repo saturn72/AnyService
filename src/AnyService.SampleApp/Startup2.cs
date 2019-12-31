@@ -1,6 +1,5 @@
 ﻿using AnyService.Middlewares;
 using AnyService.SampleApp.Models;
-using AnyService.SampleApp.Validators;
 using AnyService.Services;
 using LiteDB;
 using Microsoft.AspNetCore.Builder;
@@ -9,7 +8,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AnyService.Services.FileStorage;
 using Microsoft.Extensions.Hosting;
-using System.Linq;
 using AnyService.EasyCaching;
 using AnyService.Core.Caching;
 using AnyService.Core.Security;
@@ -17,9 +15,9 @@ using AnyService.LiteDb;
 
 namespace AnyService.SampleApp
 {
-    public class Startup
+    public class Startup2
     {
-        public Startup(IConfiguration configuration)
+        public Startup2(IConfiguration configuration)
         {
             Configuration = configuration;
         }
@@ -33,31 +31,9 @@ namespace AnyService.SampleApp
             {
                 typeof(DependentModel),
                 typeof(Dependent2),
-                typeof(MultipartSampleModel)
-            };
-            var validators = new ICrudValidator[]
-            {
-                new DependentModelValidator(),
-                new Dependent2ModelValidator(),
-                new MultipartSampleValidator(),
             };
 
-            //use this command when route== entity name
-            //services.AddAnyService(builder, Configuration, entities, validators);
-
-            var typeConfigRecords = entities.Select(e =>
-            {
-                var fn = e.FullName.ToLower();
-                var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-                var routePrefix = e.Name;
-                if (e.Equals(typeof(Dependent2)))
-                    routePrefix = routePrefix.Replace("model", "", System.StringComparison.InvariantCultureIgnoreCase);
-
-                var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-                return new TypeConfigRecord(e, routePrefix, ekr, pr, fn);
-            });
-
-            services.AddAnyService(builder, typeConfigRecords, validators);
+            services.AddAnyService(builder, entities);
 
             ConfigureLiteDb(services);
             ConfigureCaching(services);

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using AnyService.Services;
 using AnyService.Audity;
-using Microsoft.Extensions.Configuration;
 using AnyService.Events;
 using AnyService;
 using AnyService.Controllers;
@@ -16,7 +15,20 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IServiceCollection AddAnyService(this IServiceCollection services,
             IMvcBuilder mvcBuilder,
-            IConfiguration configuration,
+            IEnumerable<Type> entities)
+        {
+            var typeConfigRecords = entities.Select(e =>
+            {
+                var fn = e.FullName.ToLower();
+                var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
+                var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
+
+                return new TypeConfigRecord(e, "/" + e.Name, ekr, pr, fn);
+            });
+            return AddAnyService(services, mvcBuilder, typeConfigRecords, null);
+        }
+        public static IServiceCollection AddAnyService(this IServiceCollection services,
+            IMvcBuilder mvcBuilder,
             IEnumerable<Type> entities,
             IEnumerable<ICrudValidator> validators)
         {
@@ -28,22 +40,18 @@ namespace Microsoft.Extensions.DependencyInjection
 
                 return new TypeConfigRecord(e, "/" + e.Name, ekr, pr, fn);
             });
-            return AddAnyService(services, mvcBuilder, configuration, typeConfigRecords, validators);
+            return AddAnyService(services, mvcBuilder, typeConfigRecords, validators);
         }
 
         public static IServiceCollection AddAnyService(this IServiceCollection services,
             IMvcBuilder mvcBuilder,
-            IConfiguration configuration,
             IEnumerable<TypeConfigRecord> typeConfigRecords,
             IEnumerable<ICrudValidator> validators)
         {
             mvcBuilder.ConfigureApplicationPartManager(apm =>
-                apm.FeatureProviders.Add(new GenericControllerFeatureProvider(typeConfigRecords.Select(e =>e.Type))));
+                apm.FeatureProviders.Add(new GenericControllerFeatureProvider(typeConfigRecords.Select(e => e.Type))));
             services.AddTransient(typeof(CrudService<>));
 
-            var anyServiceConfig = new AnyServiceConfig();
-            configuration.GetSection("anyservice").Bind(anyServiceConfig);
-            services.AddSingleton(anyServiceConfig);
             var validatorFactory = new ValidatorFactory(validators);
             services.AddSingleton(validatorFactory);
             foreach (var v in validators)
@@ -52,7 +60,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 foreach (var vt in vType.GetInterfaces())
                     services.AddTransient(vt, vType);
             }
-            
+
             TypeConfigRecordManager.TypeConfigRecords = typeConfigRecords;
             services.AddScoped<WorkContext>();
             services.AddScoped<IPermissionManager, PermissionManager>();
