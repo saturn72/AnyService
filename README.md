@@ -154,7 +154,9 @@ TBD - add example for CRUD method authorization
 
 ### Manage CRUD Permissions on an authorized resource (URI)
 
-By default once a user creates an entity on a resource, `AnyService` takes care to manage permissions over the created entity. Once entity is created, the creator, and only the creator has the previliges to perform CRUD operations on it, while other users are blocked.
+By default when a user creates an entities, `AnyService` takes care to manage permissions over the created entities. Once entity is created, the creator, and only the creator has the previliges to perform CRUD operations on it, while other users are blocked from doing so.
+
+To disable the automatic permission management, set the value of `ManageEntityPermissions` of `AnyServiceOptions` to `false`.
 
 TBD - Show how to disable the authz behavior in configuration
 
