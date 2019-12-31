@@ -1,6 +1,11 @@
 using NUnit.Framework;
 using AnyService.SampleApp;
 using System.Threading.Tasks;
+using System.Net.Http;
+using Newtonsoft.Json.Linq;
+using System;
+using Shouldly;
+using System.Linq;
 
 namespace AnyService.E2E
 {
