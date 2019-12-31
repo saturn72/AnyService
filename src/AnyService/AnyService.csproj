@@ -20,7 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\saturn72.extensions\src\Saturn72.Extensions\Saturn72.Extensions.csproj" />
     <ProjectReference Include="..\AnyService.Core\AnyService.Core.csproj" />
   </ItemGroup>
 
