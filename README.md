@@ -172,6 +172,12 @@ TBD - add example here
 
 TBD
 
+## CRUD Events
+`AnyService` raises event whenever CRUD operation is preformed. 
+
+TBD - show how to consume event
+TBD - show how to modify event key
+
 ## Combine Custom Controllers with `AnyEntity` Middleware
 
 TBD
