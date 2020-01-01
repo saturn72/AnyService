@@ -1,5 +1,4 @@
-﻿using AnyService.Middlewares;
-using AnyService.SampleApp.Models;
+﻿using AnyService.SampleApp.Models;
 using AnyService.SampleApp.Validators;
 using AnyService.Services;
 using LiteDB;
@@ -28,13 +27,15 @@ namespace AnyService.SampleApp
         public void ConfigureServices(IServiceCollection services)
         {
             var builder = services.AddMvc(o => o.EnableEndpointRouting = false);
+            // builder.PartManager
+
 
             var entities = new[]
             {
                 typeof(DependentModel),
                 typeof(Dependent2),
                 typeof(MultipartSampleModel)
-            };
+                        };
             var validators = new ICrudValidator[]
             {
                 new DependentModelValidator(),
@@ -54,10 +55,19 @@ namespace AnyService.SampleApp
                     routePrefix = routePrefix.Replace("model", "", System.StringComparison.InvariantCultureIgnoreCase);
 
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-                return new TypeConfigRecord(e, routePrefix, ekr, pr, fn);
+                return new TypeConfigRecord
+                {
+                    Type = e,
+                    RoutePrefix = routePrefix,
+                    EventKeyRecord = ekr,
+                    PermissionRecord = pr,
+                    EntityKey = fn,
+                };
             });
-
-            services.AddAnyService(builder, typeConfigRecords, validators);
+            services.AddAnyService(new AnyServiceConfig
+            {
+                TypeConfigRecords = typeConfigRecords
+            });
 
             ConfigureLiteDb(services);
             ConfigureCaching(services);
@@ -107,9 +117,10 @@ namespace AnyService.SampleApp
             app.UseHttpsRedirection();
             app.UseRouting();
 
+            app.UseAnyService();
             //you may use app.UseAnyService() to setup anyservice pipeline instead the two lines below
-            app.UseMiddleware<AnyServiceWorkContextMiddleware>();
-            app.UseMiddleware<AnyServicePermissionMiddleware>();
+            // app.UseMiddleware<AnyServiceWorkContextMiddleware>();
+            // app.UseMiddleware<AnyServicePermissionMiddleware>();
 
             app.UseMvc();
         }

@@ -1,5 +1,9 @@
-﻿using AnyService.Middlewares;
+﻿using System.Collections.Generic;
+using System.Linq;
+using AnyService.Controllers;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AnyService
 {
@@ -7,8 +11,14 @@ namespace AnyService
     {
         public static IApplicationBuilder UseAnyService(this IApplicationBuilder app)
         {
-            app.UseMiddleware<AnyServiceWorkContextMiddleware>();
-            app.UseMiddleware<AnyServicePermissionMiddleware>();
+            var sp = app.ApplicationServices;
+            var apm = sp.GetService<ApplicationPartManager>();
+            var typeConfigRecords = sp.GetService<IEnumerable<TypeConfigRecord>>();
+            var types = typeConfigRecords.Select(e => e.Type).ToArray();
+            apm.FeatureProviders.Add(new GenericControllerFeatureProvider(types));
+
+            // app.UseMiddleware<AnyServiceWorkContextMiddleware>();
+            // app.UseMiddleware<AnyServicePermissionMiddleware>();
 
             return app;
         }

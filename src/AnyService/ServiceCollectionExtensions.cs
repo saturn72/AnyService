@@ -5,16 +5,15 @@ using AnyService.Services;
 using AnyService.Audity;
 using AnyService.Events;
 using AnyService;
-using AnyService.Controllers;
 using AnyService.Core.Security;
 using AnyService.Services.Security;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {
         public static IServiceCollection AddAnyService(this IServiceCollection services,
-            IMvcBuilder mvcBuilder,
             IEnumerable<Type> entities)
         {
             var typeConfigRecords = entities.Select(e =>
@@ -22,48 +21,58 @@ namespace Microsoft.Extensions.DependencyInjection
                 var fn = e.FullName.ToLower();
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-
-                return new TypeConfigRecord(e, "/" + e.Name, ekr, pr, fn);
+                return new TypeConfigRecord
+                {
+                    Type = e,
+                    RoutePrefix = "/" + e.Name,
+                    EventKeyRecord = ekr,
+                    PermissionRecord = pr,
+                    EntityKey = fn,
+                };
             });
-            return AddAnyService(services, mvcBuilder, typeConfigRecords, null);
-        }
-        public static IServiceCollection AddAnyService(this IServiceCollection services,
-            IMvcBuilder mvcBuilder,
-            IEnumerable<Type> entities,
-            IEnumerable<ICrudValidator> validators)
-        {
-            var typeConfigRecords = entities.Select(e =>
+            var config = new AnyServiceConfig
             {
-                var fn = e.FullName.ToLower();
-                var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-                var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-
-                return new TypeConfigRecord(e, "/" + e.Name, ekr, pr, fn);
-            });
-            return AddAnyService(services, mvcBuilder, typeConfigRecords, validators);
+                TypeConfigRecords = typeConfigRecords
+            };
+            return AddAnyService(services, config);
         }
+        // public static IServiceCollection AddAnyService(this IServiceCollection services,
+        //     IEnumerable<Type> entities,
+        //     IEnumerable<ICrudValidator> validators)
+        // {
+        //     var typeConfigRecords = entities.Select(e =>
+        //     {
+        //         var fn = e.FullName.ToLower();
+        //         var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
+        //         var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
+
+        //         return new TypeConfigRecord(e, "/" + e.Name, ekr, pr, fn);
+        //     });
+        //     return AddAnyService(services, typeConfigRecords, validators, null);
+        // }
 
         public static IServiceCollection AddAnyService(this IServiceCollection services,
-            IMvcBuilder mvcBuilder,
-            IEnumerable<TypeConfigRecord> typeConfigRecords,
-            IEnumerable<ICrudValidator> validators)
+            AnyServiceConfig config)
         {
-            mvcBuilder.ConfigureApplicationPartManager(apm =>
-                apm.FeatureProviders.Add(new GenericControllerFeatureProvider(typeConfigRecords.Select(e => e.Type))));
-            services.AddTransient(typeof(CrudService<>));
+            services.TryAddSingleton(config ?? new AnyServiceConfig());
+            // mvcBuilder.ConfigureApplicationPartManager(apm =>
+            //     apm.FeatureProviders.Add(new GenericControllerFeatureProvider(typeConfigRecords.Select(e => e.Type))));
+            services.TryAddTransient(typeof(CrudService<>));
 
-            var validatorFactory = new ValidatorFactory(validators);
-            services.AddSingleton(validatorFactory);
-            foreach (var v in validators)
-            {
-                var vType = v.GetType();
-                foreach (var vt in vType.GetInterfaces())
-                    services.AddTransient(vt, vType);
-            }
+            // services.
+            services.AddSingleton(config.TypeConfigRecords);
+            // var validatorFactory = new ValidatorFactory(validators);
+            // services.TryAddSingleton(validatorFactory);
+            // foreach (var v in validators)
+            // {
+            //     var vType = v.GetType();
+            //     foreach (var vt in vType.GetInterfaces())
+            //         services.TryAddTransient(vt, vType);
+            // }
 
-            TypeConfigRecordManager.TypeConfigRecords = typeConfigRecords;
-            services.AddScoped<WorkContext>();
-            services.AddScoped<IPermissionManager, PermissionManager>();
+            TypeConfigRecordManager.TypeConfigRecords = config.TypeConfigRecords;
+            services.TryAddScoped<WorkContext>();
+            services.TryAddScoped<IPermissionManager, PermissionManager>();
 
             //services.AddScoped(sp =>
             //{
@@ -78,8 +87,8 @@ namespace Microsoft.Extensions.DependencyInjection
             //    return TypeConfigRecordManager.GetRecord(ct).PermissionRecord;
             //});
 
-            services.AddScoped<AuditHelper>();
-            services.AddSingleton<IEventBus, EventBus>();
+            services.TryAddScoped<AuditHelper>();
+            services.TryAddSingleton<IEventBus, EventBus>();
 
             return services;
         }

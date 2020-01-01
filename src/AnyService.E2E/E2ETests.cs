@@ -13,7 +13,7 @@ using Shouldly;
 
 namespace AnyService.E2E
 {
-    public class E2ETests : E2ETestBase<Startup>
+    public class E2ETests : E2ETestBase
     {
         [Test]
         public async Task CRUD_Dependent()

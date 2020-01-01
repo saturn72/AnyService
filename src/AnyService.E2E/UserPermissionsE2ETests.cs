@@ -1,17 +1,41 @@
 using NUnit.Framework;
-using AnyService.SampleApp;
 using System.Threading.Tasks;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using System;
 using Shouldly;
 using System.Linq;
+using Xunit;
+using Microsoft.AspNetCore.Mvc.Testing;
+using AnyService.SampleApp;
+using AnyService.SampleApp.Models;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AnyService.E2E
 {
-    public class SimpleConfigurationE2ETest : E2ETestBase<Startup2>
+    public class SimpleConfigurationE2ETest : IClassFixture<WebApplicationFactory<Startup>>
     {
-        [Test]
+        private readonly WebApplicationFactory<Startup> _factory;
+        private readonly HttpClient _client;
+        public SimpleConfigurationE2ETest(WebApplicationFactory<Startup> factory)
+        {
+            _factory = factory;
+            _client = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    services.AddMvc(o => o.EnableEndpointRouting = false);
+                    var entities = new[]
+                    {
+                    typeof(DependentModel),
+                    typeof(Dependent2),
+                    typeof(MultipartSampleModel)
+                    };
+                    services.AddAnyService(entities);
+                });
+            }).CreateClient();
+        }
+        [Fact]
         public async Task UserPermissionsE2ETests()
         {
             var uri = "dependentmodel/";
@@ -21,7 +45,7 @@ namespace AnyService.E2E
             };
 
             //create an antity
-            var res = await Client.PostAsJsonAsync(uri, model);
+            var res = await _client.PostAsJsonAsync(uri, model);
             var content = await res.Content.ReadAsStringAsync();
             res.EnsureSuccessStatusCode();
             var jObj = JObject.Parse(content);
@@ -30,7 +54,7 @@ namespace AnyService.E2E
             jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
 
             //read by creator
-            res = await Client.GetAsync(uri + id);
+            res = await _client.GetAsync(uri + id);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
@@ -39,7 +63,7 @@ namespace AnyService.E2E
 
             throw new NotImplementedException("read by another user - declined");
             //read all by creator
-            res = await Client.GetAsync(uri);
+            res = await _client.GetAsync(uri);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
@@ -53,7 +77,7 @@ namespace AnyService.E2E
             {
                 Value = "new Value"
             };
-            res = await Client.PutAsJsonAsync(uri + id, updateModel);
+            res = await _client.PutAsJsonAsync(uri + id, updateModel);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
@@ -64,7 +88,7 @@ namespace AnyService.E2E
             throw new NotImplementedException("delete all by another user - declined");
 
             //delete by cretor
-            res = await Client.DeleteAsync(uri + id);
+            res = await _client.DeleteAsync(uri + id);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
@@ -72,7 +96,7 @@ namespace AnyService.E2E
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
 
             //get deleted
-            res = await Client.GetAsync(uri + id);
+            res = await _client.GetAsync(uri + id);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
