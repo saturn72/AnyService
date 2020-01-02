@@ -21,7 +21,7 @@ namespace AnyService.Middlewares
 
             var path = context.Request.Path;
             var typeConfigRecord = GetRouteMap(path);
-            if (!typeConfigRecord.Equals(default))
+            if (typeConfigRecord != null && !typeConfigRecord.Equals(default))
             {
                 workContext.CurrentType = typeConfigRecord.Type;
             }

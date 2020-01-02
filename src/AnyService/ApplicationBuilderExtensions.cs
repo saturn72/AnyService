@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using AnyService.Controllers;
+using AnyService.Middlewares;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +18,7 @@ namespace AnyService
             var types = typeConfigRecords.Select(e => e.Type).ToArray();
             apm.FeatureProviders.Add(new GenericControllerFeatureProvider(types));
 
-            // app.UseMiddleware<AnyServiceWorkContextMiddleware>();
+            app.UseMiddleware<AnyServiceWorkContextMiddleware>();
             // app.UseMiddleware<AnyServicePermissionMiddleware>();
 
             return app;

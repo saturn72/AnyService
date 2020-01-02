@@ -11,5 +11,6 @@ namespace AnyService
         public EventKeyRecord EventKeyRecord { get; set; }
         public PermissionRecord PermissionRecord { get; set; }
         public string EntityKey { get; set; }
+        public ICrudValidator Validator { get; set; }
     }
 }
