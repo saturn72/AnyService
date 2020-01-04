@@ -13,11 +13,20 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AnyService.E2E
 {
-    public class SimpleConfigurationE2ETest : IClassFixture<WebApplicationFactory<Startup>>
+    public class SimpleApiE2ETest : IClassFixture<WebApplicationFactory<Startup>>
+    {
+        [Fact]
+        public void RunTest()
+        {
+            throw nameof Syatem.NotImplementedException("Perform the simplest configuration for any service")
+        }
+
+    }
+    public class UserPermissionsE2ETest : IClassFixture<WebApplicationFactory<Startup>>
     {
         private readonly WebApplicationFactory<Startup> _factory;
         private readonly HttpClient _client;
-        public SimpleConfigurationE2ETest(WebApplicationFactory<Startup> factory)
+        public UserPermissionsE2ETest(WebApplicationFactory<Startup> factory)
         {
             _factory = factory;
             _client = _factory.WithWebHostBuilder(builder =>
