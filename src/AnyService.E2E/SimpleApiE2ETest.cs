@@ -6,28 +6,30 @@ using System.Linq;
 using AnyService.SampleApp.Models;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using System;
+using Microsoft.AspNetCore.Hosting;
 
 namespace AnyService.E2E
 {
     public class SimpleApiE2ETest : E2EFixture
     {
-        public SimpleApiE2ETest()
-        {
-            HttpClient = Factory.WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureServices(services =>
-                {
-                    services.AddMvc(o => o.EnableEndpointRouting = false);
-                    var entities = new[]
-                    {
+        private static Action<IWebHostBuilder> configuration = builder =>
+             {
+                 builder.ConfigureServices(services =>
+                 {
+                     services.AddMvc(o => o.EnableEndpointRouting = false);
+                     var entities = new[]
+                     {
                         typeof(DependentModel),
                         typeof(Dependent2),
                         typeof(MultipartSampleModel)
-                    };
-                    services.AddAnyService(entities);
-                });
-            }).CreateClient();
-        }
+                     };
+                     services.AddAnyService(entities);
+                 });
+             };
+        public SimpleApiE2ETest() : base(configuration)
+        { }
+
         [Test]
         public async Task RunTest()
         {
