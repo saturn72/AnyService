@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System.Threading.Tasks;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
@@ -13,11 +12,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AnyService.E2E
 {
-    public class UserPermissionsE2ETest : IClassFixture<WebApplicationFactory<Startup>>
+    public class SimpleApiE2ETest : IClassFixture<WebApplicationFactory<Startup>>
     {
         private readonly WebApplicationFactory<Startup> _factory;
         private readonly HttpClient _client;
-        public UserPermissionsE2ETest(WebApplicationFactory<Startup> factory)
+        public SimpleApiE2ETest(WebApplicationFactory<Startup> factory)
         {
             _factory = factory;
             _client = _factory.WithWebHostBuilder(builder =>
@@ -27,16 +26,16 @@ namespace AnyService.E2E
                     services.AddMvc(o => o.EnableEndpointRouting = false);
                     var entities = new[]
                     {
-                    typeof(DependentModel),
-                    typeof(Dependent2),
-                    typeof(MultipartSampleModel)
+                        typeof(DependentModel),
+                        typeof(Dependent2),
+                        typeof(MultipartSampleModel)
                     };
                     services.AddAnyService(entities);
                 });
             }).CreateClient();
         }
         [Fact]
-        public async Task UserPermissionsE2ETests()
+        public async Task RunTest()
         {
             var uri = "dependentmodel/";
             var model = new
@@ -61,7 +60,6 @@ namespace AnyService.E2E
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
 
-            throw new NotImplementedException("read by another user - declined");
             //read all by creator
             res = await _client.GetAsync(uri);
             res.EnsureSuccessStatusCode();
@@ -70,7 +68,6 @@ namespace AnyService.E2E
             var jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
-            throw new NotImplementedException("read all by another user - declined");
 
             //update by cretor
             var updateModel = new
@@ -83,10 +80,6 @@ namespace AnyService.E2E
             jObj = JObject.Parse(content);
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
-            throw new NotImplementedException("update all by another user - declined");
-
-            throw new NotImplementedException("delete all by another user - declined");
-
             //delete by cretor
             res = await _client.DeleteAsync(uri + id);
             res.EnsureSuccessStatusCode();
