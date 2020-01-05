@@ -27,15 +27,13 @@ namespace AnyService.SampleApp
         public void ConfigureServices(IServiceCollection services)
         {
             var builder = services.AddMvc(o => o.EnableEndpointRouting = false);
-            // builder.PartManager
-
 
             var entities = new[]
             {
                 typeof(DependentModel),
                 typeof(Dependent2),
                 typeof(MultipartSampleModel)
-                        };
+            };
             var validators = new ICrudValidator[]
             {
                 new DependentModelValidator(),
