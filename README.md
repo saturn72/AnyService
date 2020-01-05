@@ -28,58 +28,27 @@ public class DependentModel : IDomainModelBase //this must be implemented for Re
 }
 ```
 
-3. Create validator. The validator role is to provide the busines logic for `CRUD` operations.
-
-```
-public class DependentModelValidator : ICrudValidator<DependentModel>
-{
-    public Type Type => typeof(DependentModel);
-    public Task<bool> ValidateForCreate(DependentModel model, ServiceResponse serviceResponse)
-    {
-        return Task.FromResult(true); //always permit to create model
-    }
-
-    public Task<bool> ValidateForDelete(string id, ServiceResponse serviceResponse)
-    {
-        return Task.FromResult(true);//always permit to delete model
-    }
-
-    public Task<bool> ValidateForGet(ServiceResponse serviceResponse)
-    {
-        return Task.FromResult(true);//always permit to read model
-    }
-
-    public Task<bool> ValidateForUpdate(DependentModel model, ServiceResponse serviceResponse)
-    {
-        return Task.FromResult(true);//always permit to update model
-    }
-}
-```
-
-4. Add `AnyService` components to `Startup.cs` file: In `ConfigureServices` method, add the following lines:
+3. Add `AnyService` components to `Startup.cs` file: In `ConfigureServices` method, add the following lines:
 
 ```
 public void ConfigureServices(IServiceCollection services)
 {
   ...
-  services
-    .AddMvc()
-    .AddControllersAsServices(); //resolve controllers dynamically using dependency injection
-
-  var entities = new[] { typeof(DependentModel) };
-  var validators = new[] { new DependentModelValidator() };
-
-  services.AddAnyService(Configuration, entities, validators);
+  
+  var entities = new[] { typeof(DependentModel) }; //list all your entities
+  services.AddAnyService(entities);
+  
   ...
 }
 ```
 
-5. Configure your `IRepository` implementation by adding the following to `ConfigureServices` method (this is `LiteDb` `IRepository` pattern implementation)
+4. Configure your `IRepository` implementation by adding the following lines to `ConfigureServices` method (this is `LiteDb` implementation)
 
 ```
 public void ConfigureServices(IServiceCollection services)
 {
   ...
+  
   var liteDbName = "anyservice-testsapp.db";
   services.AddTransient<IRepository<DependentModel>>(sp => new AnyService.LiteDbRepository.Repository<DependentModel>(liteDbName));
   using (var db = new LiteDatabase(liteDbName))
@@ -91,7 +60,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-6. Last step is to add `AnyService` middleware to middlewares pipeline. Add the following line to `Configure` method of `Startup.cs`
+5. finally add `AnyService` middleware to pipeline. Add the following line to `Configure` method of `Startup.cs`
 
 ```
 public void Configure(IApplicationBuilder app, IHostingEnvironment env)
