@@ -99,10 +99,6 @@ TBD
 
 TDB
 
-## Authentication
-
-Authentication is fully handled by `asp.net core`. Please refer to `asp.net core` documentation to implement your authentication model.
-
 ## Authorization
 
 Unlike authentication, authorization is fully handled by `AnyService`.
