@@ -12,5 +12,6 @@ namespace AnyService
         public PermissionRecord PermissionRecord { get; set; }
         public string EntityKey { get; set; }
         public ICrudValidator Validator { get; set; }
+        public AuthorizationInfo Authorization { get; set; }
     }
 }

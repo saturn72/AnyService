@@ -16,14 +16,15 @@ namespace AnyService.E2E
         {
             _configuration = configuration;
         }
-        protected WebApplicationFactory<Startup> Factory { get; private set; }
+        protected WebApplicationFactory<Startup> Factory { get; set; }
         protected HttpClient HttpClient { get; set; }
 
         [OneTimeSetUp]
         public void Init()
         {
             Factory = new WebApplicationFactory<Startup>();
-            HttpClient = Factory.WithWebHostBuilder(builder => _configuration(builder)).CreateClient();
+            HttpClient = Factory.WithWebHostBuilder(builder => _configuration(builder))
+            .CreateClient();
         }
     }
 }

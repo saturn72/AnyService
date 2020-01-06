@@ -6,11 +6,11 @@ using Microsoft.AspNetCore.Http;
 
 namespace AnyService.Middlewares
 {
-    public class AnyServiceWorkContextMiddleware
+    public class WorkContextMiddleware
     {
         private readonly RequestDelegate _next;
         private static readonly IDictionary<string, TypeConfigRecord> RouteMaps = new Dictionary<string, TypeConfigRecord>();
-        public AnyServiceWorkContextMiddleware(RequestDelegate next)
+        public WorkContextMiddleware(RequestDelegate next)
         {
             _next = next;
         }
@@ -23,6 +23,7 @@ namespace AnyService.Middlewares
             var typeConfigRecord = GetRouteMap(path);
             if (typeConfigRecord != null && !typeConfigRecord.Equals(default))
             {
+                workContext.CurrentTypeConfigRecord = typeConfigRecord;
                 workContext.CurrentType = typeConfigRecord.Type;
             }
             await _next(context);
@@ -32,7 +33,7 @@ namespace AnyService.Middlewares
             if (RouteMaps.TryGetValue(path, out TypeConfigRecord value))
                 return value;
 
-            value = TypeConfigRecordManager.TypeConfigRecords.FirstOrDefault(r => path.StartsWithSegments("/" + r.RoutePrefix, StringComparison.CurrentCultureIgnoreCase));
+            value = TypeConfigRecordManager.TypeConfigRecords.FirstOrDefault(r => path.StartsWithSegments(r.RoutePrefix, StringComparison.CurrentCultureIgnoreCase));
 
             return (RouteMaps[path] = value);
         }

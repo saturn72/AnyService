@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AnyService.SampleApp.Models;
+using Microsoft.AspNetCore.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -14,6 +15,11 @@ namespace AnyService.E2E
 {
     public class E2ETests : E2EFixture
     {
+        private static Action<IWebHostBuilder> configuration = builder => { };
+        public E2ETests() : base(configuration)
+        {
+        }
+
         [Test]
         public async Task CRUD_Dependent()
         {

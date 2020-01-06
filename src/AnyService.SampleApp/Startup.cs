@@ -26,7 +26,9 @@ namespace AnyService.SampleApp
         public IConfiguration Configuration { get; }
         public void ConfigureServices(IServiceCollection services)
         {
-            var builder = services.AddMvc(o => o.EnableEndpointRouting = false);
+            var builder = services
+                .AddMvcCore(o => o.EnableEndpointRouting = false)
+                .AddAuthorization();
 
             var entities = new[]
             {
@@ -44,29 +46,25 @@ namespace AnyService.SampleApp
             //use this command when route== entity name
             //services.AddAnyService(builder, Configuration, entities, validators);
 
-            var typeConfigRecords = entities.Select(e =>
-            {
-                var fn = e.FullName.ToLower();
-                var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-                var routePrefix = e.Name;
-                if (e.Equals(typeof(Dependent2)))
-                    routePrefix = routePrefix.Replace("model", "", System.StringComparison.InvariantCultureIgnoreCase);
+            // var typeConfigRecords = entities.Select(e =>
+            // {
+            //     var fn = e.FullName.ToLower();
+            //     var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
+            //     var routePrefix = e.Name;
+            //     if (e.Equals(typeof(Dependent2)))
+            //         routePrefix = routePrefix.Replace("model", "", System.StringComparison.InvariantCultureIgnoreCase);
 
-                var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-                return new TypeConfigRecord
-                {
-                    Type = e,
-                    RoutePrefix = routePrefix,
-                    EventKeyRecord = ekr,
-                    PermissionRecord = pr,
-                    EntityKey = fn,
-                };
-            });
-            services.AddAnyService(new AnyServiceConfig
-            {
-                TypeConfigRecords = typeConfigRecords
-            });
-
+            //     var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
+            //     return new TypeConfigRecord
+            //     {
+            //         Type = e,
+            //         RoutePrefix = routePrefix,
+            //         EventKeyRecord = ekr,
+            //         PermissionRecord = pr,
+            //         EntityKey = fn,
+            //     };
+            // });
+            services.AddAnyService(entities);
             ConfigureLiteDb(services);
             ConfigureCaching(services);
         }
@@ -103,18 +101,12 @@ namespace AnyService.SampleApp
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseHsts();
-            }
 
+            app.UseAuthorization();
+            app.UseHsts();
             app.UseHttpsRedirection();
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAnyService();
             //you may use app.UseAnyService() to setup anyservice pipeline instead the two lines below
             // app.UseMiddleware<AnyServiceWorkContextMiddleware>();

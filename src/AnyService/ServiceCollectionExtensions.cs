@@ -8,6 +8,7 @@ using AnyService;
 using AnyService.Core.Security;
 using AnyService.Services.Security;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -33,6 +34,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
             // services.
             services.AddSingleton(config.TypeConfigRecords);
+            if (config.TypeConfigRecords.Any(t => t.Authorization != null))
+                services.AddTransient<IAuthorizationHandler, DefaultAuthorizationHandler>();
 
             //validator factory
             var validators = config.TypeConfigRecords.Select(t => t.Validator).ToArray();
@@ -79,6 +82,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
 
                 if (!tcr.RoutePrefix.HasValue()) tcr.RoutePrefix = "/" + e.Name;
+                if (!tcr.RoutePrefix.StartsWith("/") || tcr.RoutePrefix.StartsWith("//"))
+                    throw new InvalidOperationException($"RoutePrefix must start with single'/'. Actual value: {tcr.RoutePrefix}");
+
                 if (tcr.EventKeyRecord == null) tcr.EventKeyRecord = ekr;
                 if (tcr.PermissionRecord == null) tcr.PermissionRecord = pr;
                 if (tcr.EntityKey == null) tcr.EntityKey = fn;
@@ -87,8 +93,20 @@ namespace Microsoft.Extensions.DependencyInjection
                     var v = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);
                     tcr.Validator = (ICrudValidator)Activator.CreateInstance(v);
                 }
+                if (tcr.Authorization != null)
+                    SetAuthorization(tcr.Authorization);
             }
             config.TypeConfigRecords = temp;
+        }
+
+        private static void SetAuthorization(AuthorizationInfo authzInfo)
+        {
+            var ctrlAuthzAttribute = authzInfo.ControllerAuthorizeAttribute;
+
+            if (authzInfo.PostAuthorizeAttribute == null) authzInfo.PostAuthorizeAttribute = ctrlAuthzAttribute;
+            if (authzInfo.GetAuthorizeAttribute == null) authzInfo.GetAuthorizeAttribute = ctrlAuthzAttribute;
+            if (authzInfo.PutAuthorizeAttribute == null) authzInfo.PutAuthorizeAttribute = ctrlAuthzAttribute;
+            if (authzInfo.DeleteAuthorizeAttribute == null) authzInfo.DeleteAuthorizeAttribute = ctrlAuthzAttribute;
         }
     }
 }

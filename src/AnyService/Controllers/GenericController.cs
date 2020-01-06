@@ -12,12 +12,14 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AnyService.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     [GenericControllerNameConvention]
+    [Authorize]
     public class GenericController<TDomainModel> : ControllerBase where TDomainModel : IDomainModelBase
     {
         #region fields
@@ -44,7 +46,7 @@ namespace AnyService.Controllers
                     data = model
                 });
 
-            var res = await _crudService.Create(model); 
+            var res = await _crudService.Create(model);
             return res.ToActionResult();
         }
 

@@ -9,28 +9,41 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using AnyService.SampleApp;
 using AnyService.SampleApp.Models;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authorization;
 
-namespace AnyService.E2E
+namespace AnyService.E2E.Authorization
 {
     public class UserPermissionsE2ETest : E2EFixture
     {
-        public UserPermissionsE2ETest()
+        private static Action<IWebHostBuilder> configuration = builder =>
         {
-            HttpClient = Factory.WithWebHostBuilder(builder =>
+            builder.ConfigureServices(services =>
             {
-                builder.ConfigureServices(services =>
-                {
-                    services.AddMvc(o => o.EnableEndpointRouting = false);
-                    var entities = new[]
-                    {
-                    typeof(DependentModel),
-                    typeof(Dependent2),
-                    typeof(MultipartSampleModel)
-                    };
-                    services.AddAnyService(entities);
-                });
-            }).CreateClient();
+                throw new System.NotImplementedException();
+                // services.AddMvc(o => o.EnableEndpointRouting = false);
+                // var cfg = new AnyServiceConfig
+                // {
+                //     TypeConfigRecords = new[]
+                //     {
+                //             new TypeConfigRecord
+                //             {
+                //                 Type = typeof(DependentModel),
+                //                 AuthorizeAttribute = new AuthorizeAttribute
+                //                 {
+                //                     Roles = "editor"
+                //                 }
+                //             }
+                //     }
+                // };
+                // services.AddAnyService(cfg);
+            });
+        };
+
+        public UserPermissionsE2ETest() : base(configuration)
+        {
         }
+
         [Test]
         public async Task UserPermissionsE2ETests()
         {

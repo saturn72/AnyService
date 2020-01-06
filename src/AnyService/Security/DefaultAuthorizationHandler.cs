@@ -1,0 +1,82 @@
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
+
+namespace AnyService
+{
+    public sealed class DefaultAuthorizationHandler : IAuthorizationHandler
+    {
+        private static readonly IDictionary<string, Action<AuthorizationHandlerContext>> AuthorizationWorkers
+            = new Dictionary<string, Action<AuthorizationHandlerContext>>(StringComparer.CurrentCultureIgnoreCase);
+
+        private static readonly object lockObj = new object();
+
+        private readonly WorkContext _workContext;
+
+        public DefaultAuthorizationHandler(WorkContext workContext)
+        {
+            _workContext = workContext;
+        }
+        public Task HandleAsync(AuthorizationHandlerContext context)
+        {
+            string curHttpMethod;
+            var key = GetRequestKey();
+            if (!AuthorizationWorkers.TryGetValue(key, out Action<AuthorizationHandlerContext> worker))
+            {
+                worker = GetAuthzWorker(curHttpMethod);
+                lock (lockObj)
+                {
+                    AuthorizationWorkers[key] = worker;
+                }
+            }
+
+            worker(context);
+
+            return Task.CompletedTask;
+
+            string GetRequestKey()
+            {
+                var ad = (context.Resource as Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext).ActionDescriptor;
+                var routeAtt = ad.EndpointMetadata.FirstOrDefault(x => x.GetType() == typeof(RouteAttribute)) as RouteAttribute;
+                var httpMethodAtt = ad.EndpointMetadata.FirstOrDefault(x => typeof(HttpMethodAttribute).IsAssignableFrom(x.GetType())) as HttpMethodAttribute;
+                curHttpMethod = httpMethodAtt.HttpMethods.First().ToLower();
+                return $"{routeAtt.Name}_{curHttpMethod}";
+            }
+        }
+        private Action<AuthorizationHandlerContext> GetAuthzWorker(string httpMethod)
+        {
+            var authAtt = GetAuthorizeAttribute(httpMethod);
+            if (authAtt == null)
+                return ctx => ctx.Fail();
+
+            if (authAtt.Roles != null && authAtt.Roles.Any())
+            {
+                var roles = authAtt.Roles.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(r => r.Trim()).ToArray();
+                return ctx => roles.Any(r => ctx.User.IsInRole(r));
+            }
+
+            throw new System.NotImplementedException("currently only roles are supported");
+        }
+        private AuthorizeAttribute GetAuthorizeAttribute(string httpMethod)
+        {
+            var authz = _workContext.CurrentTypeConfigRecord.Authorization;
+            switch (httpMethod)
+            {
+                case "post":
+                    return authz.PostAuthorizeAttribute;
+                case "read":
+                    return authz.GetAuthorizeAttribute;
+                case "put":
+                    return authz.PutAuthorizeAttribute;
+                case "delete":
+                    return authz.DeleteAuthorizeAttribute;
+            }
+            return null;
+        }
+    }
+}

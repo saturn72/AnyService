@@ -15,10 +15,9 @@ namespace AnyService
             var sp = app.ApplicationServices;
             var apm = sp.GetService<ApplicationPartManager>();
             var typeConfigRecords = sp.GetService<IEnumerable<TypeConfigRecord>>();
-            var types = typeConfigRecords.Select(e => e.Type).ToArray();
-            apm.FeatureProviders.Add(new GenericControllerFeatureProvider(types));
+            apm.FeatureProviders.Add(new GenericControllerFeatureProvider());
 
-            app.UseMiddleware<AnyServiceWorkContextMiddleware>();
+            app.UseMiddleware<WorkContextMiddleware>();
             // app.UseMiddleware<AnyServicePermissionMiddleware>();
 
             return app;
