@@ -57,7 +57,12 @@ namespace AnyService
             if (authAtt.Roles != null && authAtt.Roles.Any())
             {
                 var roles = authAtt.Roles.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(r => r.Trim()).ToArray();
-                return ctx => roles.Any(r => ctx.User.IsInRole(r));
+                return ctx =>
+                {
+                    var res = roles.Any(r => ctx.User.IsInRole(r));
+                    if (!res)
+                        ctx.Fail();
+                };
             }
 
             throw new System.NotImplementedException("currently only roles are supported");
@@ -69,7 +74,7 @@ namespace AnyService
             {
                 case "post":
                     return authz.PostAuthorizeAttribute;
-                case "read":
+                case "get":
                     return authz.GetAuthorizeAttribute;
                 case "put":
                     return authz.PutAuthorizeAttribute;

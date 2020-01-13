@@ -19,7 +19,7 @@ namespace AnyService.SampleApp.Identity
         }
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            var role = !Request.Headers.TryGetValue("Authorization", out StringValues value) && value == AuthorizedSchemaName ? "some-role" : "another-role";
+            var role = Request.Headers.TryGetValue("Authorization", out StringValues value) && value == AuthorizedSchemaName ? "some-role" : "another-role";
 
             var claims = new[] { new Claim(ClaimTypes.Role, role) };
             var identity = new ClaimsIdentity(claims, "Test");

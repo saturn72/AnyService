@@ -116,16 +116,16 @@ namespace AnyService.E2E.Authorization
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("UnAuthorized");
 
             var unauthRes = await HttpClient.PostAsJsonAsync(uri, model);
-            unauthRes.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+            unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
             unauthRes = await HttpClient.GetAsync(uri);
-            unauthRes.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+            unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
             unauthRes = await HttpClient.PutAsJsonAsync(uri + id, updateModel);
-            unauthRes.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+            unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
             unauthRes = await HttpClient.DeleteAsync(uri + id);
-            unauthRes.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+            unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         }
     }
 }
