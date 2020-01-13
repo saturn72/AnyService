@@ -15,6 +15,7 @@ using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using AnyService.SampleApp;
 using System.Net;
+using AnyService.SampleApp.Identity;
 
 namespace AnyService.E2E.Authorization
 {
@@ -39,10 +40,6 @@ namespace AnyService.E2E.Authorization
                     }
                 };
                 services.AddAnyService(cfg);
-
-                services.AddAuthentication(TestAuthHandler.AuthorizedSchemaName)
-                        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.AuthorizedSchemaName, options => { });
-
             });
         };
 
@@ -56,7 +53,7 @@ namespace AnyService.E2E.Authorization
         public async Task CRUD_Entities_Possible_By_Authorized_User_Only()
         {
             //authorized by role client
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TestAuthHandler.AuthorizedSchemaName);
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedSchemaName);
             var uri = "dependentmodel/";
             var model = new
             {

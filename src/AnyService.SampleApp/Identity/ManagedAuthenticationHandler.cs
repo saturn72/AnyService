@@ -7,12 +7,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 
-namespace AnyService.E2E.Authorization
+namespace AnyService.SampleApp.Identity
 {
-    public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+    public class ManagedAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         public const string AuthorizedSchemaName = "Authorized";
-        public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
+        public ManagedAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
             : base(options, logger, encoder, clock)
         {

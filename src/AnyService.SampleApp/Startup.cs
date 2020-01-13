@@ -7,12 +7,13 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AnyService.Services.FileStorage;
-using Microsoft.Extensions.Hosting;
 using System.Linq;
 using AnyService.EasyCaching;
 using AnyService.Core.Caching;
 using AnyService.Core.Security;
 using AnyService.LiteDb;
+using Microsoft.AspNetCore.Authentication;
+using AnyService.SampleApp.Identity;
 
 namespace AnyService.SampleApp
 {
@@ -64,6 +65,8 @@ namespace AnyService.SampleApp
             //         EntityKey = fn,
             //     };
             // });
+            services.AddAuthentication(ManagedAuthenticationHandler.AuthorizedSchemaName)
+        .AddScheme<AuthenticationSchemeOptions, ManagedAuthenticationHandler>(ManagedAuthenticationHandler.AuthorizedSchemaName, options => { });
             services.AddAnyService(entities);
             ConfigureLiteDb(services);
             ConfigureCaching(services);
@@ -102,11 +105,11 @@ namespace AnyService.SampleApp
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
 
-            app.UseAuthorization();
             app.UseHsts();
             app.UseHttpsRedirection();
             app.UseRouting();
             app.UseAuthentication();
+            app.UseAuthorization();
             app.UseAnyService();
             //you may use app.UseAnyService() to setup anyservice pipeline instead the two lines below
             // app.UseMiddleware<AnyServiceWorkContextMiddleware>();
