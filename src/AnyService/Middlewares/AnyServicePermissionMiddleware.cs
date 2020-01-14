@@ -14,7 +14,7 @@ namespace AnyService.Middlewares
         public AnyServicePermissionMiddleware(RequestDelegate next, IPermissionManager permissionManager)
         {
             _next = next;
-            _permissionManager = permissionManager
+            _permissionManager = permissionManager;
         }
 
         public async Task InvokeAsync(HttpContext context, WorkContext workContext)
@@ -37,11 +37,7 @@ namespace AnyService.Middlewares
                 return;
             }
 
-            var hasPermission = isPost ?
-                await _permissionManager.UserHasPermission(workContext.CurrentUserId, permissionKey) :
-                await _permissionManager.UserHasPermissionOnEntity(workContext.CurrentUserId, permissionKey, typeConfigRecord.EntityKey, null);
-
-            if (hasPermission) await _next(context);
+            if (await IsUserPermitted(isPost, workContext.CurrentUserId, permissionKey, typeConfigRecord)) await _next(context);
             else
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -49,6 +45,20 @@ namespace AnyService.Middlewares
             }
 
             var t = ManageUserPermissions(context, permissionKey, typeConfigRecord.EntityKey);
+        }
+
+        private async Task<bool> IsUserPermitted(bool isPost, string userId, string permissionKey, TypeConfigRecord typeConfigRecord)
+        {
+            if (isPost)
+            {
+                var isOptimistic = typeConfigRecord.PermissionRecord.CreatePermissionStyle == PermissionStyle.Optimistic;
+                return isOptimistic ?
+                await _permissionManager.UserPermissionExcluded(userId, permissionKey)
+                : await _permissionManager.UserHasPermission(userId, permissionKey);
+            }
+            return await _permissionManager.UserHasPermissionOnEntity(userId, permissionKey, typeConfigRecord.EntityKey, null);
+
+
         }
 
         private async Task ManageUserPermissions(HttpContext context, string permissionKey, string entityKey)
