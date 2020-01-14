@@ -101,12 +101,12 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static void SetAuthorization(AuthorizationInfo authzInfo)
         {
-            var ctrlAuthzAttribute = authzInfo.ControllerAuthorizeAttribute;
+            var ctrlAuthzAttribute = authzInfo.ControllerAuthorizationNode;
 
-            if (authzInfo.PostAuthorizeAttribute == null) authzInfo.PostAuthorizeAttribute = ctrlAuthzAttribute;
-            if (authzInfo.GetAuthorizeAttribute == null) authzInfo.GetAuthorizeAttribute = ctrlAuthzAttribute;
-            if (authzInfo.PutAuthorizeAttribute == null) authzInfo.PutAuthorizeAttribute = ctrlAuthzAttribute;
-            if (authzInfo.DeleteAuthorizeAttribute == null) authzInfo.DeleteAuthorizeAttribute = ctrlAuthzAttribute;
+            if (authzInfo.PostAuthorizeNode == null) authzInfo.PostAuthorizeNode = ctrlAuthzAttribute;
+            if (authzInfo.GetAuthorizeNode == null) authzInfo.GetAuthorizeNode = ctrlAuthzAttribute;
+            if (authzInfo.PutAuthorizeNode == null) authzInfo.PutAuthorizeNode = ctrlAuthzAttribute;
+            if (authzInfo.DeleteAuthorizeNode == null) authzInfo.DeleteAuthorizeNode = ctrlAuthzAttribute;
         }
     }
 }

@@ -34,7 +34,7 @@ namespace AnyService.E2E.Authorization
                             Type = typeof(DependentModel),
                             Authorization = new AuthorizationInfo
                             {
-                                ControllerAuthorizeAttribute = new AuthorizeAttribute{Roles = "some-role"}
+                                ControllerAuthorizationNode = new AuthorizationNode{Roles = new[]{"some-role"}}
                             }
                         }
                     }

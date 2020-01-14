@@ -56,10 +56,9 @@ namespace AnyService
 
             if (authAtt.Roles != null && authAtt.Roles.Any())
             {
-                var roles = authAtt.Roles.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(r => r.Trim()).ToArray();
                 return ctx =>
                 {
-                    var res = roles.Any(r => ctx.User.IsInRole(r));
+                    var res = authAtt.Roles.Any(r => ctx.User.IsInRole(r));
                     if (!res)
                         ctx.Fail();
                 };
@@ -67,19 +66,19 @@ namespace AnyService
 
             throw new System.NotImplementedException("currently only roles are supported");
         }
-        private AuthorizeAttribute GetAuthorizeAttribute(string httpMethod)
+        private AuthorizationNode GetAuthorizeAttribute(string httpMethod)
         {
             var authz = _workContext.CurrentTypeConfigRecord.Authorization;
             switch (httpMethod)
             {
                 case "post":
-                    return authz.PostAuthorizeAttribute;
+                    return authz.PostAuthorizeNode;
                 case "get":
-                    return authz.GetAuthorizeAttribute;
+                    return authz.GetAuthorizeNode;
                 case "put":
-                    return authz.PutAuthorizeAttribute;
+                    return authz.PutAuthorizeNode;
                 case "delete":
-                    return authz.DeleteAuthorizeAttribute;
+                    return authz.DeleteAuthorizeNode;
             }
             return null;
         }

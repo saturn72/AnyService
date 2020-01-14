@@ -1,14 +1,12 @@
 
-using Microsoft.AspNetCore.Authorization;
-
 namespace AnyService
 {
     public sealed class AuthorizationInfo
     {
-        public AuthorizeAttribute ControllerAuthorizeAttribute { get; set; }
-        public AuthorizeAttribute PostAuthorizeAttribute { get; set; }
-        public AuthorizeAttribute GetAuthorizeAttribute { get; set; }
-        public AuthorizeAttribute PutAuthorizeAttribute { get; set; }
-        public AuthorizeAttribute DeleteAuthorizeAttribute { get; set; }
+        public AuthorizationNode ControllerAuthorizationNode { get; set; }
+        public AuthorizationNode PostAuthorizeNode { get; set; }
+        public AuthorizationNode GetAuthorizeNode { get; set; }
+        public AuthorizationNode PutAuthorizeNode { get; set; }
+        public AuthorizationNode DeleteAuthorizeNode { get; set; }
     }
 }
