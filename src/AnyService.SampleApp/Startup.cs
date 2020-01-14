@@ -44,29 +44,8 @@ namespace AnyService.SampleApp
                 new MultipartSampleValidator(),
             };
 
-            //use this command when route== entity name
-            //services.AddAnyService(builder, Configuration, entities, validators);
-
-            // var typeConfigRecords = entities.Select(e =>
-            // {
-            //     var fn = e.FullName.ToLower();
-            //     var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-            //     var routePrefix = e.Name;
-            //     if (e.Equals(typeof(Dependent2)))
-            //         routePrefix = routePrefix.Replace("model", "", System.StringComparison.InvariantCultureIgnoreCase);
-
-            //     var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-            //     return new TypeConfigRecord
-            //     {
-            //         Type = e,
-            //         RoutePrefix = routePrefix,
-            //         EventKeyRecord = ekr,
-            //         PermissionRecord = pr,
-            //         EntityKey = fn,
-            //     };
-            // });
-            services.AddAuthentication(ManagedAuthenticationHandler.AuthorizedSchemaName)
-        .AddScheme<AuthenticationSchemeOptions, ManagedAuthenticationHandler>(ManagedAuthenticationHandler.AuthorizedSchemaName, options => { });
+            services.AddAuthentication(ManagedAuthenticationHandler.Schema)
+                .AddScheme<AuthenticationSchemeOptions, ManagedAuthenticationHandler>(ManagedAuthenticationHandler.Schema, options => { });
             services.AddAnyService(entities);
             ConfigureLiteDb(services);
             ConfigureCaching(services);

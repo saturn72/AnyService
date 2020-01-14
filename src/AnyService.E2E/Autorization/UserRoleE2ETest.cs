@@ -53,7 +53,7 @@ namespace AnyService.E2E.Authorization
         public async Task CRUD_Entities_Possible_By_Authorized_User_Only()
         {
             //authorized by role client
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedSchemaName);
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson);
             var uri = "dependentmodel/";
             var model = new
             {
