@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using AnyService.Audity;
 using AnyService.Events;
 using AnyService.Services.FileStorage;
+using AnyService.Services.Security;
 
 namespace AnyService.Services
 {
@@ -62,7 +63,6 @@ namespace AnyService.Services
                 var uploadResponses = await _fileStorageManager.Upload((dbData as IFileContainer).Files);
                 serviceResponse.Data = new { entity = serviceResponse.Data, filesUploadStatus = uploadResponses };
             }
-
             return serviceResponse;
         }
         public async Task<ServiceResponse> GetById(string id)

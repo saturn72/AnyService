@@ -39,8 +39,34 @@ namespace AnyService.Middlewares
                 await permissionManager.UserHasPermissionOnEntity(workContext.CurrentUserId, permissionKey, typeConfigRecord.EntityKey, null);
 
             if (hasPermission) await _next(context);
-            else context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            else
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return;
+            }
+
+            var t = ManageUserPermissions(context, permissionKey, typeConfigRecord.EntityKey);
         }
 
+        private async Task ManageUserPermissions(HttpContext context, string permissionKey, string entityKey)
+        {
+            if (context.Response.StatusCode < 200 || context.Response.StatusCode > 299) //failure
+                return;
+
+            var isPost = context.Request.Method.Equals(HttpMethods.Post, StringComparison.InvariantCultureIgnoreCase);
+            if (isPost)
+            {
+                var gettKey = PermissionFuncs.GetByHttpMethod(HttpMethods.Get)(typeConfigRecord);
+                await _permissionManager.AddUserHasPermissionOnEntity(_workContext.CurrentUserId, gettKey, typeConfigRecord.EntityKey, entityId);
+                var putKey = PermissionFuncs.GetByHttpMethod(HttpMethods.Put)(typeConfigRecord);
+                await _permissionManager.AddUserHasPermissionOnEntity(_workContext.CurrentUserId, putKey, typeConfigRecord.EntityKey, entityId);
+                var deleteKey = PermissionFuncs.GetByHttpMethod(HttpMethods.Delete)(typeConfigRecord);
+                await _permissionManager.AddUserHasPermissionOnEntity(_workContext.CurrentUserId, deleteKey, typeConfigRecord.EntityKey, entityId);
+                return;
+            }
+            var isDelete = context.Request.Method.Equals(HttpMethods.Delete, StringComparison.InvariantCultureIgnoreCase);
+            if (isDelete)
+                await _permissionManager.RemoveUserPermissionsOnEntity(_workContext.CurrentUserId, typeConfigRecord.EntityKey, entityId);
+        }
     }
 }
