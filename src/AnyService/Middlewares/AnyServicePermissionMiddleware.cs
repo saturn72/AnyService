@@ -9,12 +9,15 @@ namespace AnyService.Middlewares
     public class AnyServicePermissionMiddleware
     {
         private readonly RequestDelegate _next;
-        public AnyServicePermissionMiddleware(RequestDelegate next)
+        private readonly IPermissionManager _permissionManager;
+
+        public AnyServicePermissionMiddleware(RequestDelegate next, IPermissionManager permissionManager)
         {
             _next = next;
+            _permissionManager = permissionManager
         }
 
-        public async Task InvokeAsync(HttpContext context, WorkContext workContext, IPermissionManager permissionManager)
+        public async Task InvokeAsync(HttpContext context, WorkContext workContext)
         {
             if (workContext.CurrentType == null) // in-case not using Anyservice pipeline
             {
@@ -35,8 +38,8 @@ namespace AnyService.Middlewares
             }
 
             var hasPermission = isPost ?
-                await permissionManager.UserHasPermission(workContext.CurrentUserId, permissionKey) :
-                await permissionManager.UserHasPermissionOnEntity(workContext.CurrentUserId, permissionKey, typeConfigRecord.EntityKey, null);
+                await _permissionManager.UserHasPermission(workContext.CurrentUserId, permissionKey) :
+                await _permissionManager.UserHasPermissionOnEntity(workContext.CurrentUserId, permissionKey, typeConfigRecord.EntityKey, null);
 
             if (hasPermission) await _next(context);
             else
@@ -57,11 +60,11 @@ namespace AnyService.Middlewares
             if (isPost)
             {
                 var gettKey = PermissionFuncs.GetByHttpMethod(HttpMethods.Get)(typeConfigRecord);
-                await _permissionManager.AddUserHasPermissionOnEntity(_workContext.CurrentUserId, gettKey, typeConfigRecord.EntityKey, entityId);
+                await _permissionManager.AddUserPermissionOnEntity(_workContext.CurrentUserId, gettKey, typeConfigRecord.EntityKey, entityId);
                 var putKey = PermissionFuncs.GetByHttpMethod(HttpMethods.Put)(typeConfigRecord);
-                await _permissionManager.AddUserHasPermissionOnEntity(_workContext.CurrentUserId, putKey, typeConfigRecord.EntityKey, entityId);
+                await _permissionManager.AddUserPermissionOnEntity(_workContext.CurrentUserId, putKey, typeConfigRecord.EntityKey, entityId);
                 var deleteKey = PermissionFuncs.GetByHttpMethod(HttpMethods.Delete)(typeConfigRecord);
-                await _permissionManager.AddUserHasPermissionOnEntity(_workContext.CurrentUserId, deleteKey, typeConfigRecord.EntityKey, entityId);
+                await _permissionManager.AddUserPermissionOnEntity(_workContext.CurrentUserId, deleteKey, typeConfigRecord.EntityKey, entityId);
                 return;
             }
             var isDelete = context.Request.Method.Equals(HttpMethods.Delete, StringComparison.InvariantCultureIgnoreCase);
