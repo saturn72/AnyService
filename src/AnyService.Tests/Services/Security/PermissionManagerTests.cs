@@ -157,7 +157,7 @@ namespace AnyService.Tests.Services.Security
             cm.Setup(c => c.GetAsync(
                 It.IsAny<string>(),
                 It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
-                It.IsAny<TimeSpan>())).ReturnsAsync(new[] { new UserPermissions { 
+                It.IsAny<TimeSpan>())).ReturnsAsync(new[] { new UserPermissions {
                     PermissionKey = pk ,
                     EntityKey = ek,
                     EntityId = eid,
@@ -166,6 +166,6 @@ namespace AnyService.Tests.Services.Security
             var res = await pm.UserHasPermissionOnEntity("user-id", pk, ek, eid);
             res.ShouldBeTrue();
         }
-        #endregion 
+        #endregion
     }
 }

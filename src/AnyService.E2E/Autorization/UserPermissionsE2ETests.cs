@@ -10,7 +10,10 @@ using AnyService.SampleApp;
 using AnyService.SampleApp.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Authorization;
+using System.Net.Http.Headers;
+using Microsoft.AspNetCore.TestHost;
+using AnyService.SampleApp.Identity;
+using System.Net;
 
 namespace AnyService.E2E.Authorization
 {
@@ -18,35 +21,37 @@ namespace AnyService.E2E.Authorization
     {
         private static Action<IWebHostBuilder> configuration = builder =>
         {
-            builder.ConfigureServices(services =>
+            builder.ConfigureTestServices(services =>
             {
-                throw new System.NotImplementedException();
-                // services.AddMvc(o => o.EnableEndpointRouting = false);
-                // var cfg = new AnyServiceConfig
-                // {
-                //     TypeConfigRecords = new[]
-                //     {
-                //             new TypeConfigRecord
-                //             {
-                //                 Type = typeof(DependentModel),
-                //                 AuthorizeAttribute = new AuthorizeAttribute
-                //                 {
-                //                     Roles = "editor"
-                //                 }
-                //             }
-                //     }
-                // };
-                // services.AddAnyService(cfg);
+                var cfg = new AnyServiceConfig
+                {
+                    ManageEntityPermissions = true,
+                    TypeConfigRecords = new[]
+                    {
+                        new TypeConfigRecord
+                        {
+                            Type = typeof(DependentModel),
+                            Authorization = new AuthorizationInfo
+                            {
+                                ControllerAuthorizationNode = new AuthorizationNode{Roles = new[]{"some-role"}}
+                            }
+                        }
+                    }
+                };
+                services.AddAnyService(cfg);
             });
         };
 
         public UserPermissionsE2ETest() : base(configuration)
         {
+            Factory = new WebApplicationFactory<Startup>();
+            HttpClient = Factory.WithWebHostBuilder(configuration).CreateClient();
         }
 
         [Test]
         public async Task UserPermissionsE2ETests()
         {
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var uri = "dependentmodel/";
             var model = new
             {
@@ -70,7 +75,6 @@ namespace AnyService.E2E.Authorization
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
 
-            throw new NotImplementedException("read by another user - declined");
             //read all by creator
             res = await HttpClient.GetAsync(uri);
             res.EnsureSuccessStatusCode();
@@ -79,9 +83,14 @@ namespace AnyService.E2E.Authorization
             var jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
-            throw new NotImplementedException("read all by another user - declined");
+
+            //switch user
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
+            res = await HttpClient.GetAsync(uri);
+            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
             //update by cretor
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var updateModel = new
             {
                 Value = "new Value"
@@ -92,24 +101,24 @@ namespace AnyService.E2E.Authorization
             jObj = JObject.Parse(content);
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
-            throw new NotImplementedException("update all by another user - declined");
 
-            throw new NotImplementedException("delete all by another user - declined");
+            //switch user
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
+            res = await HttpClient.PutAsJsonAsync(uri + id, updateModel);
+            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+
+            //delete by another user - declined
+            res = await HttpClient.DeleteAsync(uri + id);
+            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
             //delete by cretor
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             res = await HttpClient.DeleteAsync(uri + id);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
-
-            //get deleted
-            res = await HttpClient.GetAsync(uri + id);
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["data"]["deleted"].Value<bool>().ShouldBeTrue();
         }
     }
 }

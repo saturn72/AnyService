@@ -53,7 +53,7 @@ namespace AnyService.E2E.Authorization
         public async Task CRUD_Entities_Possible_By_Authorized_User_Only()
         {
             //authorized by role client
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson);
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var uri = "dependentmodel/";
             var model = new
             {
@@ -113,7 +113,7 @@ namespace AnyService.E2E.Authorization
             jObj = JObject.Parse(content);
             jObj["data"]["deleted"].Value<bool>().ShouldBeTrue();
 
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("UnAuthorized");
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.UnauthorizedUser1);
 
             var unauthRes = await HttpClient.PostAsJsonAsync(uri, model);
             unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);

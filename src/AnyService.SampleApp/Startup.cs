@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AnyService.Services.FileStorage;
-using System.Linq;
 using AnyService.EasyCaching;
 using AnyService.Core.Caching;
 using AnyService.Core.Security;
@@ -46,6 +45,7 @@ namespace AnyService.SampleApp
 
             services.AddAuthentication(ManagedAuthenticationHandler.Schema)
                 .AddScheme<AuthenticationSchemeOptions, ManagedAuthenticationHandler>(ManagedAuthenticationHandler.Schema, options => { });
+
             services.AddAnyService(entities);
             ConfigureLiteDb(services);
             ConfigureCaching(services);

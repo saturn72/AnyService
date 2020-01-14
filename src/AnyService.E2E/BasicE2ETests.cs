@@ -166,37 +166,6 @@ namespace AnyService.E2E
             jObj["data"]["firstName"].Value<string>().ShouldBe(model.firstName);
             (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
         }
-
-        [Test]
-        public async Task CRUD_NotPermitted()
-        {
-            var uri = "dependent2/";
-            var model = new
-            {
-                Value = "init value"
-            };
-            //create
-            var res = await HttpClient.PostAsJsonAsync(uri, model);
-            res.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-            //read any
-            res = await HttpClient.GetAsync(uri + "123");
-            res.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-
-            //read all
-            res = await HttpClient.GetAsync(uri);
-            res.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-            //update
-            var updateModel = new
-            {
-                Value = "new Value"
-            };
-            res = await HttpClient.PutAsJsonAsync(uri + "123", updateModel);
-            res.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-
-            //delete
-            res = await HttpClient.DeleteAsync(uri + "123");
-            res.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-        }
         [Test]
         public async Task CRUD_ControllerRouteOverwrite()
         {

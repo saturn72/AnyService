@@ -12,6 +12,12 @@ namespace AnyService
         }
 
         public IEnumerable<TypeConfigRecord> TypeConfigRecords { get; set; }
+
+        /// <summary>
+        /// Gets or sets value indicating whether anyservice manages user permission on entity. 
+        /// default value = true
+        /// </summary>
+        /// <value></value>
         public bool ManageEntityPermissions { get; set; }
         public int MaxMultipartBoundaryLength { get; set; }
         public int MaxValueCount { get; set; }

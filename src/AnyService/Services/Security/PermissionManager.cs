@@ -34,7 +34,7 @@ namespace AnyService.Services.Security
                 return false;
             var allUserPermissions = await GetAllUserPermissions(userId);
             return allUserPermissions != null && allUserPermissions.Any(p =>
-                p.EntityId.HasValue() && p.EntityId.Equals(entityId, StringComparison.InvariantCultureIgnoreCase)&&
+                p.EntityId.HasValue() && p.EntityId.Equals(entityId, StringComparison.InvariantCultureIgnoreCase) &&
                 p.EntityKey.HasValue() && p.EntityKey.Equals(entityKey, StringComparison.InvariantCultureIgnoreCase) &&
                 p.PermissionKey.HasValue() && p.PermissionKey.Equals(permissionKey, StringComparison.InvariantCultureIgnoreCase));
         }

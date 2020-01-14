@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using AnyService.Controllers;
 using AnyService.Middlewares;
 using Microsoft.AspNetCore.Builder;
@@ -18,7 +17,10 @@ namespace AnyService
             apm.FeatureProviders.Add(new GenericControllerFeatureProvider());
 
             app.UseMiddleware<WorkContextMiddleware>();
-            // app.UseMiddleware<AnyServicePermissionMiddleware>();
+
+            var config = sp.GetService<AnyServiceConfig>();
+            if (config.ManageEntityPermissions)
+                app.UseMiddleware<AnyServicePermissionMiddleware>();
 
             return app;
         }

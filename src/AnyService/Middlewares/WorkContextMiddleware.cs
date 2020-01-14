@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
@@ -17,7 +18,8 @@ namespace AnyService.Middlewares
 
         public async Task InvokeAsync(HttpContext context, WorkContext workContext)
         {
-            workContext.CurrentUserId = "some-user-id";
+            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            workContext.CurrentUserId = userId;
 
             var path = context.Request.Path;
             var typeConfigRecord = GetRouteMap(path);

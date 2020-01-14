@@ -16,10 +16,12 @@ namespace AnyService.SampleApp.Identity
     public class ManagedAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         private const string RolePrefix = "role_";
+        private const string UserIdPrefix = "id_";
         private const string Delimiter = "__";
         public const string Schema = "Test";
-        public const string AuthorizedJson = RolePrefix + "some-role";
-        public const string UnauthorizedJson = RolePrefix + "unauth-role";
+        public const string AuthorizedJson1 = RolePrefix + "some-role" + Delimiter + UserIdPrefix + "1";
+        public const string AuthorizedJson2 = RolePrefix + "some-role" + Delimiter + UserIdPrefix + "2";
+        public const string UnauthorizedUser1 = RolePrefix + "unauthz-role" + Delimiter + UserIdPrefix + "3";
 
         public ManagedAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
@@ -34,6 +36,10 @@ namespace AnyService.SampleApp.Identity
             var claims = new List<Claim>();
             foreach (var r in raw.Where(x => x.StartsWith(RolePrefix)))
                 claims.Add(new Claim(ClaimTypes.Role, r.Replace(RolePrefix, "")));
+
+            var userId = raw.FirstOrDefault(x => x.StartsWith(UserIdPrefix));
+            if (userId != null)
+                claims.Add(new Claim(ClaimTypes.NameIdentifier, userId.Replace(UserIdPrefix, "")));
 
             var identity = new ClaimsIdentity(claims, Schema);
             var principal = new ClaimsPrincipal(identity);

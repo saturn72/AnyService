@@ -70,6 +70,7 @@ namespace AnyService.Services
             var serviceResponse = new ServiceResponse
             {
                 Data = id
+
             };
             if (!await _validator.ValidateForGet(serviceResponse))
                 return serviceResponse;

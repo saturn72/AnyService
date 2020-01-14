@@ -28,8 +28,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             NormalizeConfiguration(config);
             services.TryAddSingleton(config);
-            // mvcBuilder.ConfigureApplicationPartManager(apm =>
-            //     apm.FeatureProviders.Add(new GenericControllerFeatureProvider(typeConfigRecords.Select(e => e.Type))));
+
             services.TryAddTransient(typeof(CrudService<>));
 
             // services.
