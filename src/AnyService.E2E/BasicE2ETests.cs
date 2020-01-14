@@ -10,15 +10,29 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Shouldly;
+using Microsoft.AspNetCore.TestHost;
 
+using Microsoft.Extensions.DependencyInjection;
 namespace AnyService.E2E
 {
-    public class E2ETests : E2EFixture
+    public class BasicE2ETests : E2EFixture
     {
-        private static Action<IWebHostBuilder> configuration = builder => { };
-        public E2ETests() : base(configuration)
-        {
-        }
+        private static Action<IWebHostBuilder> configuration = builder =>
+          {
+              builder.ConfigureTestServices(services =>
+              {
+                  services.AddMvc(o => o.EnableEndpointRouting = false);
+                  var entities = new[]
+                  {
+                        typeof(DependentModel),
+                        typeof(Dependent2),
+                        typeof(MultipartSampleModel)
+                  };
+                  services.AddAnyService(entities);
+              });
+          };
+        public BasicE2ETests() : base(configuration)
+        { }
 
         [Test]
         public async Task CRUD_Dependent()
@@ -154,7 +168,7 @@ namespace AnyService.E2E
         }
 
         [Test]
-        public async Task CRUD_NotPertmitted()
+        public async Task CRUD_NotPermitted()
         {
             var uri = "dependent2/";
             var model = new
