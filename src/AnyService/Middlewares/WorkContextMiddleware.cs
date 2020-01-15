@@ -22,6 +22,9 @@ namespace AnyService.Middlewares
             workContext.CurrentUserId = userId;
 
             var path = context.Request.Path;
+            workContext.RequestPath = path;
+            workContext.HttpMethod = context.Request.Method;
+
             var typeConfigRecord = GetRouteMap(path);
             if (typeConfigRecord != null && !typeConfigRecord.Equals(default))
             {

@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using AnyService.Services;
+using AnyService.Core;
 using AnyService.Services.FileStorage;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +13,7 @@ using Microsoft.Net.Http.Headers;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using Microsoft.AspNetCore.Authorization;
+using AnyService.Services;
 
 namespace AnyService.Controllers
 {

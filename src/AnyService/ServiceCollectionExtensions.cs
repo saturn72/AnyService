@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AnyService.Services;
 using AnyService.Audity;
 using AnyService.Events;
 using AnyService;
@@ -9,6 +8,7 @@ using AnyService.Core.Security;
 using AnyService.Services.Security;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.Authorization;
+using AnyService.Services;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

@@ -27,24 +27,22 @@ namespace AnyService.Middlewares
 
             var typeConfigRecord = TypeConfigRecordManager.GetRecord(workContext.CurrentType);
 
-            var httpMethod = context.Request.Method;
-            var permissionKey = PermissionFuncs.GetByHttpMethod(httpMethod)(typeConfigRecord);
+            var permissionKey = PermissionFuncs.GetByHttpMethod(workContext.HttpMethod)(typeConfigRecord);
             var id = context.Request.Query["id"].ToString();
-            var isPost = httpMethod.Equals(HttpMethods.Post, StringComparison.InvariantCultureIgnoreCase);
+            var isPost = workContext.HttpMethod.Equals(HttpMethods.Post, StringComparison.InvariantCultureIgnoreCase);
             if (string.IsNullOrEmpty(id) && !isPost)
             {
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
             }
 
-            if (await IsUserPermitted(isPost, workContext.CurrentUserId, permissionKey, typeConfigRecord)) await _next(context);
+            if (await IsUserPermitted(isPost, workContext.CurrentUserId, permissionKey, typeConfigRecord))
+                await _next(context);
             else
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return;
             }
-
-            var t = ManageUserPermissions(context, permissionKey, typeConfigRecord.EntityKey);
         }
 
         private async Task<bool> IsUserPermitted(bool isPost, string userId, string permissionKey, TypeConfigRecord typeConfigRecord)
@@ -57,29 +55,6 @@ namespace AnyService.Middlewares
                 : await _permissionManager.UserHasPermission(userId, permissionKey);
             }
             return await _permissionManager.UserHasPermissionOnEntity(userId, permissionKey, typeConfigRecord.EntityKey, null);
-
-
-        }
-
-        private async Task ManageUserPermissions(HttpContext context, string permissionKey, string entityKey)
-        {
-            if (context.Response.StatusCode < 200 || context.Response.StatusCode > 299) //failure
-                return;
-
-            var isPost = context.Request.Method.Equals(HttpMethods.Post, StringComparison.InvariantCultureIgnoreCase);
-            if (isPost)
-            {
-                var gettKey = PermissionFuncs.GetByHttpMethod(HttpMethods.Get)(typeConfigRecord);
-                await _permissionManager.AddUserPermissionOnEntity(_workContext.CurrentUserId, gettKey, typeConfigRecord.EntityKey, entityId);
-                var putKey = PermissionFuncs.GetByHttpMethod(HttpMethods.Put)(typeConfigRecord);
-                await _permissionManager.AddUserPermissionOnEntity(_workContext.CurrentUserId, putKey, typeConfigRecord.EntityKey, entityId);
-                var deleteKey = PermissionFuncs.GetByHttpMethod(HttpMethods.Delete)(typeConfigRecord);
-                await _permissionManager.AddUserPermissionOnEntity(_workContext.CurrentUserId, deleteKey, typeConfigRecord.EntityKey, entityId);
-                return;
-            }
-            var isDelete = context.Request.Method.Equals(HttpMethods.Delete, StringComparison.InvariantCultureIgnoreCase);
-            if (isDelete)
-                await _permissionManager.RemoveUserPermissionsOnEntity(_workContext.CurrentUserId, typeConfigRecord.EntityKey, entityId);
         }
     }
 }

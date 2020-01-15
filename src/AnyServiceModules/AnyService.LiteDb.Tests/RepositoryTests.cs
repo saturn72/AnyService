@@ -1,6 +1,6 @@
 using System;
 using Xunit;
-using AnyService.Services;
+using AnyService.Core;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using Shouldly;

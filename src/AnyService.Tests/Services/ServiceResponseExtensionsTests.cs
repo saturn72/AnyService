@@ -1,5 +1,4 @@
-﻿
-using AnyService.Services;
+﻿using AnyService.Services;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 using System;

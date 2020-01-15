@@ -1,6 +1,5 @@
 ﻿using AnyService.SampleApp.Models;
 using AnyService.SampleApp.Validators;
-using AnyService.Services;
 using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,6 +12,7 @@ using AnyService.Core.Security;
 using AnyService.LiteDb;
 using Microsoft.AspNetCore.Authentication;
 using AnyService.SampleApp.Identity;
+using AnyService.Services;
 
 namespace AnyService.SampleApp
 {
