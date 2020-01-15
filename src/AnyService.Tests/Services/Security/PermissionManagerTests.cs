@@ -28,7 +28,7 @@ namespace AnyService.Tests.Services.Security
                 It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
                 It.IsAny<TimeSpan>())).ReturnsAsync(null as IEnumerable<UserPermissions>);
             var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermission(userId, permissionKey);
+            var res = await pm.GetUserPermission(userId, permissionKey);
             res.ShouldBeFalse();
         }
         [Fact]
@@ -40,7 +40,7 @@ namespace AnyService.Tests.Services.Security
                 It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
                 It.IsAny<TimeSpan>())).ReturnsAsync(null as IEnumerable<UserPermissions>);
             var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermission("user-id", "pk");
+            var res = await pm.GetUserPermission("user-id", "pk");
             res.ShouldBeFalse();
         }
         [Fact]
@@ -52,19 +52,28 @@ namespace AnyService.Tests.Services.Security
                 It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
                 It.IsAny<TimeSpan>())).ReturnsAsync(new UserPermissions[] { });
             var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermission("user-id", "pk");
+            var res = await pm.GetUserPermission("user-id", "pk");
             res.ShouldBeFalse();
         }
         [Fact]
         public async Task UserHasPermission_ReturnsNonMatchingPermissionKey()
         {
+            var up = new UserPermissions
+            {
+                EntityPermissions = new[]
+                {
+                    new EntityPermission
+                {
+                    PermissionKey = "asdf"
+                }}
+            };
             var cm = new Mock<ICacheManager>();
             cm.Setup(c => c.GetAsync(
                 It.IsAny<string>(),
                 It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
-                It.IsAny<TimeSpan>())).ReturnsAsync(new[] { new UserPermissions { PermissionKey = "asfd" } });
+                It.IsAny<TimeSpan>())).ReturnsAsync(new[] { up });
             var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermission("user-id", "pk");
+            var res = await pm.GetUserPermission("user-id", "pk");
             res.ShouldBeFalse();
         }
 
@@ -72,13 +81,22 @@ namespace AnyService.Tests.Services.Security
         public async Task UserHasPermission_ReturnsTrue()
         {
             var pk = "per-key";
+            var up = new UserPermissions
+            {
+                EntityPermissions = new[]
+               {
+                    new EntityPermission
+                {
+                    PermissionKey = pk
+                }}
+            };
             var cm = new Mock<ICacheManager>();
             cm.Setup(c => c.GetAsync(
                 It.IsAny<string>(),
                 It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
-                It.IsAny<TimeSpan>())).ReturnsAsync(new[] { new UserPermissions { PermissionKey = pk } });
+                It.IsAny<TimeSpan>())).ReturnsAsync(new[] { up });
             var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermission("user-id", pk);
+            var res = await pm.GetUserPermission("user-id", pk);
             res.ShouldBeTrue();
         }
         #endregion
@@ -136,11 +154,20 @@ namespace AnyService.Tests.Services.Security
         [Fact]
         public async Task UserHasPermissionOnEntity_ReturnsNonMatchingPermissionKey()
         {
+            var up = new UserPermissions
+            {
+                EntityPermissions = new[]
+               {
+                    new EntityPermission
+                {
+                    PermissionKey = "asdf"
+                }}
+            };
             var cm = new Mock<ICacheManager>();
             cm.Setup(c => c.GetAsync(
                 It.IsAny<string>(),
                 It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
-                It.IsAny<TimeSpan>())).ReturnsAsync(new[] { new UserPermissions { PermissionKey = "asfd" } });
+                It.IsAny<TimeSpan>())).ReturnsAsync(new[] { up });
             var pm = new PermissionManager(cm.Object, null);
             var res = await pm.UserHasPermissionOnEntity("user-id", "pk", "ek", "eid");
             res.ShouldBeFalse();
@@ -153,14 +180,22 @@ namespace AnyService.Tests.Services.Security
                 ek = "ek",
                 eid = "eid";
 
+            var up = new UserPermissions
+            {
+                EntityPermissions = new[]
+                           {
+                    new EntityPermission
+                {
+                    PermissionKey = pk ,
+                    EntityKey = ek,
+                    EntityId = eid,
+                }}
+            };
             var cm = new Mock<ICacheManager>();
             cm.Setup(c => c.GetAsync(
                 It.IsAny<string>(),
                 It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
                 It.IsAny<TimeSpan>())).ReturnsAsync(new[] { new UserPermissions {
-                    PermissionKey = pk ,
-                    EntityKey = ek,
-                    EntityId = eid,
                 } });
             var pm = new PermissionManager(cm.Object, null);
             var res = await pm.UserHasPermissionOnEntity("user-id", pk, ek, eid);

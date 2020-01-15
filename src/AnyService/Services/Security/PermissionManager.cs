@@ -20,29 +20,12 @@ namespace AnyService.Services.Security
             _cacheManager = cacheManager;
             _repository = repository;
         }
-        public async Task<bool> UserHasPermission(string userId, string permissionKey)
+        public Task<UserPermissions> GetUserPermissions(string userId)
         {
-            if (!userId.HasValue() || !permissionKey.HasValue())
-                return false;
+            if (!userId.HasValue())
+                return null;
 
-            var allUserPermissions = await GetAllUserPermissions(userId);
-            return allUserPermissions != null && allUserPermissions.Any(p => p.PermissionKey.Equals(permissionKey, StringComparison.InvariantCultureIgnoreCase));
-        }
-        public async Task<bool> UserHasPermissionOnEntity(string userId, string permissionKey, string entityKey, string entityId)
-        {
-            if (!userId.HasValue() || !permissionKey.HasValue() || !entityKey.HasValue() || !entityId.HasValue())
-                return false;
-            var allUserPermissions = await GetAllUserPermissions(userId);
-            return allUserPermissions != null && allUserPermissions.Any(p =>
-                p.EntityId.HasValue() && p.EntityId.Equals(entityId, StringComparison.InvariantCultureIgnoreCase) &&
-                p.EntityKey.HasValue() && p.EntityKey.Equals(entityKey, StringComparison.InvariantCultureIgnoreCase) &&
-                p.PermissionKey.HasValue() && p.PermissionKey.Equals(permissionKey, StringComparison.InvariantCultureIgnoreCase));
-        }
-
-        private Task<IEnumerable<UserPermissions>> GetAllUserPermissions(string userId)
-        {
-            return _cacheManager.GetAsync(UserPermissionCacheKey + userId,
-                () => _repository.GetUserPermissions(userId), DefaultCachingTime);
+            return _cacheManager.GetAsync(UserPermissionCacheKey + userId, () => _repository.GetUserPermissions(userId), DefaultCachingTime);
         }
     }
 }

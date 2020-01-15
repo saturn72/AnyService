@@ -36,25 +36,20 @@ namespace AnyService.Middlewares
                 return;
             }
 
-            if (await IsUserPermitted(isPost, workContext.CurrentUserId, permissionKey, typeConfigRecord))
+            if (await _permissionManager.UserIsGranted(
+                workContext.CurrentUserId,
+                permissionKey,
+                typeConfigRecord.EntityKey,
+                isPost ? null : id,
+                typeConfigRecord.PermissionRecord.CreatePermissionStyle))
+            {
                 await _next(context);
+            }
             else
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return;
             }
-        }
-
-        private async Task<bool> IsUserPermitted(bool isPost, string userId, string permissionKey, TypeConfigRecord typeConfigRecord)
-        {
-            if (isPost)
-            {
-                var isOptimistic = typeConfigRecord.PermissionRecord.CreatePermissionStyle == PermissionStyle.Optimistic;
-                return isOptimistic ?
-                await _permissionManager.UserPermissionExcluded(userId, permissionKey)
-                : await _permissionManager.UserHasPermission(userId, permissionKey);
-            }
-            return await _permissionManager.UserHasPermissionOnEntity(userId, permissionKey, typeConfigRecord.EntityKey, null);
         }
     }
 }
