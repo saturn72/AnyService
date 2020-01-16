@@ -35,7 +35,7 @@ namespace AnyService
             app.UseMiddleware<AnyServicePermissionMiddleware>();
 
             //subscribe to events event listener
-            var eventBus = serviceProvider.GetService<IEventBus>();
+            var eventBus = serviceProvider.GetService<IDomainEventsBus>();
             var ekr = TypeConfigRecordManager.TypeConfigRecords.Select(e => e.EventKeyRecord);
             var peh = serviceProvider.GetService<IPermissionEventsHandler>();
             foreach (var e in ekr)

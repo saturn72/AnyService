@@ -13,13 +13,13 @@ namespace AnyService.Tests.Events
         {
             var handleCounter = 0;
             var ek = "event-key";
-            var ed = new EventData
+            var ed = new DomainEventData
             {
                 Data = "thjis is data"
             };
-            var handler = new Action<EventData>(d => handleCounter++);
+            var handler = new Action<DomainEventData>(d => handleCounter++);
 
-            var eb = new EventBus();
+            var eb = new DomainEventsBus();
             eb.Publish(ek, ed);
             handleCounter.ShouldBe(0);
             ed.PublishedOnUtc.ShouldBeGreaterThan(default(DateTime));
@@ -29,13 +29,13 @@ namespace AnyService.Tests.Events
         {
             var handleCounter = 0;
             var ek = "event-key";
-            var ed = new EventData
+            var ed = new DomainEventData
             {
                 Data = "thjis is data"
             };
-            var handler = new Action<EventData>(d => handleCounter++);
+            var handler = new Action<DomainEventData>(d => handleCounter++);
 
-            var eb = new EventBus();
+            var eb = new DomainEventsBus();
             var handlerId = eb.Subscribe(ek, handler);
             eb.Publish(ek, ed);
             Thread.Sleep(50);

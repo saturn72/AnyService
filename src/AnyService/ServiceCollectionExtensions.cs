@@ -65,7 +65,7 @@ namespace Microsoft.Extensions.DependencyInjection
             });
 
             services.TryAddScoped<AuditHelper>();
-            services.TryAddSingleton<IEventBus, EventBus>();
+            services.TryAddSingleton<IDomainEventsBus, DomainEventsBus>();
 
             if (config.ManageEntityPermissions)
                 services.TryAddSingleton<IPermissionEventsHandler, DefaultPermissionsEventsHandler>();

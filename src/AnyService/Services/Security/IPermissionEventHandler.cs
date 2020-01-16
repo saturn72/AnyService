@@ -5,7 +5,7 @@ namespace AnyService.Services.Security
 {
     public interface IPermissionEventsHandler
     {
-        Action<EventData> EntityCreatedHandler { get; }
-        Action<EventData> EntityDeletedHandler { get; }
+        Action<DomainEventData> EntityCreatedHandler { get; }
+        Action<DomainEventData> EntityDeletedHandler { get; }
     }
 }

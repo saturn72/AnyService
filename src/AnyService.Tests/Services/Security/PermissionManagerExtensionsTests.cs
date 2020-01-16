@@ -38,7 +38,7 @@ namespace AnyService.Tests.Services.Security
                 {
                     new EntityPermission {
                         Excluded = true ,
-                        PermissionKey = permissionKey,
+                        PermissionKeys = permissionKey,
                         EntityKey = entityKey,
                         EntityId = entityId,
                         },
@@ -80,7 +80,7 @@ namespace AnyService.Tests.Services.Security
                 {
                     new EntityPermission {
                         Excluded = true ,
-                        PermissionKey = permissionKey,
+                        PermissionKeys = permissionKey,
                         EntityKey = entityKey,
                         EntityId = entityId,
                         },

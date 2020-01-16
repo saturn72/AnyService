@@ -5,20 +5,20 @@ using System.Threading.Tasks;
 
 namespace AnyService.Events
 {
-    public class
-    EventBus : IEventBus
+    public class DomainEventsBus : IDomainEventsBus
     {
         private static IDictionary<string, ICollection<HandlerData>> _handlers = new Dictionary<string, ICollection<HandlerData>>();
-        public void Publish(string eventKey, EventData eventData)
+        public void Publish(string eventKey, DomainEventData eventData)
         {
-            eventData.PublishedOnUtc = DateTime.UtcNow;
-
             if (_handlers.TryGetValue(eventKey, out ICollection<HandlerData> handlerDatas))
                 foreach (var h in handlerDatas)
+                {
+                    eventData.PublishedOnUtc = DateTime.UtcNow;
                     Task.Run(() => h.Handler(eventData));
+                }
         }
 
-        public string Subscribe(string eventKey, Action<EventData> handler)
+        public string Subscribe(string eventKey, Action<DomainEventData> handler)
         {
             var handlerId = Convert
                 .ToBase64String(Guid.NewGuid().ToByteArray())
@@ -50,7 +50,7 @@ namespace AnyService.Events
         private class HandlerData
         {
             public string HandlerId { get; set; }
-            public Action<EventData> Handler { get; set; }
+            public Action<DomainEventData> Handler { get; set; }
         }
         #endregion
     }

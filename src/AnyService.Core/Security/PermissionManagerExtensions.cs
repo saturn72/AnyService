@@ -10,7 +10,7 @@ namespace AnyService.Core.Security
             var userPermissions = await manager.GetUserPermissions(userId);
             var isOptimistic = style == PermissionStyle.Optimistic;
             var entityPermission = userPermissions?.EntityPermissions?.FirstOrDefault(p =>
-                p.PermissionKey == permissionKey
+                p.PermissionKeys == permissionKey
                 && p.EntityKey == entityKey
                 && p.EntityId == entityId);
 
