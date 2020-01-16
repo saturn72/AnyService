@@ -1,8 +1,6 @@
 ﻿using AnyService.Core.Caching;
 using AnyService.Core.Security;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace AnyService.Services.Security
@@ -20,12 +18,19 @@ namespace AnyService.Services.Security
             _cacheManager = cacheManager;
             _repository = repository;
         }
-        public Task<UserPermissions> GetUserPermissions(string userId)
+        public async Task<UserPermissions> GetUserPermissions(string userId)
         {
             if (!userId.HasValue())
                 return null;
 
-            return _cacheManager.GetAsync(UserPermissionCacheKey + userId, () => _repository.GetUserPermissions(userId), DefaultCachingTime);
+            var userPermissions = await _cacheManager.GetAsync<UserPermissions>(UserPermissionCacheKey + userId);
+            if (userPermissions == null)
+            {
+                userPermissions = await _repository.GetUserPermissions(userId);
+                if (userPermissions != null)
+                    await _cacheManager.SetAsync(UserPermissionCacheKey + userId, userPermissions, DefaultCachingTime);
+            }
+            return userPermissions;
         }
     }
 }

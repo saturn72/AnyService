@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using AnyService.Core.Security;
 
 namespace AnyService.LiteDb
@@ -11,9 +10,9 @@ namespace AnyService.LiteDb
         {
             _dbName = dbName;
         }
-        public async Task<IEnumerable<UserPermissions>> GetUserPermissions(string userId)
+        public async Task<UserPermissions> GetUserPermissions(string userId)
         {
-            return await Task.Run(() => LiteDbUtility.Query(_dbName, db => db.GetCollection<UserPermissions>().Find(up => up.UserId == userId)));
+            return await Task.Run(() => LiteDbUtility.Query(_dbName, db => db.GetCollection<UserPermissions>().FindOne(up => up.UserId == userId)));
         }
     }
 }
