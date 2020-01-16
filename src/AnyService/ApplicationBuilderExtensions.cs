@@ -1,6 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using AnyService.Controllers;
+using AnyService.Events;
 using AnyService.Middlewares;
+using AnyService.Services.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,35 +22,27 @@ namespace AnyService
 
             app.UseMiddleware<WorkContextMiddleware>();
 
-            var config = sp.GetService<AnyServiceConfig>();
-            if (config.ManageEntityPermissions)
-            {
-                app.UseMiddleware<AnyServicePermissionMiddleware>();
-                throw new System.NotImplementedException("Add event listener here");
-
-                // private async Task ManageUserPermissions(HttpContext context, string permissionKey, string entityKey)
-                // {
-                //     if (context.Response.StatusCode < 200 || context.Response.StatusCode > 299) //failure
-                //         return;
-
-                //     var isPost = context.Request.Method.Equals(HttpMethods.Post, StringComparison.InvariantCultureIgnoreCase);
-                //     if (isPost)
-                //     {
-                //         var gettKey = PermissionFuncs.GetByHttpMethod(HttpMethods.Get)(typeConfigRecord);
-                //         await _permissionManager.AddUserPermissionOnEntity(_workContext.CurrentUserId, gettKey, typeConfigRecord.EntityKey, entityId);
-                //         var putKey = PermissionFuncs.GetByHttpMethod(HttpMethods.Put)(typeConfigRecord);
-                //         await _permissionManager.AddUserPermissionOnEntity(_workContext.CurrentUserId, putKey, typeConfigRecord.EntityKey, entityId);
-                //         var deleteKey = PermissionFuncs.GetByHttpMethod(HttpMethods.Delete)(typeConfigRecord);
-                //         await _permissionManager.AddUserPermissionOnEntity(_workContext.CurrentUserId, deleteKey, typeConfigRecord.EntityKey, entityId);
-                //         return;
-                //     }
-                //     var isDelete = context.Request.Method.Equals(HttpMethods.Delete, StringComparison.InvariantCultureIgnoreCase);
-                //     if (isDelete)
-                //         await _permissionManager.RemoveUserPermissionsOnEntity(_workContext.CurrentUserId, typeConfigRecord.EntityKey, entityId);
-                // }
-            }
-
+            AddPermissionComponents(app, sp);
             return app;
+
+        }
+        private static void AddPermissionComponents(IApplicationBuilder app, IServiceProvider serviceProvider)
+        {
+            var config = serviceProvider.GetService<AnyServiceConfig>();
+            if (!config.ManageEntityPermissions)
+                return;
+
+            app.UseMiddleware<AnyServicePermissionMiddleware>();
+
+            //subscribe to events event listener
+            var eventBus = serviceProvider.GetService<IEventBus>();
+            var ekr = TypeConfigRecordManager.TypeConfigRecords.Select(e => e.EventKeyRecord);
+            var peh = serviceProvider.GetService<IPermissionEventHandler>();
+            foreach (var e in ekr)
+            {
+                eventBus.Subscribe(e.Create, peh.EntityCreatedHandler);
+                eventBus.Subscribe(e.Create, peh.EntityDeletedHandler);
+            }
         }
     }
 }

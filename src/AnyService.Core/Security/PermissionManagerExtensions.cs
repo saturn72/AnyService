@@ -7,11 +7,10 @@ namespace AnyService.Core.Security
     {
         public static async Task<bool> UserIsGranted(this IPermissionManager manager, string userId, string permissionKey, string entityKey, string entityId, PermissionStyle style = PermissionStyle.Optimistic)
         {
-            throw new System.NotImplementedException("unit test this!!!");
             var userPermissions = await manager.GetUserPermissions(userId);
             var isOptimistic = style == PermissionStyle.Optimistic;
-            var entityPermission = userPermissions.EntityPermissions?.FirstOrDefault(p =>
-                p.PermissionKey != permissionKey
+            var entityPermission = userPermissions?.EntityPermissions?.FirstOrDefault(p =>
+                p.PermissionKey == permissionKey
                 && p.EntityKey == entityKey
                 && p.EntityId == entityId);
 
@@ -19,6 +18,5 @@ namespace AnyService.Core.Security
 
             return isOptimistic ? !isExcluded : isExcluded;
         }
-
     }
 }
