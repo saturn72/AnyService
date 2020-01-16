@@ -68,7 +68,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IEventBus, EventBus>();
 
             if (config.ManageEntityPermissions)
-                services.TryAddSingleton<IPermissionEventHandler, DefaultPermissionsEventHandler>();
+                services.TryAddSingleton<IPermissionEventsHandler, DefaultPermissionsEventsHandler>();
 
             return services;
         }

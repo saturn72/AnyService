@@ -11,8 +11,12 @@ using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Shouldly;
 using Microsoft.AspNetCore.TestHost;
-
 using Microsoft.Extensions.DependencyInjection;
+using AnyService.SampleApp.Identity;
+using Microsoft.AspNetCore.Mvc.Testing;
+using AnyService.SampleApp;
+using System.Net.Http.Headers;
+
 namespace AnyService.E2E
 {
     public class BasicE2ETests : E2EFixture
@@ -32,11 +36,14 @@ namespace AnyService.E2E
               });
           };
         public BasicE2ETests() : base(configuration)
-        { }
-
+        {
+            Factory = new WebApplicationFactory<Startup>();
+            HttpClient = Factory.WithWebHostBuilder(configuration).CreateClient();
+        }
         [Test]
         public async Task CRUD_Dependent()
         {
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var model = new
             {
                 Value = "init value"

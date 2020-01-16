@@ -3,7 +3,7 @@ using AnyService.Events;
 
 namespace AnyService.Services.Security
 {
-    public interface IPermissionEventHandler
+    public interface IPermissionEventsHandler
     {
         Action<EventData> EntityCreatedHandler { get; }
         Action<EventData> EntityDeletedHandler { get; }

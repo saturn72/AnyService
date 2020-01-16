@@ -37,11 +37,11 @@ namespace AnyService
             //subscribe to events event listener
             var eventBus = serviceProvider.GetService<IEventBus>();
             var ekr = TypeConfigRecordManager.TypeConfigRecords.Select(e => e.EventKeyRecord);
-            var peh = serviceProvider.GetService<IPermissionEventHandler>();
+            var peh = serviceProvider.GetService<IPermissionEventsHandler>();
             foreach (var e in ekr)
             {
                 eventBus.Subscribe(e.Create, peh.EntityCreatedHandler);
-                eventBus.Subscribe(e.Create, peh.EntityDeletedHandler);
+                eventBus.Subscribe(e.Delete, peh.EntityDeletedHandler);
             }
         }
     }
