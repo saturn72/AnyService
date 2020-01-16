@@ -19,9 +19,13 @@ namespace AnyService.Services.Security
         }
         public Action<DomainEventData> EntityCreatedHandler => (eventData) =>
          {
+             var createdEntity = eventData.Data as IDomainModelBase;
+             if (createdEntity == null)
+                 return;
+
              var manager = _serviceProvider.GetService<IPermissionManager>();
              var userId = eventData.PerformedByUserId;
-             var createdEntity = eventData.Data as IDomainModelBase;
+
              var tcr = TypeConfigRecordManager.GetRecord(createdEntity.GetType());
 
              var entityPermission = new EntityPermission
@@ -33,25 +37,41 @@ namespace AnyService.Services.Security
 
              Task.Run(async () =>
              {
+                 var isUpdate = true;
                  var userPermissions = await manager.GetUserPermissions(userId);
-                 var eps = userPermissions.EntityPermissions?.ToList() ?? new List<EntityPermission>();
+                 if (userPermissions == null)
+                 {
+                     isUpdate = false;
+                     userPermissions = new UserPermissions
+                     {
+                         UserId = userId
+                     };
+                 }
 
+                 var eps = userPermissions.EntityPermissions?.ToList() ?? new List<EntityPermission>();
                  eps.Add(entityPermission);
                  userPermissions.EntityPermissions = eps.ToArray();
-                 await manager.UpdateUserPermissions(userPermissions);
+
+                 if (isUpdate)
+                     await manager.UpdateUserPermissions(userPermissions);
+                 else
+                     await manager.CreateUserPermissions(userPermissions);
              });
          };
         public Action<DomainEventData> EntityDeletedHandler => (eventData) =>
      {
+         var deletedEntity = eventData.Data as IDomainModelBase;
+         if (deletedEntity == null)
+             return;
+
          var manager = _serviceProvider.GetService<IPermissionManager>();
          var userId = eventData.PerformedByUserId;
-         var deletedEntity = eventData.Data as IDomainModelBase;
          var tcr = TypeConfigRecordManager.GetRecord(deletedEntity.GetType());
 
          Task.Run(async () =>
          {
              var userPermissions = await manager.GetUserPermissions(userId);
-             var permissionToDelete = userPermissions.EntityPermissions?.FirstOrDefault(p => p.EntityId == deletedEntity.Id);
+             var permissionToDelete = userPermissions?.EntityPermissions?.FirstOrDefault(p => p.EntityId == deletedEntity.Id && p.EntityKey == tcr.EntityKey);
              if (permissionToDelete != null)
              {
                  var allUserPermissions = userPermissions.EntityPermissions.ToList();

@@ -8,7 +8,6 @@ namespace AnyService.Tests.Extensions
     {
         [Theory]
         [InlineData(null)]
-        [InlineData(default(string))]
         [InlineData("")]
         [InlineData("   ")]
         public void StringExtensions_HasValue_ReturnsFalse(string source)

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -10,7 +11,7 @@ namespace AnyService.Core.Security
             var userPermissions = await manager.GetUserPermissions(userId);
             var isOptimistic = style == PermissionStyle.Optimistic;
             var entityPermission = userPermissions?.EntityPermissions?.FirstOrDefault(p =>
-                p.PermissionKeys == permissionKey
+                p.PermissionKeys.Contains(permissionKey, StringComparer.InvariantCultureIgnoreCase)
                 && p.EntityKey == entityKey
                 && p.EntityId == entityId);
 

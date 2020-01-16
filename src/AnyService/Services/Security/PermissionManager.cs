@@ -18,6 +18,12 @@ namespace AnyService.Services.Security
             _cacheManager = cacheManager;
             _repository = repository;
         }
+
+        public Task<UserPermissions> CreateUserPermissions(UserPermissions userPermissions)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<UserPermissions> GetUserPermissions(string userId)
         {
             if (!userId.HasValue())
@@ -31,6 +37,11 @@ namespace AnyService.Services.Security
                     await _cacheManager.SetAsync(UserPermissionCacheKey + userId, userPermissions, DefaultCachingTime);
             }
             return userPermissions;
+        }
+
+        public Task<UserPermissions> UpdateUserPermissions(UserPermissions userPermissions)
+        {
+            throw new NotImplementedException();
         }
     }
 }

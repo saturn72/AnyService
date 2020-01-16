@@ -10,6 +10,7 @@ using Shouldly;
 using Xunit;
 using AnyService.Services.FileStorage;
 using AnyService.Services;
+using System.Collections;
 
 namespace AnyService.Tests.Services
 {
@@ -180,9 +181,7 @@ namespace AnyService.Tests.Services
             res.Data.ShouldBe(model);
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == ekr.Read),
-                It.Is<DomainEventData>(ed =>
-                    ed.Data.GetPropertyValueByName<object>("Data") == model
-                    && ed.Data.GetPropertyValueByName<string>("CurrentUserId") == _wc.CurrentUserId)), Times.Once);
+                It.Is<DomainEventData>(ed => ed.Data == model && ed.PerformedByUserId == _wc.CurrentUserId)), Times.Once);
         }
         #endregion
 
@@ -223,8 +222,7 @@ namespace AnyService.Tests.Services
             eb.Verify(e => e.Publish(
               It.Is<string>(k => k == ekr.Read),
               It.Is<DomainEventData>(ed =>
-                  ed.Data.GetPropertyValueByName<IEnumerable<TestModel>>("Data").Count() == 0
-                  && ed.Data.GetPropertyValueByName<string>("CurrentUserId") == _wc.CurrentUserId)), Times.Once);
+                  (ed.Data as IEnumerable<object>).Count() == 0 && ed.PerformedByUserId == _wc.CurrentUserId)), Times.Once);
         }
         [Fact]
         public async Task GetAll_ReturnesResponseFromDB()
@@ -249,9 +247,7 @@ namespace AnyService.Tests.Services
             (res.Data as IEnumerable<TestModel>).ShouldContain(model);
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == ekr.Read),
-                It.Is<DomainEventData>(ed =>
-                    ed.Data.GetPropertyValueByName<IEnumerable<TestModel>>("Data").Contains(model)
-                    && ed.Data.GetPropertyValueByName<string>("CurrentUserId") == _wc.CurrentUserId)), Times.Once);
+                It.Is<DomainEventData>(ed => (ed.Data as IEnumerable<object>).Contains(model) && ed.PerformedByUserId == _wc.CurrentUserId)), Times.Once);
         }
         #endregion
         #region Update
@@ -424,8 +420,8 @@ namespace AnyService.Tests.Services
             ah.Verify(a => a.PrepareForDelete(It.Is<TestModel>(e => e == dbModel), It.Is<string>(s => s == _wc.CurrentUserId)), Times.Once);
             eb.Verify(e => e.Publish(
                 It.Is<string>(ek => ek == ekr.Delete),
-                It.Is<DomainEventData>(ed => ed.GetPropertyValueByName<object>("Data").GetPropertyValueByName<object>("Data") == dbModel
-                && ed.GetPropertyValueByName<object>("Data").GetPropertyValueByName<string>("CurrentUserId") == _wc.CurrentUserId)), Times.Once());
+                It.Is<DomainEventData>(
+                    ed => ed.Data == dbModel && ed.PerformedByUserId == _wc.CurrentUserId)), Times.Once());
         }
         #endregion
     }
