@@ -4,7 +4,7 @@ using AnyService.Services;
 
 namespace AnyService
 {
-    public sealed class TypeConfigRecord
+    public class TypeConfigRecord
     {
         public string RoutePrefix { get; set; }
         public Type Type { get; set; }

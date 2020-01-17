@@ -17,22 +17,25 @@ namespace AnyService.Middlewares
             _permissionManager = permissionManager;
         }
 
-        public async Task InvokeAsync(HttpContext context, WorkContext workContext)
+        public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
         {
             if (workContext.CurrentType == null) // in-case not using Anyservice pipeline
             {
-                await _next(context);
+                await _next(httpContext);
                 return;
             }
 
             var typeConfigRecord = TypeConfigRecordManager.GetRecord(workContext.CurrentType);
 
-            var permissionKey = PermissionFuncs.GetByHttpMethod(workContext.HttpMethod)(typeConfigRecord);
-            var id = context.Request.Query["id"].ToString();
-            var isPost = workContext.HttpMethod.Equals(HttpMethods.Post, StringComparison.InvariantCultureIgnoreCase);
-            if (string.IsNullOrEmpty(id) && !isPost)
+            var permissionKey = PermissionFuncs.GetByHttpMethod(workContext.RequestInfo.Method)(typeConfigRecord);
+            var id = workContext.RequestInfo.RequesteeId;//.Request.Query["id"].ToString();
+
+            var isGet = HttpMethods.IsGet(workContext.RequestInfo.Method);
+            var isPost = HttpMethods.IsPost(workContext.RequestInfo.Method);
+
+            if (string.IsNullOrEmpty(id) && !isPost && !isGet)
             {
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
             }
 
@@ -43,11 +46,11 @@ namespace AnyService.Middlewares
                 isPost ? null : id,
                 typeConfigRecord.PermissionRecord.CreatePermissionStyle))
             {
-                await _next(context);
+                await _next(httpContext);
             }
             else
             {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return;
             }
         }

@@ -16,24 +16,21 @@ namespace AnyService.Middlewares
             _next = next;
         }
 
-        public async Task InvokeAsync(HttpContext context, WorkContext workContext)
+        public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
         {
-            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             workContext.CurrentUserId = userId;
 
-            var path = context.Request.Path;
-            workContext.RequestPath = path;
-            workContext.HttpMethod = context.Request.Method;
-
-            var typeConfigRecord = GetRouteMap(path);
+            var typeConfigRecord = GetRouteMap(httpContext.Request.Path);
             if (typeConfigRecord != null && !typeConfigRecord.Equals(default))
             {
                 workContext.CurrentTypeConfigRecord = typeConfigRecord;
                 workContext.CurrentType = typeConfigRecord.Type;
+                workContext.RequestInfo = ToRequestInfo(httpContext, httpContext.Request.Method, typeConfigRecord);
             }
-            await _next(context);
+            await _next(httpContext);
         }
-        private TypeConfigRecord GetRouteMap(PathString path)
+        private static TypeConfigRecord GetRouteMap(PathString path)
         {
             if (RouteMaps.TryGetValue(path, out TypeConfigRecord value))
                 return value;
@@ -41,6 +38,25 @@ namespace AnyService.Middlewares
             value = TypeConfigRecordManager.TypeConfigRecords.FirstOrDefault(r => path.StartsWithSegments(r.RoutePrefix, StringComparison.CurrentCultureIgnoreCase));
 
             return (RouteMaps[path] = value);
+        }
+        private static RequestInfo ToRequestInfo(HttpContext httpContext, string httpMethod, TypeConfigRecord typeConfigRecord)
+        {
+            var uric = httpContext.Request.Path.ToUriComponent();
+            var path = httpContext.Request.Path.ToString();
+            return new RequestInfo
+            {
+                Path = path,
+                Method = httpMethod,
+                RequesteeId = GetRequesteeId(),
+                Parameters = httpContext.Request.Query.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)).ToArray()
+            };
+            string GetRequesteeId()
+            {
+                var resource = typeConfigRecord.RoutePrefix;
+                var idx = path.LastIndexOf(resource, 0, StringComparison.InvariantCultureIgnoreCase) + resource.Length + 1;
+                var requesteeId = path.Substring(idx);
+                return requesteeId.StartsWith("/") ? requesteeId.Substring(1) : requesteeId;
+            }
         }
     }
 }
