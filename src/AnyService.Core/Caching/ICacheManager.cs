@@ -9,5 +9,6 @@ namespace AnyService.Core.Caching
         Task<TCachedObject> GetAsync<TCachedObject>(string key, Func<Task<TCachedObject>> acquire, TimeSpan expiration);
         Task Clear();
         Task SetAsync<TCachedObject>(string key, TCachedObject data, TimeSpan expiration);
+        Task Remove(string key);
     }
 }

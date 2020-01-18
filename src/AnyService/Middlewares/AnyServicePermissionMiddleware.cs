@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using AnyService.Core.Security;
 using AnyService.Services.Security;
@@ -28,7 +29,7 @@ namespace AnyService.Middlewares
             var typeConfigRecord = TypeConfigRecordManager.GetRecord(workContext.CurrentType);
 
             var permissionKey = PermissionFuncs.GetByHttpMethod(workContext.RequestInfo.Method)(typeConfigRecord);
-            var id = workContext.RequestInfo.RequesteeId;//.Request.Query["id"].ToString();
+            var id = workContext.RequestInfo.RequesteeId;
 
             var isGet = HttpMethods.IsGet(workContext.RequestInfo.Method);
             var isPost = HttpMethods.IsPost(workContext.RequestInfo.Method);
@@ -39,20 +40,25 @@ namespace AnyService.Middlewares
                 return;
             }
 
-            if (await _permissionManager.UserIsGranted(
-                workContext.CurrentUserId,
-                permissionKey,
-                typeConfigRecord.EntityKey,
-                isPost ? null : id,
-                typeConfigRecord.PermissionRecord.CreatePermissionStyle))
-            {
-                await _next(httpContext);
-            }
-            else
+            var isGranted = await IsGranted(workContext.CurrentUserId, permissionKey, typeConfigRecord.EntityKey, isPost ? null : id, isPost);
+            if (!isGranted)
             {
                 httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return;
             }
+            await _next(httpContext);
+        }
+
+        public async Task<bool> IsGranted(string userId, string permissionKey, string entityKey, string entityId, bool isPost)
+        {
+            var userPermissions = await _permissionManager.GetUserPermissions(userId);
+
+            var entityPermission = userPermissions?.EntityPermissions?.FirstOrDefault(p =>
+                p.PermissionKeys.Contains(permissionKey, StringComparer.InvariantCultureIgnoreCase)
+                && p.EntityKey == entityKey
+                && p.EntityId == entityId);
+
+            return (entityPermission == null && isPost) || (entityPermission != null && !entityPermission.Excluded);
         }
     }
 }

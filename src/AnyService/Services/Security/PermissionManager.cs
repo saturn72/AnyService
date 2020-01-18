@@ -1,40 +1,45 @@
 ﻿using AnyService.Core.Caching;
 using AnyService.Core.Security;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AnyService.Services.Security
 {
     public class PermissionManager : IPermissionManager
     {
-        private const string UserPermissionCacheKey = "user-permissions:";
         private static readonly TimeSpan DefaultCachingTime = TimeSpan.FromMinutes(10);
 
-        private readonly IUserPermissionsRepository _repository;
+        private readonly IRepository<UserPermissions> _repository;
         private readonly ICacheManager _cacheManager;
 
-        public PermissionManager(ICacheManager cacheManager, IUserPermissionsRepository repository)
+        public PermissionManager(ICacheManager cacheManager, IRepository<UserPermissions> repository)
         {
             _cacheManager = cacheManager;
             _repository = repository;
         }
+        private string GetCacheKey(string userId) => "user-permissions:" + userId;
 
-        public Task<UserPermissions> CreateUserPermissions(UserPermissions userPermissions)
+        public async Task<UserPermissions> CreateUserPermissions(UserPermissions userPermissions)
         {
-            throw new NotImplementedException();
+            if (!userPermissions.UserId.HasValue())
+                return null;
+            await _cacheManager.Remove(GetCacheKey(userPermissions.UserId));
+            return await _repository.Insert(userPermissions);
         }
-
         public async Task<UserPermissions> GetUserPermissions(string userId)
         {
             if (!userId.HasValue())
                 return null;
 
-            var userPermissions = await _cacheManager.GetAsync<UserPermissions>(UserPermissionCacheKey + userId);
+            var userPermissions = await _cacheManager.GetAsync<UserPermissions>(GetCacheKey(userId));
             if (userPermissions == null)
             {
-                userPermissions = await _repository.GetUserPermissions(userId);
+                var filter = new Dictionary<string, string> { { nameof(UserPermissions.UserId), userId } };
+                userPermissions = (await _repository.GetAll(filter))?.FirstOrDefault();
                 if (userPermissions != null)
-                    await _cacheManager.SetAsync(UserPermissionCacheKey + userId, userPermissions, DefaultCachingTime);
+                    await _cacheManager.SetAsync(GetCacheKey(userId), userPermissions, DefaultCachingTime);
             }
             return userPermissions;
         }
@@ -42,6 +47,7 @@ namespace AnyService.Services.Security
         public Task<UserPermissions> UpdateUserPermissions(UserPermissions userPermissions)
         {
             throw new NotImplementedException();
+            //clear cache
         }
     }
 }

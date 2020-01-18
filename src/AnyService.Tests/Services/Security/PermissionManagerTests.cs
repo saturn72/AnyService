@@ -1,5 +1,6 @@
 ﻿using AnyService.Core.Caching;
 using AnyService.Core.Security;
+using AnyService.Services;
 using AnyService.Services.Security;
 using Moq;
 using Shouldly;
@@ -41,8 +42,8 @@ namespace AnyService.Tests.Services.Security
             var userId = "some-user";
             var cm = new Mock<ICacheManager>();
             cm.Setup(c => c.GetAsync<UserPermissions>(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
-            var repo = new Mock<IUserPermissionsRepository>();
-            repo.Setup(r => r.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
+            var repo = new Mock<IRepository<UserPermissions>>();
+            repo.Setup(r => r.GetAll(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
 
             var pm = new PermissionManager(cm.Object, repo.Object);
 
@@ -56,7 +57,7 @@ namespace AnyService.Tests.Services.Security
             var expUserPermissions = new UserPermissions();
             var cm = new Mock<ICacheManager>();
             cm.Setup(c => c.GetAsync<UserPermissions>(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
-            var repo = new Mock<IUserPermissionsRepository>();
+            var repo = new Mock<IRepository<UserPermissions>>();
             repo.Setup(r => r.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(expUserPermissions);
 
             var pm = new PermissionManager(cm.Object, repo.Object);
@@ -70,6 +71,14 @@ namespace AnyService.Tests.Services.Security
             res.ShouldBe(expUserPermissions);
         }
 
+        #endregion
+
+        #region CreateUserPermissions
+        [Fact]
+        public async Task CreateUserPermissions_All_TESTS_ARE_MISSING()
+        {
+            throw new System.NotImplementedException("add crate unit tests");
+        }
         #endregion
     }
 }
