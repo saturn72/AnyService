@@ -45,10 +45,20 @@ namespace AnyService.Services.Security
             return userPermissions;
         }
 
-        public Task<UserPermissions> UpdateUserPermissions(UserPermissions userPermissions)
+        public async Task<UserPermissions> UpdateUserPermissions(UserPermissions userPermissions)
         {
-            throw new NotImplementedException();
-            //clear cache
+            if (userPermissions == null || !userPermissions.UserId.HasValue())
+                return null;
+            var filter = new Dictionary<string, string> { { nameof(UserPermissions.UserId), userPermissions.UserId } };
+            var allUserPermissions = await _repository.GetAll(filter);
+            var dbEntity = allUserPermissions?.FirstOrDefault();
+
+            if (dbEntity == null) return null;
+
+            await _cacheManager.Remove(GetCacheKey(userPermissions.UserId));
+            dbEntity.EntityPermissions = userPermissions.EntityPermissions;
+
+            return await _repository.Update(dbEntity);
         }
     }
 }
