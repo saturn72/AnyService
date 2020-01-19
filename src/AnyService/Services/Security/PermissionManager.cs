@@ -37,7 +37,8 @@ namespace AnyService.Services.Security
             if (userPermissions == null)
             {
                 var filter = new Dictionary<string, string> { { nameof(UserPermissions.UserId), userId } };
-                userPermissions = (await _repository.GetAll(filter))?.FirstOrDefault();
+                var allUserPermissions = await _repository.GetAll(filter);
+                userPermissions = allUserPermissions?.FirstOrDefault();
                 if (userPermissions != null)
                     await _cacheManager.Set(GetCacheKey(userId), userPermissions, DefaultCachingTime);
             }
