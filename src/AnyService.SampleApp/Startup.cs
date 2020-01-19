@@ -66,12 +66,12 @@ namespace AnyService.SampleApp
         private void ConfigureLiteDb(IServiceCollection services)
         {
             var liteDbName = "anyservice-testsapp.db";
-            services.AddSingleton<IUserPermissionsRepository>(p => new UserPermissionRepository(liteDbName));
             services.AddTransient<IFileStoreManager>(sp => new FileStoreManager(liteDbName));
             //configure db repositories
-            services.AddTransient<IRepository<DependentModel>>(sp => new LiteDb.Repository<DependentModel>(liteDbName));
-            services.AddTransient<IRepository<Dependent2>>(sp => new LiteDb.Repository<Dependent2>(liteDbName));
-            services.AddTransient<IRepository<MultipartSampleModel>>(sp => new LiteDb.Repository<MultipartSampleModel>(liteDbName));
+            services.AddTransient<IRepository<UserPermissions>>(sp => new Repository<UserPermissions>(liteDbName));
+            services.AddTransient<IRepository<DependentModel>>(sp => new Repository<DependentModel>(liteDbName));
+            services.AddTransient<IRepository<Dependent2>>(sp => new Repository<Dependent2>(liteDbName));
+            services.AddTransient<IRepository<MultipartSampleModel>>(sp => new Repository<MultipartSampleModel>(liteDbName));
 
             using var db = new LiteDatabase(liteDbName);
             var mapper = BsonMapper.Global;

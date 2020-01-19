@@ -33,13 +33,13 @@ namespace AnyService.Services.Security
             if (!userId.HasValue())
                 return null;
 
-            var userPermissions = await _cacheManager.GetAsync<UserPermissions>(GetCacheKey(userId));
+            var userPermissions = await _cacheManager.Get<UserPermissions>(GetCacheKey(userId));
             if (userPermissions == null)
             {
                 var filter = new Dictionary<string, string> { { nameof(UserPermissions.UserId), userId } };
                 userPermissions = (await _repository.GetAll(filter))?.FirstOrDefault();
                 if (userPermissions != null)
-                    await _cacheManager.SetAsync(GetCacheKey(userId), userPermissions, DefaultCachingTime);
+                    await _cacheManager.Set(GetCacheKey(userId), userPermissions, DefaultCachingTime);
             }
             return userPermissions;
         }

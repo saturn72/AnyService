@@ -5,6 +5,7 @@ using AnyService.Services.Security;
 using Moq;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -30,7 +31,7 @@ namespace AnyService.Tests.Services.Security
             var userId = "some-user";
             var expUserPermissions = new UserPermissions();
             var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.GetAsync<UserPermissions>(It.IsAny<string>())).ReturnsAsync(expUserPermissions);
+            cm.Setup(c => c.Get<UserPermissions>(It.IsAny<string>())).ReturnsAsync(expUserPermissions);
             var pm = new PermissionManager(cm.Object, null);
 
             var res = await pm.GetUserPermissions(userId);
@@ -41,9 +42,9 @@ namespace AnyService.Tests.Services.Security
         {
             var userId = "some-user";
             var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.GetAsync<UserPermissions>(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
+            cm.Setup(c => c.Get<UserPermissions>(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
             var repo = new Mock<IRepository<UserPermissions>>();
-            repo.Setup(r => r.GetAll(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
+            repo.Setup(r => r.GetAll(It.IsAny<IDictionary<string, string>>())).ReturnsAsync(null as IEnumerable<UserPermissions>);
 
             var pm = new PermissionManager(cm.Object, repo.Object);
 
@@ -53,22 +54,24 @@ namespace AnyService.Tests.Services.Security
         [Fact]
         public async Task GetUserPermissions_ReturnFromDb_CachesData()
         {
-            var userId = "some-user";
-            var expUserPermissions = new UserPermissions();
-            var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.GetAsync<UserPermissions>(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
-            var repo = new Mock<IRepository<UserPermissions>>();
-            repo.Setup(r => r.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(expUserPermissions);
+            throw new System.NotImplementedException("add crate unit tests");
 
-            var pm = new PermissionManager(cm.Object, repo.Object);
+            // var userId = "some-user";
+            // var expUserPermissions = new[] { new UserPermissions() };
+            // var cm = new Mock<ICacheManager>();
+            // cm.Setup(c => c.GetAsync<UserPermissions>(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
+            // var repo = new Mock<IRepository<UserPermissions>>();
+            // repo.Setup(r => r.GetAll(It.IsAny<IDictionary<string, string>>())).ReturnsAsync(expUserPermissions);
 
-            var res = await pm.GetUserPermissions(userId);
-            cm.Verify(c => c.SetAsync(
-                    It.Is<string>(s => s.EndsWith(userId)),
-                    It.Is<UserPermissions>(u => u == expUserPermissions),
-                    It.IsAny<TimeSpan>()),
-                Times.Once);
-            res.ShouldBe(expUserPermissions);
+            // var pm = new PermissionManager(cm.Object, repo.Object);
+
+            // var res = await pm.GetUserPermissions(userId);
+            // cm.Verify(c => c.SetAsync(
+            //         It.Is<string>(s => s.EndsWith(userId)),
+            //         It.Is<UserPermissions>(u => u == expUserPermissions),
+            //         It.IsAny<TimeSpan>()),
+            //     Times.Once);
+            // res.ShouldBe(expUserPermissions);
         }
 
         #endregion
