@@ -49,14 +49,18 @@ namespace AnyService.Middlewares
             await _next(httpContext);
         }
 
-        public async Task<bool> IsGranted(string userId, string permissionKey, string entityKey, string entityId, bool isPost)
+        private async Task<bool> IsGranted(string userId, string permissionKey, string entityKey, string entityId, bool isPost)
         {
             var userPermissions = await _permissionManager.GetUserPermissions(userId);
 
-            var entityPermission = userPermissions?.EntityPermissions?.FirstOrDefault(p =>
-                p.PermissionKeys.Contains(permissionKey, StringComparer.InvariantCultureIgnoreCase)
-                && p.EntityKey == entityKey
-                && p.EntityId == entityId);
+            var allPermissions = userPermissions?.EntityPermissions?.Where(p =>
+                            p.PermissionKeys.Contains(permissionKey, StringComparer.InvariantCultureIgnoreCase)
+                            && p.EntityKey.Equals(entityKey, StringComparison.InvariantCultureIgnoreCase));
+            var specificQuery = entityId.HasValue() ?
+                        new Func<EntityPermission, bool>(u => u.EntityId.Equals(entityId, StringComparison.InvariantCultureIgnoreCase)) :
+                        new Func<EntityPermission, bool>(u => true);
+
+            var entityPermission = allPermissions.FirstOrDefault(specificQuery);
 
             return (entityPermission == null && isPost) || (entityPermission != null && !entityPermission.Excluded);
         }
