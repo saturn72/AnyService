@@ -8,16 +8,17 @@ namespace AnyService.Core
 {
     public static class ExpressionBuilder
     {
-        private static readonly IDictionary<Type, PropertyDescriptorCollection> _typePropertyCollection = new Dictionary<Type, PropertyDescriptorCollection>();
-
+        //https://stackoverflow.com/questions/16066751/create-funct-bool-from-memberexpression-and-constant
         //see: https://www.codementor.io/@juliandambrosio/how-to-use-expression-trees-to-build-dynamic-queries-c-xyk1l2l82
-        public static Expression<Func<T, bool>> Build<T>(IDictionary<string, string> filter)
+        private static readonly IDictionary<Type, PropertyDescriptorCollection> _typePropertyCollection = new Dictionary<Type, PropertyDescriptorCollection>();
+        public static Func<T, bool> Build<T>(IDictionary<string, string> filter)
         {
             if (filter == null || !filter.Any())
                 return null;
             var props = GetTypeProperties(typeof(T));
+            var pe = Expression.Parameter(typeof(T));
 
-            Expression<Func<T, bool>> result = x => true;
+            var allBinaryExpressions = new List<BinaryExpression>();
 
             foreach (var kvp in filter)
             {
@@ -26,41 +27,30 @@ namespace AnyService.Core
                 var prop = GetPropertyByName(props, fieldName);
                 if (prop == null) return null;
 
-                var parameter = Expression.Parameter(typeof(T));
-                var me = GetMemberExpression<T>(parameter, fieldName);
-                result
-                result.Body.me.
-                allMemberExpressions.Add(me);
-                GetCriteriaWhere<T>(fieldName, kvp.Value);
+                var me = Expression.PropertyOrField(pe, fieldName);
+                object value;
+                try
+                {
+                    value = Convert.ChangeType(kvp.Value, me.Type);
+                }
+                catch
+                {
+                    return null;
+                }
+                var be = Expression.Equal(me, Expression.Constant(value));
+                allBinaryExpressions.Add(be);
             }
-            throw new NotImplementedException();
 
-        }
-        private static Expression<Func<T, bool>> GetCriteriaWhere<T>(string fieldName, object fieldValue)
-        {
-            PropertyDescriptorCollection props = TypeDescriptor.GetProperties(typeof(T));
-            PropertyDescriptor prop = GetPropertyByName(props, fieldName);
 
-            var parameter = Expression.Parameter(typeof(T));
-            var expressionParameter = GetMemberExpression<T>(parameter, fieldName);
-            if (prop != null && fieldValue != null)
+            var exp = Expression.Lambda<Func<T, bool>>(allBinaryExpressions.ElementAt(0), new ParameterExpression[] { pe });
+            for (var i = 1; i < allBinaryExpressions.Count; i++)
             {
-                var body = Expression.Equal(expressionParameter, Expression.Constant(fieldValue, prop.PropertyType));
-                return Expression.Lambda<Func<T, bool>>(body, parameter);
+                var right = allBinaryExpressions.ElementAt(i);
+                var also = Expression.AndAlso(exp, right);
+                exp = Expression.Lambda<Func<T, bool>>(also);
             }
-            else
-            {
-                Expression<Func<T, bool>> filter = x => true;
-                return filter;
-            }
-        }
-        private static MemberExpression GetMemberExpression<T>(ParameterExpression parameter, string propName)
-        {
-            if (string.IsNullOrEmpty(propName)) return null;
-            var propertiesName = propName.Split('.');
-            if (propertiesName.Count() == 2)
-                return Expression.Property(Expression.Property(parameter, propertiesName[0]), propertiesName[1]);
-            return Expression.Property(parameter, propName);
+            return exp.Compile();
+
         }
         private static PropertyDescriptorCollection GetTypeProperties(Type type)
         {
@@ -77,10 +67,7 @@ namespace AnyService.Core
                 return props.Find(fieldName, true);
 
             var fieldNameProperty = fieldName.Split('.');
-            return props.Find(fieldNameProperty[0], true).GetChildProperties().Find(fieldNameProperty[1], true
-            );
-
+            return props.Find(fieldNameProperty[0], true).GetChildProperties().Find(fieldNameProperty[1], true);
         }
-
     }
 }
