@@ -17,10 +17,19 @@ namespace AnyService.LiteDb
         {
             _dbName = dbName;
         }
-
-        public async Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter)
+        public async Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter = null)
         {
-            return await Task.Run(() => LiteDbUtility.Query(_dbName, db => db.GetCollection<TDomainModel>().FindAll()));
+            return await Task.Run(() => LiteDbUtility.Query(_dbName, db =>
+            {
+                var col = db.GetCollection<TDomainModel>();
+                if (filter == null) return col.FindAll();
+                throw new NotImplementedException();
+                var dbFilter = ExpressionBuilder.Build<TDomainModel>(filter);
+                if (dbFilter == null)
+                    return null;
+
+                return col.Find(dbFilter);
+            }));
         }
         public async Task<TDomainModel> Insert(TDomainModel entity)
         {

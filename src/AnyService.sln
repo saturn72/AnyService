@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.Core", "AnyServi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.EasyCaching.Tests", "AnyServiceModules\AnyService.EasyCaching.Tests\AnyService.EasyCaching.Tests.csproj", "{81057530-51E9-40EE-B64B-245A0173E570}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.Core.Tests", "AnyService.Core.Tests\AnyService.Core.Tests.csproj", "{6755C92A-3A50-4221-9107-F05780851BEF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -141,6 +143,18 @@ Global
 		{81057530-51E9-40EE-B64B-245A0173E570}.Release|x64.Build.0 = Release|Any CPU
 		{81057530-51E9-40EE-B64B-245A0173E570}.Release|x86.ActiveCfg = Release|Any CPU
 		{81057530-51E9-40EE-B64B-245A0173E570}.Release|x86.Build.0 = Release|Any CPU
+		{6755C92A-3A50-4221-9107-F05780851BEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6755C92A-3A50-4221-9107-F05780851BEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6755C92A-3A50-4221-9107-F05780851BEF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6755C92A-3A50-4221-9107-F05780851BEF}.Debug|x64.Build.0 = Debug|Any CPU
+		{6755C92A-3A50-4221-9107-F05780851BEF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6755C92A-3A50-4221-9107-F05780851BEF}.Debug|x86.Build.0 = Debug|Any CPU
+		{6755C92A-3A50-4221-9107-F05780851BEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6755C92A-3A50-4221-9107-F05780851BEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6755C92A-3A50-4221-9107-F05780851BEF}.Release|x64.ActiveCfg = Release|Any CPU
+		{6755C92A-3A50-4221-9107-F05780851BEF}.Release|x64.Build.0 = Release|Any CPU
+		{6755C92A-3A50-4221-9107-F05780851BEF}.Release|x86.ActiveCfg = Release|Any CPU
+		{6755C92A-3A50-4221-9107-F05780851BEF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
