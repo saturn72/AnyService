@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AnyService.Core;
 using AnyService.Services;
 using AnyService.Services.FileStorage;
+using LiteDB;
 
 namespace AnyService.LiteDb
 {
@@ -23,12 +24,11 @@ namespace AnyService.LiteDb
             {
                 var col = db.GetCollection<TDomainModel>();
                 if (filter == null) return col.FindAll();
-                throw new NotImplementedException();
-                var dbFilter = ExpressionBuilder.Build<TDomainModel>(filter);
-                if (dbFilter == null)
-                    return null;
 
-                return col.Find(dbFilter);
+                var query = ExpressionBuilder.ToExpression<TDomainModel>(filter);
+                if (query == null)
+                    return null;
+                return col.Find(query);
             }));
         }
         public async Task<TDomainModel> Insert(TDomainModel entity)

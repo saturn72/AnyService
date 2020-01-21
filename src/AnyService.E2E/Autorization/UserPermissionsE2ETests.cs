@@ -119,6 +119,11 @@ namespace AnyService.E2E.Authorization
             jObj = JObject.Parse(content);
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
+
+            //switch user and get deleted
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
+            res = await HttpClient.GetAsync(uri);
+            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         }
     }
 }

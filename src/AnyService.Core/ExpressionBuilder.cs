@@ -8,18 +8,20 @@ namespace AnyService.Core
 {
     public static class ExpressionBuilder
     {
-        //https://stackoverflow.com/questions/16066751/create-funct-bool-from-memberexpression-and-constant
-        //see: https://www.codementor.io/@juliandambrosio/how-to-use-expression-trees-to-build-dynamic-queries-c-xyk1l2l82
         private static readonly IDictionary<Type, PropertyDescriptorCollection> _typePropertyCollection = new Dictionary<Type, PropertyDescriptorCollection>();
-        public static Func<T, bool> Build<T>(IDictionary<string, string> filter)
+        public static Func<T, bool> ToFunc<T>(IDictionary<string, string> filter)
+        {
+            var exp = ToExpression<T>(filter);
+            return exp?.Compile();
+        }
+        public static Expression<Func<T, bool>> ToExpression<T>(IDictionary<string, string> filter)
         {
             if (filter == null || !filter.Any())
                 return null;
             var props = GetTypeProperties(typeof(T));
             var pe = Expression.Parameter(typeof(T));
 
-            var allBinaryExpressions = new List<BinaryExpression>();
-
+            var expCol = new List<BinaryExpression>();
             foreach (var kvp in filter)
             {
                 var fieldName = kvp.Key;
@@ -38,19 +40,12 @@ namespace AnyService.Core
                     return null;
                 }
                 var be = Expression.Equal(me, Expression.Constant(value));
-                allBinaryExpressions.Add(be);
+                expCol.Add(be);
             }
-
-
-            var exp = Expression.Lambda<Func<T, bool>>(allBinaryExpressions.ElementAt(0), new ParameterExpression[] { pe });
-            for (var i = 1; i < allBinaryExpressions.Count; i++)
-            {
-                var right = allBinaryExpressions.ElementAt(i);
-                var also = Expression.AndAlso(exp, right);
-                exp = Expression.Lambda<Func<T, bool>>(also);
-            }
-            return exp.Compile();
-
+            var arr = new[] { "a", "b", "c", "d", "e" };
+            var v = arr.Aggregate((a, b) => a + "___" + b);
+            var allBinaryExpressions = expCol.Aggregate((left, right) => Expression.AndAlso(left, right));
+            return Expression.Lambda<Func<T, bool>>(allBinaryExpressions, new ParameterExpression[] { pe });
         }
         private static PropertyDescriptorCollection GetTypeProperties(Type type)
         {

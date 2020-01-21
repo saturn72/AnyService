@@ -17,7 +17,7 @@ namespace AnyService.Core.Tests
         [MemberData(nameof(Build_EmptyOrNullOrIncorrectFilter_ReturnsNull_DATA))]
         public void Build_EmptyOrNullFilter_ReturnsNull(IDictionary<string, string> filter)
         {
-            ExpressionBuilder.Build<TestClass>(filter).ShouldBeNull();
+            ExpressionBuilder.ToFunc<TestClass>(filter).ShouldBeNull();
         }
         public static IEnumerable<object[]> Build_EmptyOrNullOrIncorrectFilter_ReturnsNull_DATA => new[]
         {
@@ -30,7 +30,7 @@ namespace AnyService.Core.Tests
         public void Build_PropertyNotExists()
         {
             var filter = new Dictionary<string, string> { { "p", "d" } };
-            ExpressionBuilder.Build<TestClass>(filter).ShouldBeNull();
+            ExpressionBuilder.ToFunc<TestClass>(filter).ShouldBeNull();
         }
         [Fact]
         public void Build_BuildsExpression()
@@ -43,7 +43,7 @@ namespace AnyService.Core.Tests
             };
 
             var filter1 = new Dictionary<string, string> { { nameof(TestClass.Value2), "1" } };
-            var f1 = ExpressionBuilder.Build<TestClass>(filter1);
+            var f1 = ExpressionBuilder.ToFunc<TestClass>(filter1);
             f1.ShouldNotBeNull();
             var res1 = col.Where(f1).ToArray();
             res1.Count().ShouldBe(2);
@@ -52,7 +52,7 @@ namespace AnyService.Core.Tests
                 {nameof(TestClass.Value1), "1" } ,
                 {nameof(TestClass.Value2), "1" } ,
                 };
-            var f2 = ExpressionBuilder.Build<TestClass>(filter2);
+            var f2 = ExpressionBuilder.ToFunc<TestClass>(filter2);
             f2.ShouldNotBeNull();
             var res2 = col.Where(f2).ToArray();
             res2.Count().ShouldBe(1);

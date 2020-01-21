@@ -40,10 +40,10 @@ namespace AnyService.Middlewares
                 return;
             }
 
-            var isGranted = await IsGranted(workContext.CurrentUserId, permissionKey, typeConfigRecord.EntityKey, isPost ? null : id, isPost);
+            var isGranted = await IsGranted(workContext.CurrentUserId, permissionKey, typeConfigRecord.EntityKey, isPost ? "" : id, isPost);
             if (!isGranted)
             {
-                httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
                 return;
             }
             await _next(httpContext);
@@ -60,7 +60,7 @@ namespace AnyService.Middlewares
                         new Func<EntityPermission, bool>(u => u.EntityId.Equals(entityId, StringComparison.InvariantCultureIgnoreCase)) :
                         new Func<EntityPermission, bool>(u => true);
 
-            var entityPermission = allPermissions.FirstOrDefault(specificQuery);
+            var entityPermission = allPermissions?.FirstOrDefault(specificQuery);
 
             return (entityPermission == null && isPost) || (entityPermission != null && !entityPermission.Excluded);
         }
