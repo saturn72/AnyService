@@ -97,10 +97,7 @@ namespace AnyService.E2E
 
             //get deleted
             res = await HttpClient.GetAsync("dependentmodel/" + id);
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["data"]["deleted"].Value<bool>().ShouldBeTrue();
+            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         }
 
         [Test]
