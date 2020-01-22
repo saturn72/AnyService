@@ -11,13 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: checkout master
-        uses: actions/checkout@master
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
+      - name: checkout master branch
+        uses: actions/checkout@master
         with:
           dotnet-version: 3.1.100          
       - name: test
         working-directory: ./src      
         run: dotnet test
-#       run: dotnet build --configuration Release
+      - name: build
+        run: dotnet build --configuration Release
+#       - name: create nuget package
+#         get last index
+# promote nuget version
+# publish to nuget 
