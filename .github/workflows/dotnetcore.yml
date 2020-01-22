@@ -12,20 +12,11 @@ jobs:
 
     steps:
       - working-directory: ./src
-#       - uses: actions/checkout@master
-      - uses: actions/setup-dotnet@v1
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '3.1.100'
-      - run: dotnet test
-#     - uses: saturn72/anyservice@master
-    
-#     - name: .NET Core CLI
-#       uses: baruchiro/github-actions@0.0.1
-#     - name: Setup .NET Core
-#       uses: actions/setup-dotnet@v1
-#       with:
-#         dotnet-version: 2.2.108
-#     - name: test
-#       run: dotnet test
-#     - name: Build with dotnet
+          dotnet-version: 3.1.100
+          
+      - name: test
+        run: dotnet test
 #       run: dotnet build --configuration Release
