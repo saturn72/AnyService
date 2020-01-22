@@ -14,11 +14,13 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - working-directory: ./src
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 2.2.108
-    - name: test
-      run: dotnet test
-    - name: Build with dotnet
-      run: dotnet build --configuration Release
+    - name: .NET Core CLI
+      uses: baruchiro/github-actions@0.0.1
+#     - name: Setup .NET Core
+#       uses: actions/setup-dotnet@v1
+#       with:
+#         dotnet-version: 2.2.108
+#     - name: test
+#       run: dotnet test
+#     - name: Build with dotnet
+#       run: dotnet build --configuration Release
