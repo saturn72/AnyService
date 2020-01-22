@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - working-directory: ./src
-      - uses: actions/checkout@master
+#       - uses: actions/checkout@master
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '3.1.100'
