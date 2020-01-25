@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.LiteDb", "AnySer
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.LiteDb.Tests", "AnyServiceModules\AnyService.LiteDb.Tests\AnyService.LiteDb.Tests.csproj", "{86F5FF26-D7DC-41E1-A0DC-A2115CA58FE8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Anyservice.E2E", "Anyservice.E2E\Anyservice.E2E.csproj", "{27B7A974-F0E0-4732-85FA-1051155A4D5A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.E2E", "AnyService.E2E\AnyService.E2E.csproj", "{27B7A974-F0E0-4732-85FA-1051155A4D5A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.EasyCaching", "AnyServiceModules\AnyService.EasyCaching\AnyService.EasyCaching.csproj", "{0831F328-5E63-4B9D-8348-BEC0B4A2F5F6}"
 EndProject
