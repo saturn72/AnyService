@@ -1,5 +1,6 @@
 ﻿using AnyService.Core.Caching;
 using AnyService.Core.Security;
+using AnyService.Services;
 using AnyService.Services.Security;
 using Moq;
 using Shouldly;
@@ -12,160 +13,177 @@ namespace AnyService.Tests.Services.Security
 {
     public class PermissionManagerTests
     {
-        #region UserHasPermissions
+
+        #region GetUserPermissions
         [Theory]
-        [InlineData("", "pk")]
-        [InlineData(" ", "pk")]
-        [InlineData(null, "pk")]
-        [InlineData("ui", "")]
-        [InlineData("ui", " ")]
-        [InlineData("ui", null)]
-        public async Task UserHasPermission_MissingValues(string userId, string permissionKey)
+        [InlineData("")]
+        [InlineData(" ")]
+        [InlineData(null)]
+        public async Task GetUserPermissions_UserIdHasNoValue(string userId)
         {
-            var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.GetAsync(
-                It.IsAny<string>(),
-                It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
-                It.IsAny<TimeSpan>())).ReturnsAsync(null as IEnumerable<UserPermissions>);
-            var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermission(userId, permissionKey);
-            res.ShouldBeFalse();
+            var pm = new PermissionManager(null, null);
+            var up = await pm.GetUserPermissions(userId);
+            up.ShouldBeNull();
         }
         [Fact]
-        public async Task UserHasPermission_ReturnsNullfromDB()
+        public async Task GetUserPermissions_ReturnFromCache()
         {
+            var userId = "some-user";
+            var expUserPermissions = new UserPermissions();
             var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.GetAsync(
-                It.IsAny<string>(),
-                It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
-                It.IsAny<TimeSpan>())).ReturnsAsync(null as IEnumerable<UserPermissions>);
+            cm.Setup(c => c.Get<UserPermissions>(It.IsAny<string>())).ReturnsAsync(expUserPermissions);
             var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermission("user-id", "pk");
-            res.ShouldBeFalse();
+
+            var res = await pm.GetUserPermissions(userId);
+            res.ShouldBe(expUserPermissions);
         }
-        [Fact]
-        public async Task UserHasPermission_ReturnsEmptycollectionFromDB()
+        [Theory]
+        [MemberData(nameof(GetUserPermissions_ReturnEmptyOrReturnNullFromDb_DATA))]
+        public async Task GetUserPermissions_ReturnEmptyOrReturnNullFromDb(IEnumerable<UserPermissions> data)
         {
+            var userId = "some-user";
             var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.GetAsync(
-                It.IsAny<string>(),
-                It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
-                It.IsAny<TimeSpan>())).ReturnsAsync(new UserPermissions[] { });
-            var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermission("user-id", "pk");
-            res.ShouldBeFalse();
+            cm.Setup(c => c.Get<UserPermissions>(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
+            var repo = new Mock<IRepository<UserPermissions>>();
+            repo.Setup(r => r.GetAll(It.IsAny<IDictionary<string, string>>())).ReturnsAsync(data);
+
+            var pm = new PermissionManager(cm.Object, repo.Object);
+
+            var res = await pm.GetUserPermissions(userId);
+            res.ShouldBeNull();
         }
-        [Fact]
-        public async Task UserHasPermission_ReturnsNonMatchingPermissionKey()
+        public static IEnumerable<object[]> GetUserPermissions_ReturnEmptyOrReturnNullFromDb_DATA => new[]
         {
-            var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.GetAsync(
-                It.IsAny<string>(),
-                It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
-                It.IsAny<TimeSpan>())).ReturnsAsync(new[] { new UserPermissions { PermissionKey = "asfd" } });
-            var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermission("user-id", "pk");
-            res.ShouldBeFalse();
-        }
+            new object[]{null as IEnumerable<UserPermissions>},
+            new object[]{new UserPermissions[]{}},
+        };
 
         [Fact]
-        public async Task UserHasPermission_ReturnsTrue()
+        public async Task GetUserPermissions_ReturnFromDb_And_CacheData()
         {
-            var pk = "per-key";
+            var userId = "some-user";
+            var up = new UserPermissions();
             var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.GetAsync(
-                It.IsAny<string>(),
-                It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
-                It.IsAny<TimeSpan>())).ReturnsAsync(new[] { new UserPermissions { PermissionKey = pk } });
-            var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermission("user-id", pk);
-            res.ShouldBeTrue();
+            cm.Setup(c => c.Get<UserPermissions>(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
+            var repo = new Mock<IRepository<UserPermissions>>();
+            repo.Setup(r => r.GetAll(It.IsAny<IDictionary<string, string>>())).ReturnsAsync(new[] { up });
+
+            var pm = new PermissionManager(cm.Object, repo.Object);
+
+            var res = await pm.GetUserPermissions(userId);
+            cm.Verify(c => c.Set(
+                    It.Is<string>(s => s.EndsWith(userId)),
+                    It.Is<UserPermissions>(u => u == up),
+                    It.IsAny<TimeSpan>()),
+                Times.Once);
+            res.ShouldBe(up);
+        }
+
+        #endregion
+
+        #region CreateUserPermissions
+        [Theory]
+        [InlineData("")]
+        [InlineData(" ")]
+        [InlineData(null)]
+        public async Task CreateUserPermissions_UserIdHasNoValue(string userId)
+        {
+            var toCreate = new UserPermissions
+            {
+                UserId = userId
+            };
+            var pm = new PermissionManager(null, null);
+            var up = await pm.CreateUserPermissions(toCreate);
+            up.ShouldBeNull();
+        }
+        [Fact]
+        public async Task CreateUserPermissions_PersistModel()
+        {
+            var repo = new Mock<IRepository<UserPermissions>>();
+            var cm = new Mock<ICacheManager>();
+
+            var userId = "some-user";
+            var toCreate = new UserPermissions
+            {
+                UserId = userId
+            };
+
+            var pm = new PermissionManager(cm.Object, repo.Object);
+            var up = await pm.CreateUserPermissions(toCreate);
+            cm.Verify(c => c.Remove(It.Is<string>(s => s.EndsWith(userId))), Times.Once);
+            repo.Verify(c => c.Insert(It.Is<UserPermissions>(s => s.UserId == userId)), Times.Once);
         }
         #endregion
-        #region UserHasPermissionOnEntity
-
+        #region Update
         [Theory]
-        [InlineData("", "pk", "ek", "ei")]
-        [InlineData(" ", "pk", "ek", "ei")]
-        [InlineData(null, "pk", "ek", "ei")]
-        [InlineData("ui", "", "ek", "ei")]
-        [InlineData("ui", " ", "ek", "ei")]
-        [InlineData("ui", null, "ek", "ei")]
-        [InlineData("ui", "pk", "", "ei")]
-        [InlineData("ui", "pk", " ", "ei")]
-        [InlineData("ui", "pk", null, "ei")]
-        [InlineData("ui", "pk", "ek", "")]
-        [InlineData("ui", "pk", "ek", " ")]
-        [InlineData("ui", "pk", "ek", null)]
-        public async Task UserHasPermissionOnEntity_MissingValues(string userId, string permissionKey, string entityKey, string entityId)
+        [MemberData(nameof(CreateUserPermissions_InvalidModel_DATA))]
+        public async Task CreateUserPermissions_InvalidModel(UserPermissions data)
         {
-            var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.GetAsync(
-                It.IsAny<string>(),
-                It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
-                It.IsAny<TimeSpan>())).ReturnsAsync(null as IEnumerable<UserPermissions>);
-            var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermissionOnEntity(userId, permissionKey, entityKey, entityId);
-            res.ShouldBeFalse();
+            var pm = new PermissionManager(null, null);
+            var up = await pm.UpdateUserPermissions(data);
+            up.ShouldBeNull();
         }
+        public static IEnumerable<object[]> CreateUserPermissions_InvalidModel_DATA => new[]
+        {
+            new object[]{ null as UserPermissions},
+            new object[]{ new UserPermissions()},
+        };
+        [Theory]
+        [MemberData(nameof(UpdateUserPermissions_EntityDoesNotExistsInDatabase_DATA))]
+        public async Task UpdateUserPermissions_EntityDoesNotExistsInDatabase(IEnumerable<UserPermissions> data)
+        {
+            var repo = new Mock<IRepository<UserPermissions>>();
+            var cm = new Mock<ICacheManager>();
+            repo.Setup(r => r.GetAll(It.IsAny<IDictionary<string, string>>())).ReturnsAsync(data);
 
-        [Fact]
-        public async Task UserHasPermissionOnEntity_ReturnsNullfromDB()
-        {
-            var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.GetAsync(
-                It.IsAny<string>(),
-                It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
-                It.IsAny<TimeSpan>())).ReturnsAsync(null as IEnumerable<UserPermissions>);
-            var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermissionOnEntity("user-id", "pk", "ek", "eid");
-            res.ShouldBeFalse();
-        }
-        [Fact]
-        public async Task UserHasPermissionOnEntity_ReturnsEmptycollectionFromDB()
-        {
-            var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.GetAsync(
-                It.IsAny<string>(),
-                It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
-                It.IsAny<TimeSpan>())).ReturnsAsync(new UserPermissions[] { });
-            var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermissionOnEntity("user-id", "pk", "ek", "eid");
-            res.ShouldBeFalse();
-        }
-        [Fact]
-        public async Task UserHasPermissionOnEntity_ReturnsNonMatchingPermissionKey()
-        {
-            var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.GetAsync(
-                It.IsAny<string>(),
-                It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
-                It.IsAny<TimeSpan>())).ReturnsAsync(new[] { new UserPermissions { PermissionKey = "asfd" } });
-            var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermissionOnEntity("user-id", "pk", "ek", "eid");
-            res.ShouldBeFalse();
-        }
+            var userId = "some-user";
+            var toCreate = new UserPermissions
+            {
+                Id = "123",
+                UserId = userId
+            };
 
-        [Fact]
-        public async Task UserHasPermissionOnEntity_ReturnsTrue()
-        {
-            string pk = "per-key",
-                ek = "ek",
-                eid = "eid";
-
-            var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.GetAsync(
-                It.IsAny<string>(),
-                It.IsAny<Func<Task<IEnumerable<UserPermissions>>>>(),
-                It.IsAny<TimeSpan>())).ReturnsAsync(new[] { new UserPermissions { 
-                    PermissionKey = pk ,
-                    EntityKey = ek,
-                    EntityId = eid,
-                } });
-            var pm = new PermissionManager(cm.Object, null);
-            var res = await pm.UserHasPermissionOnEntity("user-id", pk, ek, eid);
-            res.ShouldBeTrue();
+            var pm = new PermissionManager(cm.Object, repo.Object);
+            var up = await pm.UpdateUserPermissions(toCreate);
+            up.ShouldBeNull();
+            cm.Verify(c => c.Remove(It.Is<string>(s => s.EndsWith(userId))), Times.Never);
         }
-        #endregion 
+        public static IEnumerable<object[]> UpdateUserPermissions_EntityDoesNotExistsInDatabase_DATA => new[]
+        {
+            new object[]{ null as  IEnumerable<UserPermissions>},
+            new object[]{ new UserPermissions[]{}},
+        };
+        [Fact]
+        public async Task UpdateUserPermissions_Success()
+        {
+            var userId = "uid";
+            var ep = new[]{
+                new EntityPermission
+            {
+                EntityId = "eid",
+            }};
+            var toUpdate = new UserPermissions
+            {
+                UserId = userId,
+                EntityPermissions = ep,
+            };
+            var dbEntity = new UserPermissions
+            {
+                UserId = userId,
+            };
+
+            var repo = new Mock<IRepository<UserPermissions>>();
+            var cm = new Mock<ICacheManager>();
+            repo.Setup(r => r.GetAll(It.IsAny<IDictionary<string, string>>())).ReturnsAsync(new[] { dbEntity });
+            repo.Setup(r => r.Update(It.IsAny<UserPermissions>())).ReturnsAsync(dbEntity);
+
+            var pm = new PermissionManager(cm.Object, repo.Object);
+            var res = await pm.UpdateUserPermissions(toUpdate);
+            res.ShouldBe(dbEntity);
+
+            cm.Verify(c => c.Remove(It.Is<string>(s => s.EndsWith(userId))), Times.Once);
+            repo.Verify(r => r.Update(It.Is<UserPermissions>(u => u == dbEntity && u.EntityPermissions == ep)), Times.Once);
+        }
+        #endregion
     }
 }

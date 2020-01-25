@@ -23,7 +23,14 @@ namespace AnyService.Tests
             var expRoutePrefix = "some-route-prefix";
             var maps = new[]
             {
-              new TypeConfigRecord(expType, expRoutePrefix, null, null, null),
+              new TypeConfigRecord
+              {
+                  Type= expType,
+                  RoutePrefix =  expRoutePrefix,
+                  EventKeyRecord = null,
+                  PermissionRecord =null,
+                  EntityKey =  null,
+                }
             };
 
             pi.SetValue(null, maps);

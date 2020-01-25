@@ -2,13 +2,15 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AnyService.Services;
+using AnyService.Core;
 using Moq;
 using AnyService.Audity;
 using AnyService.Events;
 using Shouldly;
 using Xunit;
 using AnyService.Services.FileStorage;
+using AnyService.Services;
+using System.Collections;
 
 namespace AnyService.Tests.Services
 {
@@ -53,13 +55,13 @@ namespace AnyService.Tests.Services
 
             var ah = new Mock<AuditHelper>();
 
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventsBus>();
             var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, null, null);
             var model = new TestModel();
             var res = await cSrv.Create(model);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
 
-            eb.Verify(e => e.Publish(It.IsAny<string>(), It.IsAny<EventData>()), Times.Never);
+            eb.Verify(e => e.Publish(It.IsAny<string>(), It.IsAny<DomainEventData>()), Times.Never);
             ah.Verify(a => a.PrepareForCreate(It.Is<TestModel>(e => e == model), It.Is<string>(s => s == _wc.CurrentUserId)), Times.Once);
         }
 
@@ -75,7 +77,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(true);
 
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventsBus>();
             var ekr = new EventKeyRecord("created", null, null, null);
             var fsm = new Mock<IFileStoreManager>();
 
@@ -85,7 +87,7 @@ namespace AnyService.Tests.Services
             res.Data.ShouldBe(model);
 
             ah.Verify(a => a.PrepareForCreate(It.Is<TestModel>(e => e == model), It.Is<string>(s => s == _wc.CurrentUserId)), Times.Once);
-            eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<EventData>()), Times.Once);
+            eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<DomainEventData>()), Times.Once);
             fsm.Verify(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()), Times.Never);
         }
         [Fact]
@@ -104,7 +106,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(true);
 
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventsBus>();
             var ekr = new EventKeyRecord("created", null, null, null);
             var fsm = new Mock<IFileStoreManager>();
             fsm.Setup(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()))
@@ -119,7 +121,7 @@ namespace AnyService.Tests.Services
             res.Result.ShouldBe(ServiceResult.Ok);
 
             ah.Verify(a => a.PrepareForCreate(It.Is<TestFileContainer>(e => e == model), It.Is<string>(s => s == _wc.CurrentUserId)), Times.Once);
-            eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<EventData>()), Times.Once);
+            eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<DomainEventData>()), Times.Once);
             fsm.Verify(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()), Times.Once);
         }
         #endregion
@@ -151,7 +153,7 @@ namespace AnyService.Tests.Services
 
             var ah = new Mock<AuditHelper>();
 
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventsBus>();
             var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, null, null);
             var res = await cSrv.GetById("123");
             res.Result.ShouldBe(ServiceResult.NotFound);
@@ -170,7 +172,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(true);
 
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventsBus>();
             var ekr = new EventKeyRecord(null, "read", null, null);
 
             var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, null);
@@ -179,9 +181,7 @@ namespace AnyService.Tests.Services
             res.Data.ShouldBe(model);
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == ekr.Read),
-                It.Is<EventData>(ed =>
-                    ed.Data.GetPropertyValueByName<object>("Data") == model
-                    && ed.Data.GetPropertyValueByName<string>("CurrentUserId") == _wc.CurrentUserId)), Times.Once);
+                It.Is<DomainEventData>(ed => ed.Data == model && ed.PerformedByUserId == _wc.CurrentUserId)), Times.Once);
         }
         #endregion
 
@@ -212,7 +212,7 @@ namespace AnyService.Tests.Services
 
             var ah = new Mock<AuditHelper>();
 
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventsBus>();
             var ekr = new EventKeyRecord(null, "read", null, null);
 
             var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, null);
@@ -221,9 +221,8 @@ namespace AnyService.Tests.Services
             res.Data.ShouldBeOfType<TestModel[]>().Length.ShouldBe(0);
             eb.Verify(e => e.Publish(
               It.Is<string>(k => k == ekr.Read),
-              It.Is<EventData>(ed =>
-                  ed.Data.GetPropertyValueByName<IEnumerable<TestModel>>("Data").Count() == 0
-                  && ed.Data.GetPropertyValueByName<string>("CurrentUserId") == _wc.CurrentUserId)), Times.Once);
+              It.Is<DomainEventData>(ed =>
+                  (ed.Data as IEnumerable<object>).Count() == 0 && ed.PerformedByUserId == _wc.CurrentUserId)), Times.Once);
         }
         [Fact]
         public async Task GetAll_ReturnesResponseFromDB()
@@ -239,7 +238,7 @@ namespace AnyService.Tests.Services
 
             var ah = new Mock<AuditHelper>();
 
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventsBus>();
 
             var ekr = new EventKeyRecord(null, "read", null, null);
             var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, null);
@@ -248,9 +247,7 @@ namespace AnyService.Tests.Services
             (res.Data as IEnumerable<TestModel>).ShouldContain(model);
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == ekr.Read),
-                It.Is<EventData>(ed =>
-                    ed.Data.GetPropertyValueByName<IEnumerable<TestModel>>("Data").Contains(model)
-                    && ed.Data.GetPropertyValueByName<string>("CurrentUserId") == _wc.CurrentUserId)), Times.Once);
+                It.Is<DomainEventData>(ed => (ed.Data as IEnumerable<object>).Contains(model) && ed.PerformedByUserId == _wc.CurrentUserId)), Times.Once);
         }
         #endregion
         #region Update
@@ -303,7 +300,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(null as TestModel);
 
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventsBus>();
             var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, null, null);
             var res = await cSrv.Update(id, entity);
             var ekr = new EventKeyRecord(null, null, "update", null);
@@ -312,7 +309,7 @@ namespace AnyService.Tests.Services
 
             v.Verify(x => x.ValidateForUpdate(It.Is<TestModel>(ep => ep.Id == id), It.IsAny<ServiceResponse>()));
             ah.Verify(a => a.PrepareForUpdate(It.Is<TestModel>(e => e == entity), It.Is<TestModel>(e => e == dbModel), It.Is<string>(s => s == _wc.CurrentUserId)), Times.Once);
-            eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Update), It.IsAny<EventData>()), Times.Never);
+            eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Update), It.IsAny<DomainEventData>()), Times.Never);
         }
         [Fact]
         public async Task Update_RepositoryUpdate_ReturnsUpdatedData()
@@ -333,7 +330,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(entity);
 
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventsBus>();
             var ekr = new EventKeyRecord(null, null, "update", null);
             var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, null);
             var res = await cSrv.Update(id, entity);
@@ -342,7 +339,7 @@ namespace AnyService.Tests.Services
 
             v.Verify(x => x.ValidateForUpdate(It.Is<TestModel>(ep => ep.Id == id), It.IsAny<ServiceResponse>()));
             ah.Verify(a => a.PrepareForUpdate(It.Is<TestModel>(e => e == entity), It.Is<TestModel>(e => e == dbModel), It.Is<string>(s => s == _wc.CurrentUserId)), Times.Once);
-            eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Update), It.IsAny<EventData>()), Times.Once);
+            eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Update), It.IsAny<DomainEventData>()), Times.Once);
         }
         #endregion
         #region Delete
@@ -401,7 +398,7 @@ namespace AnyService.Tests.Services
         public async Task Delete_Success()
         {
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventsBus>();
 
             var dbModel = new TestModel();
 
@@ -423,8 +420,8 @@ namespace AnyService.Tests.Services
             ah.Verify(a => a.PrepareForDelete(It.Is<TestModel>(e => e == dbModel), It.Is<string>(s => s == _wc.CurrentUserId)), Times.Once);
             eb.Verify(e => e.Publish(
                 It.Is<string>(ek => ek == ekr.Delete),
-                It.Is<EventData>(ed => ed.GetPropertyValueByName<object>("Data").GetPropertyValueByName<object>("Data") == dbModel
-                && ed.GetPropertyValueByName<object>("Data").GetPropertyValueByName<string>("CurrentUserId") == _wc.CurrentUserId)), Times.Once());
+                It.Is<DomainEventData>(
+                    ed => ed.Data == dbModel && ed.PerformedByUserId == _wc.CurrentUserId)), Times.Once());
         }
         #endregion
     }

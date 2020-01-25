@@ -1,23 +1,17 @@
 using System;
-using AnyService.Services;
 using AnyService.Core.Security;
+using AnyService.Services;
 
 namespace AnyService
 {
-    public sealed class TypeConfigRecord
+    public class TypeConfigRecord
     {
-        public TypeConfigRecord(Type type, string routePrefix, EventKeyRecord eventKeyRecord, PermissionRecord permissionRecord, string entityKey)
-        {
-            RoutePrefix = routePrefix;
-            Type = type;
-            EventKeyRecord = eventKeyRecord;
-            PermissionRecord = permissionRecord;
-            EntityKey = entityKey;
-        }
-        public string RoutePrefix { get; }
-        public Type Type { get; }
-        public EventKeyRecord EventKeyRecord { get; }
-        public PermissionRecord PermissionRecord { get; }
-        public string EntityKey { get; }
+        public string RoutePrefix { get; set; }
+        public Type Type { get; set; }
+        public EventKeyRecord EventKeyRecord { get; set; }
+        public PermissionRecord PermissionRecord { get; set; }
+        public string EntityKey { get; set; }
+        public ICrudValidator Validator { get; set; }
+        public AuthorizationInfo Authorization { get; set; }
     }
 }

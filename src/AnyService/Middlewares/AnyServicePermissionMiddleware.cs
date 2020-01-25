@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AnyService.Core.Security;
+using AnyService.Services.Security;
 using Microsoft.AspNetCore.Http;
 
 namespace AnyService.Middlewares
@@ -9,44 +10,59 @@ namespace AnyService.Middlewares
     public class AnyServicePermissionMiddleware
     {
         private readonly RequestDelegate _next;
-        private static readonly IReadOnlyDictionary<string, Func<TypeConfigRecord, string>> HttpMethodToPerMissionKey = new Dictionary<string, Func<TypeConfigRecord, string>>(StringComparer.InvariantCultureIgnoreCase)
-        {
-            { "POST" ,t => t.PermissionRecord.CreateKey},
-            {  "GET",t  => t.PermissionRecord.ReadKey},
-            {   "PUT",t  => t.PermissionRecord.UpdateKey},
-            {   "DELETE", t => t.PermissionRecord.DeleteKey },
-        };
-        public AnyServicePermissionMiddleware(RequestDelegate next)
+        private readonly IPermissionManager _permissionManager;
+
+        public AnyServicePermissionMiddleware(RequestDelegate next, IPermissionManager permissionManager)
         {
             _next = next;
+            _permissionManager = permissionManager;
         }
 
-        public async Task InvokeAsync(HttpContext context, WorkContext workContext, IPermissionManager permissionService)
+        public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
         {
             if (workContext.CurrentType == null) // in-case not using Anyservice pipeline
             {
-                await _next(context);
+                await _next(httpContext);
                 return;
             }
 
             var typeConfigRecord = TypeConfigRecordManager.GetRecord(workContext.CurrentType);
-            var httpMethod = context.Request.Method;
-            var permissionKey = HttpMethodToPerMissionKey[httpMethod](typeConfigRecord);
-            var id = context.Request.Query["id"].ToString();
-            var isPost = httpMethod.Equals(HttpMethods.Post, StringComparison.InvariantCultureIgnoreCase);
-            if (string.IsNullOrEmpty(id) && !isPost)
+
+            var permissionKey = PermissionFuncs.GetByHttpMethod(workContext.RequestInfo.Method)(typeConfigRecord);
+            var id = workContext.RequestInfo.RequesteeId;
+
+            var isGet = HttpMethods.IsGet(workContext.RequestInfo.Method);
+            var isPost = HttpMethods.IsPost(workContext.RequestInfo.Method);
+
+            if (string.IsNullOrEmpty(id) && !isPost && !isGet)
             {
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
             }
 
-            var hasPermission = isPost ?
-                await permissionService.UserHasPermission(workContext.CurrentUserId, permissionKey) :
-                await permissionService.UserHasPermissionOnEntity(workContext.CurrentUserId, permissionKey, typeConfigRecord.EntityKey, null);
-
-            if (hasPermission) await _next(context);
-            else context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            var isGranted = await IsGranted(workContext.CurrentUserId, permissionKey, typeConfigRecord.EntityKey, isPost ? "" : id, isPost);
+            if (!isGranted)
+            {
+                httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return;
+            }
+            await _next(httpContext);
         }
 
+        private async Task<bool> IsGranted(string userId, string permissionKey, string entityKey, string entityId, bool isPost)
+        {
+            var userPermissions = await _permissionManager.GetUserPermissions(userId);
+
+            var allPermissions = userPermissions?.EntityPermissions?.Where(p =>
+                            p.PermissionKeys.Contains(permissionKey, StringComparer.InvariantCultureIgnoreCase)
+                            && p.EntityKey.Equals(entityKey, StringComparison.InvariantCultureIgnoreCase));
+            var specificQuery = entityId.HasValue() ?
+                        new Func<EntityPermission, bool>(u => u.EntityId.Equals(entityId, StringComparison.InvariantCultureIgnoreCase)) :
+                        new Func<EntityPermission, bool>(u => true);
+
+            var entityPermission = allPermissions?.FirstOrDefault(specificQuery);
+
+            return (entityPermission == null && isPost) || (entityPermission != null && !entityPermission.Excluded);
+        }
     }
 }

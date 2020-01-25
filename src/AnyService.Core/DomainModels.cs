@@ -1,4 +1,4 @@
-namespace AnyService.Services
+namespace AnyService.Core
 {
     public interface IDomainModelBase
     {

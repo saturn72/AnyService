@@ -1,19 +1,18 @@
-﻿using AnyService.Middlewares;
-using AnyService.SampleApp.Models;
+﻿using AnyService.SampleApp.Models;
 using AnyService.SampleApp.Validators;
-using AnyService.Services;
 using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AnyService.Services.FileStorage;
-using Microsoft.Extensions.Hosting;
-using System.Linq;
 using AnyService.EasyCaching;
 using AnyService.Core.Caching;
 using AnyService.Core.Security;
 using AnyService.LiteDb;
+using Microsoft.AspNetCore.Authentication;
+using AnyService.SampleApp.Identity;
+using AnyService.Services;
 
 namespace AnyService.SampleApp
 {
@@ -27,7 +26,9 @@ namespace AnyService.SampleApp
         public IConfiguration Configuration { get; }
         public void ConfigureServices(IServiceCollection services)
         {
-            var builder = services.AddMvc(o => o.EnableEndpointRouting = false);
+            var builder = services
+                .AddMvcCore(o => o.EnableEndpointRouting = false)
+                .AddAuthorization();
 
             var entities = new[]
             {
@@ -42,23 +43,10 @@ namespace AnyService.SampleApp
                 new MultipartSampleValidator(),
             };
 
-            //use this command when route== entity name
-            //services.AddAnyService(builder, Configuration, entities, validators);
+            services.AddAuthentication(ManagedAuthenticationHandler.Schema)
+                .AddScheme<AuthenticationSchemeOptions, ManagedAuthenticationHandler>(ManagedAuthenticationHandler.Schema, options => { });
 
-            var typeConfigRecords = entities.Select(e =>
-            {
-                var fn = e.FullName.ToLower();
-                var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-                var routePrefix = e.Name;
-                if (e.Equals(typeof(Dependent2)))
-                    routePrefix = routePrefix.Replace("model", "", System.StringComparison.InvariantCultureIgnoreCase);
-
-                var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-                return new TypeConfigRecord(e, routePrefix, ekr, pr, fn);
-            });
-
-            services.AddAnyService(builder, typeConfigRecords, validators);
-
+            services.AddAnyService(entities);
             ConfigureLiteDb(services);
             ConfigureCaching(services);
         }
@@ -78,12 +66,12 @@ namespace AnyService.SampleApp
         private void ConfigureLiteDb(IServiceCollection services)
         {
             var liteDbName = "anyservice-testsapp.db";
-            services.AddSingleton<IUserPermissionsRepository>(p => new UserPermissionRepository(liteDbName));
             services.AddTransient<IFileStoreManager>(sp => new FileStoreManager(liteDbName));
             //configure db repositories
-            services.AddTransient<IRepository<DependentModel>>(sp => new LiteDb.Repository<DependentModel>(liteDbName));
-            services.AddTransient<IRepository<Dependent2>>(sp => new LiteDb.Repository<Dependent2>(liteDbName));
-            services.AddTransient<IRepository<MultipartSampleModel>>(sp => new LiteDb.Repository<MultipartSampleModel>(liteDbName));
+            services.AddTransient<IRepository<UserPermissions>>(sp => new Repository<UserPermissions>(liteDbName));
+            services.AddTransient<IRepository<DependentModel>>(sp => new Repository<DependentModel>(liteDbName));
+            services.AddTransient<IRepository<Dependent2>>(sp => new Repository<Dependent2>(liteDbName));
+            services.AddTransient<IRepository<MultipartSampleModel>>(sp => new Repository<MultipartSampleModel>(liteDbName));
 
             using var db = new LiteDatabase(liteDbName);
             var mapper = BsonMapper.Global;
@@ -95,21 +83,16 @@ namespace AnyService.SampleApp
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseHsts();
-            }
 
+            app.UseHsts();
             app.UseHttpsRedirection();
             app.UseRouting();
-
+            app.UseAuthentication();
+            app.UseAuthorization();
+            app.UseAnyService();
             //you may use app.UseAnyService() to setup anyservice pipeline instead the two lines below
-            app.UseMiddleware<AnyServiceWorkContextMiddleware>();
-            app.UseMiddleware<AnyServicePermissionMiddleware>();
+            // app.UseMiddleware<AnyServiceWorkContextMiddleware>();
+            // app.UseMiddleware<AnyServicePermissionMiddleware>();
 
             app.UseMvc();
         }

@@ -1,87 +1,114 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AnyService.Services;
 using AnyService.Audity;
 using AnyService.Events;
 using AnyService;
-using AnyService.Controllers;
 using AnyService.Core.Security;
 using AnyService.Services.Security;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.Authorization;
+using AnyService.Services;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {
         public static IServiceCollection AddAnyService(this IServiceCollection services,
-            IMvcBuilder mvcBuilder,
             IEnumerable<Type> entities)
         {
-            var typeConfigRecords = entities.Select(e =>
+            var config = new AnyServiceConfig
             {
-                var fn = e.FullName.ToLower();
-                var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-                var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-
-                return new TypeConfigRecord(e, "/" + e.Name, ekr, pr, fn);
-            });
-            return AddAnyService(services, mvcBuilder, typeConfigRecords, null);
+                TypeConfigRecords = entities.Select(e => new TypeConfigRecord { Type = e, })
+            };
+            return AddAnyService(services, config);
         }
         public static IServiceCollection AddAnyService(this IServiceCollection services,
-            IMvcBuilder mvcBuilder,
-            IEnumerable<Type> entities,
-            IEnumerable<ICrudValidator> validators)
+            AnyServiceConfig config)
         {
-            var typeConfigRecords = entities.Select(e =>
-            {
-                var fn = e.FullName.ToLower();
-                var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
-                var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
+            NormalizeConfiguration(config);
+            services.TryAddSingleton(config);
 
-                return new TypeConfigRecord(e, "/" + e.Name, ekr, pr, fn);
-            });
-            return AddAnyService(services, mvcBuilder, typeConfigRecords, validators);
-        }
+            services.TryAddTransient(typeof(CrudService<>));
 
-        public static IServiceCollection AddAnyService(this IServiceCollection services,
-            IMvcBuilder mvcBuilder,
-            IEnumerable<TypeConfigRecord> typeConfigRecords,
-            IEnumerable<ICrudValidator> validators)
-        {
-            mvcBuilder.ConfigureApplicationPartManager(apm =>
-                apm.FeatureProviders.Add(new GenericControllerFeatureProvider(typeConfigRecords.Select(e => e.Type))));
-            services.AddTransient(typeof(CrudService<>));
+            // services.
+            services.AddSingleton(config.TypeConfigRecords);
+            if (config.TypeConfigRecords.Any(t => t.Authorization != null))
+                services.AddTransient<IAuthorizationHandler, DefaultAuthorizationHandler>();
 
+            //validator factory
+            var validators = config.TypeConfigRecords.Select(t => t.Validator).ToArray();
             var validatorFactory = new ValidatorFactory(validators);
-            services.AddSingleton(validatorFactory);
+            services.TryAddSingleton(validatorFactory);
             foreach (var v in validators)
             {
                 var vType = v.GetType();
                 foreach (var vt in vType.GetInterfaces())
-                    services.AddTransient(vt, vType);
+                    services.TryAddTransient(vt, vType);
             }
 
-            TypeConfigRecordManager.TypeConfigRecords = typeConfigRecords;
-            services.AddScoped<WorkContext>();
-            services.AddScoped<IPermissionManager, PermissionManager>();
+            TypeConfigRecordManager.TypeConfigRecords = config.TypeConfigRecords;
+            services.TryAddScoped<WorkContext>();
+            services.TryAddSingleton<IPermissionManager, PermissionManager>();
 
-            //services.AddScoped(sp =>
-            //{
-            //    var wc = sp.GetService<WorkContext>();
-            //    var ct = wc.CurrentType;
-            //    return TypeConfigRecordManager.GetRecord(ct).EventKeyRecord;
-            //});
-            //services.AddScoped(sp =>
-            //{
-            //    var wc = sp.GetService<WorkContext>();
-            //    var ct = wc.CurrentType;
-            //    return TypeConfigRecordManager.GetRecord(ct).PermissionRecord;
-            //});
+            services.AddScoped(sp =>
+            {
+                var wc = sp.GetService<WorkContext>();
+                var ct = wc.CurrentType;
+                return TypeConfigRecordManager.GetRecord(ct).EventKeyRecord;
+            });
+            services.AddScoped(sp =>
+            {
+                var wc = sp.GetService<WorkContext>();
+                var ct = wc.CurrentType;
+                return TypeConfigRecordManager.GetRecord(ct).PermissionRecord;
+            });
 
-            services.AddScoped<AuditHelper>();
-            services.AddSingleton<IEventBus, EventBus>();
+            services.TryAddScoped<AuditHelper>();
+            services.TryAddSingleton<IDomainEventsBus, DomainEventsBus>();
+
+            if (config.ManageEntityPermissions)
+                services.TryAddSingleton<IPermissionEventsHandler, DefaultPermissionsEventsHandler>();
 
             return services;
+        }
+
+        private static void NormalizeConfiguration(AnyServiceConfig config)
+        {
+            var temp = config.TypeConfigRecords.ToArray();
+            foreach (var tcr in temp)
+            {
+                var e = tcr.Type;
+                var fn = e.FullName.ToLower();
+                var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
+                var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
+
+                if (!tcr.RoutePrefix.HasValue()) tcr.RoutePrefix = "/" + e.Name;
+                if (!tcr.RoutePrefix.StartsWith("/") || tcr.RoutePrefix.StartsWith("//"))
+                    throw new InvalidOperationException($"RoutePrefix must start with single'/'. Actual value: {tcr.RoutePrefix}");
+
+                if (tcr.EventKeyRecord == null) tcr.EventKeyRecord = ekr;
+                if (tcr.PermissionRecord == null) tcr.PermissionRecord = pr;
+                if (tcr.EntityKey == null) tcr.EntityKey = fn;
+                if (tcr.Validator == null)
+                {
+                    var v = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);
+                    tcr.Validator = (ICrudValidator)Activator.CreateInstance(v);
+                }
+                if (tcr.Authorization != null)
+                    SetAuthorization(tcr.Authorization);
+            }
+            config.TypeConfigRecords = temp;
+        }
+
+        private static void SetAuthorization(AuthorizationInfo authzInfo)
+        {
+            var ctrlAuthzAttribute = authzInfo.ControllerAuthorizationNode;
+
+            if (authzInfo.PostAuthorizeNode == null) authzInfo.PostAuthorizeNode = ctrlAuthzAttribute;
+            if (authzInfo.GetAuthorizeNode == null) authzInfo.GetAuthorizeNode = ctrlAuthzAttribute;
+            if (authzInfo.PutAuthorizeNode == null) authzInfo.PutAuthorizeNode = ctrlAuthzAttribute;
+            if (authzInfo.DeleteAuthorizeNode == null) authzInfo.DeleteAuthorizeNode = ctrlAuthzAttribute;
         }
     }
 }

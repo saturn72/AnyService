@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using AnyService.Audity;
+using AnyService.Core;
 using AnyService.Events;
 using AnyService.Services.FileStorage;
 
@@ -12,7 +13,7 @@ namespace AnyService.Services
         private readonly ICrudValidator<TDomainModel> _validator;
         private readonly AuditHelper _auditHelper;
         private readonly WorkContext _workContext;
-        private readonly IEventBus _eventBus;
+        private readonly IDomainEventsBus _eventBus;
         private readonly EventKeyRecord _eventKeyRecord;
         private readonly IFileStoreManager _fileStorageManager;
         #endregion
@@ -22,7 +23,7 @@ namespace AnyService.Services
             ICrudValidator<TDomainModel> validator,
             AuditHelper auditHelper,
             WorkContext workContext,
-            IEventBus eventBus,
+            IDomainEventsBus eventBus,
             EventKeyRecord eventKeyRecord,
             IFileStoreManager fileStorageManager)
         {
@@ -50,10 +51,10 @@ namespace AnyService.Services
 
             if (dbData == null)
                 return serviceResponse;
-            _eventBus.Publish(_eventKeyRecord.Create, new EventData
+            _eventBus.Publish(_eventKeyRecord.Create, new DomainEventData
             {
                 Data = dbData,
-                CurrentUserId = _workContext.CurrentUserId
+                PerformedByUserId = _workContext.CurrentUserId
             });
             serviceResponse.Result = ServiceResult.Ok;
 
@@ -62,7 +63,6 @@ namespace AnyService.Services
                 var uploadResponses = await _fileStorageManager.Upload((dbData as IFileContainer).Files);
                 serviceResponse.Data = new { entity = serviceResponse.Data, filesUploadStatus = uploadResponses };
             }
-
             return serviceResponse;
         }
         public async Task<ServiceResponse> GetById(string id)
@@ -70,6 +70,7 @@ namespace AnyService.Services
             var serviceResponse = new ServiceResponse
             {
                 Data = id
+
             };
             if (!await _validator.ValidateForGet(serviceResponse))
                 return serviceResponse;
@@ -79,13 +80,10 @@ namespace AnyService.Services
             {
                 serviceResponse.Data = data;
                 serviceResponse.Result = ServiceResult.Ok;
-                _eventBus.Publish(_eventKeyRecord.Read, new EventData
+                _eventBus.Publish(_eventKeyRecord.Read, new DomainEventData
                 {
-                    Data = new
-                    {
-                        Data = data,
-                        _workContext.CurrentUserId
-                    }
+                    Data = data,
+                    PerformedByUserId = _workContext.CurrentUserId
                 });
             }
             return serviceResponse;
@@ -100,13 +98,10 @@ namespace AnyService.Services
             {
                 serviceResponse.Data = data;
                 serviceResponse.Result = ServiceResult.Ok;
-                _eventBus.Publish(_eventKeyRecord.Read, new EventData
+                _eventBus.Publish(_eventKeyRecord.Read, new DomainEventData
                 {
-                    Data = new
-                    {
-                        Data = data,
-                        _workContext.CurrentUserId
-                    }
+                    Data = data,
+                    PerformedByUserId = _workContext.CurrentUserId
                 });
             }
             return serviceResponse;
@@ -130,13 +125,10 @@ namespace AnyService.Services
 
             if (updateResponse != null && serviceResponse.Result == ServiceResult.NotSet)
             {
-                _eventBus.Publish(_eventKeyRecord.Update, new EventData
+                _eventBus.Publish(_eventKeyRecord.Update, new DomainEventData
                 {
-                    Data = new
-                    {
-                        Data = updateResponse,
-                        _workContext.CurrentUserId
-                    }
+                    Data = updateResponse,
+                    PerformedByUserId = _workContext.CurrentUserId
                 });
                 serviceResponse.Result = ServiceResult.Ok;
             }
@@ -166,13 +158,10 @@ namespace AnyService.Services
                 throw new System.NotImplementedException("need to implement delete logic in database");
             }
 
-            _eventBus.Publish(_eventKeyRecord.Delete, new EventData
+            _eventBus.Publish(_eventKeyRecord.Delete, new DomainEventData
             {
-                Data = new
-                {
-                    Data = deletedModel,
-                    _workContext.CurrentUserId
-                }
+                Data = deletedModel,
+                PerformedByUserId = _workContext.CurrentUserId
             });
             serviceResponse.Result = ServiceResult.Ok;
             return serviceResponse;

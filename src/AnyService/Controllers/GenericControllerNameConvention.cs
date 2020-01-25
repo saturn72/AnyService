@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc.ApplicationModels;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.Mvc.Routing;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace AnyService.Controllers
@@ -15,7 +18,9 @@ namespace AnyService.Controllers
                 return;
             }
             var entityType = controller.ControllerType.GenericTypeArguments[0];
-            controller.ControllerName = TypeConfigRecordManager.TypeConfigRecords.FirstOrDefault(t => t.Type == entityType)?.RoutePrefix ?? entityType.Name;
+            var tcr = TypeConfigRecordManager.TypeConfigRecords.FirstOrDefault(t => t.Type == entityType);
+
+            controller.ControllerName = tcr?.RoutePrefix ?? entityType.Name;
         }
     }
 }

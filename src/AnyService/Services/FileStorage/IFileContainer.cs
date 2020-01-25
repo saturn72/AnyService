@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using AnyService.Core;
 
 namespace AnyService.Services.FileStorage
 {

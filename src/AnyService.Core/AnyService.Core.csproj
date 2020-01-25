@@ -7,11 +7,4 @@
   <ItemGroup>
     <PackageReference Include="EasyCaching.Core" Version="0.8.0" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Saturn72.Extensions">
-      <HintPath>..\..\..\Saturn72.Extensions\src\Saturn72.Extensions\bin\Debug\netstandard2.1\Saturn72.Extensions.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>

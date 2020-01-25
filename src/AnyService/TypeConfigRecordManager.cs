@@ -14,7 +14,7 @@ namespace AnyService
         public static IEnumerable<TypeConfigRecord> TypeConfigRecords
         {
             get => _records;
-            internal set
+            set
             {
                 _records = value;
                 _recordDictionary = _records.ToDictionary(k => k.Type, v => v);

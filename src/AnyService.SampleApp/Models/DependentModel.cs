@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using AnyService.Services;
+using AnyService.Core;
 using AnyService.Audity;
 
 namespace AnyService.SampleApp.Models

@@ -1,9 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using AnyService.Core;
 using AnyService.Services;
 using AnyService.Services.FileStorage;
+using LiteDB;
 
 namespace AnyService.LiteDb
 {
@@ -16,10 +18,18 @@ namespace AnyService.LiteDb
         {
             _dbName = dbName;
         }
-
-        public async Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter)
+        public async Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter = null)
         {
-            return await Task.Run(() => LiteDbUtility.Query(_dbName, db => db.GetCollection<TDomainModel>().FindAll()));
+            return await Task.Run(() => LiteDbUtility.Query(_dbName, db =>
+            {
+                var col = db.GetCollection<TDomainModel>();
+                if (filter == null) return col.FindAll();
+
+                var query = ExpressionBuilder.ToExpression<TDomainModel>(filter);
+                if (query == null)
+                    return null;
+                return col.Find(query);
+            }));
         }
         public async Task<TDomainModel> Insert(TDomainModel entity)
         {
