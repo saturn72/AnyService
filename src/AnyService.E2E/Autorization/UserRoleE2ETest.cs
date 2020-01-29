@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using AnyService.SampleApp;
 using System.Net;
 using AnyService.SampleApp.Identity;
+using Microsoft.AspNetCore.Http;
 
 namespace AnyService.E2E.Authorization
 {
@@ -104,17 +105,11 @@ namespace AnyService.E2E.Authorization
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
 
-            //get deleted
-            res = await HttpClient.GetAsync(uri + id);
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["data"]["deleted"].Value<bool>().ShouldBeTrue();
+            //un authorized requests
+            var unauthRes = await HttpClient.GetAsync(uri + id);
+            unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.UnauthorizedUser1);
-
-            var unauthRes = await HttpClient.PostAsJsonAsync(uri, model);
-            unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
             unauthRes = await HttpClient.GetAsync(uri);
             unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);

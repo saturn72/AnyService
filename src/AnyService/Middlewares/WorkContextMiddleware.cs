@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -19,6 +20,11 @@ namespace AnyService.Middlewares
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
         {
             var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!userId.HasValue())
+            {
+                httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return;
+            }
             workContext.CurrentUserId = userId;
 
             var typeConfigRecord = GetRouteMap(httpContext.Request.Path);

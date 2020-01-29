@@ -103,6 +103,8 @@ namespace AnyService.E2E
         [Test]
         public async Task MultipartFormSampleFlow()
         {
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
+
             var multiForm = new MultipartFormDataContent();
             var filePath = Path.Combine(AppContext.BaseDirectory, "resources", "dog.jpg");
 
