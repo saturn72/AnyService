@@ -52,7 +52,6 @@ namespace AnyService.Middlewares
         private async Task<bool> IsGranted(string userId, string permissionKey, string entityKey, string entityId, bool isPost)
         {
             var userPermissions = await _permissionManager.GetUserPermissions(userId);
-
             var allPermissions = userPermissions?.EntityPermissions?.Where(p =>
                             p.PermissionKeys.Contains(permissionKey, StringComparer.InvariantCultureIgnoreCase)
                             && p.EntityKey.Equals(entityKey, StringComparison.InvariantCultureIgnoreCase));

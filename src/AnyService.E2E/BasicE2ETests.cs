@@ -106,7 +106,7 @@ namespace AnyService.E2E
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
 
             var multiForm = new MultipartFormDataContent();
-            var filePath = Path.Combine(AppContext.BaseDirectory, "resources", "dog.jpg");
+            var filePath = Path.Combine("resources", "dog.jpg");
 
             //data 
             var model = new
@@ -140,8 +140,9 @@ namespace AnyService.E2E
         [Test]
         public async Task MultipartFormStreamSampleFlow()
         {
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var multiForm = new MultipartFormDataContent();
-            var filePath = Path.Combine(AppContext.BaseDirectory, "resources", "video.mp4");
+            var filePath = Path.Combine("resources", "video.mp4");
 
             //data 
             var model = new
@@ -155,7 +156,8 @@ namespace AnyService.E2E
             multiForm.Add(new StringContent(dataString), "model");
 
             var fileStream = new FileStream(filePath, FileMode.Open);
-            multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), Path.GetFileName(filePath));
+            var fn = Path.GetFileName(filePath);
+            multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), fn);
             var res = await HttpClient.PostAsync("multipartSampleModel/__stream", multiForm);
             res.EnsureSuccessStatusCode();
 
