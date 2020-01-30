@@ -19,8 +19,11 @@
     <ProjectReference Include="..\AnyService.SampleApp\AnyService.SampleApp.csproj" />
   </ItemGroup>
 
+   <!-- <Content Include="layouts\*.*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>  -->
   <ItemGroup>
-    <None Update="resources\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="resources\**" CopyToOutputDirectory="Always" />
   </ItemGroup>
 
 </Project>
