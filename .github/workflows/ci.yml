@@ -21,6 +21,7 @@ jobs:
         working-directory: ./src      
         run: dotnet test
       - name: build
+        working-directory: ./src/AnyService
         run: dotnet build --configuration Release
 #       - name: create nuget package
 #         get last index
