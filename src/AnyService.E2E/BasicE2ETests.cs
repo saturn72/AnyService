@@ -51,6 +51,7 @@ namespace AnyService.E2E
 
             //create
             var res = await HttpClient.PostAsJsonAsync("dependentmodel", model);
+            await Task.Delay(150);//simulate real network delay for all background tasks to finish
             var content = await res.Content.ReadAsStringAsync();
             res.EnsureSuccessStatusCode();
             var jObj = JObject.Parse(content);
@@ -129,6 +130,7 @@ namespace AnyService.E2E
             var id = jObj["data"]["entity"]["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
 
+            await Task.Delay(150);//simulate real network delay for all background tasks to finish
             res = await HttpClient.GetAsync("multipartSampleModel/" + id);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
@@ -159,6 +161,7 @@ namespace AnyService.E2E
             var fn = Path.GetFileName(filePath);
             multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), fn);
             var res = await HttpClient.PostAsync("multipartSampleModel/__stream", multiForm);
+            await Task.Delay(150);//simulate real network delay for all background tasks to finish
             res.EnsureSuccessStatusCode();
 
             var content = await res.Content.ReadAsStringAsync();
@@ -175,6 +178,7 @@ namespace AnyService.E2E
             (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
         }
         [Test]
+        [Ignore("feature postpond")]
         public async Task CRUD_ControllerRouteOverwrite()
         {
             var uri = "dependent2/";

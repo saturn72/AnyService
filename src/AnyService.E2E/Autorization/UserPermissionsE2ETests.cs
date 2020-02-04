@@ -60,6 +60,8 @@ namespace AnyService.E2E.Authorization
 
             //create an antity
             var res = await HttpClient.PostAsJsonAsync(uri, model);
+            await Task.Delay(150);//simulate real network delay for all background tasks to finish
+
             var content = await res.Content.ReadAsStringAsync();
             res.EnsureSuccessStatusCode();
             var jObj = JObject.Parse(content);
