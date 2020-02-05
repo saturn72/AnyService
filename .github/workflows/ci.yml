@@ -23,14 +23,13 @@ jobs:
         working-directory: ./src      
         run: dotnet test
 
-      - name: build
+      - name: Create nuget package
         working-directory: ./src/AnyService
-        run: dotnet build --configuration Release --version-suffix prerelease-$(date +%Y%m%d%H%M%S)
-        shell: bash
+        run: dotnet pack --configuration Release
         
-      - name: Publish nuget
-        working-directory: ./src/AnyService/bin/Release/
-        run: |
-           curl -vX PUT -u "[user]:${{ secrets.GHPackagesToken }}" -F package=anyservice.nupkg https://nuget.pkg.github.com/[user]/
-           done
-        shell: bash
+#       - name: Publish nuget
+#         working-directory: ./src/AnyService/bin/Release/
+#         run: |
+#            curl -vX PUT -u "[user]:${{ secrets.GHPackagesToken }}" -F package=anyservice.nupkg https://nuget.pkg.github.com/[user]/
+#            done
+#         shell: bash
