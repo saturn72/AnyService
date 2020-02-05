@@ -6,30 +6,35 @@ on:
       - master
   
 jobs:
-  gated:
-    name: test, build, pack and publish
+  build:
+    name: build and test source code
     runs-on: ubuntu-latest
-    
     steps:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
-      
+        with:
+          dotnet-version: 3.0.100
+        
       - name: Checkout master branch
         uses: actions/checkout@master
         with:
           dotnet-version: 3.1.100          
 
+      - name: Build
+        working-directory: ./src
+        run: dotnet build --configuration Release
+      
       - name: Test
         working-directory: ./src      
         run: dotnet test
-
-      - name: Build
-        working-directory: ./src/AnyService
-        run: dotnet build --configuration Release
-      
+  deploy:
+    needs: build
+    name: deploys to nuget
+    runs-on: ubuntu-latest
+    steps:  
       - name: Pack nuget package
         working-directory: ./src/AnyService
-        run: dotnet pack --configuration Release
+        run: dotnet pack --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg
       
 #       - name: Publish nuget
 #         working-directory: ./src/AnyService/bin/Release/
