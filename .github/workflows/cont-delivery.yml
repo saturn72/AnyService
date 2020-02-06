@@ -32,6 +32,10 @@ jobs:
         working-directory: ./src/AnyService
         run: dotnet pack --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg
       
+      - name: Push package to nuget
+        working-directory: ./src/AnyService
+        run: dotnet nuget push **/*.nupkg --api-key ${{secrets.NUGET_DEPLOY_KEY}} --source https://api.nuget.org/v3/index.json
+      
 #       - name: Publish nuget
 #         working-directory: ./src/AnyService/bin/Release/
 #         run: |
