@@ -33,12 +33,5 @@ jobs:
         run: dotnet pack --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg
       
       - name: Push package to nuget
-        working-directory: ./src/AnyService
-        run: dotnet nuget push **/*.nupkg --api-key ${{secrets.NUGET_DEPLOY_KEY}} --source https://api.nuget.org/v3/index.json
-      
-#       - name: Publish nuget
-#         working-directory: ./src/AnyService/bin/Release/
-#         run: |
-#            curl -vX PUT -u "[user]:${{ secrets.GHPackagesToken }}" -F package=anyservice.nupkg https://nuget.pkg.github.com/[user]/
-#            done
-#         shell: bash
+        working-directory: ./src/AnyService/bin/Release
+        run: dotnet nuget push *.nupkg --api-key ${{secrets.NUGET_DEPLOY_KEY}} --source https://api.nuget.org/v3/index.json
