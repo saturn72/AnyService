@@ -1,0 +1,38 @@
+name: anyservice ci
+
+on:
+  push:
+    branches: 
+      - master
+  
+jobs:
+  continunous_delivery:
+    name: build, test & deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.0.100
+        
+      - name: Checkout master branch
+        uses: actions/checkout@master
+        with:
+          dotnet-version: 3.1.100          
+
+      - name: Build
+        working-directory: ./src
+        run: dotnet build --configuration Release
+      
+      - name: Test
+        working-directory: ./src      
+        run: dotnet test
+        
+      - name: Pack nuget package
+        working-directory: ./src/AnyService
+        run: dotnet pack --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg
+      
+      - name: Push package to nuget
+        working-directory: ./src/AnyService/bin/Release
+        run: dotnet nuget push *.nupkg --api-key ${{secrets.NUGET_DEPLOY_KEY}}
+#         --source https://api.nuget.org/v3/index.json
