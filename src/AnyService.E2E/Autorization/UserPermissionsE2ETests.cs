@@ -60,8 +60,8 @@ namespace AnyService.E2E.Authorization
 
             //create an antity
             var res = await HttpClient.PostAsJsonAsync(uri, model);
-            await Task.Delay(1500); //wait for litedb to create database
-            
+            await Task.Delay(2500); //wait for litedb to create database
+
             var content = await res.Content.ReadAsStringAsync();
             res.EnsureSuccessStatusCode();
             var jObj = JObject.Parse(content);
