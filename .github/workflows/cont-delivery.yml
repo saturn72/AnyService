@@ -34,4 +34,5 @@ jobs:
       
       - name: Push package to nuget
         working-directory: ./src/AnyService/bin/Release
-        run: dotnet nuget push *.nupkg --api-key ${{secrets.NUGET_DEPLOY_KEY}} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push *.nupkg --api-key ${{secrets.NUGET_DEPLOY_KEY}}
+#         --source https://api.nuget.org/v3/index.json
