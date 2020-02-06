@@ -51,7 +51,7 @@ namespace AnyService.E2E
 
             //create
             var res = await HttpClient.PostAsJsonAsync("dependentmodel", model);
-            await Task.Delay(150);//simulate real network delay for all background tasks to finish
+            await Task.Delay(1500);//wait for litedb to create database
             var content = await res.Content.ReadAsStringAsync();
             res.EnsureSuccessStatusCode();
             var jObj = JObject.Parse(content);
@@ -130,7 +130,7 @@ namespace AnyService.E2E
             var id = jObj["data"]["entity"]["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
 
-            await Task.Delay(150);//simulate real network delay for all background tasks to finish
+            await Task.Delay(1500);//wait for litedb to create database
             res = await HttpClient.GetAsync("multipartSampleModel/" + id);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
@@ -161,7 +161,7 @@ namespace AnyService.E2E
             var fn = Path.GetFileName(filePath);
             multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), fn);
             var res = await HttpClient.PostAsync("multipartSampleModel/__stream", multiForm);
-            await Task.Delay(150);//simulate real network delay for all background tasks to finish
+            await Task.Delay(1500);//wait for litedb to create database
             res.EnsureSuccessStatusCode();
 
             var content = await res.Content.ReadAsStringAsync();
