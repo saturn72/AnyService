@@ -23,10 +23,10 @@ jobs:
       - name: Build
         working-directory: ./src
         run: dotnet build --configuration Release
-      
-      - name: Test
+        
+        - name: Test
         working-directory: ./src      
-        run: dotnet test
+        run: dotnet test --configuration Release
         
       - name: Pack nuget package
         working-directory: ./src/AnyService
