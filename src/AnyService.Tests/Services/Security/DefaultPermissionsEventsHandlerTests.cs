@@ -152,7 +152,7 @@ namespace AnyService.Tests.Services.Security
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
             ph.EntityCreatedHandler(ed);
-            Thread.Sleep(50);
+            Thread.Sleep(100);
 
             pm.Verify(p => p.UpdateUserPermissions(It.Is<UserPermissions>(
                 up => up.UserId == userId
