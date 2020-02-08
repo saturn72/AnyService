@@ -69,7 +69,7 @@ namespace AnyService.E2E.Authorization
             jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
 
             //read by creator
-            await Task.Delay(2500);//wait for litedb to create database
+            await Task.Delay(150);// wait for background tasks (by simulating network delay)
             res = await HttpClient.GetAsync(uri + id);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
@@ -105,7 +105,7 @@ namespace AnyService.E2E.Authorization
             jObj = JObject.Parse(content);
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
-            await Task.Delay(2500);//wait for litedb to create database
+            await Task.Delay(150);// wait for background tasks (by simulating network delay)
             //un authorized requests
             var unauthRes = await HttpClient.GetAsync(uri + id);
             unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
