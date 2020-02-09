@@ -17,9 +17,13 @@ The boilerplate code is already in place. All you have to do now is to configure
 
 init step - Create new `webapi` project by using `dotnet new webapi --name AnyService.SampleApp` command.
 
-#### 1. Add reference to `AnyService` nuget package (see [here](https://www.nuget.org/packages/anyservice/))
+#### 1. Add reference to `AnyService` nuget package 
 
-#### 2. Create a model (entity) that you want to use as resource. This modelwould be used to perform all `CRUD` operations of the web service. It must implement `IDomainModelBase` to "glue" it to `AnyService`'s business logic.  
+(see [here](https://www.nuget.org/packages/anyservice/))
+
+#### 2. Create a model (entity) that you want to use as resource
+
+This model is used to perform all `CRUD` operations of the web service. It must implement `IDomainModelBase` to "glue" it to `AnyService`'s business logic.  
 
 ```
 public class DependentModel : IDomainModelBase //Your model must implement IDomainModelBase
@@ -29,7 +33,9 @@ public class DependentModel : IDomainModelBase //Your model must implement IDoma
 }
 ```
 
-#### 3. Add `AnyService` components to `Startup.cs` file: In `ConfigureServices` method, add the following lines:
+#### 3. Add `AnyService` components to `Startup.cs` file
+
+In `ConfigureServices` method, add the following lines:
 
 ```
 public void ConfigureServices(IServiceCollection services)
@@ -77,7 +83,9 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-#### 5. The final step is to add `AnyService` middleware to pipeline. Add the following line to `Configure` method of `Startup.cs`
+#### 5. The final step is to add `AnyService` middleware to pipeline
+
+Add the following line to `Configure` method of `Startup.cs`
 
 ```
 public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -88,7 +96,9 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 }
 ```
 
-#### 6. Now hit F5 to start your application and perform _CRUD_ operations on `dependent` URI.
+#### 6. Start your app
+
+Now hit F5 to start your application and perform _CRUD_ operations on `dependent` URI.
 
 ## CRUD Flow
 
