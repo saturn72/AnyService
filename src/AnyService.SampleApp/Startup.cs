@@ -36,12 +36,6 @@ namespace AnyService.SampleApp
                 typeof(Dependent2),
                 typeof(MultipartSampleModel)
             };
-            var validators = new ICrudValidator[]
-            {
-                new DependentModelValidator(),
-                new Dependent2ModelValidator(),
-                new MultipartSampleValidator(),
-            };
 
             services.AddAuthentication(ManagedAuthenticationHandler.Schema)
                 .AddScheme<AuthenticationSchemeOptions, ManagedAuthenticationHandler>(ManagedAuthenticationHandler.Schema, options => { });
@@ -53,13 +47,11 @@ namespace AnyService.SampleApp
 
         private void ConfigureCaching(IServiceCollection services)
         {
-            services.AddSingleton<ICacheManager, EasyCachingCacheManager>();
-            services.AddEasyCaching(options => options.UseInMemory("default"));
-
             var easycachingconfig = new EasyCachingConfig();
             Configuration.GetSection("caching").Bind(easycachingconfig);
 
             services.AddSingleton(easycachingconfig);
+            services.AddEasyCaching(options => options.UseInMemory("default"));
             services.AddSingleton<ICacheManager, EasyCachingCacheManager>();
         }
 
@@ -83,17 +75,12 @@ namespace AnyService.SampleApp
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-
             app.UseHsts();
             app.UseHttpsRedirection();
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseAnyService();
-            //you may use app.UseAnyService() to setup anyservice pipeline instead the two lines below
-            // app.UseMiddleware<AnyServiceWorkContextMiddleware>();
-            // app.UseMiddleware<AnyServicePermissionMiddleware>();
-
             app.UseMvc();
         }
     }
