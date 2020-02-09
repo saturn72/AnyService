@@ -17,18 +17,25 @@ The boilerplate code is already in place. All you have to do now is to configure
 
 init step - Create new `webapi` project by using `dotnet new webapi --name AnyService.SampleApp` command.
 
-1. Add reference to `AnyService` **_Note: nuget package would be created in near future, meanwhile create git submodule in your project_**
-2. Create your dependent model. This dependent model is used to perform all `CRUD` operations
+#### 1. Add reference to `AnyService` nuget package 
+
+(see [here](https://www.nuget.org/packages/anyservice/))
+
+#### 2. Create a model (entity) that you want to use as resource
+
+This model is used to perform all `CRUD` operations of the web service. It must implement `IDomainModelBase` to "glue" it to `AnyService`'s business logic.  
 
 ```
-public class DependentModel : IDomainModelBase //this must be implemented for Repository operations
+public class DependentModel : IDomainModelBase //Your model must implement IDomainModelBase
 {
     public string Id { get; set; }
     public string Value { get; set; }
 }
 ```
 
-3. Add `AnyService` components to `Startup.cs` file: In `ConfigureServices` method, add the following lines:
+#### 3. Add `AnyService` components to `Startup.cs` file
+
+In `ConfigureServices` method, add the following lines:
 
 ```
 public void ConfigureServices(IServiceCollection services)
@@ -42,7 +49,9 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-4. Configure your `IRepository` implementation by adding the following lines to `ConfigureServices` method (this is `LiteDb` implementation)
+#### 4. Configure caching and persistency functions
+
+**Persistency** is achieved by `IRepository` implementation. Here is `LiteDB` example: add reference to `AnyService.LiteDB` nuget (see [here](https://www.nuget.org/packages/anyservice.litedb)) and adding the following lines to `ConfigureServices` method.
 
 ```
 public void ConfigureServices(IServiceCollection services)
@@ -51,6 +60,7 @@ public void ConfigureServices(IServiceCollection services)
   
   var liteDbName = "anyservice-testsapp.db";
   services.AddTransient<IRepository<DependentModel>>(sp => new AnyService.LiteDbRepository.Repository<DependentModel>(liteDbName));
+  services.AddTransient<IRepository<UserPermissions>>(sp => new Repository<UserPermissions>(liteDbName));
   using (var db = new LiteDatabase(liteDbName))
   {
       var mapper = BsonMapper.Global;
@@ -60,18 +70,36 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-5. finally add `AnyService` middleware to pipeline. Add the following line to `Configure` method of `Startup.cs`
+**Caching** is achieved by `ICacheManager` implementation. Here is `EasyCaching.InMemory` example: : add reference to `AnyService.EasyCaching` nuget (see [here](https://www.nuget.org/packages/anyservice.easycaching)) and to `EasyCaching.InMemory` (see[here](https://www.nuget.org/packages/EasyCaching.InMemory/)) and adding the following lines to `ConfigureServices` method.
 
 ```
-public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+public void ConfigureServices(IServiceCollection services)
 {
   ...
-  app.UseMiddleware<AnyServiceMiddleware>();
+  var easycachingconfig = new EasyCachingConfig();
+  services.AddSingleton(easycachingconfig);
+  services.AddEasyCaching(options => options.UseInMemory("default"));
+  services.AddSingleton<ICacheManager, EasyCachingCacheManager>();
   ...
 }
 ```
 
-Now start your application and perform _CRUD_ operations on `dependent` URI.
+#### 5. The final step is to add `AnyService` middleware to pipeline
+
+Add the following line to `Configure` method of `Startup.cs`
+
+```
+public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+{
+  //other middleware before
+  app.UseMiddleware<AnyServiceMiddleware>();
+  //other middleware after
+}
+```
+
+#### 6. Start your app
+
+Now hit F5 to start your application and perform _CRUD_ operations on `dependent` URI.
 
 ## CRUD Flow
 
