@@ -4,7 +4,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <PackageId>anyservice</PackageId>
-    <Version>1.1.0</Version>
+    <Version>1.1.1-Preview</Version>
     <Authors>roi@saturn72.com</Authors>
     <Company>saturn technologies</Company>
   </PropertyGroup>

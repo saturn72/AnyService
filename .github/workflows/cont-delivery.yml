@@ -30,7 +30,7 @@ jobs:
 
       - name: Pack nuget package
         working-directory: ./src/AnyService
-        run: dotnet pack --configuration Release --output ./bin/nupkg --no-build --version-suffix "Preview" --include-symbols -p:SymbolPackageFormat=snupkg
+        run: dotnet pack --configuration Release --output ./bin/nupkg --no-build --include-symbols -p:SymbolPackageFormat=snupkg
 
       - name: Push package to nuget
         working-directory: ./src/AnyService/bin/nupkg
