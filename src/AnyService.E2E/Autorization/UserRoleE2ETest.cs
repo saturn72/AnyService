@@ -105,7 +105,7 @@ namespace AnyService.E2E.Authorization
             jObj = JObject.Parse(content);
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
-            await Task.Delay(150);// wait for background tasks (by simulating network delay)
+            await Task.Delay(250);// wait for background tasks (by simulating network delay)
             //un authorized requests
             var unauthRes = await HttpClient.GetAsync(uri + id);
             unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
