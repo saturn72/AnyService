@@ -84,7 +84,12 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-#### 5. The final step is to add `AnyService` middleware to pipeline
+#### 5. Add Autorization and Authentication
+
+`AnyService` cannot work without identity management configured. 
+**TBD: add anyservice.mocks package** 
+
+#### 6. The final step is to add `AnyService` middleware to pipeline
 
 Add the following line to `Configure` method of `Startup.cs`
 
@@ -97,7 +102,7 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 }
 ```
 
-#### 6. Start your app
+#### 7. Start your app
 
 Now hit F5 to start your application and perform _CRUD_ operations on `dependent` URI.
 
