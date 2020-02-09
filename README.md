@@ -17,7 +17,7 @@ The boilerplate code is already in place. All you have to do now is to configure
 
 init step - Create new `webapi` project by using `dotnet new webapi --name AnyService.SampleApp` command.
 
-1. Add reference to `AnyService` **_Note: nuget package would be created in near future, meanwhile create git submodule in your project_**
+1. Add reference to `AnyService` nuget package (see [here](https://www.nuget.org/packages/anyservice/))
 2. Create your dependent model. This dependent model is used to perform all `CRUD` operations
 
 ```
