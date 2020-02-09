@@ -202,7 +202,7 @@ namespace AnyService.Tests.Services.Security
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
             ph.EntityDeletedHandler(ed);
-            Thread.Sleep(50);
+            Thread.Sleep(100);
 
             pm.Verify(p => p.UpdateUserPermissions(It.IsAny<UserPermissions>()), Times.Never);
 
