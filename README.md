@@ -60,6 +60,7 @@ public void ConfigureServices(IServiceCollection services)
   
   var liteDbName = "anyservice-testsapp.db";
   services.AddTransient<IRepository<DependentModel>>(sp => new AnyService.LiteDbRepository.Repository<DependentModel>(liteDbName));
+  services.AddTransient<IRepository<UserPermissions>>(sp => new Repository<UserPermissions>(liteDbName));
   using (var db = new LiteDatabase(liteDbName))
   {
       var mapper = BsonMapper.Global;
