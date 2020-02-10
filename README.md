@@ -43,8 +43,7 @@ public void ConfigureServices(IServiceCollection services)
   ...
   
   var entities = new[] { typeof(DependentModel) }; //list all your entities
-  services.AddAnyService(entities);
-  
+  services.AddAnyService(entities);  
   ...
 }
 ```
@@ -84,11 +83,18 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-#### 5. Add Autorization and Authentication
+#### 5. Add Authentication
 
-`AnyService` cannot work without identity management configured. 
-**TBD: add anyservice.mocks package** 
+`AnyService` must have authentication configured (otherwise 401 Unauthorized response is always returned). `AnyService` provides mocked `AuthenticationHandler` that injects claims to Request's User. This done by using `AddAlwaysPassAuthentication` extension method.
 
+```
+public void ConfigureServices(IServiceCollection services)
+{
+  ...
+  services.AddAlwaysPassAuthentication("abcd-1234", null); //  
+  ...
+}
+```
 #### 6. The final step is to add `AnyService` middleware to pipeline
 
 Add the following line to `Configure` method of `Startup.cs`
