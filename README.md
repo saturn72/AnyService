@@ -140,6 +140,26 @@ TBD
 
 TDB
 
+## Authentication
+
+Authenticating a user is mandatory in `AnyService`. Some of the main reasons are that `UserId` is required to manage permissions access to created entity, that user-based-event is raised on `CRUD` operation is performed and more.
+Authentication is added and configured using `asp.net core`'s default authentication configuration.
+For development purposes only, you may configure `AlwaysPassAuthenticationHandler` by using `AddAlwaysPassAuthentication` extension method. Using `AlwaysPassAuthenticationHandler` you are able to inject any claim to the current `Request.User`.
+
+public void ConfigureServices(IServiceCollection services)
+{
+  ...
+  var userId = "some-user-id";
+  var claims = new []
+  {
+    new KeyValuePair<string, string>("claim1-key", "claim1-value"),
+    new KeyValuePair<string, string>("claim1-key", "claim1-value"),
+    new KeyValuePair<string, string>("claim1-key", "claim1-value"),
+  };
+  services.AddAlwaysPassAuthentication(userId, claims); // This   
+  ...
+}
+
 ## Authorization
 
 Unlike authentication, authorization is fully handled by `AnyService`.
