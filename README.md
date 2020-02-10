@@ -1,3 +1,5 @@
+![anyservice ci](https://github.com/saturn72/AnyService/workflows/anyservice%20ci/badge.svg)
+
 # AnyService
 
 Create asp.net core services FAST 🐱‍🏍
