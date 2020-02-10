@@ -1,5 +1,4 @@
 ﻿using AnyService.SampleApp.Models;
-using AnyService.SampleApp.Validators;
 using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
