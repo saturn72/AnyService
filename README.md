@@ -146,6 +146,7 @@ Authenticating a user is mandatory in `AnyService`. Some of the main reasons are
 Authentication is added and configured using `asp.net core`'s default authentication configuration.
 For development purposes only, you may configure `AlwaysPassAuthenticationHandler` by using `AddAlwaysPassAuthentication` extension method. Using `AlwaysPassAuthenticationHandler` you are able to inject any claim to the current `Request.User`.
 
+```
 public void ConfigureServices(IServiceCollection services)
 {
   ...
@@ -159,6 +160,7 @@ public void ConfigureServices(IServiceCollection services)
   services.AddAlwaysPassAuthentication(userId, claims); // This   
   ...
 }
+```
 
 ## Authorization
 
