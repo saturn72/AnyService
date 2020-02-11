@@ -26,17 +26,17 @@ namespace AnyService.Tests
               new EntityConfigRecord
               {
                   Type= expType,
-                  RoutePrefix =  expRoutePrefix,
-                  EventKeyRecord = null,
+                  Route =  expRoutePrefix,
+                  EventKeys = null,
                   PermissionRecord =null,
-                  EntityKey =  null,
+                  EntityId =  null,
                 }
             };
 
             pi.SetValue(null, maps);
             EntityConfigRecordManager.EntityConfigRecords.Count().ShouldBe(1);
-            EntityConfigRecordManager.EntityConfigRecords.First(c => c.RoutePrefix.Equals(expRoutePrefix, StringComparison.InvariantCultureIgnoreCase)).Type.ShouldBe(expType);
-            EntityConfigRecordManager.GetRecord(expType).RoutePrefix.ShouldBe(expRoutePrefix);
+            EntityConfigRecordManager.EntityConfigRecords.First(c => c.Route.Equals(expRoutePrefix, StringComparison.InvariantCultureIgnoreCase)).Type.ShouldBe(expType);
+            EntityConfigRecordManager.GetRecord(expType).Route.ShouldBe(expRoutePrefix);
         }
     }
 }

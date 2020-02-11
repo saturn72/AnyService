@@ -55,7 +55,7 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 var wc = sp.GetService<WorkContext>();
                 var ct = wc.CurrentType;
-                return EntityConfigRecordManager.GetRecord(ct).EventKeyRecord;
+                return EntityConfigRecordManager.GetRecord(ct).EventKeys;
             });
             services.AddScoped(sp =>
             {
@@ -83,13 +83,13 @@ namespace Microsoft.Extensions.DependencyInjection
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
 
-                if (!tcr.RoutePrefix.HasValue()) tcr.RoutePrefix = "/" + e.Name;
-                if (!tcr.RoutePrefix.StartsWith("/") || tcr.RoutePrefix.StartsWith("//"))
-                    throw new InvalidOperationException($"RoutePrefix must start with single'/'. Actual value: {tcr.RoutePrefix}");
+                if (!tcr.Route.HasValue()) tcr.Route = "/" + e.Name;
+                if (!tcr.Route.StartsWith("/") || tcr.Route.StartsWith("//"))
+                    throw new InvalidOperationException($"RoutePrefix must start with single'/'. Actual value: {tcr.Route}");
 
-                if (tcr.EventKeyRecord == null) tcr.EventKeyRecord = ekr;
+                if (tcr.EventKeys == null) tcr.EventKeys = ekr;
                 if (tcr.PermissionRecord == null) tcr.PermissionRecord = pr;
-                if (tcr.EntityKey == null) tcr.EntityKey = fn;
+                if (tcr.EntityId == null) tcr.EntityId = fn;
                 if (tcr.Validator == null)
                 {
                     var v = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);

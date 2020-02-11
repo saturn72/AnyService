@@ -40,7 +40,7 @@ namespace AnyService.Middlewares
                 return;
             }
 
-            var isGranted = await IsGranted(workContext.CurrentUserId, permissionKey, typeConfigRecord.EntityKey, isPost ? "" : id, isPost);
+            var isGranted = await IsGranted(workContext.CurrentUserId, permissionKey, typeConfigRecord.EntityId, isPost ? "" : id, isPost);
             if (!isGranted)
             {
                 httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;

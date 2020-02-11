@@ -31,7 +31,7 @@ namespace AnyService.Services.Security
              var entityPermission = new EntityPermission
              {
                  EntityId = createdEntity.Id,
-                 EntityKey = tcr.EntityKey,
+                 EntityKey = tcr.EntityId,
                  PermissionKeys = new[] { tcr.PermissionRecord.ReadKey, tcr.PermissionRecord.UpdateKey, tcr.PermissionRecord.DeleteKey, },
              };
 
@@ -71,7 +71,7 @@ namespace AnyService.Services.Security
          Task.Run(async () =>
          {
              var userPermissions = await manager.GetUserPermissions(userId);
-             var permissionToDelete = userPermissions?.EntityPermissions?.FirstOrDefault(p => p.EntityId == deletedEntity.Id && p.EntityKey == tcr.EntityKey);
+             var permissionToDelete = userPermissions?.EntityPermissions?.FirstOrDefault(p => p.EntityId == deletedEntity.Id && p.EntityKey == tcr.EntityId);
              if (permissionToDelete != null)
              {
                  var allUserPermissions = userPermissions.EntityPermissions.ToList();

@@ -20,7 +20,7 @@ namespace AnyService.Controllers
             var entityType = controller.ControllerType.GenericTypeArguments[0];
             var tcr = EntityConfigRecordManager.EntityConfigRecords.FirstOrDefault(t => t.Type == entityType);
 
-            controller.ControllerName = tcr?.RoutePrefix ?? entityType.Name;
+            controller.ControllerName = tcr?.Route ?? entityType.Name;
         }
     }
 }

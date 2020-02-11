@@ -6,11 +6,29 @@ namespace AnyService
 {
     public class EntityConfigRecord
     {
-        public string RoutePrefix { get; set; }
+        /// <summary>
+        /// Gets or sets route for entity.
+        /// </summary>
+        public string Route { get; set; }
+        /// <summary>
+        /// Gets or sets entity type 
+        /// </summary>
         public Type Type { get; set; }
-        public EventKeyRecord EventKeyRecord { get; set; }
+        /// <summary>
+        /// Gets or sets event keys for the entity. 
+        /// These keys are used to uniquly identify CRUD operation events on the entity. 
+        /// </summary>
+        public EventKeyRecord EventKeys { get; set; }
+        /// <summary>
+        /// Gets or sets entity permission record keys
+        /// These keys uniqly identify entity's permission record keys, which used durin entity authorization.
+        /// </summary>
         public PermissionRecord PermissionRecord { get; set; }
-        public string EntityKey { get; set; }
+        /// <summary>
+        /// Gets or sets unique identifier for this entity.
+        /// </summary>
+        /// <value></value>
+        public string EntityId { get; set; }
         public ICrudValidator Validator { get; set; }
         public AuthorizationInfo Authorization { get; set; }
     }

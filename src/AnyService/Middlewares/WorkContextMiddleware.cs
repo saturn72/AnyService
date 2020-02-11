@@ -41,7 +41,7 @@ namespace AnyService.Middlewares
             if (RouteMaps.TryGetValue(path, out EntityConfigRecord value))
                 return value;
 
-            value = EntityConfigRecordManager.EntityConfigRecords.FirstOrDefault(r => path.StartsWithSegments(r.RoutePrefix, StringComparison.CurrentCultureIgnoreCase));
+            value = EntityConfigRecordManager.EntityConfigRecords.FirstOrDefault(r => path.StartsWithSegments(r.Route, StringComparison.CurrentCultureIgnoreCase));
 
             return (RouteMaps[path] = value);
         }
@@ -58,7 +58,7 @@ namespace AnyService.Middlewares
             };
             string GetRequesteeId()
             {
-                var resource = typeConfigRecord.RoutePrefix;
+                var resource = typeConfigRecord.Route;
                 var idx = path.LastIndexOf(resource, 0, StringComparison.InvariantCultureIgnoreCase) + resource.Length + 1;
                 var requesteeId = path.Substring(idx);
                 return requesteeId.StartsWith("/") ? requesteeId.Substring(1) : requesteeId;
