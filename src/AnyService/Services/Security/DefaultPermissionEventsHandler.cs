@@ -26,7 +26,7 @@ namespace AnyService.Services.Security
              var manager = _serviceProvider.GetService<IPermissionManager>();
              var userId = eventData.PerformedByUserId;
 
-             var tcr = TypeConfigRecordManager.GetRecord(createdEntity.GetType());
+             var tcr = EntityConfigRecordManager.GetRecord(createdEntity.GetType());
 
              var entityPermission = new EntityPermission
              {
@@ -66,7 +66,7 @@ namespace AnyService.Services.Security
 
          var manager = _serviceProvider.GetService<IPermissionManager>();
          var userId = eventData.PerformedByUserId;
-         var tcr = TypeConfigRecordManager.GetRecord(deletedEntity.GetType());
+         var tcr = EntityConfigRecordManager.GetRecord(deletedEntity.GetType());
 
          Task.Run(async () =>
          {

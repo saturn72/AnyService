@@ -11,7 +11,7 @@ namespace AnyService
             ManageEntityPermissions = true;
         }
 
-        public IEnumerable<TypeConfigRecord> TypeConfigRecords { get; set; }
+        public IEnumerable<EntityConfigRecord> EntityConfigRecords { get; set; }
 
         /// <summary>
         /// Gets or sets value indicating whether anyservice manages user permission on entity. 

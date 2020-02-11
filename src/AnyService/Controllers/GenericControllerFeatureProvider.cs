@@ -11,7 +11,7 @@ namespace AnyService.Controllers
     {
         public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
         {
-            var entityTypes = TypeConfigRecordManager.TypeConfigRecords.Select(e => e.Type).ToArray();
+            var entityTypes = EntityConfigRecordManager.EntityConfigRecords.Select(e => e.Type).ToArray();
 
             foreach (var et in entityTypes)
             {

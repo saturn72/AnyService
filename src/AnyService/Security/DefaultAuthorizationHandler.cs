@@ -68,7 +68,7 @@ namespace AnyService
         }
         private AuthorizationNode GetAuthorizeAttribute(string httpMethod)
         {
-            var authz = _workContext.CurrentTypeConfigRecord.Authorization;
+            var authz = _workContext.CurrentEntityConfigRecord.Authorization;
             switch (httpMethod)
             {
                 case "post":

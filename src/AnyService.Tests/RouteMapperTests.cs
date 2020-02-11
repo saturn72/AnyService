@@ -16,14 +16,14 @@ namespace AnyService.Tests
         [Fact]
         public void RouteMapper_CreatedTests()
         {
-            var type = typeof(TypeConfigRecordManager);
+            var type = typeof(EntityConfigRecordManager);
             var pi = type.GetProperty("TypeConfigRecords");
 
             var expType = typeof(Myclass);
             var expRoutePrefix = "some-route-prefix";
             var maps = new[]
             {
-              new TypeConfigRecord
+              new EntityConfigRecord
               {
                   Type= expType,
                   RoutePrefix =  expRoutePrefix,
@@ -34,9 +34,9 @@ namespace AnyService.Tests
             };
 
             pi.SetValue(null, maps);
-            TypeConfigRecordManager.TypeConfigRecords.Count().ShouldBe(1);
-            TypeConfigRecordManager.TypeConfigRecords.First(c => c.RoutePrefix.Equals(expRoutePrefix, StringComparison.InvariantCultureIgnoreCase)).Type.ShouldBe(expType);
-            TypeConfigRecordManager.GetRecord(expType).RoutePrefix.ShouldBe(expRoutePrefix);
+            EntityConfigRecordManager.EntityConfigRecords.Count().ShouldBe(1);
+            EntityConfigRecordManager.EntityConfigRecords.First(c => c.RoutePrefix.Equals(expRoutePrefix, StringComparison.InvariantCultureIgnoreCase)).Type.ShouldBe(expType);
+            EntityConfigRecordManager.GetRecord(expType).RoutePrefix.ShouldBe(expRoutePrefix);
         }
     }
 }

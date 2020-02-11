@@ -19,7 +19,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             var config = new AnyServiceConfig
             {
-                TypeConfigRecords = entities.Select(e => new TypeConfigRecord { Type = e, })
+                EntityConfigRecords = entities.Select(e => new EntityConfigRecord { Type = e, })
             };
             return AddAnyService(services, config);
         }
@@ -32,12 +32,12 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddTransient(typeof(CrudService<>));
 
             // services.
-            services.AddSingleton(config.TypeConfigRecords);
-            if (config.TypeConfigRecords.Any(t => t.Authorization != null))
+            services.AddSingleton(config.EntityConfigRecords);
+            if (config.EntityConfigRecords.Any(t => t.Authorization != null))
                 services.AddTransient<IAuthorizationHandler, DefaultAuthorizationHandler>();
 
             //validator factory
-            var validators = config.TypeConfigRecords.Select(t => t.Validator).ToArray();
+            var validators = config.EntityConfigRecords.Select(t => t.Validator).ToArray();
             var validatorFactory = new ValidatorFactory(validators);
             services.TryAddSingleton(validatorFactory);
             foreach (var v in validators)
@@ -47,7 +47,7 @@ namespace Microsoft.Extensions.DependencyInjection
                     services.TryAddTransient(vt, vType);
             }
 
-            TypeConfigRecordManager.TypeConfigRecords = config.TypeConfigRecords;
+            EntityConfigRecordManager.EntityConfigRecords = config.EntityConfigRecords;
             services.TryAddScoped<WorkContext>();
             services.TryAddSingleton<IPermissionManager, PermissionManager>();
 
@@ -55,13 +55,13 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 var wc = sp.GetService<WorkContext>();
                 var ct = wc.CurrentType;
-                return TypeConfigRecordManager.GetRecord(ct).EventKeyRecord;
+                return EntityConfigRecordManager.GetRecord(ct).EventKeyRecord;
             });
             services.AddScoped(sp =>
             {
                 var wc = sp.GetService<WorkContext>();
                 var ct = wc.CurrentType;
-                return TypeConfigRecordManager.GetRecord(ct).PermissionRecord;
+                return EntityConfigRecordManager.GetRecord(ct).PermissionRecord;
             });
 
             services.TryAddScoped<AuditHelper>();
@@ -75,7 +75,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static void NormalizeConfiguration(AnyServiceConfig config)
         {
-            var temp = config.TypeConfigRecords.ToArray();
+            var temp = config.EntityConfigRecords.ToArray();
             foreach (var tcr in temp)
             {
                 var e = tcr.Type;
@@ -98,7 +98,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 if (tcr.Authorization != null)
                     SetAuthorization(tcr.Authorization);
             }
-            config.TypeConfigRecords = temp;
+            config.EntityConfigRecords = temp;
         }
 
         private static void SetAuthorization(AuthorizationInfo authzInfo)

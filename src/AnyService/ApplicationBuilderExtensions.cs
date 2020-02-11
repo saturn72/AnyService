@@ -17,7 +17,7 @@ namespace AnyService
         {
             var sp = app.ApplicationServices;
             var apm = sp.GetService<ApplicationPartManager>();
-            var typeConfigRecords = sp.GetService<IEnumerable<TypeConfigRecord>>();
+            var typeConfigRecords = sp.GetService<IEnumerable<EntityConfigRecord>>();
             apm.FeatureProviders.Add(new GenericControllerFeatureProvider());
 
             app.UseMiddleware<WorkContextMiddleware>();
@@ -36,7 +36,7 @@ namespace AnyService
 
             //subscribe to events event listener
             var eventBus = serviceProvider.GetService<IDomainEventsBus>();
-            var ekr = TypeConfigRecordManager.TypeConfigRecords.Select(e => e.EventKeyRecord);
+            var ekr = EntityConfigRecordManager.EntityConfigRecords.Select(e => e.EventKeyRecord);
             var peh = serviceProvider.GetService<IPermissionEventsHandler>();
             foreach (var e in ekr)
             {

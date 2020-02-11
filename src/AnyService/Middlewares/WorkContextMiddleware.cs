@@ -11,7 +11,7 @@ namespace AnyService.Middlewares
     public class WorkContextMiddleware
     {
         private readonly RequestDelegate _next;
-        private static readonly IDictionary<string, TypeConfigRecord> RouteMaps = new Dictionary<string, TypeConfigRecord>();
+        private static readonly IDictionary<string, EntityConfigRecord> RouteMaps = new Dictionary<string, EntityConfigRecord>();
         public WorkContextMiddleware(RequestDelegate next)
         {
             _next = next;
@@ -30,22 +30,22 @@ namespace AnyService.Middlewares
             var typeConfigRecord = GetRouteMap(httpContext.Request.Path);
             if (typeConfigRecord != null && !typeConfigRecord.Equals(default))
             {
-                workContext.CurrentTypeConfigRecord = typeConfigRecord;
+                workContext.CurrentEntityConfigRecord = typeConfigRecord;
                 workContext.CurrentType = typeConfigRecord.Type;
                 workContext.RequestInfo = ToRequestInfo(httpContext, httpContext.Request.Method, typeConfigRecord);
             }
             await _next(httpContext);
         }
-        private static TypeConfigRecord GetRouteMap(PathString path)
+        private static EntityConfigRecord GetRouteMap(PathString path)
         {
-            if (RouteMaps.TryGetValue(path, out TypeConfigRecord value))
+            if (RouteMaps.TryGetValue(path, out EntityConfigRecord value))
                 return value;
 
-            value = TypeConfigRecordManager.TypeConfigRecords.FirstOrDefault(r => path.StartsWithSegments(r.RoutePrefix, StringComparison.CurrentCultureIgnoreCase));
+            value = EntityConfigRecordManager.EntityConfigRecords.FirstOrDefault(r => path.StartsWithSegments(r.RoutePrefix, StringComparison.CurrentCultureIgnoreCase));
 
             return (RouteMaps[path] = value);
         }
-        private static RequestInfo ToRequestInfo(HttpContext httpContext, string httpMethod, TypeConfigRecord typeConfigRecord)
+        private static RequestInfo ToRequestInfo(HttpContext httpContext, string httpMethod, EntityConfigRecord typeConfigRecord)
         {
             var uric = httpContext.Request.Path.ToUriComponent();
             var path = httpContext.Request.Path.ToString();

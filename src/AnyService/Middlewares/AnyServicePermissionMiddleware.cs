@@ -26,7 +26,7 @@ namespace AnyService.Middlewares
                 return;
             }
 
-            var typeConfigRecord = TypeConfigRecordManager.GetRecord(workContext.CurrentType);
+            var typeConfigRecord = EntityConfigRecordManager.GetRecord(workContext.CurrentType);
 
             var permissionKey = PermissionFuncs.GetByHttpMethod(workContext.RequestInfo.Method)(typeConfigRecord);
             var id = workContext.RequestInfo.RequesteeId;

@@ -15,7 +15,7 @@ namespace AnyService.Tests.Services.Security
             get = "get",
             put = "put",
             delete = "delete";
-            var tc = new TypeConfigRecord { PermissionRecord = new PermissionRecord(post, get, put, delete) };
+            var tc = new EntityConfigRecord { PermissionRecord = new PermissionRecord(post, get, put, delete) };
 
             PermissionFuncs.GetByHttpMethod(post)(tc).ShouldBe(post);
             PermissionFuncs.GetByHttpMethod(get)(tc).ShouldBe(get);

@@ -26,9 +26,9 @@ namespace AnyService.E2E.Authorization
                 var cfg = new AnyServiceConfig
                 {
                     ManageEntityPermissions = true,
-                    TypeConfigRecords = new[]
+                    EntityConfigRecords = new[]
                     {
-                        new TypeConfigRecord
+                        new EntityConfigRecord
                         {
                             Type = typeof(DependentModel),
                             Authorization = new AuthorizationInfo

@@ -33,8 +33,8 @@ namespace AnyService.Tests.Services.Security
         public void EntityCreatedHandler_CreatesNewUserPermissions_WhenNotExistsInDatabase()
         {
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            TypeConfigRecordManager.TypeConfigRecords = new[] {
-             new TypeConfigRecord {
+            EntityConfigRecordManager.EntityConfigRecords = new[] {
+             new EntityConfigRecord {
                  Type = typeof(TestClass),
                  PermissionRecord = expPr
                  }
@@ -72,8 +72,8 @@ namespace AnyService.Tests.Services.Security
         public void EntityCreatedHandler_AddsNewUserPermissions()
         {
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            TypeConfigRecordManager.TypeConfigRecords = new[] {
-             new TypeConfigRecord {
+            EntityConfigRecordManager.EntityConfigRecords = new[] {
+             new EntityConfigRecord {
                  Type = typeof(TestClass),
                  PermissionRecord = expPr
                  }
@@ -115,8 +115,8 @@ namespace AnyService.Tests.Services.Security
         public void EntityCreatedHandler_UpdatesExistsUserPermissions()
         {
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            TypeConfigRecordManager.TypeConfigRecords = new[] {
-             new TypeConfigRecord {
+            EntityConfigRecordManager.EntityConfigRecords = new[] {
+             new EntityConfigRecord {
                  Type = typeof(TestClass),
                  PermissionRecord = expPr
                  }
@@ -210,8 +210,8 @@ namespace AnyService.Tests.Services.Security
         public void EntityDeletedHandler_HasNoEntityPermissions()
         {
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            TypeConfigRecordManager.TypeConfigRecords = new[] {
-             new TypeConfigRecord {
+            EntityConfigRecordManager.EntityConfigRecords = new[] {
+             new EntityConfigRecord {
                  Type = typeof(TestClass),
                  PermissionRecord = expPr
                  }
@@ -250,8 +250,8 @@ namespace AnyService.Tests.Services.Security
             var ek = "ek";
 
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            TypeConfigRecordManager.TypeConfigRecords = new[] {
-             new TypeConfigRecord {
+            EntityConfigRecordManager.EntityConfigRecords = new[] {
+             new EntityConfigRecord {
                  Type = typeof(TestClass),
                  PermissionRecord = expPr,
                  }
@@ -264,8 +264,8 @@ namespace AnyService.Tests.Services.Security
                 EntityKey = "ek1",
                 PermissionKeys = new[] { "r1", "u1", "d1", },
             };
-            TypeConfigRecordManager.TypeConfigRecords = new[] {
-             new TypeConfigRecord {
+            EntityConfigRecordManager.EntityConfigRecords = new[] {
+             new EntityConfigRecord {
                  EntityKey = ek,
                  Type = typeof(TestClass),
                  PermissionRecord = expPr
