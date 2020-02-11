@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using AnyService.Audity;
 using AnyService.Core;
+using AnyService.Core.Security;
 using AnyService.Events;
 using AnyService.Services.FileStorage;
 
@@ -16,6 +17,8 @@ namespace AnyService.Services
         private readonly IDomainEventsBus _eventBus;
         private readonly EventKeyRecord _eventKeyRecord;
         private readonly IFileStoreManager _fileStorageManager;
+        private readonly IPermissionManager _permissionManager;
+
         #endregion
         #region ctor
         public CrudService(
@@ -25,7 +28,8 @@ namespace AnyService.Services
             WorkContext workContext,
             IDomainEventsBus eventBus,
             EventKeyRecord eventKeyRecord,
-            IFileStoreManager fileStorageManager)
+            IFileStoreManager fileStorageManager,
+            IPermissionManager permissionManager)
         {
             _repository = repository;
             _validator = validator;
@@ -34,6 +38,7 @@ namespace AnyService.Services
             _eventBus = eventBus;
             _eventKeyRecord = eventKeyRecord;
             _fileStorageManager = fileStorageManager;
+            _permissionManager = permissionManager;
         }
 
         #endregion
@@ -92,6 +97,10 @@ namespace AnyService.Services
             var serviceResponse = new ServiceResponse();
             if (!await _validator.ValidateForGet(serviceResponse))
                 return serviceResponse;
+            var entityIds = await _permissionManager.GetPermittedEntityIds(
+                _workContext.CurrentUserId,
+                _workContext.CurrentEntityConfigRecord.EntityKey,
+                _workContext.CurrentEntityConfigRecord.PermissionRecord.ReadKey);
             var data = await _repository.Query(r => r.GetAll(), serviceResponse) ?? new TDomainModel[] { };
             if (serviceResponse.Result == ServiceResult.NotSet)
             {

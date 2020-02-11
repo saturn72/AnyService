@@ -89,7 +89,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
                 if (tcr.EventKeys == null) tcr.EventKeys = ekr;
                 if (tcr.PermissionRecord == null) tcr.PermissionRecord = pr;
-                if (tcr.EntityId == null) tcr.EntityId = fn;
+                if (tcr.EntityKey == null) tcr.EntityKey = fn;
                 if (tcr.Validator == null)
                 {
                     var v = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);

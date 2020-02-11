@@ -29,7 +29,7 @@ namespace AnyService.Tests
                   Route =  expRoutePrefix,
                   EventKeys = null,
                   PermissionRecord =null,
-                  EntityId =  null,
+                  EntityKey =  null,
                 }
             };
 

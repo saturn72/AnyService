@@ -33,14 +33,14 @@ namespace AnyService.Middlewares
 
             var isGet = HttpMethods.IsGet(workContext.RequestInfo.Method);
             var isPost = HttpMethods.IsPost(workContext.RequestInfo.Method);
-
-            if (string.IsNullOrEmpty(id) && !isPost && !isGet)
+            var hasId = id.HasValue();
+            if (!hasId && !isPost && !isGet)
             {
                 httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
             }
 
-            var isGranted = await IsGranted(workContext.CurrentUserId, permissionKey, typeConfigRecord.EntityId, isPost ? "" : id, isPost);
+            var isGranted = await IsGranted(workContext.CurrentUserId, permissionKey, typeConfigRecord.EntityKey, isPost ? "" : id, isPost, isGet && !hasId);
             if (!isGranted)
             {
                 httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -49,7 +49,7 @@ namespace AnyService.Middlewares
             await _next(httpContext);
         }
 
-        private async Task<bool> IsGranted(string userId, string permissionKey, string entityKey, string entityId, bool isPost)
+        private async Task<bool> IsGranted(string userId, string permissionKey, string entityKey, string entityId, bool isPost, bool isGetAll)
         {
             var userPermissions = await _permissionManager.GetUserPermissions(userId);
             var allPermissions = userPermissions?.EntityPermissions?.Where(p =>
@@ -61,7 +61,7 @@ namespace AnyService.Middlewares
 
             var entityPermission = allPermissions?.FirstOrDefault(specificQuery);
 
-            return (entityPermission == null && isPost) || (entityPermission != null && !entityPermission.Excluded);
+            return (entityPermission == null && (isPost || isGetAll)) || (entityPermission != null && !entityPermission.Excluded);
         }
     }
 }

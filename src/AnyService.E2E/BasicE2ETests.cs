@@ -43,24 +43,33 @@ namespace AnyService.E2E
         [Test]
         public async Task CRUD_Dependent()
         {
+            var uri = "dependentmodel/";
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var model = new
             {
                 Value = "init value"
             };
 
-            //create
-            var res = await HttpClient.PostAsJsonAsync("dependentmodel", model);
-            await Task.Delay(150);// wait for background tasks (by simulating network delay)
-            var content = await res.Content.ReadAsStringAsync();
+            //get all - returns empty collection
+            var res = await HttpClient.GetAsync(uri);
             res.EnsureSuccessStatusCode();
+            var content = await res.Content.ReadAsStringAsync();
             var jObj = JObject.Parse(content);
+            var jArr = jObj["data"] as JArray;
+            jArr.Count.ShouldBe(0);
+
+            //create
+            res = await HttpClient.PostAsJsonAsync(uri, model);
+            await Task.Delay(150);// wait for background tasks (by simulating network delay)
+            content = await res.Content.ReadAsStringAsync();
+            res.EnsureSuccessStatusCode();
+            jObj = JObject.Parse(content);
             var id = jObj["data"]["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
             jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
 
             //read
-            res = await HttpClient.GetAsync("dependentmodel/" + id);
+            res = await HttpClient.GetAsync(uri + id);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
@@ -68,11 +77,11 @@ namespace AnyService.E2E
             jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
 
             //read all
-            res = await HttpClient.GetAsync("dependentmodel/");
+            res = await HttpClient.GetAsync(uri);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            var jArr = jObj["data"] as JArray;
+            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
 
@@ -81,7 +90,7 @@ namespace AnyService.E2E
             {
                 Value = "new Value"
             };
-            res = await HttpClient.PutAsJsonAsync("dependentmodel/" + id, updateModel);
+            res = await HttpClient.PutAsJsonAsync(uri + id, updateModel);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
@@ -89,7 +98,7 @@ namespace AnyService.E2E
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
 
             //delete
-            res = await HttpClient.DeleteAsync("dependentmodel/" + id);
+            res = await HttpClient.DeleteAsync(uri + id);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
@@ -98,7 +107,7 @@ namespace AnyService.E2E
 
             //get deleted
             await Task.Delay(250);// wait for background tasks (by simulating network delay)
-            res = await HttpClient.GetAsync("dependentmodel/" + id);
+            res = await HttpClient.GetAsync(uri + id);
             res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         }
 

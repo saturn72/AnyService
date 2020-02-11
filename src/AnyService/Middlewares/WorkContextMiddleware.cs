@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -31,7 +30,6 @@ namespace AnyService.Middlewares
             if (typeConfigRecord != null && !typeConfigRecord.Equals(default))
             {
                 workContext.CurrentEntityConfigRecord = typeConfigRecord;
-                workContext.CurrentType = typeConfigRecord.Type;
                 workContext.RequestInfo = ToRequestInfo(httpContext, httpContext.Request.Method, typeConfigRecord);
             }
             await _next(httpContext);
@@ -56,13 +54,7 @@ namespace AnyService.Middlewares
                 RequesteeId = GetRequesteeId(),
                 Parameters = httpContext.Request.Query.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)).ToArray()
             };
-            string GetRequesteeId()
-            {
-                var resource = typeConfigRecord.Route;
-                var idx = path.LastIndexOf(resource, 0, StringComparison.InvariantCultureIgnoreCase) + resource.Length + 1;
-                var requesteeId = path.Substring(idx);
-                return requesteeId.StartsWith("/") ? requesteeId.Substring(1) : requesteeId;
-            }
+            string GetRequesteeId() => path.Split("/", StringSplitOptions.RemoveEmptyEntries).Skip(1).FirstOrDefault(p => !p.StartsWith("__"));
         }
     }
 }
