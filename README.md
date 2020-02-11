@@ -214,6 +214,34 @@ TBD
 TBD - show how to consume event
 TBD - show how to modify event key
 
+## `AnyServiceConfig` - Customize default values
+
+You are able to customize all default values of `AnyService`. 
+Most of `AnyService` properties can be modified by creating instance of `AnyServiceConfig` and set relevant properties. Then send it to `AddAnyService` extension method.
+
+In the example below we modify entity route.
+By default route is set to entity's name (using `Type.Name`). 
+We use `HeatMapInfo` entity which by default gets the route `/heatmapinfo` for its `CRUD` operations. By setting the `EntityConfigRecord.Route` property to `/heatmap`, `CRUD` operations are performed in `/heatmap` route.
+
+```
+public void ConfigureServices(IServiceCollection services)
+{
+  ...
+  var anyServiceConfig = new AnyServiceConfig
+  {
+    EntityConfigRecords = new[]
+    {
+      new EntityConfigRecord
+      {
+        Type =typeof(HeatMapInfo),
+        Route = "/heatmap"
+      }
+    },
+  };
+  ...
+}
+```
+
 ## Combine Custom Controllers with `AnyEntity` Middleware
 
 TBD
