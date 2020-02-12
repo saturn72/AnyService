@@ -31,7 +31,6 @@ namespace AnyService.Middlewares
             if (typeConfigRecord != null && !typeConfigRecord.Equals(default))
             {
                 workContext.CurrentEntityConfigRecord = typeConfigRecord;
-                workContext.CurrentType = typeConfigRecord.Type;
                 workContext.RequestInfo = ToRequestInfo(httpContext, httpContext.Request.Method, typeConfigRecord);
             }
             await _next(httpContext);

@@ -26,21 +26,22 @@ namespace AnyService.Middlewares
                 return;
             }
 
-            var typeConfigRecord = EntityConfigRecordManager.GetRecord(workContext.CurrentType);
-
-            var permissionKey = PermissionFuncs.GetByHttpMethod(workContext.RequestInfo.Method)(typeConfigRecord);
-            var id = workContext.RequestInfo.RequesteeId;
-
-            var isGet = HttpMethods.IsGet(workContext.RequestInfo.Method);
-            var isPost = HttpMethods.IsPost(workContext.RequestInfo.Method);
-
-            if (string.IsNullOrEmpty(id) && !isPost && !isGet)
+            var cfgRecord = workContext.CurrentEntityConfigRecord;
+            var reqInfo = workContext.RequestInfo;
+            var entityId = reqInfo.RequesteeId;
+            var isPost = HttpMethods.IsPost(reqInfo.Method);
+            var isGet = HttpMethods.IsGet(reqInfo.Method);
+            if (string.IsNullOrEmpty(reqInfo.RequesteeId) && !isPost && !isGet)
             {
                 httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
             }
 
-            var isGranted = await IsGranted(workContext.CurrentUserId, permissionKey, typeConfigRecord.EntityId, isPost ? "" : id, isPost);
+            //post, get-all and get-by-id when publicGet==true are always permitted 
+            var isGranted = isPost ||
+                 (isGet && (!entityId.HasValue() || cfgRecord.PublicGet)) ||
+                 await IsGranted(workContext);
+
             if (!isGranted)
             {
                 httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -49,19 +50,21 @@ namespace AnyService.Middlewares
             await _next(httpContext);
         }
 
-        private async Task<bool> IsGranted(string userId, string permissionKey, string entityKey, string entityId, bool isPost)
+        protected async Task<bool> IsGranted(WorkContext workContext)
         {
-            var userPermissions = await _permissionManager.GetUserPermissions(userId);
-            var allPermissions = userPermissions?.EntityPermissions?.Where(p =>
-                            p.PermissionKeys.Contains(permissionKey, StringComparer.InvariantCultureIgnoreCase)
-                            && p.EntityKey.Equals(entityKey, StringComparison.InvariantCultureIgnoreCase));
-            var specificQuery = entityId.HasValue() ?
-                        new Func<EntityPermission, bool>(u => u.EntityId.Equals(entityId, StringComparison.InvariantCultureIgnoreCase)) :
-                        new Func<EntityPermission, bool>(u => true);
+            var cfgRecord = workContext.CurrentEntityConfigRecord;
+            var reqInfo = workContext.RequestInfo;
+            var isGet = HttpMethods.IsGet(reqInfo.Method);
 
-            var entityPermission = allPermissions?.FirstOrDefault(specificQuery);
+            var entityId = reqInfo.RequesteeId;
 
-            return (entityPermission == null && isPost) || (entityPermission != null && !entityPermission.Excluded);
+            var userId = workContext.CurrentUserId;
+            var permissionKey = PermissionFuncs.GetByHttpMethod(reqInfo.Method)(cfgRecord);
+            var entityKey = cfgRecord.EntityKey;
+            if (isGet || HttpMethods.IsPut(reqInfo.Method) || HttpMethods.IsDelete(reqInfo.Method))
+                return await _permissionManager.UserHasPermissionOnEntity(userId, entityKey, permissionKey, entityId);
+
+            throw new NotSupportedException("http method is not supported");
         }
     }
 }

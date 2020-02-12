@@ -27,8 +27,11 @@ namespace AnyService
         /// <summary>
         /// Gets or sets unique identifier for this entity.
         /// </summary>
-        /// <value></value>
-        public string EntityId { get; set; }
+        public string EntityKey { get; set; }
+        /// <summary>
+        /// Gets or sets value indicating whether the get operation is public to all users or just to the creator
+        /// </summary>
+        public bool PublicGet { get; set; }
         public ICrudValidator Validator { get; set; }
         public AuthorizationInfo Authorization { get; set; }
     }

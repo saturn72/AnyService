@@ -17,7 +17,7 @@ using System.Net;
 
 namespace AnyService.E2E.Authorization
 {
-    public class UserPermissionsE2ETest : E2EFixture
+    public class UserPermissions_CRUD_By_Creator_OnlyE2ETest : E2EFixture
     {
         private static Action<IWebHostBuilder> configuration = builder =>
         {
@@ -42,14 +42,14 @@ namespace AnyService.E2E.Authorization
             });
         };
 
-        public UserPermissionsE2ETest() : base(configuration)
+        public UserPermissions_CRUD_By_Creator_OnlyE2ETest() : base(configuration)
         {
             Factory = new WebApplicationFactory<Startup>();
             HttpClient = Factory.WithWebHostBuilder(configuration).CreateClient();
         }
 
         [Test]
-        public async Task UserPermissionsE2ETests()
+        public async Task UserPermissions_Privatly_Read_E2ETest()
         {
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var uri = "dependentmodel/";

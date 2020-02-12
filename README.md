@@ -19,13 +19,13 @@ The boilerplate code is already in place. All you have to do now is to configure
 
 init step - Create new `webapi` project by using `dotnet new webapi --name AnyService.SampleApp` command.
 
-#### 1. Add reference to `AnyService` nuget package 
+#### 1. Add reference to `AnyService` nuget package
 
 (see [here](https://www.nuget.org/packages/anyservice/))
 
 #### 2. Create a model (entity) that you want to use as resource
 
-This model is used to perform all `CRUD` operations of the web service. It must implement `IDomainModelBase` to "glue" it to `AnyService`'s business logic.  
+This model is used to perform all `CRUD` operations of the web service. It must implement `IDomainModelBase` to "glue" it to `AnyService`'s business logic.
 
 ```
 public class DependentModel : IDomainModelBase //Your model must implement IDomainModelBase
@@ -43,9 +43,9 @@ In `ConfigureServices` method, add the following lines:
 public void ConfigureServices(IServiceCollection services)
 {
   ...
-  
+
   var entities = new[] { typeof(DependentModel) }; //list all your entities
-  services.AddAnyService(entities);  
+  services.AddAnyService(entities);
   ...
 }
 ```
@@ -58,7 +58,7 @@ public void ConfigureServices(IServiceCollection services)
 public void ConfigureServices(IServiceCollection services)
 {
   ...
-  
+
   var liteDbName = "anyservice-testsapp.db";
   services.AddTransient<IRepository<DependentModel>>(sp => new AnyService.LiteDbRepository.Repository<DependentModel>(liteDbName));
   services.AddTransient<IRepository<UserPermissions>>(sp => new Repository<UserPermissions>(liteDbName));
@@ -93,10 +93,11 @@ public void ConfigureServices(IServiceCollection services)
 public void ConfigureServices(IServiceCollection services)
 {
   ...
-  services.AddAlwaysPassAuthentication("abcd-1234", null); //  
+  services.AddAlwaysPassAuthentication("abcd-1234", null); //
   ...
 }
 ```
+
 #### 6. The final step is to add `AnyService` middleware to pipeline
 
 Add the following line to `Configure` method of `Startup.cs`
@@ -143,6 +144,7 @@ TDB
 ## Authentication
 
 Authenticating a user is mandatory in `AnyService`. Some of the main reasons are:
+
 - `UserId` is required to manage permissions access over entities
 - A user-based-event is raised whenever `CRUD` operation is performed
 - `Audity` feature data management heavily relies on user's info
@@ -151,7 +153,7 @@ Authenticating a user is mandatory in `AnyService`. Some of the main reasons are
 Authentication is added and configured using `asp.net core`'s default authentication configuration mechanism.
 **important:** user's id claim type must be "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" (defined by `System.Security.Claims.ClaimTypes.NameIdentifier` constant).
 
-For development purposes, you may configure `AlwaysPassAuthenticationHandler` which, as implied, always approves incoming request's user as authenticated one, with pre-configured id value and claims. 
+For development purposes, you may configure `AlwaysPassAuthenticationHandler` which, as implied, always approves incoming request's user as authenticated one, with pre-configured id value and claims.
 To use `AlwaysPassAuthenticationHandler` simply use `AddAlwaysPassAuthentication` extension method.
 
 ```
@@ -165,34 +167,37 @@ public void ConfigureServices(IServiceCollection services)
     new KeyValuePair<string, string>("claim1-key", "claim1-value"),
     new KeyValuePair<string, string>("claim1-key", "claim1-value"),
   };
-  services.AddAlwaysPassAuthentication(userId, claims); // This   
+  services.AddAlwaysPassAuthentication(userId, claims); // This
   ...
 }
 ```
 
-## Authorization
+## Authorization (Permission Management)
 
-Unlike authentication, authorization is fully handled by `AnyService`.
+By default Authorization is fully handled by `AnyService`. To disable this, set the value of `ManageEntityPermissions` of `AnyServiceOptions` class to `false`.
+
 Authorization has 2 aspects addressed by `AnyService`:
 
-1. Configuring user's access to specific resource (URI) aka _Can user perform CRUD operation on a given URI?_
+### 1. Configuring user's access to specific resource (URI), hence: _Can user perform CRUD operation on a given URI?_
 
-2. Manage CRUD Permissions on an authorized resource (URI) aka _Given that a user has permission to perform CRUD operation on given URI, can the user perform read/update/delete operations on specific entity?_
-
-### Configuring user's access to specific resource (URI)
-
+<!--
 Configuring authrozation for specific controller is done by sending an instance of `AuthorizeAttribute` to the registration of you model.
-You may set authorization to controller and override each CRUD method.
+You may set authorization to controller and override each CRUD method. -->
 
 TBD - add example for controller authorization
 TBD - add example for controller authorization with CRUD method override
 TBD - add example for CRUD method authorization
 
-### Manage CRUD Permissions on an authorized resource (URI)
+### 2. Manage CRUD Permissions on an authorized resource (URI), hence: _Given that a user has permission to perform CRUD operation on given URI (entity), can the user perform read/update/delete operations on specific URI's entity?_
 
-By default when a user creates an entities, `AnyService` takes care to manage permissions over the created entities. Once entity is created, the creator, and only the creator has the previliges to perform CRUD operations on it, while other users are blocked from doing so.
+Once user has permission to create an entity on a resource, `AnyService` takes care of managing permissions over the created entity.
+`AnyService` supports 2 permission management patterns:
 
-To disable the automatic permission management, set the value of `ManageEntityPermissions` of `AnyServiceOptions` to `false`.
+1. All CRUD operations can be performed by the creator and only by the creator.
+   This means the entities created by a priliged user are fully private and are **managed and accessed** by this user (entity's creator) and only by this user.
+
+2. Create, Update and Delete operations can be performed by the creator and only by the creator while Read operation can be performed by all users.
+   This means the entities created by a priliged user are **managed** privatly by this user (entity's creator) and only by this user, but are publicly **accessed** by all users.
 
 TBD - Show how to disable the authz behavior in configuration
 
@@ -209,18 +214,19 @@ TBD - add example here
 TBD
 
 ## CRUD Events
-`AnyService` raises event whenever CRUD operation is preformed. 
+
+`AnyService` raises event whenever CRUD operation is preformed.
 
 TBD - show how to consume event
 TBD - show how to modify event key
 
 ## `AnyServiceConfig` - Customize default values
 
-You are able to customize all default values of `AnyService`. 
+You are able to customize all default values of `AnyService`.
 Most of `AnyService` properties can be modified by creating instance of `AnyServiceConfig` and set relevant properties. Then send it to `AddAnyService` extension method.
 
 In the example below we modify entity route.
-By default route is set to entity's name (using `Type.Name`). 
+By default route is set to entity's name (using `Type.Name`).
 We use `HeatMapInfo` entity which by default gets the route `/heatmapinfo` for its `CRUD` operations. By setting the `EntityConfigRecord.Route` property to `/heatmap`, `CRUD` operations are performed in `/heatmap` route.
 
 ```

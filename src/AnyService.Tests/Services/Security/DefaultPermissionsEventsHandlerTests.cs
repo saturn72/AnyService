@@ -266,7 +266,7 @@ namespace AnyService.Tests.Services.Security
             };
             EntityConfigRecordManager.EntityConfigRecords = new[] {
              new EntityConfigRecord {
-                 EntityId = ek,
+                 EntityKey = ek,
                  Type = typeof(TestClass),
                  PermissionRecord = expPr
                  }
