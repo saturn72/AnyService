@@ -11,6 +11,7 @@ using Xunit;
 using AnyService.Services.FileStorage;
 using AnyService.Services;
 using System.Collections;
+using AnyService.Core.Security;
 
 namespace AnyService.Tests.Services
 {
@@ -199,6 +200,35 @@ namespace AnyService.Tests.Services
             res.Data.ShouldBeNull();
         }
         [Fact]
+        public async Task GetAll_HasNoPermittedEntities()
+        {
+            var model = new TestModel();
+            var repo = new Mock<IRepository<TestModel>>();
+            repo.Setup(r => r.GetAll(It.IsAny<IDictionary<string, string>>()))
+                .ReturnsAsync(null as IEnumerable<TestModel>);
+
+            var v = new Mock<ICrudValidator<TestModel>>();
+            v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
+                .ReturnsAsync(true);
+
+            var ah = new Mock<AuditHelper>();
+
+            var eb = new Mock<IDomainEventsBus>();
+            var ekr = new EventKeyRecord(null, "read", null, null);
+
+            var pm = new Mock<IPermissionManager>();
+            pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
+
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, null, pm.Object);
+            var res = await cSrv.GetAll();
+            res.Result.ShouldBe(ServiceResult.Ok);
+            res.Data.ShouldBeOfType<TestModel[]>().Length.ShouldBe(0);
+            eb.Verify(e => e.Publish(
+              It.Is<string>(k => k == ekr.Read),
+              It.Is<DomainEventData>(ed =>
+                  (ed.Data as IEnumerable<object>).Count() == 0 && ed.PerformedByUserId == _wc.CurrentUserId)), Times.Once);
+
+        }
         public async Task GetAll_Returns_NullResponseFromDB()
         {
             var model = new TestModel();
@@ -215,7 +245,11 @@ namespace AnyService.Tests.Services
             var eb = new Mock<IDomainEventsBus>();
             var ekr = new EventKeyRecord(null, "read", null, null);
 
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, null, null);
+            var pm = new Mock<IPermissionManager>();
+            pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(new UserPermissions());
+
+
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, null, pm.Object);
             var res = await cSrv.GetAll();
             res.Result.ShouldBe(ServiceResult.Ok);
             res.Data.ShouldBeOfType<TestModel[]>().Length.ShouldBe(0);

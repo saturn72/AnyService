@@ -10,7 +10,7 @@ namespace AnyService.Core.Security
         public static async Task<IEnumerable<string>> GetPermittedEntityIds(this IPermissionManager manager, string userId, string entityKey, string permissionKey)
         {
             var userPermission = await manager.GetUserPermissions(userId);
-            var ids = userPermission.EntityPermissions?
+            var ids = userPermission?.EntityPermissions?
                 .Where(ep =>
                     ep.EntityKey.Equals(entityKey, StringComparison.InvariantCultureIgnoreCase) &&
                     !ep.Excluded &&

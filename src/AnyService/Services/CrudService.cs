@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using AnyService.Audity;
 using AnyService.Core;
@@ -101,7 +102,10 @@ namespace AnyService.Services
                 _workContext.CurrentUserId,
                 _workContext.CurrentEntityConfigRecord.EntityKey,
                 _workContext.CurrentEntityConfigRecord.PermissionRecord.ReadKey);
-            var data = await _repository.Query(r => r.GetAll(), serviceResponse) ?? new TDomainModel[] { };
+
+            var data = entityIds.Any() ?
+                await _repository.Query(r => r.GetAll(), serviceResponse) ?? new TDomainModel[] { } :
+                new TDomainModel[] { };
             if (serviceResponse.Result == ServiceResult.NotSet)
             {
                 serviceResponse.Data = data;
