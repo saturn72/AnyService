@@ -29,18 +29,18 @@ namespace AnyService.Middlewares
             var cfgRecord = workContext.CurrentEntityConfigRecord;
             var reqInfo = workContext.RequestInfo;
             var entityId = reqInfo.RequesteeId;
-            var isPost = HttpMethods.IsPost(reqInfo.Method);
-            var isGet = HttpMethods.IsGet(reqInfo.Method);
-            if (string.IsNullOrEmpty(reqInfo.RequesteeId) && !isPost && !isGet)
+            var httpMethodParse = IsSupported(reqInfo.Method);
+
+            if (!httpMethodParse.IsSupported || (string.IsNullOrEmpty(reqInfo.RequesteeId) && !httpMethodParse.IsPost && !httpMethodParse.IsGet))
             {
                 httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
             }
 
             //post, get-all and get-by-id when publicGet==true are always permitted 
-            var isGranted = isPost ||
-                 (isGet && (!entityId.HasValue() || cfgRecord.PublicGet)) ||
-                 await IsGranted(workContext);
+            var isGranted = httpMethodParse.IsPost ||
+                (httpMethodParse.IsGet && (!entityId.HasValue() || cfgRecord.PublicGet)) ||
+                await IsGranted(workContext);
 
             if (!isGranted)
             {
@@ -48,6 +48,19 @@ namespace AnyService.Middlewares
                 return;
             }
             await _next(httpContext);
+        }
+
+        private (bool IsSupported, bool IsPost, bool IsGet) IsSupported(string method)
+        {
+            var isPost = HttpMethods.IsPost(method);
+            var isGet = HttpMethods.IsGet(method);
+            var isSupported =
+                isPost ||
+                isGet ||
+                HttpMethods.IsPut(method) ||
+                HttpMethods.IsDelete(method);
+
+            return (isSupported, isPost, isGet);
         }
 
         protected async Task<bool> IsGranted(WorkContext workContext)
@@ -63,8 +76,7 @@ namespace AnyService.Middlewares
             var entityKey = cfgRecord.EntityKey;
             if (isGet || HttpMethods.IsPut(reqInfo.Method) || HttpMethods.IsDelete(reqInfo.Method))
                 return await _permissionManager.UserHasPermissionOnEntity(userId, entityKey, permissionKey, entityId);
-
-            throw new NotSupportedException("http method is not supported");
+            return false;
         }
     }
 }

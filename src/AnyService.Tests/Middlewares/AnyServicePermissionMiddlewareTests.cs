@@ -68,6 +68,28 @@ namespace AnyService.Tests.Middlewares
 
             httpResponse.VerifySet(r => r.StatusCode = StatusCodes.Status400BadRequest, Times.Once);
         }
+        [Fact]
+        public async Task IsGranted_NotSupportedMethod_ReturnsFalse()
+        {
+            var mw = new AnyServicePermissionMiddleware(null, null);
+            var wc = new WorkContext
+            {
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(TestModel),
+                },
+                RequestInfo = new RequestInfo
+                {
+                    Method = "not-supported-method",
+                }
+            };
+            var httpResponse = new Mock<HttpResponse>();
+            var httpContext = new Mock<HttpContext>();
+            httpContext.SetupGet(h => h.Response).Returns(httpResponse.Object);
+            await mw.InvokeAsync(httpContext.Object, wc);
+
+            httpResponse.VerifySet(r => r.StatusCode = StatusCodes.Status400BadRequest, Times.Once);
+        }
         #region IsGranted
         [Theory]
         [MemberData(nameof(CRUD_RetunsMockedAnswer_DATA))]
@@ -93,7 +115,6 @@ namespace AnyService.Tests.Middlewares
                     Method = method,
                     RequesteeId = "some-id",
                 },
-
             };
             var res = await mw.IsGrantedForTest(wc);
             res.ShouldBe(isGranted);
