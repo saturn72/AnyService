@@ -10,7 +10,6 @@ using Shouldly;
 using Xunit;
 using AnyService.Services.FileStorage;
 using AnyService.Services;
-using System.Collections;
 
 namespace AnyService.Tests.Services
 {
@@ -30,7 +29,11 @@ namespace AnyService.Tests.Services
     }
     public class CrudServiceTests
     {
-        readonly WorkContext _wc = new WorkContext { CurrentUserId = "some-user-id" };
+        readonly WorkContext _wc = new WorkContext
+        {
+            CurrentUserId = "some-user-id",
+            CurrentEntityConfigRecord = new EntityConfigRecord()
+        };
         #region Create
         [Fact]
         public async Task Create_BadRequest_OnValidatorFailure()

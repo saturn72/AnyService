@@ -26,7 +26,6 @@ namespace AnyService.Middlewares
                 return;
             }
 
-            var cfgRecord = workContext.CurrentEntityConfigRecord;
             var reqInfo = workContext.RequestInfo;
             var entityId = reqInfo.RequesteeId;
             var httpMethodParse = IsSupported(reqInfo.Method);
@@ -39,7 +38,7 @@ namespace AnyService.Middlewares
 
             //post, get-all and get-by-id when publicGet==true are always permitted 
             var isGranted = httpMethodParse.IsPost ||
-                (httpMethodParse.IsGet && (!entityId.HasValue() || cfgRecord.PublicGet)) ||
+                (httpMethodParse.IsGet && (!entityId.HasValue() || workContext.CurrentEntityConfigRecord.PublicGet)) ||
                 await IsGranted(workContext);
 
             if (!isGranted)

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AnyService.Audity;
 using AnyService.Core;
@@ -92,7 +93,12 @@ namespace AnyService.Services
             var serviceResponse = new ServiceResponse();
             if (!await _validator.ValidateForGet(serviceResponse))
                 return serviceResponse;
-            var data = await _repository.Query(r => r.GetAll(), serviceResponse) ?? new TDomainModel[] { };
+
+            var filter = _workContext.CurrentEntityConfigRecord.PublicGet ?
+                null :
+                new Dictionary<string, string> { { "CreatedByUserId", _workContext.CurrentUserId } };
+            var data = await _repository.Query(r => r.GetAll(filter), serviceResponse) ?? new TDomainModel[] { };
+
             if (serviceResponse.Result == ServiceResult.NotSet)
             {
                 serviceResponse.Data = data;
@@ -105,6 +111,7 @@ namespace AnyService.Services
             }
             return serviceResponse;
         }
+
         public async Task<ServiceResponse> Update(string id, TDomainModel entity)
         {
             entity.Id = id;

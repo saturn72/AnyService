@@ -13,10 +13,9 @@ namespace AnyService.Tests.Middlewares
     public class AnyServicePermissionMiddlewareTests
     {
         [Theory]
-        [InlineData("get", null)]
-        [InlineData("get", "123")]
-        [InlineData("post", null)]
-        public async Task InvokeAsync_PermittedMethods(string method, string requesteeId)
+        [InlineData("get")]
+        [InlineData("post")]
+        public async Task InvokeAsync_PermittedMethods(string method)
         {
             int i = 0, expValue = 15;
             RequestDelegate reqDel = hc =>

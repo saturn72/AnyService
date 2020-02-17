@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using AnyService.SampleApp;
 using System.Net;
 using AnyService.SampleApp.Identity;
-using Microsoft.AspNetCore.Http;
 
 namespace AnyService.E2E.Authorization
 {
@@ -51,6 +50,7 @@ namespace AnyService.E2E.Authorization
         [Test]
         public async Task CRUD_Entities_Possible_By_Authorized_User_Only()
         {
+            #region authorized user
             //authorized by role client
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var uri = "dependentmodel/";
@@ -106,6 +106,8 @@ namespace AnyService.E2E.Authorization
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
             await Task.Delay(250);// wait for background tasks (by simulating network delay)
+
+            #endregion
             //un authorized requests
             var unauthRes = await HttpClient.GetAsync(uri + id);
             unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);

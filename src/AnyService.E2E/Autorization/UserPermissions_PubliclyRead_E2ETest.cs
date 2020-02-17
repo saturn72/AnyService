@@ -14,6 +14,7 @@ using System.Net.Http.Headers;
 using Microsoft.AspNetCore.TestHost;
 using AnyService.SampleApp.Identity;
 using System.Net;
+using System.Threading;
 
 namespace AnyService.E2E.Authorization
 {
@@ -32,10 +33,6 @@ namespace AnyService.E2E.Authorization
                         {
                             Type = typeof(DependentModel),
                             PublicGet = true,
-                            Authorization = new AuthorizationInfo
-                            {
-                                ControllerAuthorizationNode = new AuthorizationNode{Roles = new[]{"some-role"}}
-                            }
                         }
                     }
                 };
@@ -52,6 +49,8 @@ namespace AnyService.E2E.Authorization
         [Test]
         public async Task UserPermissions_CUD_By_Creator_Read_by_All_Users()
         {
+            Init(); //clear database content prior running this tests
+            #region for debug only
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var uri = "dependentmodel/";
             var model = new
@@ -61,7 +60,7 @@ namespace AnyService.E2E.Authorization
 
             //create an antity
             var res = await HttpClient.PostAsJsonAsync(uri, model);
-            await Task.Delay(150); // wait for background tasks (by simulating network delay)
+            Thread.Sleep(250); // wait for background tasks (by simulating network delay)
 
             var content = await res.Content.ReadAsStringAsync();
             res.EnsureSuccessStatusCode();
@@ -98,27 +97,9 @@ namespace AnyService.E2E.Authorization
             jObj = JObject.Parse(content);
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
-
+            #endregion
             //switch user
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-            res = await HttpClient.GetAsync(uri);
-            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-
-            res = await HttpClient.PutAsJsonAsync(uri + id, updateModel);
-            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-
-            //delete by another user - declined
-            res = await HttpClient.DeleteAsync(uri + id);
-            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-
-            //read by non-creator
-            res = await HttpClient.GetAsync(uri + id);
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
-
             //read all by non-creator
             res = await HttpClient.GetAsync(uri);
             res.EnsureSuccessStatusCode();
@@ -127,6 +108,22 @@ namespace AnyService.E2E.Authorization
             jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
+
+            //read by id by non-creator
+            res = await HttpClient.GetAsync(uri + id);
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jObj["data"]["id"].Value<string>().ShouldBe(id);
+            jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
+
+            //update by non-creator
+            res = await HttpClient.PutAsJsonAsync(uri + id, updateModel);
+            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+
+            //delete by another user - declined
+            res = await HttpClient.DeleteAsync(uri + id);
+            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
             //delete by cretor
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);

@@ -34,7 +34,10 @@ namespace AnyService.Services
 
             return data;
         }
-        public static async Task<TResult> Query<TDomainModel, TResult>(this IRepository<TDomainModel> repository, Func<IRepository<TDomainModel>, Task<TResult>> command, ServiceResponse serviceResponse)
+        public static async Task<TResult> Query<TDomainModel, TResult>(
+            this IRepository<TDomainModel> repository,
+            Func<IRepository<TDomainModel>, Task<TResult>> command,
+            ServiceResponse serviceResponse)
             where TDomainModel : IDomainModelBase
         {
             var data = default(TResult);

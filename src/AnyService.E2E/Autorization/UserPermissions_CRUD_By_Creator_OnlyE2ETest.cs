@@ -89,7 +89,11 @@ namespace AnyService.E2E.Authorization
             //switch user
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
             res = await HttpClient.GetAsync(uri);
-            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jArr = jObj["data"] as JArray;
+            jArr.Count.ShouldBe(0);
 
             //update by cretor
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
@@ -124,7 +128,7 @@ namespace AnyService.E2E.Authorization
 
             //switch user and get deleted
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-            res = await HttpClient.GetAsync(uri);
+            res = await HttpClient.GetAsync(uri + id);
             res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         }
     }

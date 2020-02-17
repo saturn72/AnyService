@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -8,7 +9,8 @@ namespace AnyService.Core
 {
     public static class ExpressionBuilder
     {
-        private static readonly IDictionary<Type, PropertyDescriptorCollection> _typePropertyCollection = new Dictionary<Type, PropertyDescriptorCollection>();
+        private static readonly ConcurrentDictionary<Type, PropertyDescriptorCollection> _typePropertyCollection
+            = new ConcurrentDictionary<Type, PropertyDescriptorCollection>();
         public static Func<T, bool> ToFunc<T>(IDictionary<string, string> filter)
         {
             var exp = ToExpression<T>(filter);
@@ -52,7 +54,7 @@ namespace AnyService.Core
             if (!_typePropertyCollection.TryGetValue(type, out PropertyDescriptorCollection value))
             {
                 value = TypeDescriptor.GetProperties(type);
-                _typePropertyCollection[type] = value;
+                _typePropertyCollection.TryAdd(type, value);
             }
             return value;
         }
