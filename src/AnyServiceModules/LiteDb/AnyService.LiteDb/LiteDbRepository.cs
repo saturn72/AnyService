@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using AnyService.Core;
 using AnyService.Services;
 using AnyService.Services.FileStorage;
-using LiteDB;
 
 namespace AnyService.LiteDb
 {

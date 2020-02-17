@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System;
+using Microsoft.EntityFrameworkCore.ValueGeneration;
 
 namespace AnyService.EntityFramework
 {
@@ -20,8 +21,16 @@ namespace AnyService.EntityFramework
             _dbContext = dbContext;
         }
 
-        public Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter = null) =>
-            Task.FromResult<IEnumerable<TDomainModel>>(Entities.ToArray());
+        public async Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter = null)
+        {
+            if (filter == null)
+                return await Entities.ToArrayAsync();
+
+            var query = ExpressionBuilder.ToExpression<TDomainModel>(filter);
+            if (query == null)
+                return null;
+            return await Entities.Where(query).ToArrayAsync();
+        }
 
         public Task<TDomainModel> GetById(string id) =>
             Entities.FirstOrDefaultAsync(x => x.Id.Equals(id, StringComparison.InvariantCultureIgnoreCase));
@@ -30,6 +39,7 @@ namespace AnyService.EntityFramework
         {
             await _dbContext.Set<TDomainModel>().AddAsync(entity);
             await _dbContext.SaveChangesAsync();
+            _dbContext.Entry(entity).State = EntityState.Detached;
             return entity;
         }
 
@@ -37,6 +47,7 @@ namespace AnyService.EntityFramework
         {
             _dbContext.Set<TDomainModel>().Update(entity);
             await _dbContext.SaveChangesAsync();
+            _dbContext.Entry(entity).State = EntityState.Detached;
             return entity;
         }
     }
