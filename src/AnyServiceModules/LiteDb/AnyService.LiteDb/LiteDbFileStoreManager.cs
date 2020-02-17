@@ -7,11 +7,11 @@ using AnyService.Services.FileStorage;
 
 namespace AnyService.LiteDb
 {
-    public class FileStoreManager : IFileStoreManager
+    public class LiteDbFileStoreManager : IFileStoreManager
     {
         private readonly string _dbName;
 
-        public FileStoreManager(string dbName)
+        public LiteDbFileStoreManager(string dbName)
         {
             _dbName = dbName;
         }

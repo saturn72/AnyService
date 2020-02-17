@@ -57,7 +57,7 @@ namespace AnyService.SampleApp
         private void ConfigureLiteDb(IServiceCollection services)
         {
             var liteDbName = "anyservice-testsapp.db";
-            services.AddTransient<IFileStoreManager>(sp => new FileStoreManager(liteDbName));
+            services.AddTransient<IFileStoreManager>(sp => new LiteDbFileStoreManager(liteDbName));
             //configure db repositories
             services.AddTransient<IRepository<UserPermissions>>(sp => new LiteDbRepository<UserPermissions>(liteDbName));
             services.AddTransient<IRepository<DependentModel>>(sp => new LiteDbRepository<DependentModel>(liteDbName));
