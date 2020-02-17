@@ -32,7 +32,7 @@ namespace AnyService.LiteDb.Tests
         {
             var dbName = $"testdb-{GetCurrentMethodName()}-{DateTime.UtcNow.ToString("yyyy-mm-dd_hh-mm-dd-fff")}.db";
 
-            var lr = new AnyService.LiteDb.Repository<TestDomainModel>(dbName);
+            var lr = new LiteDbRepository<TestDomainModel>(dbName);
             var expValue = "my special value";
             var data = new TestDomainModel
             {
@@ -59,7 +59,7 @@ namespace AnyService.LiteDb.Tests
             {
                 db.GetCollection<TestDomainModel>().Insert(entities);
             }
-            var lr = new AnyService.LiteDb.Repository<TestDomainModel>(dbName);
+            var lr = new LiteDbRepository<TestDomainModel>(dbName);
             var all = await lr.GetAll(null);
             all.Count().ShouldBe(entities.Length);
             foreach (var e in entities)

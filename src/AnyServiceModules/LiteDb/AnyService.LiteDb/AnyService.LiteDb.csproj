@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\AnyService.Core\AnyService.Core.csproj" />
-    <ProjectReference Include="..\..\AnyService\AnyService.csproj" />
+    <ProjectReference Include="..\..\..\AnyService.Core\AnyService.Core.csproj" />
+    <ProjectReference Include="..\..\..\AnyService\AnyService.csproj" />
   </ItemGroup>
 
   <ItemGroup>

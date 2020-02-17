@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\AnyService\AnyService.csproj" />
+    <ProjectReference Include="..\AnyService.LiteDb\AnyService.LiteDb.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

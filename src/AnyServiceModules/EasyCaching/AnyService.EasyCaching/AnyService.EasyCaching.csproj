@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\AnyService.Core\AnyService.Core.csproj" />
+    <ProjectReference Include="..\..\..\AnyService.Core\AnyService.Core.csproj" />
   </ItemGroup>
 
 </Project>

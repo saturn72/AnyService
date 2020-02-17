@@ -1,15 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using AnyService.Core;
+using AnyService.Core.Security;
+using AnyService.Services;
+using AnyService.Services.FileStorage;
+using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace AnyService.LiteDb.SampleApp
 {
@@ -39,8 +36,7 @@ namespace AnyService.LiteDb.SampleApp
                 typeof(Stock)
             };
 
-            services.AddAuthentication(ManagedAuthenticationHandler.Schema)
-                .AddScheme<AuthenticationSchemeOptions, ManagedAuthenticationHandler>(ManagedAuthenticationHandler.Schema, options => { });
+            services.AddAlwaysPassAuthentication("123-abcd-user-id", null);
 
             services.AddAnyService(entities);
             ConfigureLiteDb(services);
@@ -48,12 +44,7 @@ namespace AnyService.LiteDb.SampleApp
         }
         private void ConfigureCaching(IServiceCollection services)
         {
-            var easycachingconfig = new EasyCachingConfig();
-            Configuration.GetSection("caching").Bind(easycachingconfig);
-
-            services.AddSingleton(easycachingconfig);
-            services.AddEasyCaching(options => options.UseInMemory("default"));
-            services.AddSingleton<ICacheManager, EasyCachingCacheManager>();
+            //Configure caching here...
         }
 
         private void ConfigureLiteDb(IServiceCollection services)
@@ -61,8 +52,8 @@ namespace AnyService.LiteDb.SampleApp
             var liteDbName = "anyservice-testsapp.db";
             services.AddTransient<IFileStoreManager>(sp => new FileStoreManager(liteDbName));
             //configure db repositories
-            services.AddTransient<IRepository<UserPermissions>>(sp => new Repository<UserPermissions>(liteDbName));
-            services.AddTransient<IRepository<Stock>>(sp => new Repository<Stock>(liteDbName));
+            services.AddTransient<IRepository<UserPermissions>>(sp => new LiteDbRepository<UserPermissions>(liteDbName));
+            services.AddTransient<IRepository<Stock>>(sp => new LiteDbRepository<Stock>(liteDbName));
 
             using var db = new LiteDatabase(liteDbName);
             var mapper = BsonMapper.Global;

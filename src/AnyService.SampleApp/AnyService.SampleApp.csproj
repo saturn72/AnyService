@@ -11,9 +11,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AnyServiceModules\AnyService.EasyCaching\AnyService.EasyCaching.csproj" />
+    <ProjectReference Include="..\AnyServiceModules\EasyCaching\AnyService.EasyCaching\AnyService.EasyCaching.csproj" />
     <ProjectReference Include="..\AnyService\AnyService.csproj" />
-    <ProjectReference Include="..\AnyServiceModules\AnyService.LiteDb\AnyService.LiteDb.csproj" />
+    <ProjectReference Include="..\AnyServiceModules\LiteDb\AnyService.LiteDb\AnyService.LiteDb.csproj" />
   </ItemGroup>
 
 </Project>

@@ -9,12 +9,12 @@ using LiteDB;
 
 namespace AnyService.LiteDb
 {
-    public class Repository<TDomainModel> : IRepository<TDomainModel> where TDomainModel : IDomainModelBase
+    public class LiteDbRepository<TDomainModel> : IRepository<TDomainModel> where TDomainModel : IDomainModelBase
     {
         private static readonly IDictionary<Type, string> TableNames = new Dictionary<Type, string>();
         private readonly string _dbName;
 
-        public Repository(string dbName)
+        public LiteDbRepository(string dbName)
         {
             _dbName = dbName;
         }
