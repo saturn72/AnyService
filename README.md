@@ -56,7 +56,27 @@ public void ConfigureServices(IServiceCollection services)
 
 1. Add reference to `AnyService.EntityFramework` nuget package (see [here](https://www.nuget.org/packages/anyservice.entityframework))
 2. Add reference to `Microsoft.EntityFrameworkCore.InMemory` nuget packages (see [here](https://docs.microsoft.com/en-us/ef/core/providers/in-memory/?tabs=dotnet-core-cli)) 
-3. Add the following lines to `ConfigureServices` method.
+3. Create `DbContext`
+```
+public class SampleAppDbContext : DbContext
+    {
+        public SampleAppDbContext(DbContextOptions<SampleAppDbContext> options) : base(options)
+        { }
+        public DbSet<UserPermissions> UserPermissions { get; set; }
+        public DbSet<DependentModel> DependentModel { get; set; }
+        public DbSet<Dependent2> Dependent2s { get; set; }
+        public DbSet<MultipartSampleModel> MultipartSampleModels { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<UserPermissions>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+            modelBuilder.Entity<DependentModel>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+            modelBuilder.Entity<Dependent2>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+            modelBuilder.Entity<MultipartSampleModel>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+        }
+    }
+ ```
+4. Add the following lines to `ConfigureServices` method.
 
 ```
 public void ConfigureServices(IServiceCollection services)
