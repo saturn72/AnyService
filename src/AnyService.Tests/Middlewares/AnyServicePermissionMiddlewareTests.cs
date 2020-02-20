@@ -23,7 +23,7 @@ namespace AnyService.Tests.Middlewares
                 i = 15;
                 return Task.CompletedTask;
             };
-            var mw = new AnyServicePermissionMiddleware(reqDel, null);
+            var mw = new AnyServicePermissionMiddleware(reqDel);
             var wc = new WorkContext
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord
@@ -39,7 +39,7 @@ namespace AnyService.Tests.Middlewares
             var httpResponse = new Mock<HttpResponse>();
             var httpContext = new Mock<HttpContext>();
             httpContext.SetupGet(h => h.Response).Returns(httpResponse.Object);
-            await mw.InvokeAsync(httpContext.Object, wc);
+            await mw.InvokeAsync(httpContext.Object, wc, null);
             i.ShouldBe(expValue);
         }
 
@@ -48,7 +48,7 @@ namespace AnyService.Tests.Middlewares
         [InlineData("delete")]
         public async Task InvokeAsync_BadRequestOnMissingIdForDeleteAndPut(string method)
         {
-            var mw = new AnyServicePermissionMiddleware(null, null);
+            var mw = new AnyServicePermissionMiddleware(null);
             var wc = new WorkContext
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord
@@ -63,14 +63,14 @@ namespace AnyService.Tests.Middlewares
             var httpResponse = new Mock<HttpResponse>();
             var httpContext = new Mock<HttpContext>();
             httpContext.SetupGet(h => h.Response).Returns(httpResponse.Object);
-            await mw.InvokeAsync(httpContext.Object, wc);
+            await mw.InvokeAsync(httpContext.Object, wc, null);
 
             httpResponse.VerifySet(r => r.StatusCode = StatusCodes.Status400BadRequest, Times.Once);
         }
         [Fact]
         public async Task IsGranted_NotSupportedMethod_ReturnsFalse()
         {
-            var mw = new AnyServicePermissionMiddleware(null, null);
+            var mw = new AnyServicePermissionMiddleware(null);
             var wc = new WorkContext
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord
@@ -85,7 +85,7 @@ namespace AnyService.Tests.Middlewares
             var httpResponse = new Mock<HttpResponse>();
             var httpContext = new Mock<HttpContext>();
             httpContext.SetupGet(h => h.Response).Returns(httpResponse.Object);
-            await mw.InvokeAsync(httpContext.Object, wc);
+            await mw.InvokeAsync(httpContext.Object, wc, null);
 
             httpResponse.VerifySet(r => r.StatusCode = StatusCodes.Status400BadRequest, Times.Once);
         }
@@ -104,7 +104,7 @@ namespace AnyService.Tests.Middlewares
 
             var pm = new Mock<IPermissionManager>();
             pm.Setup(pm => pm.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(userPermissions);
-            var mw = new TestAnyServicePermissionware(null, pm.Object);
+            var mw = new TestAnyServicePermissionware(null);
             var wc = new WorkContext
             {
                 CurrentUserId = "userId",
@@ -115,7 +115,7 @@ namespace AnyService.Tests.Middlewares
                     RequesteeId = "some-id",
                 },
             };
-            var res = await mw.IsGrantedForTest(wc);
+            var res = await mw.IsGrantedForTest(wc, pm.Object);
             res.ShouldBe(isGranted);
         }
         public static IEnumerable<object[]> CRUD_RetunsMockedAnswer_DATA = new[]
@@ -236,11 +236,11 @@ namespace AnyService.Tests.Middlewares
 
         public class TestAnyServicePermissionware : AnyServicePermissionMiddleware
         {
-            public TestAnyServicePermissionware(RequestDelegate next, IPermissionManager permissionManager) : base(next, permissionManager)
+            public TestAnyServicePermissionware(RequestDelegate next) : base(next)
             {
             }
 
-            public Task<bool> IsGrantedForTest(WorkContext workContext) => base.IsGranted(workContext);
+            public Task<bool> IsGrantedForTest(WorkContext workContext, IPermissionManager permissionManager) => base.IsGranted(workContext, permissionManager);
         }
     }
 }

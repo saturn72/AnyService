@@ -5,14 +5,19 @@ using System.Threading.Tasks;
 using AnyService.Core;
 using System.Collections.Generic;
 using System.Linq;
-using Xunit.Abstractions;
 
 namespace AnyService.EntityFramework.Tests
 {
+    public class TestNestedClass : IDomainModelBase
+    {
+        public string Id { get; set; }
+        public string Value { get; set; }
+    }
     public class TestClass : IDomainModelBase
     {
         public string Id { get; set; }
         public string Value { get; set; }
+        public IEnumerable<TestNestedClass> NestedClasses { get; set; }
     }
     public class TestDbContext : DbContext
     {
@@ -22,21 +27,19 @@ namespace AnyService.EntityFramework.Tests
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<TestClass>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+            modelBuilder.Entity<TestNestedClass>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
         }
     }
     public class EfRepositoryTests
     {
         private readonly TestDbContext _dbContext;
         private readonly EfRepository<TestClass> _repository;
-        private readonly ITestOutputHelper _output;
-
-        public EfRepositoryTests(ITestOutputHelper output)
+        private static readonly DbContextOptions<TestDbContext> DbOptions = new DbContextOptionsBuilder<TestDbContext>()
+            .UseInMemoryDatabase(databaseName: "test_ef_db")
+            .Options;
+        public EfRepositoryTests()
         {
-            _output = output;
-            var options = new DbContextOptionsBuilder<TestDbContext>()
-                .UseInMemoryDatabase(databaseName: "test_ef_db")
-                .Options;
-            _dbContext = new TestDbContext(options);
+            _dbContext = new TestDbContext(DbOptions);
             _repository = new EfRepository<TestClass>(_dbContext);
         }
         [Fact]
@@ -73,15 +76,26 @@ namespace AnyService.EntityFramework.Tests
         public async Task GetAll_WithoutFilter()
         {
             _dbContext.Set<TestClass>().RemoveRange(_dbContext.Set<TestClass>());
+            _dbContext.Set<TestNestedClass>().RemoveRange(_dbContext.Set<TestNestedClass>());
             await _dbContext.SaveChangesAsync();
 
             var valuePrefix = "value-";
-
             var tc = new List<TestClass>();
             for (int i = 0; i < 3; i++)
                 tc.Add(new TestClass
                 {
-                    Value = valuePrefix + i.ToString()
+                    Value = valuePrefix + i.ToString(),
+                    NestedClasses = new[]
+                    {
+                        new TestNestedClass
+                        {
+                            Value = "v1",
+                        },
+                        new TestNestedClass
+                        {
+                            Value = "v2",
+                        },
+                    },
                 });
 
             await _dbContext.Set<TestClass>().AddRangeAsync(tc);
@@ -90,7 +104,10 @@ namespace AnyService.EntityFramework.Tests
             var e = await _repository.GetAll();
             e.Count().ShouldBe(tc.Count);
             for (int i = 0; i < tc.Count; i++)
+            {
                 e.Any(x => x.Id != null && x.Value == valuePrefix + i.ToString()).ShouldBeTrue();
+                e.ElementAt(i).NestedClasses.Count().ShouldBe(2);
+            }
         }
 
         [Fact]
@@ -103,7 +120,18 @@ namespace AnyService.EntityFramework.Tests
             for (int i = 0; i < 7; i++)
                 tc.Add(new TestClass
                 {
-                    Value = i % 2 == 0 ? a : "b"
+                    Value = i % 2 == 0 ? a : "b",
+                    NestedClasses = new[]
+                    {
+                        new TestNestedClass
+                        {
+                            Value = "v1_" + i%2,
+                        },
+                        new TestNestedClass
+                        {
+                            Value = "v2_" + i%2,
+                        },
+                    },
                 });
 
 
@@ -113,8 +141,14 @@ namespace AnyService.EntityFramework.Tests
             var filter = new Dictionary<string, string> { { "value", "a" } };
             var e = await _repository.GetAll(filter);
             e.Count().ShouldBe(4);
-            for (int i = 0; i < tc.Count; i++)
+            for (int i = 0; i < e.Count(); i++)
+            {
                 e.Any(x => x.Id != null && x.Value == a).ShouldBeTrue();
+                var c = e.ElementAt(i);
+                c.NestedClasses.Count().ShouldBe(2);
+                c.NestedClasses.ElementAt(0).Value.ShouldBe("v1_0");
+                c.NestedClasses.ElementAt(1).Value.ShouldBe("v2_0");
+            }
         }
 
         [Fact]

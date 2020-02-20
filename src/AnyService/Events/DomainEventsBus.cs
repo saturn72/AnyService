@@ -11,14 +11,16 @@ namespace AnyService.Events
         public void Publish(string eventKey, DomainEventData eventData)
         {
             if (_handlers.TryGetValue(eventKey, out ICollection<HandlerData> handlerDatas))
+            {
                 foreach (var h in handlerDatas)
                 {
                     eventData.PublishedOnUtc = DateTime.UtcNow;
-                    Task.Run(() => h.Handler(eventData));
+                    var t = h.Handler(eventData);
                 }
+            }
         }
 
-        public string Subscribe(string eventKey, Action<DomainEventData> handler)
+        public string Subscribe(string eventKey, Func<DomainEventData, Task> handler)
         {
             var handlerId = Convert
                 .ToBase64String(Guid.NewGuid().ToByteArray())
@@ -39,6 +41,7 @@ namespace AnyService.Events
             return handlerId;
         }
 
+
         public void Unsubscribe(string handlerId)
         {
             var handlerDatas = _handlers.Values.FirstOrDefault(hd => hd.Any(x => x.HandlerId.Equals(handlerId, StringComparison.InvariantCultureIgnoreCase)));
@@ -50,7 +53,7 @@ namespace AnyService.Events
         private class HandlerData
         {
             public string HandlerId { get; set; }
-            public Action<DomainEventData> Handler { get; set; }
+            public Func<DomainEventData, Task> Handler { get; set; }
         }
         #endregion
     }

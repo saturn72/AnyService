@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using AnyService.Core.Security;
 using AnyService.Services.Security;
@@ -10,15 +9,12 @@ namespace AnyService.Middlewares
     public class AnyServicePermissionMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly IPermissionManager _permissionManager;
-
-        public AnyServicePermissionMiddleware(RequestDelegate next, IPermissionManager permissionManager)
+        public AnyServicePermissionMiddleware(RequestDelegate next)
         {
             _next = next;
-            _permissionManager = permissionManager;
         }
 
-        public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
+        public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext, IPermissionManager permissionManager)
         {
             if (workContext.CurrentType == null) // in-case not using Anyservice pipeline
             {
@@ -39,7 +35,7 @@ namespace AnyService.Middlewares
             //post, get-all and get-by-id when publicGet==true are always permitted 
             var isGranted = httpMethodParse.IsPost ||
                 (httpMethodParse.IsGet && (!entityId.HasValue() || workContext.CurrentEntityConfigRecord.PublicGet)) ||
-                await IsGranted(workContext);
+                await IsGranted(workContext, permissionManager);
 
             if (!isGranted)
             {
@@ -62,7 +58,7 @@ namespace AnyService.Middlewares
             return (isSupported, isPost, isGet);
         }
 
-        protected async Task<bool> IsGranted(WorkContext workContext)
+        protected async Task<bool> IsGranted(WorkContext workContext, IPermissionManager permissionManager)
         {
             var cfgRecord = workContext.CurrentEntityConfigRecord;
             var reqInfo = workContext.RequestInfo;
@@ -74,7 +70,7 @@ namespace AnyService.Middlewares
             var permissionKey = PermissionFuncs.GetByHttpMethod(reqInfo.Method)(cfgRecord);
             var entityKey = cfgRecord.EntityKey;
             if (isGet || HttpMethods.IsPut(reqInfo.Method) || HttpMethods.IsDelete(reqInfo.Method))
-                return await _permissionManager.UserHasPermissionOnEntity(userId, entityKey, permissionKey, entityId);
+                return await permissionManager.UserHasPermissionOnEntity(userId, entityKey, permissionKey, entityId);
             return false;
         }
     }

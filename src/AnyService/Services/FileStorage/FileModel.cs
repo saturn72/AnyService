@@ -11,7 +11,7 @@ namespace AnyService.Services.FileStorage
     public sealed class FileModel : ChildModelBase
     {
         public string TempPath { get; set; }
-        public IEnumerable<byte> Bytes { get; set; }
+        public byte[] Bytes { get; set; }
         public string DisplayFileName { get; set; }
         public string UntrustedFileName { get; set; }
         public string StoredFileName { get; internal set; }

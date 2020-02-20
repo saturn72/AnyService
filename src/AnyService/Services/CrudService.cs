@@ -123,7 +123,13 @@ namespace AnyService.Services
             var dbModel = await _repository.Query(async r => await r.GetById(id), serviceResponse);
             if (dbModel == null)
                 return serviceResponse;
-            serviceResponse.Result = ServiceResult.NotSet;
+
+            var deletable = dbModel as IDeletableAudit;
+            if (deletable != null && deletable.Deleted)
+            {
+                serviceResponse.Result = ServiceResult.BadOrMissingData;
+                return serviceResponse;
+            }
 
             if (entity is IUpdatableAudit)
                 _auditHelper.PrepareForUpdate(entity as IUpdatableAudit, dbModel as IUpdatableAudit, _workContext.CurrentUserId);

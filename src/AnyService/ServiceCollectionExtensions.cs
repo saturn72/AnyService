@@ -49,7 +49,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             EntityConfigRecordManager.EntityConfigRecords = config.EntityConfigRecords;
             services.TryAddScoped<WorkContext>();
-            services.TryAddSingleton<IPermissionManager, PermissionManager>();
+            services.TryAddTransient<IPermissionManager, PermissionManager>();
 
             services.AddScoped(sp =>
             {

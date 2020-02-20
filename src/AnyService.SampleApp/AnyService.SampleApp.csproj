@@ -6,14 +6,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AnyService.EasyCaching" Version="1.0.0" />
+    <!-- <PackageReference Include="AnyService.EntityFramework" Version="1.0.0" /> -->
     <PackageReference Include="EasyCaching.InMemory" Version="0.8.0" />
-    <PackageReference Include="LiteDb" Version="4.1.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AnyServiceModules\EasyCaching\AnyService.EasyCaching\AnyService.EasyCaching.csproj" />
     <ProjectReference Include="..\AnyService\AnyService.csproj" />
-    <ProjectReference Include="..\AnyServiceModules\LiteDb\AnyService.LiteDb\AnyService.LiteDb.csproj" />
+    <ProjectReference Include="..\AnyServiceModules\EntityFramework\AnyService.EntityFramework\AnyService.EntityFramework.csproj" />
   </ItemGroup>
 
 </Project>

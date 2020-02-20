@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using AnyService.Events;
 using Shouldly;
 using Xunit;
@@ -31,7 +32,11 @@ namespace AnyService.Tests.Events
             {
                 Data = "thjis is data"
             };
-            var handler = new Action<DomainEventData>(d => handleCounter++);
+            var handler = new Func<DomainEventData, Task>(d =>
+            {
+                handleCounter++;
+                return Task.CompletedTask;
+            });
 
             var eb = new DomainEventsBus();
             var handlerId = eb.Subscribe(ek, handler);

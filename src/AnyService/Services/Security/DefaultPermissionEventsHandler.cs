@@ -17,69 +17,65 @@ namespace AnyService.Services.Security
         {
             _serviceProvider = serviceProvider;
         }
-        public Action<DomainEventData> EntityCreatedHandler => (eventData) =>
-         {
-             var createdEntity = eventData.Data as IDomainModelBase;
-             if (createdEntity == null)
-                 return;
+        public Func<DomainEventData, Task> EntityCreatedHandler => async (eventData) =>
+          {
+              var createdEntity = eventData.Data as IDomainModelBase;
+              if (createdEntity == null)
+                  return;
 
-             var manager = _serviceProvider.GetService<IPermissionManager>();
-             var userId = eventData.PerformedByUserId;
+              var manager = _serviceProvider.GetService<IPermissionManager>();
+              var userId = eventData.PerformedByUserId;
 
-             var tcr = EntityConfigRecordManager.GetRecord(createdEntity.GetType());
+              var tcr = EntityConfigRecordManager.GetRecord(createdEntity.GetType());
 
-             var entityPermission = new EntityPermission
-             {
-                 EntityId = createdEntity.Id,
-                 EntityKey = tcr.EntityKey,
-                 PermissionKeys = new[] { tcr.PermissionRecord.ReadKey, tcr.PermissionRecord.UpdateKey, tcr.PermissionRecord.DeleteKey, },
-             };
+              var entityPermission = new EntityPermission
+              {
+                  EntityId = createdEntity.Id,
+                  EntityKey = tcr.EntityKey,
+                  PermissionKeys = new[] { tcr.PermissionRecord.ReadKey, tcr.PermissionRecord.UpdateKey, tcr.PermissionRecord.DeleteKey, },
+              };
 
-             Task.Run(async () =>
-             {
-                 var isUpdate = true;
-                 var userPermissions = await manager.GetUserPermissions(userId);
-                 if (userPermissions == null)
-                 {
-                     isUpdate = false;
-                     userPermissions = new UserPermissions
-                     {
-                         UserId = userId
-                     };
-                 }
+              var isUpdate = true;
+              var userPermissions = await manager.GetUserPermissions(userId);
+              if (userPermissions == null)
+              {
+                  isUpdate = false;
+                  userPermissions = new UserPermissions
+                  {
+                      UserId = userId
+                  };
+              }
 
-                 var eps = userPermissions.EntityPermissions?.ToList() ?? new List<EntityPermission>();
-                 eps.Add(entityPermission);
-                 userPermissions.EntityPermissions = eps.ToArray();
+              var eps = userPermissions.EntityPermissions?.ToList() ?? new List<EntityPermission>();
+              eps.Add(entityPermission);
+              userPermissions.EntityPermissions = eps.ToArray();
 
-                 if (isUpdate)
-                     await manager.UpdateUserPermissions(userPermissions);
-                 else
-                     await manager.CreateUserPermissions(userPermissions);
-             });
-         };
-        public Action<DomainEventData> EntityDeletedHandler => (eventData) =>
-     {
-         var deletedEntity = eventData.Data as IDomainModelBase;
-         if (deletedEntity == null)
-             return;
+              if (isUpdate)
+                  await manager.UpdateUserPermissions(userPermissions);
+              else
+                  await manager.CreateUserPermissions(userPermissions);
+          };
 
-         var manager = _serviceProvider.GetService<IPermissionManager>();
-         var userId = eventData.PerformedByUserId;
-         var tcr = EntityConfigRecordManager.GetRecord(deletedEntity.GetType());
 
-         Task.Run(async () =>
-         {
-             var userPermissions = await manager.GetUserPermissions(userId);
-             var permissionToDelete = userPermissions?.EntityPermissions?.FirstOrDefault(p => p.EntityId == deletedEntity.Id && p.EntityKey == tcr.EntityKey);
-             if (permissionToDelete != null)
-             {
-                 var allUserPermissions = userPermissions.EntityPermissions.ToList();
-                 allUserPermissions.Remove(permissionToDelete);
-                 userPermissions.EntityPermissions = allUserPermissions.ToArray();
-                 await manager.UpdateUserPermissions(userPermissions);
-             }
-         });
-     };
+        public Func<DomainEventData, Task> EntityDeletedHandler => async (eventData) =>
+      {
+          var deletedEntity = eventData.Data as IDomainModelBase;
+          if (deletedEntity == null)
+              return;
+
+          var manager = _serviceProvider.GetService<IPermissionManager>();
+          var userId = eventData.PerformedByUserId;
+          var tcr = EntityConfigRecordManager.GetRecord(deletedEntity.GetType());
+
+          var userPermissions = await manager.GetUserPermissions(userId);
+          var permissionToDelete = userPermissions?.EntityPermissions?.FirstOrDefault(p => p.EntityId == deletedEntity.Id && p.EntityKey == tcr.EntityKey);
+          if (permissionToDelete != null)
+          {
+              var allUserPermissions = userPermissions.EntityPermissions.ToList();
+              allUserPermissions.Remove(permissionToDelete);
+              userPermissions.EntityPermissions = allUserPermissions.ToArray();
+              await manager.UpdateUserPermissions(userPermissions);
+          }
+      };
     }
 }

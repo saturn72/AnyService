@@ -40,7 +40,6 @@ namespace AnyService.E2E.Authorization
                 services.AddAnyService(cfg);
             });
         };
-
         public UserRoleE2ETest() : base(configuration)
         {
             Factory = new WebApplicationFactory<Startup>();
@@ -59,7 +58,7 @@ namespace AnyService.E2E.Authorization
                 Value = "init value"
             };
 
-            //create an antity
+            //create an entity
             var res = await HttpClient.PostAsJsonAsync(uri, model);
             var content = await res.Content.ReadAsStringAsync();
             res.EnsureSuccessStatusCode();
@@ -98,23 +97,23 @@ namespace AnyService.E2E.Authorization
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
 
-            //delete by cretor
-            res = await HttpClient.DeleteAsync(uri + id);
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
-            await Task.Delay(250);// wait for background tasks (by simulating network delay)
+            // //delete by cretor
+            // res = await HttpClient.DeleteAsync(uri + id);
+            // res.EnsureSuccessStatusCode();
+            // content = await res.Content.ReadAsStringAsync();
+            // jObj = JObject.Parse(content);
+            // jObj["data"]["id"].Value<string>().ShouldBe(id);
+            // jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
+            // await Task.Delay(250);// wait for background tasks (by simulating network delay)
 
+            // res = await HttpClient.GetAsync(uri + id);
+            // res.EnsureSuccessStatusCode();
             #endregion
             //un authorized requests
-            var unauthRes = await HttpClient.GetAsync(uri + id);
-            unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.UnauthorizedUser1);
 
-            unauthRes = await HttpClient.GetAsync(uri);
+            var unauthRes = await HttpClient.GetAsync(uri);
             unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
             unauthRes = await HttpClient.PutAsJsonAsync(uri + id, updateModel);

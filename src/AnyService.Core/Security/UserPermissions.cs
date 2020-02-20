@@ -6,6 +6,6 @@ namespace AnyService.Core.Security
     {
         public string Id { get; set; }
         public string UserId { get; set; }
-        public IEnumerable<EntityPermission> EntityPermissions { get; set; }
+        public virtual IEnumerable<EntityPermission> EntityPermissions { get; set; }
     }
 }

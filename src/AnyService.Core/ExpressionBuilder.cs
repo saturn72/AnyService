@@ -44,8 +44,6 @@ namespace AnyService.Core
                 var be = Expression.Equal(me, Expression.Constant(value));
                 expCol.Add(be);
             }
-            var arr = new[] { "a", "b", "c", "d", "e" };
-            var v = arr.Aggregate((a, b) => a + "___" + b);
             var allBinaryExpressions = expCol.Aggregate((left, right) => Expression.AndAlso(left, right));
             return Expression.Lambda<Func<T, bool>>(allBinaryExpressions, new ParameterExpression[] { pe });
         }

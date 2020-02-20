@@ -99,7 +99,7 @@ namespace AnyService.E2E
             //get deleted
             await Task.Delay(250);// wait for background tasks (by simulating network delay)
             res = await HttpClient.GetAsync("dependentmodel/" + id);
-            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+            res.EnsureSuccessStatusCode();
         }
 
         [Test]

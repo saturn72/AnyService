@@ -11,7 +11,7 @@ using System.Collections.Generic;
 
 namespace AnyService.LiteDb.Tests
 {
-    public class RepositoryTests
+    public class LiteDbRepositoryTests
     {
         public class TestDomainModel : IDomainModelBase
         {

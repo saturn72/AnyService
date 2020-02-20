@@ -50,7 +50,8 @@ namespace AnyService.E2E.Authorization
         public async Task UserPermissions_CUD_By_Creator_Read_by_All_Users()
         {
             Init(); //clear database content prior running this tests
-            #region for debug only
+            #region Creator scope
+
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var uri = "dependentmodel/";
             var model = new
@@ -105,7 +106,7 @@ namespace AnyService.E2E.Authorization
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
+            jArr = (JArray)jObj["data"];
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
 
@@ -133,11 +134,6 @@ namespace AnyService.E2E.Authorization
             jObj = JObject.Parse(content);
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
-
-            //switch user and get deleted
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-            res = await HttpClient.GetAsync(uri);
-            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         }
     }
 }

@@ -187,7 +187,6 @@ namespace AnyService.Tests.Services
                 It.Is<DomainEventData>(ed => ed.Data == model && ed.PerformedByUserId == _wc.CurrentUserId)), Times.Once);
         }
         #endregion
-
         #region get all
         [Fact]
         public async Task GetAll_BadRequest_OnValidatorFailure()
@@ -343,6 +342,30 @@ namespace AnyService.Tests.Services
             v.Verify(x => x.ValidateForUpdate(It.Is<TestModel>(ep => ep.Id == id), It.IsAny<ServiceResponse>()));
             ah.Verify(a => a.PrepareForUpdate(It.Is<TestModel>(e => e == entity), It.Is<TestModel>(e => e == dbModel), It.Is<string>(s => s == _wc.CurrentUserId)), Times.Once);
             eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Update), It.IsAny<DomainEventData>()), Times.Once);
+        }
+        [Fact]
+        public async Task Update_DoesNotUpdateDeleted()
+        {
+            var id = "some-id";
+            var entity = new TestModel();
+            var dbModel = new TestModel
+            {
+                Id = id,
+                Deleted = true
+            };
+            var v = new Mock<ICrudValidator<TestModel>>();
+            v.Setup(i => i.ValidateForUpdate(It.IsAny<TestModel>(), It.IsAny<ServiceResponse>()))
+                .ReturnsAsync(true);
+            var repo = new Mock<IRepository<TestModel>>();
+            repo.Setup(r => r.GetById(It.IsAny<string>()))
+                .ReturnsAsync(dbModel);
+
+            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, null, null, null, null, null);
+            var res = await cSrv.Update(id, entity);
+
+            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
+
+            v.Verify(x => x.ValidateForUpdate(It.Is<TestModel>(ep => ep.Id == id), It.IsAny<ServiceResponse>()));
         }
         #endregion
         #region Delete

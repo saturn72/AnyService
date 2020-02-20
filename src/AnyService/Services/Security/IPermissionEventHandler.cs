@@ -1,11 +1,12 @@
 using System;
+using System.Threading.Tasks;
 using AnyService.Events;
 
 namespace AnyService.Services.Security
 {
     public interface IPermissionEventsHandler
     {
-        Action<DomainEventData> EntityCreatedHandler { get; }
-        Action<DomainEventData> EntityDeletedHandler { get; }
+        Func<DomainEventData, Task> EntityCreatedHandler { get; }
+        Func<DomainEventData, Task> EntityDeletedHandler { get; }
     }
 }

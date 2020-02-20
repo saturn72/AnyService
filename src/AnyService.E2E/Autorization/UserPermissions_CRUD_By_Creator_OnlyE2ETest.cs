@@ -51,13 +51,15 @@ namespace AnyService.E2E.Authorization
         [Test]
         public async Task UserPermissions_Privatly_Read_E2ETest()
         {
+            #region Setup
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var uri = "dependentmodel/";
             var model = new
             {
                 Value = "init value"
             };
-
+            #endregion
+            #region Create
             //create an antity
             var res = await HttpClient.PostAsJsonAsync(uri, model);
             await Task.Delay(150); // wait for background tasks (by simulating network delay)
@@ -68,6 +70,7 @@ namespace AnyService.E2E.Authorization
             var id = jObj["data"]["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
             jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
+            #endregion
 
             //read by creator
             res = await HttpClient.GetAsync(uri + id);

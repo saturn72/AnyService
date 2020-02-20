@@ -5,16 +5,15 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System;
-using Microsoft.EntityFrameworkCore.ValueGeneration;
+using System.Collections.Concurrent;
 
 namespace AnyService.EntityFramework
 {
     public class EfRepository<TDomainModel> : IRepository<TDomainModel>
-    where TDomainModel : class, IDomainModelBase
+        where TDomainModel : class, IDomainModelBase
     {
         private readonly DbContext _dbContext;
-        private IQueryable<TDomainModel> Entities => _entities ?? (_entities = _dbContext.Set<TDomainModel>().AsNoTracking());
-        private IQueryable<TDomainModel> _entities;
+        private IQueryable<TDomainModel> DbSet => _dbContext.Set<TDomainModel>().AsNoTracking();
 
         public EfRepository(DbContext dbContext)
         {
@@ -24,16 +23,16 @@ namespace AnyService.EntityFramework
         public async Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter = null)
         {
             if (filter == null)
-                return await Entities.ToArrayAsync();
+                return await IncludeNavigations(DbSet).ToArrayAsync();
 
             var query = ExpressionBuilder.ToExpression<TDomainModel>(filter);
             if (query == null)
                 return null;
-            return await Entities.Where(query).ToArrayAsync();
+            return await IncludeNavigations(DbSet.Where(query)).ToArrayAsync();
         }
 
         public Task<TDomainModel> GetById(string id) =>
-            Entities.FirstOrDefaultAsync(x => x.Id.Equals(id, StringComparison.InvariantCultureIgnoreCase));
+            DbSet.FirstOrDefaultAsync(x => x.Id.Equals(id, StringComparison.InvariantCultureIgnoreCase));
 
         public async Task<TDomainModel> Insert(TDomainModel entity)
         {
@@ -49,6 +48,22 @@ namespace AnyService.EntityFramework
             await _dbContext.SaveChangesAsync();
             _dbContext.Entry(entity).State = EntityState.Detached;
             return entity;
+        }
+        private static readonly ConcurrentDictionary<Type, IEnumerable<string>> NavigationPropertyNames
+            = new ConcurrentDictionary<Type, IEnumerable<string>>();
+        private IQueryable<TDomainModel> IncludeNavigations(IQueryable<TDomainModel> query)
+        {
+            var type = typeof(TDomainModel);
+
+            if (!NavigationPropertyNames.TryGetValue(type, out IEnumerable<string> navigationPropertiesNames))
+            {
+                var allProperties = _dbContext.Model.FindEntityType(typeof(TDomainModel));
+                navigationPropertiesNames = allProperties.GetNavigations().Select(x => x.Name).ToArray();
+                NavigationPropertyNames.TryAdd(type, navigationPropertiesNames);
+            }
+            foreach (var name in navigationPropertiesNames)
+                query = query.Include(name);
+            return query;
         }
     }
 }
