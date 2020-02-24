@@ -4,8 +4,6 @@ using AnyService.SampleApp;
 using NUnit.Framework;
 using System;
 using Microsoft.AspNetCore.Hosting;
-using System.IO;
-using System.Threading;
 
 namespace AnyService.E2E
 {
