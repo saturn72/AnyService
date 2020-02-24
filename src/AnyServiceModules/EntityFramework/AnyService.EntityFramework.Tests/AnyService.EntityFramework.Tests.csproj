@@ -20,4 +20,7 @@
     <ProjectReference Include="..\AnyService.EntityFramework\AnyService.EntityFramework.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="resources\**" CopyToOutputDirectory="Always" />
+  </ItemGroup>
 </Project>

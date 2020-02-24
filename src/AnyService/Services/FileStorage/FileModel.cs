@@ -14,6 +14,6 @@ namespace AnyService.Services.FileStorage
         public byte[] Bytes { get; set; }
         public string DisplayFileName { get; set; }
         public string UntrustedFileName { get; set; }
-        public string StoredFileName { get; internal set; }
+        public string StoredFileName { get; set; }
     }
 }

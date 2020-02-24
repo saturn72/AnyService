@@ -19,17 +19,6 @@ namespace AnyService.EntityFramework.Tests
         public string Value { get; set; }
         public IEnumerable<TestNestedClass> NestedClasses { get; set; }
     }
-    public class TestDbContext : DbContext
-    {
-        public TestDbContext(DbContextOptions<TestDbContext> options) : base(options)
-        { }
-        public DbSet<TestClass> TestClasses { get; set; }
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<TestClass>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
-            modelBuilder.Entity<TestNestedClass>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
-        }
-    }
     public class EfRepositoryTests
     {
         private readonly TestDbContext _dbContext;

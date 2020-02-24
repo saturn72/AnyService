@@ -63,8 +63,7 @@ namespace AnyService.SampleApp
             // services.AddDbContext<DbContext>(sp => new SampleAppDbContext(options));
             services.AddTransient<DbContext>(sp => new SampleAppDbContext(options));
             services.AddTransient(typeof(IRepository<>), typeof(EfRepository<>));
-
-            services.AddTransient<IFileStoreManager>(sp => null as IFileStoreManager);
+            services.AddTransient<IFileStoreManager, EfFileStoreManager>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

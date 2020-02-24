@@ -30,24 +30,32 @@ namespace AnyService.EntityFramework
                 return null;
             return await IncludeNavigations(DbSet.Where(query)).ToArrayAsync();
         }
-
-        public Task<TDomainModel> GetById(string id) =>
-            DbSet.FirstOrDefaultAsync(x => x.Id.Equals(id, StringComparison.InvariantCultureIgnoreCase));
+        public Task<TDomainModel> GetById(string id)
+        {
+            var query = DbSet.Where(x => x.Id.Equals(id, StringComparison.InvariantCultureIgnoreCase));
+            return IncludeNavigations(query).FirstOrDefaultAsync();
+        }
 
         public async Task<TDomainModel> Insert(TDomainModel entity)
         {
             await _dbContext.Set<TDomainModel>().AddAsync(entity);
             await _dbContext.SaveChangesAsync();
-            _dbContext.Entry(entity).State = EntityState.Detached;
+            DetachEntity(entity);
             return entity;
         }
-
         public async Task<TDomainModel> Update(TDomainModel entity)
         {
             _dbContext.Set<TDomainModel>().Update(entity);
             await _dbContext.SaveChangesAsync();
-            _dbContext.Entry(entity).State = EntityState.Detached;
+            DetachEntity(entity);
             return entity;
+        }
+        private void DetachEntity(TDomainModel entity)
+        {
+            _dbContext.Entry(entity).State = EntityState.Detached;
+
+            foreach (var col in _dbContext.Entry(entity).Collections)
+                col.EntityEntry.State = EntityState.Detached;
         }
         private static readonly ConcurrentDictionary<Type, IEnumerable<string>> NavigationPropertyNames
             = new ConcurrentDictionary<Type, IEnumerable<string>>();

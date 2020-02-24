@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using AnyService.Services.FileStorage;
+using System;
 
 namespace AnyService.EntityFramework
 {
@@ -18,11 +19,26 @@ namespace AnyService.EntityFramework
         public async Task<IEnumerable<FileUploadResponse>> Upload(IEnumerable<FileModel> files)
         {
             var dbSet = _dbContext.Set<FileModel>();
-            await dbSet.AddRangeAsync(files);
+            var toUpdate = new List<FileModel>();
+            var toCreate = new List<FileModel>();
+
+            foreach (var f in files)
+            {
+                f.StoredFileName = f.DisplayFileName;
+
+                if (f.Id.HasValue())
+                    toUpdate.Add(f);
+                else
+                {
+                    toCreate.Add(f);
+                }
+            }
+
+            await Task.Run(() => dbSet.UpdateRange(toUpdate));
+            await dbSet.AddRangeAsync(toCreate);
             await _dbContext.SaveChangesAsync();
 
-            var res = files.Select(f => new FileUploadResponse { File = f, Status = UploadStatus.Uploaded }).ToArray();
-            return res;
+            return files.Select(f => new FileUploadResponse { File = f, Status = UploadStatus.Uploaded }).ToArray();
         }
     }
 }

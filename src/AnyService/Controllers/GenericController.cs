@@ -67,7 +67,6 @@ namespace AnyService.Controllers
                     UntrustedFileName = Path.GetFileName(ff.FileName),
                     DisplayFileName = WebUtility.HtmlEncode(ff.FileName),
                     StoredFileName = Path.GetRandomFileName(),
-                    ParentKey = _curType.FullName,
                 };
                 using (var memoryStream = new MemoryStream())
                 {

@@ -143,6 +143,7 @@ namespace AnyService.E2E
         [Test]
         public async Task MultipartFormStreamSampleFlow()
         {
+            #region setup
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var multiForm = new MultipartFormDataContent();
             var filePath = Path.Combine("resources", "video.mp4");
@@ -157,19 +158,20 @@ namespace AnyService.E2E
             var dataString = JsonConvert.SerializeObject(model);
             //add to form under key "model"
             multiForm.Add(new StringContent(dataString), "model");
-
+            #endregion 
+            #region Create
             var fileStream = new FileStream(filePath, FileMode.Open);
             var fn = Path.GetFileName(filePath);
             multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), fn);
             var res = await HttpClient.PostAsync("multipartSampleModel/__stream", multiForm);
             await Task.Delay(150);// wait for background tasks (by simulating network delay)
             res.EnsureSuccessStatusCode();
-
             var content = await res.Content.ReadAsStringAsync();
             var jObj = JObject.Parse(content);
             var id = jObj["data"]["entity"]["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
-
+            #endregion
+            #region Read
             res = await HttpClient.GetAsync("multipartSampleModel/" + id);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
@@ -177,6 +179,7 @@ namespace AnyService.E2E
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["firstName"].Value<string>().ShouldBe(model.firstName);
             (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
+            #endregion
         }
         [Test]
         [Ignore("feature postpond")]

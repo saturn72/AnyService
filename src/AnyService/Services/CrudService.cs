@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AnyService.Audity;
 using AnyService.Core;
@@ -38,7 +40,6 @@ namespace AnyService.Services
         }
 
         #endregion
-
         public async Task<ServiceResponse> Create(TDomainModel entity)
         {
             var serviceResponse = new ServiceResponse();
@@ -60,11 +61,22 @@ namespace AnyService.Services
             serviceResponse.Result = ServiceResult.Ok;
 
             if (entity is IFileContainer)
-            {
-                var uploadResponses = await _fileStorageManager.Upload((dbData as IFileContainer).Files);
-                serviceResponse.Data = new { entity = serviceResponse.Data, filesUploadStatus = uploadResponses };
-            }
+                await UploadFiles(dbData as IFileContainer, serviceResponse);
             return serviceResponse;
+        }
+        public async Task UploadFiles(IFileContainer fileContainer, ServiceResponse serviceResponse)
+        {
+            var files = fileContainer.Files;
+            if (!files.Any())
+                return;
+
+            foreach (var f in files)
+            {
+                f.ParentId = fileContainer.Id;
+                f.ParentKey = _workContext.CurrentEntityConfigRecord.EntityKey;
+            }
+            var uploadResponses = await _fileStorageManager.Upload(files);
+            serviceResponse.Data = new { entity = serviceResponse.Data, filesUploadStatus = uploadResponses };
         }
         public async Task<ServiceResponse> GetById(string id)
         {
@@ -111,7 +123,6 @@ namespace AnyService.Services
             }
             return serviceResponse;
         }
-
         public async Task<ServiceResponse> Update(string id, TDomainModel entity)
         {
             entity.Id = id;
