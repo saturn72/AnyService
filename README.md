@@ -52,15 +52,38 @@ public void ConfigureServices(IServiceCollection services)
 
 #### 4. Configure caching and persistency functions
 
-**Persistency** is achieved by `IRepository` implementation. Here is `LiteDB` example: add reference to `AnyService.LiteDB` nuget (see [here](https://www.nuget.org/packages/anyservice.litedb)) and adding the following lines to `ConfigureServices` method.
+**Persistency** is achieved by `IRepository` implementation. Below is `EntityFramework` (`InMemory` provider) example.
+
+1. Add reference to `AnyService.EntityFramework` nuget package (see [here](https://www.nuget.org/packages/anyservice.entityframework))
+2. Add reference to `Microsoft.EntityFrameworkCore.InMemory` nuget packages (see [here](https://docs.microsoft.com/en-us/ef/core/providers/in-memory/?tabs=dotnet-core-cli)) 
+3. Create `DbContext`
+```
+public class SampleAppDbContext : DbContext
+    {
+        public SampleAppDbContext(DbContextOptions<SampleAppDbContext> options) : base(options)
+        { }
+        public DbSet<UserPermissions> UserPermissions { get; set; }
+        public DbSet<DependentModel> DependentModel { get; set; }
+        public DbSet<Dependent2> Dependent2s { get; set; }
+        public DbSet<MultipartSampleModel> MultipartSampleModels { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<UserPermissions>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+            modelBuilder.Entity<DependentModel>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+            modelBuilder.Entity<Dependent2>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+            modelBuilder.Entity<MultipartSampleModel>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+        }
+    }
+ ```
+4. Add the following lines to `ConfigureServices` method.
 
 ```
 public void ConfigureServices(IServiceCollection services)
 {
   ...
-
-  var liteDbName = "anyservice-testsapp.db";
-  services.AddTransient<IRepository<DependentModel>>(sp => new AnyService.LiteDbRepository.Repository<DependentModel>(liteDbName));
+  var dbName = "anyservice-testsapp-db";
+  services.AddTransient<IRepository<DependentModel>>(sp => new AnyService.EntityFramework.EfRepository<DependentModel>(liteDbName));
   services.AddTransient<IRepository<UserPermissions>>(sp => new Repository<UserPermissions>(liteDbName));
   using (var db = new LiteDatabase(liteDbName))
   {
