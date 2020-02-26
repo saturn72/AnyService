@@ -15,6 +15,7 @@ The boilerplate code is already in place. All you have to do now is to configure
 
 ## Features
 
+* Fully comaptible with `asp.net core` - `AnyService` is framework on top of `asp.net core`
 * Audity management - auto manage for creation, update and deletion of an entity 
 * Permission management - entity can be restricted as private or public over simple configuration
 * Event sourcing - Main `CRUD` events over an entity are publish 
