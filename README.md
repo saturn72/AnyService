@@ -13,6 +13,15 @@ The boilerplate code is already in place. All you have to do now is to configure
 
 `AnyService` main goal is to provide extremely easy and fast way to create CRUD based microservice using asp.net core technology.
 
+## Features
+
+* Audity management - auto manage for creation, update and deletion of an entity 
+* Permission management - entity can be restricted as private or public over simple configuration
+* Event sourcing - Main `CRUD` events over an entity are publish 
+* Modularity - build in modules system
+* Full test coverage - code is fully tested so you can rely infrastructure was tested and verified!
+* Caching - to minimize database calls and increase performance* 
+
 ## Getting Started
 
 \*Note: fully configured example may be found in `AnyService.SampleApp` project.
