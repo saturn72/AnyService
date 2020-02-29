@@ -15,6 +15,7 @@ using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using AnyService.Services;
 using AnyService.Services.ServiceResponseMappers;
+using Microsoft.Extensions.Logging;
 
 namespace AnyService.Controllers
 {
@@ -27,22 +28,27 @@ namespace AnyService.Controllers
         #region fields
         private readonly CrudService<TDomainModel> _crudService;
         private readonly IServiceResponseMapper _serviceResponseMapper;
+        private readonly ILogger<GenericController<TDomainModel>> _logger;
         private readonly AnyServiceConfig _config;
         private readonly Type _curType;
         private static readonly IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
         #endregion
         #region ctor
-        public GenericController(IServiceProvider serviceProvider, AnyServiceConfig config, IServiceResponseMapper serviceResponseMapper)
+        public GenericController(IServiceProvider serviceProvider, AnyServiceConfig config,
+        IServiceResponseMapper serviceResponseMapper, ILogger<GenericController<TDomainModel>> logger)
         {
             _crudService = serviceProvider.GetService<CrudService<TDomainModel>>();
             _config = config;
             _serviceResponseMapper = serviceResponseMapper;
+            _logger = logger;
             _curType = typeof(TDomainModel);
         }
         #endregion
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] TDomainModel model)
         {
+            _logger.LogDebug("Start Post flow");
+
             if (!ModelState.IsValid || model.Equals(default))
                 return new BadRequestObjectResult(new
                 {
@@ -50,14 +56,17 @@ namespace AnyService.Controllers
                     data = model
                 });
 
-
+            _logger.LogDebug("Call service with value: " + model);
             var res = await _crudService.Create(model);
+            _logger.LogDebug("Post service response value: " + res);
             return _serviceResponseMapper.Map(res);
         }
 
         [HttpPost(Consts.MultipartSuffix)]
         public async Task<IActionResult> PostMultipart()
         {
+            _logger.LogDebug("Start Post for multipart flow");
+
             if (!Request.HasFormContentType) return BadRequest();
             var form = Request.Form;
             var model = form["model"].ToString().ToObject<TDomainModel>();
@@ -83,7 +92,11 @@ namespace AnyService.Controllers
                 ? pi
                 : (pi = FilesPropertyInfos[_curType] = _curType.GetProperty(nameof(IFileContainer.Files)));
             filesPropertyInfo.SetValue(model, fileList);
+
+            _logger.LogDebug("Call service with value: " + model);
             var res = await _crudService.Create(model);
+
+            _logger.LogDebug("Post service response value: " + res);
             return _serviceResponseMapper.Map(res);
         }
 
@@ -91,6 +104,8 @@ namespace AnyService.Controllers
         [HttpPost(Consts.StreamSuffix)]
         public async Task<IActionResult> PostMultipartStream()
         {
+            _logger.LogDebug("Start Post for multipart flow stream");
+
             // Used to accumulate all the form url encoded key value pairs in the 
             // request.
             var formAccumulator = new KeyValueAccumulator();
@@ -158,24 +173,34 @@ namespace AnyService.Controllers
 
             var model = modelJson.ToObject<TDomainModel>();
             _curType.GetProperty(nameof(IFileContainer.Files)).SetValue(model, files);
+
+            _logger.LogDebug("Call service with value: " + model);
             var res = await _crudService.Create(model);
+            _logger.LogDebug("Post service response value: " + res);
+
             return _serviceResponseMapper.Map(res);
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
         {
+            _logger.LogDebug("Start Get by id flow with id " + id);
             var res = await _crudService.GetById(id);
+            _logger.LogDebug("Get all service response value: " + res);
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
+            _logger.LogDebug("Start Get all flow");
             var res = await _crudService.GetAll();
+            _logger.LogDebug("Get all service response value: " + res);
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(string id, [FromBody] TDomainModel model)
         {
+            _logger.LogDebug("Start Put flow");
+
             if (!ModelState.IsValid || model.Equals(default))
                 return new BadRequestObjectResult(new
                 {
@@ -183,13 +208,17 @@ namespace AnyService.Controllers
                     data = model
                 });
 
+            _logger.LogDebug($"Start update flow with id {id} and model {model}");
             var res = await _crudService.Update(id, model);
+            _logger.LogDebug("Update service response value: " + res);
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
+            _logger.LogDebug("Start Delete flow with id " + id);
             var res = await _crudService.Delete(id);
+            _logger.LogDebug("Delete service response value: " + res);
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
     }

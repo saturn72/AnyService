@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using AnyService.Middlewares;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -12,7 +13,8 @@ namespace AnyService.Tests.Middlewares
         [Fact]
         public async Task UserIdIsNull_ReturnUnauthroized()
         {
-            var wcm = new WorkContextMiddleware(null);
+            var logger = new Mock<ILogger<WorkContextMiddleware>>();
+            var wcm = new WorkContextMiddleware(null, logger.Object);
 
             var user = new Mock<ClaimsPrincipal>();
             user.Setup(u => u.Claims).Returns(new Claim[] { });

@@ -4,6 +4,7 @@ using AnyService.Core;
 using AnyService.Core.Security;
 using AnyService.Middlewares;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 using Xunit;
@@ -23,7 +24,8 @@ namespace AnyService.Tests.Middlewares
                 i = 15;
                 return Task.CompletedTask;
             };
-            var mw = new AnyServicePermissionMiddleware(reqDel);
+            var logger = new Mock<ILogger<AnyServicePermissionMiddleware>>();
+            var mw = new AnyServicePermissionMiddleware(reqDel, logger.Object);
             var wc = new WorkContext
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord
@@ -48,7 +50,8 @@ namespace AnyService.Tests.Middlewares
         [InlineData("delete")]
         public async Task InvokeAsync_BadRequestOnMissingIdForDeleteAndPut(string method)
         {
-            var mw = new AnyServicePermissionMiddleware(null);
+            var logger = new Mock<ILogger<AnyServicePermissionMiddleware>>();
+            var mw = new AnyServicePermissionMiddleware(null, logger.Object);
             var wc = new WorkContext
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord
@@ -70,7 +73,8 @@ namespace AnyService.Tests.Middlewares
         [Fact]
         public async Task IsGranted_NotSupportedMethod_ReturnsFalse()
         {
-            var mw = new AnyServicePermissionMiddleware(null);
+            var logger = new Mock<ILogger<AnyServicePermissionMiddleware>>();
+            var mw = new AnyServicePermissionMiddleware(null, logger.Object);
             var wc = new WorkContext
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord
@@ -104,7 +108,9 @@ namespace AnyService.Tests.Middlewares
 
             var pm = new Mock<IPermissionManager>();
             pm.Setup(pm => pm.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(userPermissions);
-            var mw = new TestAnyServicePermissionware(null);
+
+            var logger = new Mock<ILogger<AnyServicePermissionMiddleware>>();
+            var mw = new TestAnyServicePermissionware(null, logger.Object);
             var wc = new WorkContext
             {
                 CurrentUserId = "userId",
@@ -236,7 +242,7 @@ namespace AnyService.Tests.Middlewares
 
         public class TestAnyServicePermissionware : AnyServicePermissionMiddleware
         {
-            public TestAnyServicePermissionware(RequestDelegate next) : base(next)
+            public TestAnyServicePermissionware(RequestDelegate next, ILogger<AnyServicePermissionMiddleware> logger) : base(next, logger)
             {
             }
 
