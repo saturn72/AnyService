@@ -13,15 +13,15 @@ The boilerplate code is already in place. All you have to do now is to configure
 
 `AnyService` main goal is to provide extremely easy and fast way to create CRUD based microservice using asp.net core technology.
 
-## Features
+## Main Features
 
-* Fully comaptible with `asp.net core` - `AnyService` is framework on top of `asp.net core`
-* Audity management - auto manage for creation, update and deletion of an entity 
-* Permission management - entity can be restricted as private or public over simple configuration
-* Event sourcing - Main `CRUD` events over an entity are publish 
-* Modularity - build in modules system
-* Full test coverage - code is fully tested so you can rely infrastructure was tested and verified!
-* Caching - to minimize database calls and increase performance* 
+- Fully comaptible with `asp.net core` - `AnyService` is framework on top of `asp.net core`
+- Audity management - auto manage for creation, update and deletion of an entity
+- Permission management - entity can be restricted as private or public over simple configuration
+- Event sourcing - Main `CRUD` events over an entity are publish
+- Modularity - build in modules system
+- Full test coverage - code is fully tested so you can rely infrastructure was tested and verified!
+- Caching - to minimize database calls and increase performance\*
 
 ## Getting Started
 
@@ -65,8 +65,9 @@ public void ConfigureServices(IServiceCollection services)
 **Persistency** is achieved by `IRepository` implementation. Below is `EntityFramework` (`InMemory` provider) example.
 
 1. Add reference to `AnyService.EntityFramework` nuget package (see [here](https://www.nuget.org/packages/anyservice.entityframework))
-2. Add reference to `Microsoft.EntityFrameworkCore.InMemory` nuget packages (see [here](https://docs.microsoft.com/en-us/ef/core/providers/in-memory/?tabs=dotnet-core-cli)) 
+2. Add reference to `Microsoft.EntityFrameworkCore.InMemory` nuget packages (see [here](https://docs.microsoft.com/en-us/ef/core/providers/in-memory/?tabs=dotnet-core-cli))
 3. Create `DbContext`
+
 ```
 public class SampleAppDbContext : DbContext
     {
@@ -85,7 +86,8 @@ public class SampleAppDbContext : DbContext
             modelBuilder.Entity<MultipartSampleModel>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
         }
     }
- ```
+```
+
 4. Add the following lines to `ConfigureServices` method.
 
 ```
@@ -166,10 +168,6 @@ TBD
 
 TBD
 
-### Patch
-
-TBD
-
 ### Delete
 
 TDB
@@ -204,6 +202,13 @@ public void ConfigureServices(IServiceCollection services)
   ...
 }
 ```
+
+## Response Mapping
+
+By Default `ServiceResponse` is returned from business logic layer (`CrudService<>`) to the entity controller(`GenericController`). The controller maps the returned `ServiceResponse` to `IActionResult` object and return to caller.
+2 types of response mappers are exists in `AnyService`: `DefaultServiceResponseMapper` (the default mapper) which returns all the details of the response and `DataOnlyServiceResponseMapper` that returns the data part of the response.
+
+To modify the `IServiceResponseMapper` used for an entity, set the value of `AnyService.EntityConfigRecord.ResponseMapperType` to the required type.
 
 ## Authorization (Permission Management)
 

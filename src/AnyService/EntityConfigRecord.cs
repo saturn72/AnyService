@@ -33,6 +33,7 @@ namespace AnyService
         /// </summary>
         public bool PublicGet { get; set; }
         public ICrudValidator Validator { get; set; }
+        public Type ResponseMapperType { get; set; }
         public AuthorizationInfo Authorization { get; set; }
     }
 }

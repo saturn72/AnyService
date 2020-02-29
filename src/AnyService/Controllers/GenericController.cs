@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using AnyService.Services;
+using AnyService.Services.ResponseMappers;
 
 namespace AnyService.Controllers
 {
@@ -25,15 +26,17 @@ namespace AnyService.Controllers
     {
         #region fields
         private readonly CrudService<TDomainModel> _crudService;
+        private readonly IServiceResponseMapper _serviceResponseMapper;
         private readonly AnyServiceConfig _config;
         private readonly Type _curType;
         private static readonly IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
         #endregion
         #region ctor
-        public GenericController(IServiceProvider serviceProvider, AnyServiceConfig config)
+        public GenericController(IServiceProvider serviceProvider, AnyServiceConfig config, IServiceResponseMapper serviceResponseMapper)
         {
             _crudService = serviceProvider.GetService<CrudService<TDomainModel>>();
             _config = config;
+            _serviceResponseMapper = serviceResponseMapper;
             _curType = typeof(TDomainModel);
         }
         #endregion
@@ -49,7 +52,7 @@ namespace AnyService.Controllers
 
 
             var res = await _crudService.Create(model);
-            return res.ToActionResult();
+            return _serviceResponseMapper.Map(res);
         }
 
         [HttpPost(Consts.MultipartSuffix)]
@@ -81,7 +84,7 @@ namespace AnyService.Controllers
                 : (pi = FilesPropertyInfos[_curType] = _curType.GetProperty(nameof(IFileContainer.Files)));
             filesPropertyInfo.SetValue(model, fileList);
             var res = await _crudService.Create(model);
-            return res.ToActionResult();
+            return _serviceResponseMapper.Map(res);
         }
 
         [DisableFormValueModelBinding]
@@ -156,19 +159,19 @@ namespace AnyService.Controllers
             var model = modelJson.ToObject<TDomainModel>();
             _curType.GetProperty(nameof(IFileContainer.Files)).SetValue(model, files);
             var res = await _crudService.Create(model);
-            return res.ToActionResult();
+            return _serviceResponseMapper.Map(res);
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
         {
             var res = await _crudService.GetById(id);
-            return (res as ServiceResponse).ToActionResult();
+            return _serviceResponseMapper.Map(res as ServiceResponse);
         }
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var res = await _crudService.GetAll();
-            return (res as ServiceResponse).ToActionResult();
+            return _serviceResponseMapper.Map(res as ServiceResponse);
         }
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(string id, [FromBody] TDomainModel model)
@@ -181,13 +184,13 @@ namespace AnyService.Controllers
                 });
 
             var res = await _crudService.Update(id, model);
-            return (res as ServiceResponse).ToActionResult();
+            return _serviceResponseMapper.Map(res as ServiceResponse);
         }
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
             var res = await _crudService.Delete(id);
-            return (res as ServiceResponse).ToActionResult();
+            return _serviceResponseMapper.Map(res as ServiceResponse);
         }
     }
 }

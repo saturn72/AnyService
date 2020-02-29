@@ -9,6 +9,7 @@ using AnyService.Services.Security;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using AnyService.Services;
+using AnyService.Services.ResponseMappers;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -35,6 +36,10 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton(config.EntityConfigRecords);
             if (config.EntityConfigRecords.Any(t => t.Authorization != null))
                 services.AddTransient<IAuthorizationHandler, DefaultAuthorizationHandler>();
+            //mappers
+            var mappers = config.EntityConfigRecords.Select(t => t.ResponseMapperType).ToArray();
+            foreach (var m in mappers)
+                services.TryAddSingleton(m);
 
             //validator factory
             var validators = config.EntityConfigRecords.Select(t => t.Validator).ToArray();
@@ -64,6 +69,13 @@ namespace Microsoft.Extensions.DependencyInjection
                 return EntityConfigRecordManager.GetRecord(ct).PermissionRecord;
             });
 
+            services.AddTransient(sp =>
+            {
+                var wc = sp.GetService<WorkContext>();
+                var mt = wc.CurrentEntityConfigRecord.ResponseMapperType;
+                return sp.GetService(mt) as IServiceResponseMapper;
+            });
+
             services.TryAddScoped<AuditHelper>();
             services.TryAddSingleton<IDomainEventsBus, DomainEventsBus>();
 
@@ -85,7 +97,13 @@ namespace Microsoft.Extensions.DependencyInjection
 
                 if (!tcr.Route.HasValue()) tcr.Route = "/" + e.Name;
                 if (!tcr.Route.StartsWith("/") || tcr.Route.StartsWith("//"))
-                    throw new InvalidOperationException($"RoutePrefix must start with single'/'. Actual value: {tcr.Route}");
+                    throw new InvalidOperationException($"{nameof(EntityConfigRecord.Route)} must start with single'/'. Actual value: {tcr.Route}");
+
+                var mapperType = tcr.ResponseMapperType;
+                if (mapperType != null && !typeof(IServiceResponseMapper).IsAssignableFrom(mapperType))
+                    throw new InvalidOperationException($"{nameof(EntityConfigRecord.ResponseMapperType)} must implement {nameof(IServiceResponseMapper)}");
+                if (mapperType == null)
+                    tcr.ResponseMapperType = typeof(DefaultServiceResponseMapper);
 
                 if (tcr.EventKeys == null) tcr.EventKeys = ekr;
                 if (tcr.PermissionRecord == null) tcr.PermissionRecord = pr;
