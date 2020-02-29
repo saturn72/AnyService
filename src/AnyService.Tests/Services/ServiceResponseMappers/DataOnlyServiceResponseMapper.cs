@@ -1,23 +1,24 @@
-﻿using AnyService.Services;
-using Microsoft.AspNetCore.Mvc;
-using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AnyService.Services;
+using AnyService.Services.ServiceResponseMappers;
+using Microsoft.AspNetCore.Mvc;
+using Shouldly;
 using Xunit;
 
-namespace AnyService.Tests.Services
+namespace AnyService.Tests.Services.ServiceResponseMappers
 {
-    public class ServiceResponseExtensionsTests
+    public class DataOnlyServiceResponseMapperTests
     {
         [Fact]
         public void ToActionResult_ValidateConvertableItemCount()
         {
             var allSrvResults = ServiceResult.All;
-            ServiceResponseExtensions.ConversionFuncs.Keys.Count().ShouldBe(allSrvResults.Count());
+            DataOnlyServiceResponseMapper.ConversionFuncs.Keys.Count().ShouldBe(allSrvResults.Count());
 
             foreach (var sr in allSrvResults)
-                ServiceResponseExtensions.ConversionFuncs.ContainsKey(sr);
+                DataOnlyServiceResponseMapper.ConversionFuncs.ContainsKey(sr);
         }
 
         [Fact]
@@ -28,7 +29,8 @@ namespace AnyService.Tests.Services
                 Result = ServiceResult.Ok,
                 Data = new object(),
             };
-            Should.Throw(() => ServiceResponseExtensions.ToActionResult<TestClass1, object>(serRes), typeof(InvalidOperationException));
+            var mapper = new DataOnlyServiceResponseMapper();
+            Should.Throw(() => mapper.Map<TestClass1, object>(serRes), typeof(InvalidOperationException));
         }
 
         [Theory]
@@ -40,14 +42,14 @@ namespace AnyService.Tests.Services
                 cfg.CreateMap<TestClass1, TestClass2>()
                     .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.Id.ToString()));
             });
-
             var serRes = new ServiceResponse
             {
                 Result = result,
                 Data = data,
                 Message = message
             };
-            ServiceResponseExtensions.ToActionResult<TestClass1, TestClass2>(serRes).ShouldBeOfType(expectedActionResultType);
+            var mapper = new DataOnlyServiceResponseMapper();
+            mapper.Map<TestClass1, TestClass2>(serRes).ShouldBeOfType(expectedActionResultType);
 
             if (result == ServiceResult.Ok && data != null)
                 (serRes.Data as TestClass2).Id.ShouldBe(data.Id.ToString());

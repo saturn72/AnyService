@@ -9,7 +9,7 @@ using AnyService.Services.Security;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using AnyService.Services;
-using AnyService.Services.ResponseMappers;
+using AnyService.Services.ServiceResponseMappers;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AnyService.Services.ResponseMappers
+namespace AnyService.Services.ServiceResponseMappers
 {
     public class DataOnlyServiceResponseMapper : IServiceResponseMapper
     {
-        protected static readonly IDictionary<string, Func<ServiceResponse, IActionResult>> ConversionFuncs =
+        public static readonly IDictionary<string, Func<ServiceResponse, IActionResult>> ConversionFuncs =
             new Dictionary<string, Func<ServiceResponse, IActionResult>>
             {
                 {
@@ -58,5 +58,20 @@ namespace AnyService.Services.ResponseMappers
             };
 
         public IActionResult Map(ServiceResponse serviceResponse) => ConversionFuncs[serviceResponse.Result](serviceResponse);
+
+        public IActionResult Map<TSource, TDestination>(ServiceResponse serviceResponse)
+            where TSource : class
+            where TDestination : class
+        {
+
+            if (serviceResponse.Data != null)
+            {
+                if (!typeof(TSource).IsAssignableFrom(serviceResponse.Data.GetType()))
+                    throw new InvalidOperationException($"Cannot map from {serviceResponse.Data.GetType()} to {typeof(TSource)}");
+                serviceResponse.Data = serviceResponse.Data.Map<TDestination>();
+            }
+
+            return Map(serviceResponse);
+        }
     }
 }

@@ -14,7 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using AnyService.Services;
-using AnyService.Services.ResponseMappers;
+using AnyService.Services.ServiceResponseMappers;
 
 namespace AnyService.Controllers
 {
