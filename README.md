@@ -216,7 +216,8 @@ By default Authorization is fully handled by `AnyService`. To disable this, set 
 
 Authorization has 2 aspects addressed by `AnyService`:
 
-### 1. Configuring user's access to specific resource (URI), hence: _Can user perform CRUD operation on a given URI?_
+### 1. Configuring user's access to specific resource (URI)
+#### _Can user perform CRUD operation on a given URI?_
 
 <!--
 Configuring authrozation for specific controller is done by sending an instance of `AuthorizeAttribute` to the registration of you model.
@@ -226,7 +227,8 @@ TBD - add example for controller authorization
 TBD - add example for controller authorization with CRUD method override
 TBD - add example for CRUD method authorization
 
-### 2. Manage CRUD Permissions on an authorized resource (URI), hence: _Given that a user has permission to perform CRUD operation on given URI (entity), can the user perform read/update/delete operations on specific URI's entity?_
+### 2. Manage CRUD Permissions on an authorized resource (URI)
+#### _Given that a user has permission to perform CRUD operation on given URI (entity), can the user perform read/update/delete operations on specific URI's entity?_
 
 Once user has permission to create an entity on a resource, `AnyService` takes care of managing permissions over the created entity.
 `AnyService` supports 2 permission management patterns:
