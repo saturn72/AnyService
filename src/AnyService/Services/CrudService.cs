@@ -45,31 +45,31 @@ namespace AnyService.Services
         #endregion
         public async Task<ServiceResponse> Create(TDomainModel entity)
         {
-            _logger.LogDebug($"Start create flow for entity: {entity}");
+            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start create flow for entity: {entity}");
 
             var serviceResponse = new ServiceResponse();
             if (!await _validator.ValidateForCreate(entity, serviceResponse))
             {
-                _logger.LogDebug("Entity did not pass validation");
+                _logger.LogDebug(LoggingEvents.Validation, "Entity did not pass validation");
                 return serviceResponse;
             }
 
             if (entity is ICreatableAudit)
             {
-                _logger.LogDebug("Audity - prepare for creation");
+                _logger.LogDebug(LoggingEvents.Audity, "Audity - prepare for creation");
                 _auditHelper.PrepareForCreate(entity as ICreatableAudit, _workContext.CurrentUserId);
             }
 
-            _logger.LogDebug($"Insert entity to repository");
+            _logger.LogDebug(LoggingEvents.Repository, $"Insert entity to repository");
             var dbData = await _repository.Command(r => r.Insert(entity), serviceResponse);
-            _logger.LogDebug($"Repository insert response: {dbData}");
+            _logger.LogDebug(LoggingEvents.Repository, $"Repository insert response: {dbData}");
 
             if (dbData == null)
             {
-                _logger.LogDebug("Repository insert response is null - return back");
+                _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Repository insert response is null - return back");
                 return serviceResponse;
             }
-            _logger.LogDebug($"Publish created event using {_eventKeyRecord.Create} key");
+            _logger.LogDebug(LoggingEvents.EventPublishing, $"Publish created event using {_eventKeyRecord.Create} key");
 
             _eventBus.Publish(_eventKeyRecord.Create, new DomainEventData
             {
@@ -80,10 +80,10 @@ namespace AnyService.Services
 
             if (entity is IFileContainer)
             {
-                _logger.LogDebug("Start file uploads");
+                _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start file uploads");
                 await UploadFiles(dbData as IFileContainer, serviceResponse);
             }
-            _logger.LogDebug($"Service Response: {serviceResponse}");
+            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
         public async Task UploadFiles(IFileContainer fileContainer, ServiceResponse serviceResponse)
@@ -102,7 +102,7 @@ namespace AnyService.Services
         }
         public async Task<ServiceResponse> GetById(string id)
         {
-            _logger.LogDebug($"Start get by id with id = {id}");
+            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start get by id with id = {id}");
 
             var serviceResponse = new ServiceResponse
             {
@@ -110,13 +110,13 @@ namespace AnyService.Services
             };
             if (!await _validator.ValidateForGet(serviceResponse))
             {
-                _logger.LogDebug("Entity did not pass validation");
+                _logger.LogDebug(LoggingEvents.Validation, "Entity did not pass validation");
                 return serviceResponse;
             }
 
-            _logger.LogDebug("Get by Id from repository");
+            _logger.LogDebug(LoggingEvents.Repository, "Get by Id from repository");
             var data = await _repository.Query(r => r.GetById(id), serviceResponse);
-            _logger.LogDebug($"Repository response: {data}");
+            _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
 
             if (data != null && serviceResponse.Result == ServiceResult.NotSet)
             {
@@ -131,83 +131,83 @@ namespace AnyService.Services
                 });
             }
 
-            _logger.LogDebug($"Service Response: {serviceResponse}");
+            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
         public async Task<ServiceResponse> GetAll()
         {
-            _logger.LogDebug("Start get all flow");
+            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all flow");
 
             var serviceResponse = new ServiceResponse();
             if (!await _validator.ValidateForGet(serviceResponse))
             {
-                _logger.LogDebug("Request did not pass validation");
+                _logger.LogDebug(LoggingEvents.Validation, "Request did not pass validation");
                 return serviceResponse;
             }
 
             var filter = _workContext.CurrentEntityConfigRecord.PublicGet ?
                 null :
                 new Dictionary<string, string> { { "CreatedByUserId", _workContext.CurrentUserId } };
-            _logger.LogDebug("Get all filter = " + filter);
-            _logger.LogDebug("Get all from repository");
+            _logger.LogDebug(LoggingEvents.Repository, "Get all filter = " + filter);
+            _logger.LogDebug(LoggingEvents.Repository, "Get all from repository");
             var data = await _repository.Query(r => r.GetAll(filter), serviceResponse) ?? new TDomainModel[] { };
-            _logger.LogDebug($"Repository response: {data}");
+            _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
 
             if (serviceResponse.Result == ServiceResult.NotSet)
             {
                 serviceResponse.Data = data;
                 serviceResponse.Result = ServiceResult.Ok;
-                _logger.LogDebug($"Publish Get event using {_eventKeyRecord.Read} key");
+                _logger.LogDebug(LoggingEvents.EventPublishing, $"Publish Get event using {_eventKeyRecord.Read} key");
                 _eventBus.Publish(_eventKeyRecord.Read, new DomainEventData
                 {
                     Data = data,
                     PerformedByUserId = _workContext.CurrentUserId
                 });
             }
-            _logger.LogDebug($"Service Response: {serviceResponse}");
+            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
         public async Task<ServiceResponse> Update(string id, TDomainModel entity)
         {
-            _logger.LogDebug($"Start update flow for id: {id}, entity: {entity}");
+            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start update flow for id: {id}, entity: {entity}");
             entity.Id = id;
             var serviceResponse = new ServiceResponse();
 
             if (!await _validator.ValidateForUpdate(entity, serviceResponse))
             {
-                _logger.LogDebug("Entity did not pass validation");
+                _logger.LogDebug(LoggingEvents.Validation, "Entity did not pass validation");
                 return serviceResponse;
             }
 
-            _logger.LogDebug("Repository - Fetch entity");
+            _logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
             var dbModel = await _repository.Query(async r => await r.GetById(id), serviceResponse);
             if (dbModel == null)
             {
-                _logger.LogDebug("Repository response is null");
+                _logger.LogDebug(LoggingEvents.Repository, "Repository response is null");
                 return serviceResponse;
             }
 
             var deletable = dbModel as IDeletableAudit;
             if (deletable != null && deletable.Deleted)
             {
-                _logger.LogDebug("entity already deleted");
+                _logger.LogDebug(LoggingEvents.Audity, "entity already deleted");
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
                 return serviceResponse;
             }
 
             if (entity is IUpdatableAudit)
             {
-                _logger.LogDebug("Audity - prepare for update");
+                _logger.LogDebug(LoggingEvents.Audity, "Audity - prepare for update");
                 _auditHelper.PrepareForUpdate(entity as IUpdatableAudit, dbModel as IUpdatableAudit, _workContext.CurrentUserId);
             }
 
-            _logger.LogDebug($"Update entity in repository");
+            _logger.LogDebug(LoggingEvents.Repository, $"Update entity in repository");
             var updateResponse = await _repository.Command(r => r.Update(entity), serviceResponse);
-            _logger.LogDebug($"Repository update response: {updateResponse}");
+            _logger.LogDebug(LoggingEvents.Repository, $"Repository update response: {updateResponse}");
 
             if (updateResponse != null && serviceResponse.Result == ServiceResult.NotSet)
             {
-                _logger.LogDebug($"Publish updated event using {_eventKeyRecord.Update} key");
+                _logger.LogDebug(LoggingEvents.EventPublishing, $"Publish updated event using {_eventKeyRecord.Update} key");
                 _eventBus.Publish(_eventKeyRecord.Update, new DomainEventData
                 {
                     Data = updateResponse,
@@ -215,39 +215,39 @@ namespace AnyService.Services
                 });
                 serviceResponse.Result = ServiceResult.Ok;
             }
-            _logger.LogDebug($"Service Response: {serviceResponse}");
+            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
         public async Task<ServiceResponse> Delete(string id)
         {
-            _logger.LogDebug($"Start delete flow for id: {id}");
+            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start delete flow for id: {id}");
             var serviceResponse = new ServiceResponse();
 
             if (!await _validator.ValidateForDelete(id, serviceResponse))
             {
-                _logger.LogDebug("Entity did not pass validation");
+                _logger.LogDebug(LoggingEvents.Validation, "Entity did not pass validation");
                 return serviceResponse;
             }
 
-            _logger.LogDebug("Repository - Fetch entity");
+            _logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
             var dbModel = await _repository.Query(r => r.GetById(id), serviceResponse);
             if (dbModel == null)
             {
-                _logger.LogDebug("Repository response is null");
+                _logger.LogDebug(LoggingEvents.Repository, "Repository response is null");
                 return serviceResponse;
             }
 
             TDomainModel deletedModel;
             if (dbModel is IDeletableAudit)
             {
-                _logger.LogDebug("Audity - prepare for deletion");
+                _logger.LogDebug(LoggingEvents.Audity, "Audity - prepare for deletion");
 
                 _auditHelper.PrepareForDelete(dbModel as IDeletableAudit, _workContext.CurrentUserId);
-                _logger.LogDebug("Repository - Update entity");
+                _logger.LogDebug(LoggingEvents.Repository, "Repository - Update entity");
                 deletedModel = await _repository.Command(r => r.Update(dbModel), serviceResponse);
                 if (deletedModel == null)
                 {
-                    _logger.LogDebug("Repository - return null");
+                    _logger.LogDebug(LoggingEvents.Repository, "Repository - return null");
                     return serviceResponse;
                 }
             }
@@ -256,14 +256,14 @@ namespace AnyService.Services
                 throw new System.NotImplementedException("need to implement delete logic in database");
             }
 
-            _logger.LogDebug($"Publish updated event using {_eventKeyRecord.Delete} key");
+            _logger.LogDebug(LoggingEvents.EventPublishing, $"Publish updated event using {_eventKeyRecord.Delete} key");
             _eventBus.Publish(_eventKeyRecord.Delete, new DomainEventData
             {
                 Data = deletedModel,
                 PerformedByUserId = _workContext.CurrentUserId
             });
             serviceResponse.Result = ServiceResult.Ok;
-            _logger.LogDebug($"Service Response: {serviceResponse}");
+            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using AnyService.Core.Security;
+using AnyService.Services;
 using AnyService.Services.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -19,11 +20,11 @@ namespace AnyService.Middlewares
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext, IPermissionManager permissionManager)
         {
-            _logger.LogDebug("Start AnyServicePermissionMiddleware invokation");
+            _logger.LogDebug(LoggingEvents.Permission, "Start AnyServicePermissionMiddleware invokation");
 
             if (workContext.CurrentType == null) // in-case not using Anyservice pipeline
             {
-                _logger.LogDebug("Skip anyservice middleware");
+                _logger.LogDebug(LoggingEvents.Permission, "Skip anyservice middleware");
 
                 await _next(httpContext);
                 return;
@@ -39,7 +40,7 @@ namespace AnyService.Middlewares
                 var msgSuffix = httpMethodParse.IsSupported ?
                     "Missing entity id in request that requires it" :
                      "Not supported http method";
-                _logger.LogDebug("Bad request due to " + msgSuffix);
+                _logger.LogDebug(LoggingEvents.Permission, "Bad request due to " + msgSuffix);
 
                 httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
@@ -52,13 +53,13 @@ namespace AnyService.Middlewares
 
             if (!isGranted)
             {
-                _logger.LogDebug("User is not permitted to perform this operation");
+                _logger.LogDebug(LoggingEvents.Permission, "User is not permitted to perform this operation");
 
                 httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
                 return;
             }
 
-            _logger.LogDebug("User is permitted to perform this operation. Move to next middleware");
+            _logger.LogDebug(LoggingEvents.Permission, "User is permitted to perform this operation. Move to next middleware");
             await _next(httpContext);
         }
 

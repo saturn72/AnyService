@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AnyService.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -21,7 +22,7 @@ namespace AnyService.Middlewares
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
         {
-            _logger.LogDebug("Start WorkContextMiddleware invokation");
+            _logger.LogDebug(LoggingEvents.WorkContext, "Start WorkContextMiddleware invokation");
             var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!userId.HasValue())
             {
@@ -37,7 +38,7 @@ namespace AnyService.Middlewares
                 workContext.CurrentEntityConfigRecord = typeConfigRecord;
                 workContext.RequestInfo = ToRequestInfo(httpContext, httpContext.Request.Method, typeConfigRecord);
             }
-            _logger.LogDebug("Finish parsing current WorkContext");
+            _logger.LogDebug(LoggingEvents.WorkContext, "Finish parsing current WorkContext");
             await _next(httpContext);
         }
         private static EntityConfigRecord GetRouteMap(PathString path)
