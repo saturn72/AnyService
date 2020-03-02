@@ -121,11 +121,14 @@ namespace AnyService.E2E
             //add to form under key "model"
             multiForm.Add(new StringContent(dataString), "model");
 
-            var fileStream = new FileStream(filePath, FileMode.Open);
-            multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), Path.GetFileName(filePath));
-            var res = await HttpClient.PostAsync("multipartSampleModel/__multipart", multiForm);
-            res.EnsureSuccessStatusCode();
-
+            HttpResponseMessage res;
+            using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), Path.GetFileName(filePath));
+                res = await HttpClient.PostAsync("multipartSampleModel/__multipart", multiForm);
+                res.EnsureSuccessStatusCode();
+                fileStream.Close();
+            }
             var content = await res.Content.ReadAsStringAsync();
             var jObj = JObject.Parse(content);
             var id = jObj["data"]["entity"]["id"].Value<string>();
@@ -158,14 +161,18 @@ namespace AnyService.E2E
             var dataString = JsonConvert.SerializeObject(model);
             //add to form under key "model"
             multiForm.Add(new StringContent(dataString), "model");
-            #endregion 
+            #endregion
             #region Create
-            var fileStream = new FileStream(filePath, FileMode.Open);
-            var fn = Path.GetFileName(filePath);
-            multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), fn);
-            var res = await HttpClient.PostAsync("multipartSampleModel/__stream", multiForm);
-            await Task.Delay(150);// wait for background tasks (by simulating network delay)
-            res.EnsureSuccessStatusCode();
+            HttpResponseMessage res;
+            using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                var fn = Path.GetFileName(filePath);
+                multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), fn);
+                res = await HttpClient.PostAsync("multipartSampleModel/__stream", multiForm);
+                await Task.Delay(150);// wait for background tasks (by simulating network delay)
+                res.EnsureSuccessStatusCode();
+                fileStream.Close();
+            }
             var content = await res.Content.ReadAsStringAsync();
             var jObj = JObject.Parse(content);
             var id = jObj["data"]["entity"]["id"].Value<string>();
@@ -188,14 +195,13 @@ namespace AnyService.E2E
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var multiForm = new MultipartFormDataContent();
             var filePath = Path.Combine("resources", "video.mp4");
-
             //data 
             var model = new
             {
                 firstName = "Roi",
                 lastName = "Shabtai"
             };
-            #endregion 
+            #endregion
             #region Create
             var res = await HttpClient.PostAsJsonAsync("multipartSampleModel/", model);
             var content = await res.Content.ReadAsStringAsync();
@@ -213,11 +219,15 @@ namespace AnyService.E2E
             var dataString = JsonConvert.SerializeObject(updateModel);
             //add to form under key "model"
             multiForm.Add(new StringContent(dataString), "model");
-            var fileStream = new FileStream(filePath, FileMode.Open);
-            var fn = Path.GetFileName(filePath);
-            multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), fn);
-            res = await HttpClient.PutAsync("multipartSampleModel/__stream/" + id, multiForm);
-            res.EnsureSuccessStatusCode();
+            using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                var fn = Path.GetFileName(filePath);
+                multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), fn);
+                res = await HttpClient.PutAsync("multipartSampleModel/__stream/" + id, multiForm);
+
+                res.EnsureSuccessStatusCode();
+                // fileStream.Close();
+            }
             #endregion
             #region Read
             res = await HttpClient.GetAsync("multipartSampleModel/" + id);

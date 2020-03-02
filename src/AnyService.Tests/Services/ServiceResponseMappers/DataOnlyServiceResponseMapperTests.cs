@@ -9,7 +9,7 @@ using Xunit;
 
 namespace AnyService.Tests.Services.ServiceResponseMappers
 {
-    public class DataOnlyServiceResponseMapperTests
+    public class DataOnlyServiceResponseMapperTests : MappingTest
     {
         [Fact]
         public void ToActionResult_ValidateConvertableItemCount()

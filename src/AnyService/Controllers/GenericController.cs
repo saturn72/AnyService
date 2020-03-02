@@ -113,13 +113,13 @@ namespace AnyService.Controllers
             return _serviceResponseMapper.Map(res);
         }
         [DisableFormValueModelBinding]
-        [HttpPost(Consts.StreamSuffix + "/{id}")]
-        public async Task<IActionResult> PutMultipartStream(string id)
+        [HttpPut(Consts.StreamSuffix + "/{id}")]
+        public async Task<IActionResult> PutMultipartStream()
         {
             _logger.LogDebug(LoggingEvents.Controller, "Start Put for multipart flow stream");
             var model = await ExctractModelFromStream();
             _logger.LogDebug(LoggingEvents.Controller, "Call service with value: " + model);
-            var res = await _crudService.Update(id, model);
+            var res = await _crudService.Update("123", model);
             _logger.LogDebug(LoggingEvents.Controller, "Put service response value: " + res);
 
             return _serviceResponseMapper.Map(res);
