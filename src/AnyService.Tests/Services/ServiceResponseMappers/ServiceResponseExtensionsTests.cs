@@ -1,24 +1,23 @@
+﻿using AnyService.Services;
+using Microsoft.AspNetCore.Mvc;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AnyService.Services;
-using AnyService.Services.ServiceResponseMappers;
-using Microsoft.AspNetCore.Mvc;
-using Shouldly;
 using Xunit;
 
 namespace AnyService.Tests.Services.ServiceResponseMappers
 {
-    public class DataOnlyServiceResponseMapperTests
+    public class ServiceResponseExtensionsTests
     {
         [Fact]
         public void ToActionResult_ValidateConvertableItemCount()
         {
             var allSrvResults = ServiceResult.All;
-            DataOnlyServiceResponseMapper.ConversionFuncs.Keys.Count().ShouldBe(allSrvResults.Count());
+            ServiceResponseExtensions.ConversionFuncs.Keys.Count().ShouldBe(allSrvResults.Count());
 
             foreach (var sr in allSrvResults)
-                DataOnlyServiceResponseMapper.ConversionFuncs.ContainsKey(sr);
+                ServiceResponseExtensions.ConversionFuncs.ContainsKey(sr);
         }
 
         [Fact]
@@ -29,27 +28,20 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Result = ServiceResult.Ok,
                 Data = new object(),
             };
-            var mapper = new DataOnlyServiceResponseMapper();
-            Should.Throw(() => mapper.Map<TestClass1, object>(serRes), typeof(InvalidOperationException));
+            Should.Throw(() => ServiceResponseExtensions.ToActionResult<TestClass1, object>(serRes), typeof(InvalidOperationException));
         }
 
         [Theory]
         [MemberData(nameof(ReturnExpectedActionResultMember_DATA))]
         public void ReturnExpectedActionResult(string result, TestClass1 data, string message, Type expectedActionResultType)
         {
-            MappingExtensions.Configure(cfg =>
-            {
-                cfg.CreateMap<TestClass1, TestClass2>()
-                    .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.Id.ToString()));
-            });
             var serRes = new ServiceResponse
             {
                 Result = result,
                 Data = data,
                 Message = message
             };
-            var mapper = new DataOnlyServiceResponseMapper();
-            mapper.Map<TestClass1, TestClass2>(serRes).ShouldBeOfType(expectedActionResultType);
+            ServiceResponseExtensions.ToActionResult<TestClass1, TestClass2>(serRes).ShouldBeOfType(expectedActionResultType);
 
             if (result == ServiceResult.Ok && data != null)
                 (serRes.Data as TestClass2).Id.ShouldBe(data.Id.ToString());
@@ -86,14 +78,5 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
             new object[]{ ServiceResult.Unauthorized, null, "some-message", typeof(UnauthorizedObjectResult)},
             new object[]{ ServiceResult.Unauthorized, null, null, typeof(UnauthorizedResult)},
         };
-    }
-
-    public class TestClass1
-    {
-        public int Id { get; set; }
-    }
-    public class TestClass2
-    {
-        public string Id { get; set; }
     }
 }

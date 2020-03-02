@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using AnyService.Controllers;
+using AnyService.Core.Caching;
 using AnyService.Events;
 using AnyService.Middlewares;
 using AnyService.Services.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
-
 namespace AnyService
 {
     public static class ApplicationBuilderExtensions
@@ -16,6 +16,9 @@ namespace AnyService
         public static IApplicationBuilder UseAnyService(this IApplicationBuilder app)
         {
             var sp = app.ApplicationServices;
+
+            ValidateCoreServicesconfigured(sp);
+
             var apm = sp.GetService<ApplicationPartManager>();
             var typeConfigRecords = sp.GetService<IEnumerable<EntityConfigRecord>>();
             apm.FeatureProviders.Add(new GenericControllerFeatureProvider());
@@ -24,7 +27,16 @@ namespace AnyService
 
             AddPermissionComponents(app, sp);
             return app;
+        }
+        private static void ValidateCoreServicesconfigured(IServiceProvider serviceProvider)
+        {
+            ThrowIfNotConfigured<ICacheManager>();
 
+            void ThrowIfNotConfigured<TService>()
+            {
+                if (serviceProvider.GetService<TService>() == null)
+                    throw new InvalidOperationException($"{nameof(TService)} is not configured");
+            }
         }
         private static void AddPermissionComponents(IApplicationBuilder app, IServiceProvider serviceProvider)
         {
