@@ -16,6 +16,7 @@ namespace AnyService.Tests.Services
 {
     public class TestFileContainer : TestModel, IFileContainer
     {
+        public string Value { get; set; }
         public IEnumerable<FileModel> Files { get; set; }
     }
     public class TestModel : IDomainModelBase, IFullAudit
@@ -99,7 +100,7 @@ namespace AnyService.Tests.Services
             fsm.Verify(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()), Times.Never);
         }
         [Fact]
-        public async Task GetById_Returns_CallsFileStorage()
+        public async Task Create_CallsFileStorage()
         {
             var file = new FileModel { DisplayFileName = "this is fileName" };
             var model = new TestFileContainer
@@ -386,6 +387,56 @@ namespace AnyService.Tests.Services
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
 
             v.Verify(x => x.ValidateForUpdate(It.Is<TestModel>(ep => ep.Id == id), It.IsAny<ServiceResponse>()));
+        }
+        [Fact]
+        public async Task Update_CallsFileStorage()
+        {
+            var id = "some-id";
+            var file = new FileModel { DisplayFileName = "this is fileName" };
+            var dbModel = new TestFileContainer
+            {
+                Id = id,
+                Value = "some-data",
+            };
+            var entity = new TestFileContainer
+            {
+                Value = "some-new-data",
+                Files = new[] { file }
+            };
+
+            var v = new Mock<ICrudValidator<TestFileContainer>>();
+            v.Setup(i => i.ValidateForUpdate(It.IsAny<TestFileContainer>(), It.IsAny<ServiceResponse>()))
+                .ReturnsAsync(true);
+
+            var repo = new Mock<IRepository<TestFileContainer>>();
+            repo.Setup(r => r.GetById(It.IsAny<string>()))
+                .ReturnsAsync(dbModel);
+            repo.Setup(r => r.Update(It.IsAny<TestFileContainer>()))
+                .ReturnsAsync(entity);
+            var ah = new Mock<AuditHelper>();
+            var eb = new Mock<IDomainEventsBus>();
+            var ekr = new EventKeyRecord(null, null, "update", null);
+            var logger = new Mock<ILogger<CrudService<TestFileContainer>>>();
+            var fsm = new Mock<IFileStoreManager>();
+            fsm.Setup(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()))
+            .ReturnsAsync
+            (new[]{ new  FileUploadResponse
+            {
+                File  = file,
+                Status = UploadStatus.Uploaded
+            }});
+            var cSrv = new CrudService<TestFileContainer>(
+                repo.Object, v.Object,
+                ah.Object, _wc,
+                eb.Object, ekr,
+                fsm.Object, logger.Object);
+            var res = await cSrv.Update(id, entity);
+
+            res.Result.ShouldBe(ServiceResult.Ok);
+
+            v.Verify(x => x.ValidateForUpdate(It.Is<TestFileContainer>(ep => ep.Id == id), It.IsAny<ServiceResponse>()));
+            ah.Verify(a => a.PrepareForUpdate(It.Is<TestModel>(e => e == entity), It.Is<TestModel>(e => e == dbModel), It.Is<string>(s => s == _wc.CurrentUserId)), Times.Once);
+            eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Update), It.IsAny<DomainEventData>()), Times.Once);
         }
         #endregion
         #region Delete

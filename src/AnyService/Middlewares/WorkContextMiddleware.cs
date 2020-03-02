@@ -47,7 +47,6 @@ namespace AnyService.Middlewares
                 return value;
 
             value = EntityConfigRecordManager.EntityConfigRecords.FirstOrDefault(r => path.StartsWithSegments(r.Route, StringComparison.CurrentCultureIgnoreCase));
-
             return (RouteMaps[path] = value);
         }
         private static RequestInfo ToRequestInfo(HttpContext httpContext, string httpMethod, EntityConfigRecord typeConfigRecord)
@@ -58,16 +57,27 @@ namespace AnyService.Middlewares
             {
                 Path = path,
                 Method = httpMethod,
-                RequesteeId = GetRequesteeId(),
+                RequesteeId = GetRequesteeId(typeConfigRecord.Route, path),
                 Parameters = httpContext.Request.Query.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)).ToArray()
             };
-            string GetRequesteeId()
+        }
+        private static string GetRequesteeId(string route, string path)
+        {
+            var idx = path.LastIndexOf(route, 0, StringComparison.InvariantCultureIgnoreCase) + route.Length + 1;
+            var requesteeId = path.Substring(idx);
+            while (requesteeId.StartsWith("/"))
+                requesteeId = requesteeId.Substring(1);
+
+            if (requesteeId.StartsWith(Consts.ReservedPrefix))
             {
-                var resource = typeConfigRecord.Route;
-                var idx = path.LastIndexOf(resource, 0, StringComparison.InvariantCultureIgnoreCase) + resource.Length + 1;
-                var requesteeId = path.Substring(idx);
-                return requesteeId.StartsWith("/") ? requesteeId.Substring(1) : requesteeId;
+                idx = requesteeId.IndexOf("/");
+                requesteeId = requesteeId.Substring(idx + 1);
+
+                while (requesteeId.StartsWith("/"))
+                    requesteeId = requesteeId.Substring(1);
             }
+
+            return requesteeId;
         }
     }
 }

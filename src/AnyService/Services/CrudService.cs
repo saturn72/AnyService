@@ -89,7 +89,7 @@ namespace AnyService.Services
         public async Task UploadFiles(IFileContainer fileContainer, ServiceResponse serviceResponse)
         {
             var files = fileContainer.Files;
-            if (!files.Any())
+            if (files == null || !files.Any())
                 return;
 
             foreach (var f in files)
@@ -204,17 +204,27 @@ namespace AnyService.Services
             _logger.LogDebug(LoggingEvents.Repository, $"Update entity in repository");
             var updateResponse = await _repository.Command(r => r.Update(entity), serviceResponse);
             _logger.LogDebug(LoggingEvents.Repository, $"Repository update response: {updateResponse}");
-
-            if (updateResponse != null && serviceResponse.Result == ServiceResult.NotSet)
+            if (updateResponse == null)
             {
-                _logger.LogDebug(LoggingEvents.EventPublishing, $"Publish updated event using {_eventKeyRecord.Update} key");
-                _eventBus.Publish(_eventKeyRecord.Update, new DomainEventData
-                {
-                    Data = updateResponse,
-                    PerformedByUserId = _workContext.CurrentUserId
-                });
-                serviceResponse.Result = ServiceResult.Ok;
+                _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Repository get-by-id response is null");
+                return serviceResponse;
             }
+            if (entity is IFileContainer)
+            {
+                var fileContainer = (entity as IFileContainer);
+                (updateResponse as IFileContainer).Files = fileContainer.Files;
+                _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start file uploads");
+                await UploadFiles(fileContainer, serviceResponse);
+            }
+
+            _logger.LogDebug(LoggingEvents.EventPublishing, $"Publish updated event using {_eventKeyRecord.Update} key");
+            _eventBus.Publish(_eventKeyRecord.Update, new DomainEventData
+            {
+                Data = updateResponse,
+                PerformedByUserId = _workContext.CurrentUserId
+            });
+
+            serviceResponse.Result = ServiceResult.Ok;
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
@@ -243,7 +253,7 @@ namespace AnyService.Services
                 _logger.LogDebug(LoggingEvents.Audity, "Audity - prepare for deletion");
 
                 _auditHelper.PrepareForDelete(dbModel as IDeletableAudit, _workContext.CurrentUserId);
-                _logger.LogDebug(LoggingEvents.Repository, "Repository - Update entity");
+                _logger.LogDebug(LoggingEvents.Repository, "Repository - Delete entity");
                 deletedModel = await _repository.Command(r => r.Update(dbModel), serviceResponse);
                 if (deletedModel == null)
                 {

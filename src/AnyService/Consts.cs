@@ -2,7 +2,8 @@ namespace AnyService
 {
     public class Consts
     {
-        public const string MultipartSuffix = "__multipart";
-        public const string StreamSuffix = "__stream";
+        public const string ReservedPrefix = "__";
+        public const string MultipartSuffix = ReservedPrefix + "multipart";
+        public const string StreamSuffix = ReservedPrefix + "stream";
     }
 }

@@ -105,7 +105,69 @@ namespace AnyService.Controllers
         public async Task<IActionResult> PostMultipartStream()
         {
             _logger.LogDebug(LoggingEvents.Controller, "Start Post for multipart flow stream");
+            var model = await ExctractModelFromStream();
+            _logger.LogDebug(LoggingEvents.Controller, "Call service with value: " + model);
+            var res = await _crudService.Create(model);
+            _logger.LogDebug(LoggingEvents.Controller, "Post service response value: " + res);
 
+            return _serviceResponseMapper.Map(res);
+        }
+        [DisableFormValueModelBinding]
+        [HttpPost(Consts.StreamSuffix + "/{id}")]
+        public async Task<IActionResult> PutMultipartStream(string id)
+        {
+            _logger.LogDebug(LoggingEvents.Controller, "Start Put for multipart flow stream");
+            var model = await ExctractModelFromStream();
+            _logger.LogDebug(LoggingEvents.Controller, "Call service with value: " + model);
+            var res = await _crudService.Update(id, model);
+            _logger.LogDebug(LoggingEvents.Controller, "Put service response value: " + res);
+
+            return _serviceResponseMapper.Map(res);
+        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(string id)
+        {
+            _logger.LogDebug(LoggingEvents.Controller, "Start Get by id flow with id " + id);
+            var res = await _crudService.GetById(id);
+            _logger.LogDebug(LoggingEvents.Controller, "Get all service response value: " + res);
+            return _serviceResponseMapper.Map(res as ServiceResponse);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
+            var res = await _crudService.GetAll();
+            _logger.LogDebug(LoggingEvents.Controller, "Get all service response value: " + res);
+            return _serviceResponseMapper.Map(res as ServiceResponse);
+        }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put(string id, [FromBody] TDomainModel model)
+        {
+            _logger.LogDebug(LoggingEvents.Controller, "Start Put flow");
+
+            if (!ModelState.IsValid || model.Equals(default))
+                return new BadRequestObjectResult(new
+                {
+                    message = "Bad or missing data",
+                    data = model
+                });
+
+            _logger.LogDebug($"Start update flow with id {id} and model {model}");
+            var res = await _crudService.Update(id, model);
+            _logger.LogDebug(LoggingEvents.Controller, "Update service response value: " + res);
+            return _serviceResponseMapper.Map(res as ServiceResponse);
+        }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            _logger.LogDebug(LoggingEvents.Controller, "Start Delete flow with id " + id);
+            var res = await _crudService.Delete(id);
+            _logger.LogDebug(LoggingEvents.Controller, "Delete service response value: " + res);
+            return _serviceResponseMapper.Map(res as ServiceResponse);
+        }
+        #region Utilities
+        private async Task<TDomainModel> ExctractModelFromStream()
+        {
             // Used to accumulate all the form url encoded key value pairs in the 
             // request.
             var formAccumulator = new KeyValueAccumulator();
@@ -172,54 +234,20 @@ namespace AnyService.Controllers
             var modelJson = formAccumulator.GetResults()["model"].ToString();
 
             var model = modelJson.ToObject<TDomainModel>();
-            _curType.GetProperty(nameof(IFileContainer.Files)).SetValue(model, files);
+            GetFilesProperty(_curType).SetValue(model, files);
 
-            _logger.LogDebug(LoggingEvents.Controller, "Call service with value: " + model);
-            var res = await _crudService.Create(model);
-            _logger.LogDebug(LoggingEvents.Controller, "Post service response value: " + res);
-
-            return _serviceResponseMapper.Map(res);
+            return model;
         }
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(string id)
+        private static readonly IDictionary<Type, PropertyInfo> FilesPropertyCollection = new Dictionary<Type, PropertyInfo>();
+        private static PropertyInfo GetFilesProperty(Type type)
         {
-            _logger.LogDebug(LoggingEvents.Controller, "Start Get by id flow with id " + id);
-            var res = await _crudService.GetById(id);
-            _logger.LogDebug(LoggingEvents.Controller, "Get all service response value: " + res);
-            return _serviceResponseMapper.Map(res as ServiceResponse);
+            if (!FilesPropertyCollection.TryGetValue(type, out PropertyInfo value))
+            {
+                value = type.GetProperty(nameof(IFileContainer.Files));
+                FilesPropertyCollection[type] = value;
+            }
+            return value;
         }
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
-            var res = await _crudService.GetAll();
-            _logger.LogDebug(LoggingEvents.Controller, "Get all service response value: " + res);
-            return _serviceResponseMapper.Map(res as ServiceResponse);
-        }
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(string id, [FromBody] TDomainModel model)
-        {
-            _logger.LogDebug(LoggingEvents.Controller, "Start Put flow");
-
-            if (!ModelState.IsValid || model.Equals(default))
-                return new BadRequestObjectResult(new
-                {
-                    message = "Bad or missing data",
-                    data = model
-                });
-
-            _logger.LogDebug($"Start update flow with id {id} and model {model}");
-            var res = await _crudService.Update(id, model);
-            _logger.LogDebug(LoggingEvents.Controller, "Update service response value: " + res);
-            return _serviceResponseMapper.Map(res as ServiceResponse);
-        }
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(string id)
-        {
-            _logger.LogDebug(LoggingEvents.Controller, "Start Delete flow with id " + id);
-            var res = await _crudService.Delete(id);
-            _logger.LogDebug(LoggingEvents.Controller, "Delete service response value: " + res);
-            return _serviceResponseMapper.Map(res as ServiceResponse);
-        }
+        #endregion
     }
 }

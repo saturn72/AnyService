@@ -21,6 +21,7 @@ namespace AnyService.Tests.Controllers
         [InlineData("Post", "POST", null)]
         [InlineData("PostMultipart", "POST", "__multipart")]
         [InlineData("PostMultipartStream", "POST", "__stream")]
+        [InlineData("PutMultipartStream", "PUT", "__stream/{id}")]
         [InlineData("GetAll", "GET", null)]
         [InlineData("Get", "GET", "{id}")]
         [InlineData("Put", "PUT", "{id}")]

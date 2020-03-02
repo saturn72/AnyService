@@ -141,7 +141,7 @@ namespace AnyService.E2E
             (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
         }
         [Test]
-        public async Task MultipartFormStreamSampleFlow()
+        public async Task MultipartFormStreamSampleFlow_Create()
         {
             #region setup
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
@@ -170,6 +170,54 @@ namespace AnyService.E2E
             var jObj = JObject.Parse(content);
             var id = jObj["data"]["entity"]["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
+            #endregion
+            #region Read
+            res = await HttpClient.GetAsync("multipartSampleModel/" + id);
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jObj["data"]["id"].Value<string>().ShouldBe(id);
+            jObj["data"]["firstName"].Value<string>().ShouldBe(model.firstName);
+            (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
+            #endregion
+        }
+        [Test]
+        public async Task MultipartFormStreamSampleFlow_Update()
+        {
+            #region setup
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
+            var multiForm = new MultipartFormDataContent();
+            var filePath = Path.Combine("resources", "video.mp4");
+
+            //data 
+            var model = new
+            {
+                firstName = "Roi",
+                lastName = "Shabtai"
+            };
+            #endregion 
+            #region Create
+            var res = await HttpClient.PostAsJsonAsync("multipartSampleModel/", model);
+            var content = await res.Content.ReadAsStringAsync();
+            var jObj = JObject.Parse(content);
+            var id = jObj["data"]["id"].Value<string>();
+            id.ShouldNotBeNullOrEmpty();
+            #endregion
+            #region update
+            var updateModel = new
+            {
+                firstName = "Uriyah",
+                lastName = "Shabtai Levi"
+            };
+            //convert data to string
+            var dataString = JsonConvert.SerializeObject(updateModel);
+            //add to form under key "model"
+            multiForm.Add(new StringContent(dataString), "model");
+            var fileStream = new FileStream(filePath, FileMode.Open);
+            var fn = Path.GetFileName(filePath);
+            multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), fn);
+            res = await HttpClient.PutAsync("multipartSampleModel/__stream/" + id, multiForm);
+            res.EnsureSuccessStatusCode();
             #endregion
             #region Read
             res = await HttpClient.GetAsync("multipartSampleModel/" + id);
