@@ -88,7 +88,7 @@ namespace AnyService.Services
         }
         public async Task UploadFiles(IFileContainer fileContainer, ServiceResponse serviceResponse)
         {
-            var files = fileContainer.Files;
+            var files = fileContainer?.Files;
             if (files == null || !files.Any())
                 return;
 
