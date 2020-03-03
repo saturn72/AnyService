@@ -27,15 +27,15 @@ jobs:
       - name: Test
         working-directory: ./src
         run: dotnet test --configuration Release --no-build
-      - name: Pack anyservice nuget package
-        working-directory: ./src
-        run: dotnet pack ./AnyService/AnyService.csproj --configuration Release --output ./nupkg --no-build --include-symbols -p:SymbolPackageFormat=snupkg
+      # - name: Pack anyservice nuget package
+      #   working-directory: ./src
+      #   run: dotnet pack ./AnyService/AnyService.csproj --configuration Release --output ./nupkg --no-build --include-symbols -p:SymbolPackageFormat=snupkg
       # - name: Pack anyservice.core nuget package
       #   working-directory: ./src
       #   run: dotnet pack ./AnyService.Core/AnyService.Core.csproj --configuration Release --output ./nupkg --no-build --include-symbols -p:SymbolPackageFormat=snupkg
-      # - name: Pack anyservice.litedb nuget package
-      #   working-directory: ./src
-      #   run: dotnet pack ./AnyServiceModules/LiteDb/AnyService.LiteDb/AnyService.LiteDb.csproj --configuration Release --output ./nupkg --no-build --include-symbols -p:SymbolPackageFormat=snupkg
+      - name: Pack anyservice.litedb nuget package
+        working-directory: ./src
+        run: dotnet pack ./AnyServiceModules/LiteDb/AnyService.LiteDb/AnyService.LiteDb.csproj --configuration Release --output ./nupkg --no-build --include-symbols -p:SymbolPackageFormat=snupkg
       # - name: Pack anyservice.entityframework nuget package
       #   working-directory: ./src
       #   run: dotnet pack ./AnyServiceModules/EntityFramework/AnyService.EntityFramework/AnyService.EntityFramework.csproj --configuration Release --output ./nupkg --no-build --include-symbols -p:SymbolPackageFormat=snupkg
