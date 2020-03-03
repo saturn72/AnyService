@@ -30,13 +30,13 @@ namespace AnyService.LiteDb.Tests
             var file1 = new FileModel
             {
                 Id = "1",
-                Bytes = File.ReadAllBytes(Path.Combine("resources", "file.txt")),
+                Bytes = File.ReadAllBytes(Path.Combine("Resources", "file.txt")),
                 StoredFileName = "file.txt"
             };
             var file2 = new FileModel
             {
                 Id = "2",
-                Bytes = File.ReadAllBytes(Path.Combine("resources", "file.csv")),
+                Bytes = File.ReadAllBytes(Path.Combine("Resources", "file.csv")),
                 StoredFileName = "file.csv"
             };
 
