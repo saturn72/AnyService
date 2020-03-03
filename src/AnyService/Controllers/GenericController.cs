@@ -31,15 +31,19 @@ namespace AnyService.Controllers
         private readonly ILogger<GenericController<TDomainModel>> _logger;
         private readonly AnyServiceConfig _config;
         private readonly Type _curType;
+        private readonly WorkContext _workContext;
         private static readonly IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
         #endregion
         #region ctor
-        public GenericController(IServiceProvider serviceProvider, AnyServiceConfig config,
-        IServiceResponseMapper serviceResponseMapper, ILogger<GenericController<TDomainModel>> logger)
+        public GenericController(
+            IServiceProvider serviceProvider, AnyServiceConfig config,
+            IServiceResponseMapper serviceResponseMapper, WorkContext workContext,
+            ILogger<GenericController<TDomainModel>> logger)
         {
             _crudService = serviceProvider.GetService<CrudService<TDomainModel>>();
             _config = config;
             _serviceResponseMapper = serviceResponseMapper;
+            _workContext = workContext;
             _logger = logger;
             _curType = typeof(TDomainModel);
         }
@@ -88,9 +92,7 @@ namespace AnyService.Controllers
                 fileList.Add(fileModel);
             }
 
-            var filesPropertyInfo = FilesPropertyInfos.TryGetValue(_curType, out PropertyInfo pi)
-                ? pi
-                : (pi = FilesPropertyInfos[_curType] = _curType.GetProperty(nameof(IFileContainer.Files)));
+            var filesPropertyInfo = GetFilesProperty(_curType);
             filesPropertyInfo.SetValue(model, fileList);
 
             _logger.LogDebug(LoggingEvents.Controller, "Call service with value: " + model);
@@ -119,7 +121,7 @@ namespace AnyService.Controllers
             _logger.LogDebug(LoggingEvents.Controller, "Start Put for multipart flow stream");
             var model = await ExctractModelFromStream();
             _logger.LogDebug(LoggingEvents.Controller, "Call service with value: " + model);
-            var res = await _crudService.Update("123", model);
+            var res = await _crudService.Update(_workContext.RequestInfo.RequesteeId, model);
             _logger.LogDebug(LoggingEvents.Controller, "Put service response value: " + res);
 
             return _serviceResponseMapper.Map(res);
@@ -238,13 +240,12 @@ namespace AnyService.Controllers
 
             return model;
         }
-        private static readonly IDictionary<Type, PropertyInfo> FilesPropertyCollection = new Dictionary<Type, PropertyInfo>();
         private static PropertyInfo GetFilesProperty(Type type)
         {
-            if (!FilesPropertyCollection.TryGetValue(type, out PropertyInfo value))
+            if (!FilesPropertyInfos.TryGetValue(type, out PropertyInfo value))
             {
                 value = type.GetProperty(nameof(IFileContainer.Files));
-                FilesPropertyCollection[type] = value;
+                FilesPropertyInfos[type] = value;
             }
             return value;
         }

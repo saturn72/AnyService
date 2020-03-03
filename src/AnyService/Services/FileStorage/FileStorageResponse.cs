@@ -1,10 +1,10 @@
 namespace AnyService.Services.FileStorage
 {
-    public sealed class FileUploadResponse
+    public sealed class FileStorageResponse
     {
-        public FileUploadResponse()
+        public FileStorageResponse()
         {
-            Status = UploadStatus.NotSet;
+            Status = FileStoreState.NotSet;
         }
         public string Status { get; set; }
         public FileModel File { get; set; }

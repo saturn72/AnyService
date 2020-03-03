@@ -120,10 +120,10 @@ namespace AnyService.Tests.Services
             var fsm = new Mock<IFileStoreManager>();
             fsm.Setup(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()))
             .ReturnsAsync
-            (new[]{ new  FileUploadResponse
+            (new[]{ new  FileStorageResponse
             {
                 File  = file,
-                Status = UploadStatus.Uploaded
+                Status = FileStoreState.Uploaded
             }});
             var logger = new Mock<ILogger<CrudService<TestFileContainer>>>();
 
@@ -420,10 +420,10 @@ namespace AnyService.Tests.Services
             var fsm = new Mock<IFileStoreManager>();
             fsm.Setup(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()))
             .ReturnsAsync
-            (new[]{ new  FileUploadResponse
+            (new[]{ new  FileStorageResponse
             {
                 File  = file,
-                Status = UploadStatus.Uploaded
+                Status = FileStoreState.Uploaded
             }});
             var cSrv = new CrudService<TestFileContainer>(
                 repo.Object, v.Object,

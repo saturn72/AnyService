@@ -15,9 +15,29 @@ namespace AnyService.LiteDb
         {
             _dbName = dbName;
         }
-        public async Task<IEnumerable<FileUploadResponse>> Upload(IEnumerable<FileModel> files)
+
+        public async Task<IEnumerable<FileStorageResponse>> Delete(IEnumerable<FileModel> files)
         {
-            var furList = new List<FileUploadResponse>();
+            var furList = new List<FileStorageResponse>();
+            await Task.Run(() => LiteDbUtility.Command(_dbName, db =>
+            {
+                foreach (var f in files)
+                {
+                    var s = db.FileStorage.Delete(f.Id);
+                    furList.Add(new FileStorageResponse
+                    {
+                        File = f,
+                        Status = s ? FileStoreState.Deleted : FileStoreState.DeleteFailed
+                    });
+                }
+            }));
+
+            return furList;
+        }
+
+        public async Task<IEnumerable<FileStorageResponse>> Upload(IEnumerable<FileModel> files)
+        {
+            var furList = new List<FileStorageResponse>();
             await Task.Run(() => LiteDbUtility.Command(_dbName, db =>
             {
                 foreach (var f in files)
@@ -27,7 +47,7 @@ namespace AnyService.LiteDb
                         : new MemoryStream(f.Bytes.ToArray()) as Stream)
                     {
                         var lfi = db.FileStorage.Upload(f.Id, f.StoredFileName, stream);
-                        furList.Add(new FileUploadResponse { File = f, Status = UploadStatus.Uploaded });
+                        furList.Add(new FileStorageResponse { File = f, Status = FileStoreState.Uploaded });
                     }
                 }
             }));

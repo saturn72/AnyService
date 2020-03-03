@@ -18,4 +18,8 @@
     <ProjectReference Include="..\..\..\AnyService\AnyService.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Resources\**" CopyToOutputDirectory="Always" />
+  </ItemGroup>
+
 </Project>

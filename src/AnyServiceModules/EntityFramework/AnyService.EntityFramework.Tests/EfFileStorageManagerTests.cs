@@ -51,7 +51,7 @@ namespace AnyService.EntityFramework.Tests
                 var curRes = res.ElementAt(i);
                 curRes.File.ShouldBe(curRef);
                 curRes.File.StoredFileName.ShouldBe(curRef.DisplayFileName);
-                curRes.Status.ShouldBe(UploadStatus.Uploaded);
+                curRes.Status.ShouldBe(FileStoreState.Uploaded);
             }
         }
     }

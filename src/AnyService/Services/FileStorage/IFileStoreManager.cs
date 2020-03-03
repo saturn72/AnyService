@@ -5,6 +5,7 @@ namespace AnyService.Services.FileStorage
 {
     public interface IFileStoreManager
     {
-        Task<IEnumerable<FileUploadResponse>> Upload(IEnumerable<FileModel> files);
+        Task<IEnumerable<FileStorageResponse>> Upload(IEnumerable<FileModel> files);
+        Task<IEnumerable<FileStorageResponse>> Delete(IEnumerable<FileModel> files);
     }
 }

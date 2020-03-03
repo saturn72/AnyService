@@ -9,7 +9,7 @@ namespace AnyService.Services.Tests.FileStorage
         [Fact]
         public void FileUploadResponseInit()
         {
-            new FileUploadResponse().Status.ShouldBe(UploadStatus.NotSet);
+            new FileStorageResponse().Status.ShouldBe(FileStoreState.NotSet);
         }
     }
 }

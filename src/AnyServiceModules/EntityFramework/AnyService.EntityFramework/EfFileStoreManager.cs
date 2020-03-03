@@ -16,7 +16,7 @@ namespace AnyService.EntityFramework
 
             _dbContext = dbContext;
         }
-        public async Task<IEnumerable<FileUploadResponse>> Upload(IEnumerable<FileModel> files)
+        public async Task<IEnumerable<FileStorageResponse>> Upload(IEnumerable<FileModel> files)
         {
             var dbSet = _dbContext.Set<FileModel>();
             var toUpdate = new List<FileModel>();
@@ -38,7 +38,7 @@ namespace AnyService.EntityFramework
             await dbSet.AddRangeAsync(toCreate);
             await _dbContext.SaveChangesAsync();
 
-            return files.Select(f => new FileUploadResponse { File = f, Status = UploadStatus.Uploaded }).ToArray();
+            return files.Select(f => new FileStorageResponse { File = f, Status = FileStoreState.Uploaded }).ToArray();
         }
     }
 }
