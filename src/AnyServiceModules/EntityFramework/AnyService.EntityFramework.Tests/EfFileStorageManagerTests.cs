@@ -54,5 +54,38 @@ namespace AnyService.EntityFramework.Tests
                 curRes.Status.ShouldBe(FileStoreState.Uploaded);
             }
         }
+
+        [Fact]
+        public async Task Delete_Tests()
+        {
+            var fileName1 = "dog.jpg";
+            var fileName2 = "video.mp4";
+
+            FileModel f1 = new FileModel
+            {
+                Bytes = await File.ReadAllBytesAsync("./resources/" + fileName1),
+                DisplayFileName = fileName1,
+            },
+            f2 = new FileModel
+            {
+                Bytes = await File.ReadAllBytesAsync("./resources/" + fileName2),
+                DisplayFileName = fileName2,
+            };
+
+            await _dbContext.Set<FileModel>().AddAsync(f1);
+            await _dbContext.SaveChangesAsync();
+
+            var fms = new[] { f1, f2 };
+            var res = await _fileManager.Delete(fms);
+
+            res.Count().ShouldBe(fms.Length);
+            for (int i = 0; i < fms.Length; i++)
+            {
+                var curRef = fms[i];
+                var curRes = res.ElementAt(i);
+                curRes.File.ShouldBe(curRef);
+                curRes.Status.ShouldBe(FileStoreState.Deleted);
+            }
+        }
     }
 }

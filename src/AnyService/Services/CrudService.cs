@@ -212,7 +212,7 @@ namespace AnyService.Services
             if (entity is IFileContainer)
             {
                 var fileContainer = (entity as IFileContainer);
-                await _fileStorageManager.Delete(fileContainer.Files);
+                await _fileStorageManager.Delete((dbModel as IFileContainer).Files);
                 (updateResponse as IFileContainer).Files = fileContainer.Files;
                 _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start file uploads");
                 await UploadFiles(fileContainer, serviceResponse);

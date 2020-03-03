@@ -235,7 +235,7 @@ namespace AnyService.E2E
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
             jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["firstName"].Value<string>().ShouldBe(model.firstName);
+            jObj["data"]["firstName"].Value<string>().ShouldBe(updateModel.firstName);
             (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
             #endregion
         }

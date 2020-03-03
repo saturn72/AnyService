@@ -5,12 +5,12 @@ using Xunit;
 
 namespace AnyService.Services.Tests.FileStorage
 {
-    public class UploadStatusTests
+    public class FileStoreStateTests
     {
         [Fact]
         public void VerifyallKeys()
         {
-            FileStoreState.All.Count().ShouldBe(4);
+            FileStoreState.All.Count().ShouldBe(7);
             FileStoreState.NotSet.ShouldBe("notset");
             FileStoreState.UploadPending.ShouldBe("uploadpending");
             FileStoreState.Uploaded.ShouldBe("uploaded");

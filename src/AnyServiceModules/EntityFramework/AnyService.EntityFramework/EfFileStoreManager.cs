@@ -40,5 +40,17 @@ namespace AnyService.EntityFramework
 
             return files.Select(f => new FileStorageResponse { File = f, Status = FileStoreState.Uploaded }).ToArray();
         }
+
+        public async Task<IEnumerable<FileStorageResponse>> Delete(IEnumerable<FileModel> files)
+        {
+            var dbSet = _dbContext.Set<FileModel>();
+            var ids = files.Select(f => f.Id).ToArray();
+
+            var toDelete = dbSet.Where(e => ids.Contains(e.Id, StringComparer.InvariantCultureIgnoreCase));
+            await Task.Run(() => dbSet.RemoveRange(toDelete));
+            await _dbContext.SaveChangesAsync();
+
+            return files.Select(f => new FileStorageResponse { File = f, Status = FileStoreState.Deleted }).ToArray();
+        }
     }
 }
