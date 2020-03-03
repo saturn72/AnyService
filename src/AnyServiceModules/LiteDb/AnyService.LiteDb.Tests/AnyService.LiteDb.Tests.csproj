@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Resources\**" CopyToOutputDirectory="Always" />
+    <None Update="resources\**" CopyToOutputDirectory="Always" />
   </ItemGroup>
 
 </Project>
