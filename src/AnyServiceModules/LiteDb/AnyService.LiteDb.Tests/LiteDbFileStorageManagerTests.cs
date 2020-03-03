@@ -30,13 +30,13 @@ namespace AnyService.LiteDb.Tests
             var file1 = new FileModel
             {
                 Id = "1",
-                Bytes = File.ReadAllBytes(@"resources\file.txt"),
+                Bytes = File.ReadAllBytes(Path.Combine("resources", "file.txt")),
                 StoredFileName = "file.txt"
             };
             var file2 = new FileModel
             {
                 Id = "2",
-                Bytes = File.ReadAllBytes(@"resources\file.csv"),
+                Bytes = File.ReadAllBytes(Path.Combine("resources", "file.csv")),
                 StoredFileName = "file.csv"
             };
 
@@ -60,14 +60,14 @@ namespace AnyService.LiteDb.Tests
             var file1 = new FileModel
             {
                 Id = "1",
-                Bytes = File.ReadAllBytes(@"resources\file.txt"),
+                Bytes = File.ReadAllBytes(Path.Combine("resources", "file.txt")),
                 StoredFileName = "file.txt"
             };
             var file2 = new FileModel
             {
                 Id = "2",
-                Bytes = File.ReadAllBytes(@"resources\file.csv"),
-                StoredFileName = "file.csv"
+                Bytes = File.ReadAllBytes(Path.Combine("resources", "file.csv")),
+                StoredFileName = "file.csv",
             };
             var files = new[] { file1, file2 };
             using (var db = new LiteDatabase(dbName))
