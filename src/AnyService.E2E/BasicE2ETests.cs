@@ -224,10 +224,14 @@ namespace AnyService.E2E
                 var fn = Path.GetFileName(filePath);
                 multiForm.Add(new StreamContent(fileStream), nameof(MultipartSampleModel.Files), fn);
                 res = await HttpClient.PutAsync("multipartSampleModel/__stream/" + id, multiForm);
-
-                res.EnsureSuccessStatusCode();
-                // fileStream.Close();
             }
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            var je = jObj["data"]["entity"];
+            je["id"].Value<string>().ShouldBe(id);
+            je["firstName"].Value<string>().ShouldBe(updateModel.firstName);
+            je["lastName"].Value<string>().ShouldBe(updateModel.lastName);
             #endregion
             #region Read
             res = await HttpClient.GetAsync("multipartSampleModel/" + id);
