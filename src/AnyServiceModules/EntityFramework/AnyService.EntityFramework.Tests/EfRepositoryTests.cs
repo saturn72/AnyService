@@ -43,7 +43,12 @@ namespace AnyService.EntityFramework.Tests
             inserted.Id.ShouldNotBeEmpty();
             inserted.Value.ShouldBe(entity.Value);
         }
-
+        [Fact]
+        public async Task GetById_returns_Null_On_NotExists()
+        {
+            var e = await _repository.GetById("not-exists");
+            e.ShouldBeNull();
+        }
         [Fact]
         public async Task GetById()
         {
@@ -60,7 +65,6 @@ namespace AnyService.EntityFramework.Tests
             e.Id.ShouldBe(dbEntity.Id);
             e.Value.ShouldBe(dbEntity.Value);
         }
-
         [Fact]
         public async Task GetAll_WithoutFilter()
         {
@@ -98,7 +102,6 @@ namespace AnyService.EntityFramework.Tests
                 e.ElementAt(i).NestedClasses.Count().ShouldBe(2);
             }
         }
-
         [Fact]
         public async Task GetAll_Filtered()
         {
@@ -141,6 +144,17 @@ namespace AnyService.EntityFramework.Tests
         }
 
         [Fact]
+        public async Task Update_returnsNullOnEntityNotExists()
+        {
+            var updated = new TestClass
+            {
+                Id = "id-not-exists",
+                Value = "new-value"
+            };
+            var res = await _repository.Update(updated);
+            res.ShouldBeNull();
+        }
+        [Fact]
         public async Task Update()
         {
             var orig = new TestClass
@@ -156,10 +170,43 @@ namespace AnyService.EntityFramework.Tests
                 Id = orig.Id,
                 Value = "new-value"
             };
-            await _repository.Update(updated);
+            var db = await _repository.Update(updated);
 
             var dbEntity = await _dbContext.Set<TestClass>().AsNoTracking().FirstOrDefaultAsync(x => x.Id == orig.Id);
             dbEntity.Value.ShouldBe(updated.Value);
         }
+        [Fact]
+        public async Task Delete_ReturnsNullOnEntityNotExists()
+        {
+            var updated = new TestClass
+            {
+                Id = "id-not-exists",
+                Value = "new-value"
+            };
+            var res = await _repository.Delete(updated);
+            res.ShouldBeNull();
+        }
+
+        [Fact]
+        public async Task Delete()
+        {
+            var orig = new TestClass
+            {
+                Value = "orig-value"
+            };
+            await _dbContext.Set<TestClass>().AddAsync(orig);
+            await _dbContext.SaveChangesAsync();
+            _dbContext.Entry(orig).State = EntityState.Detached;
+
+            var toDelete = new TestClass
+            {
+                Id = orig.Id,
+            };
+            await _repository.Delete(toDelete);
+
+            var dbEntity = await _dbContext.Set<TestClass>().FindAsync(toDelete.Id);
+            dbEntity.ShouldBeNull();
+        }
+
     }
 }

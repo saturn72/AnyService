@@ -254,17 +254,19 @@ namespace AnyService.Services
                 _logger.LogDebug(LoggingEvents.Audity, "Audity - prepare for deletion");
 
                 _auditHelper.PrepareForDelete(dbModel as IDeletableAudit, _workContext.CurrentUserId);
-                _logger.LogDebug(LoggingEvents.Repository, "Repository - Delete entity");
+                _logger.LogDebug(LoggingEvents.Repository, $"Repository - update {nameof(IDeletableAudit)} entity");
                 deletedModel = await _repository.Command(r => r.Update(dbModel), serviceResponse);
-                if (deletedModel == null)
-                {
-                    _logger.LogDebug(LoggingEvents.Repository, "Repository - return null");
-                    return serviceResponse;
-                }
             }
             else
             {
-                throw new System.NotImplementedException("need to implement delete logic in database");
+                _logger.LogDebug(LoggingEvents.Repository, "Repository - delete entity with id " + id);
+                deletedModel = await _repository.Command(r => r.Delete(dbModel), serviceResponse);
+            }
+
+            if (deletedModel == null)
+            {
+                _logger.LogDebug(LoggingEvents.Repository, "Repository - return null");
+                return serviceResponse;
             }
 
             _logger.LogDebug(LoggingEvents.EventPublishing, $"Publish updated event using {_eventKeyRecord.Delete} key");

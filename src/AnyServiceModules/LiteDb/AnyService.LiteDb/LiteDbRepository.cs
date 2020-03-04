@@ -8,7 +8,8 @@ using AnyService.Services.FileStorage;
 
 namespace AnyService.LiteDb
 {
-    public class LiteDbRepository<TDomainModel> : IRepository<TDomainModel> where TDomainModel : IDomainModelBase
+    public class LiteDbRepository<TDomainModel> :
+        IRepository<TDomainModel> where TDomainModel : IDomainModelBase
     {
         private static readonly IDictionary<Type, string> TableNames = new Dictionary<Type, string>();
         private readonly string _dbName;
@@ -16,22 +17,6 @@ namespace AnyService.LiteDb
         public LiteDbRepository(string dbName)
         {
             _dbName = dbName;
-        }
-        public Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter = null)
-        {
-            var res = LiteDbUtility.Query<IEnumerable<TDomainModel>>(_dbName, db =>
-            {
-                var col = db.GetCollection<TDomainModel>();
-                if (filter == null)
-                    return col.FindAll().ToArray();
-
-                var query = ExpressionBuilder.ToExpression<TDomainModel>(filter);
-                if (query == null)
-                    return null;
-                return col.Find(query).ToArray();
-            });
-
-            return Task.FromResult(res);
         }
         public async Task<TDomainModel> Insert(TDomainModel entity)
         {
@@ -64,15 +49,41 @@ namespace AnyService.LiteDb
                 return DateTime.UtcNow.ToString("yyyyMMddTHHmmssK") + "-" + Guid.NewGuid().ToString();
             }
         }
-        public async Task<TDomainModel> Update(TDomainModel entity)
+        public Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter = null)
         {
-            await Task.Run(() => LiteDbUtility.Command(_dbName, db => db.GetCollection<TDomainModel>().Update(entity)));
-            return entity;
+            var res = LiteDbUtility.Query<IEnumerable<TDomainModel>>(_dbName, db =>
+            {
+                var col = db.GetCollection<TDomainModel>();
+                if (filter == null)
+                    return col.FindAll().ToArray();
+
+                var query = ExpressionBuilder.ToExpression<TDomainModel>(filter);
+                if (query == null)
+                    return null;
+                return col.Find(query).ToArray();
+            });
+
+            return Task.FromResult(res);
         }
         public async Task<TDomainModel> GetById(string id)
         {
             return await Task.Run(() => LiteDbUtility.Query(_dbName, db => db.GetCollection<TDomainModel>().FindById(id)));
         }
-
+        public async Task<TDomainModel> Update(TDomainModel entity)
+        {
+            await Task.Run(() => LiteDbUtility.Command(_dbName, db => db.GetCollection<TDomainModel>().Update(entity)));
+            return entity;
+        }
+        public async Task<TDomainModel> Delete(TDomainModel entity)
+        {
+            await Task.Run(() =>
+                LiteDbUtility.Command(_dbName, db =>
+                {
+                    var col = db.GetCollection<TDomainModel>();
+                    if (!col.Delete(entity.Id))
+                        entity = default(TDomainModel);
+                }));
+            return entity;
+        }
     }
 }
