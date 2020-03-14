@@ -157,12 +157,23 @@ Now hit F5 to start your application and perform _CRUD_ operations on `dependent
 TBD
 
 ### Read By Id
-
-TBD
+1. Validate user is Authenticated and has permission to read entity
+2. Entity Details is fetched more database
+3. Event with `entity-read` key is fired
+4. Entity details id returned to user 
 
 ### Read All (with filter)
-
-TBD
+Read all api has 2 scenarios to be used. The first is when a user fetches all entities under his account and the second is when a user fetches ALL public entities of the endpoint.
+#### User fetches entities under his account
+1. Validate user is Authenticated
+2. Entity Details are queried from database, based on user permissions and filter
+3. Event with `entity-read` key is fired
+4. Entities details returned to user 
+#### User fetches entities under his account (`__public` route)
+1. Validate user is Authenticated and that the entity has public API capability.
+2. All endpoint's entities are queried from database based on filter
+3. Event with `entity-read` key is fired
+4. Entities details returned to user 
 
 ### Update
 
