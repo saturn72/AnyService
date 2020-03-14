@@ -76,7 +76,14 @@ namespace AnyService.E2E
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
 
+            //get all public - forbid
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
+            res = await HttpClient.GetAsync("dependentmodel/__public");
+            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+
             //update
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
+
             var updateModel = new
             {
                 Value = "new Value"

@@ -47,7 +47,6 @@ namespace AnyService.E2E.Authorization
         }
 
         [Test]
-        [Ignore("doesnot work on release")]
         public async Task UserPermissions_CUD_By_Creator_Read_by_All_Users()
         {
             Init(); //clear database content prior running this tests
@@ -107,9 +106,18 @@ namespace AnyService.E2E.Authorization
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jArr = (JArray)jObj["data"];
+            jArr = jObj["data"] as JArray;
+            jArr.Count.ShouldBe(0);
+
+            //get all public
+            res = await HttpClient.GetAsync("dependentmodel/__public");
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
+
 
             //read by id by non-creator
             res = await HttpClient.GetAsync(uri + id);

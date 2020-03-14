@@ -23,6 +23,7 @@ namespace AnyService.Tests.Controllers
         [InlineData("PostMultipartStream", "POST", "__stream")]
         [InlineData("PutMultipartStream", "PUT", "__stream/{id}")]
         [InlineData("GetAll", "GET", null)]
+        [InlineData("GetAllPublic", "GET", "__public")]
         [InlineData("Get", "GET", "{id}")]
         [InlineData("Put", "PUT", "{id}")]
         public void ValidateVerbs(string methodName, string expHttpVerb, string expTemplate)

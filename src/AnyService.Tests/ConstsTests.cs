@@ -11,6 +11,7 @@ namespace AnyService.Tests
             Consts.ReservedPrefix.ShouldBe("__");
             Consts.MultipartSuffix.ShouldBe("__multipart");
             Consts.StreamSuffix.ShouldBe("__stream");
+            Consts.PublicSuffix.ShouldBe("__public");
         }
     }
 }

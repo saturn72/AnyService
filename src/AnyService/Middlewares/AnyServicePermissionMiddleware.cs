@@ -10,6 +10,7 @@ namespace AnyService.Middlewares
 {
     public class AnyServicePermissionMiddleware
     {
+        private const string PublicSuffix = "/" + Consts.PublicSuffix;
         private readonly ILogger<AnyServicePermissionMiddleware> _logger;
         private readonly RequestDelegate _next;
         public AnyServicePermissionMiddleware(RequestDelegate next, ILogger<AnyServicePermissionMiddleware> logger)
@@ -48,7 +49,8 @@ namespace AnyService.Middlewares
 
             //post, get-all and get-by-id when publicGet==true are always permitted 
             var isGranted = httpMethodParse.IsPost ||
-                (httpMethodParse.IsGet && (!entityId.HasValue() || workContext.CurrentEntityConfigRecord.PublicGet)) ||
+                (httpMethodParse.IsGet && reqInfo.Path.HasValue() && reqInfo.Path.EndsWith(PublicSuffix) && workContext.CurrentEntityConfigRecord.PublicGet) ||
+                (httpMethodParse.IsGet && !workContext.RequestInfo.RequesteeId.HasValue()) ||
                 await IsGranted(workContext, permissionManager);
 
             if (!isGranted)

@@ -215,7 +215,7 @@ namespace AnyService.Tests.Services
                 .Callback<ServiceResponse>(sr => sr.Result = ServiceResult.BadOrMissingData);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var cSrv = new CrudService<AuditableTestModel>(null, v.Object, null, null, null, null, null, logger.Object);
-            var res = await cSrv.GetAll();
+            var res = await cSrv.GetAll(null);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
             res.Data.ShouldBeNull();
         }
@@ -238,7 +238,7 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
             var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, null, logger.Object);
-            var res = await cSrv.GetAll();
+            var res = await cSrv.GetAll(null);
             res.Result.ShouldBe(ServiceResult.Ok);
             res.Data.ShouldBeOfType<AuditableTestModel[]>().Length.ShouldBe(0);
             eb.Verify(e => e.Publish(
@@ -250,8 +250,9 @@ namespace AnyService.Tests.Services
         public async Task GetAll_ReturnesResponseFromDB()
         {
             var model = new AuditableTestModel();
+            var filter = new Dictionary<string, string>();
             var repo = new Mock<IRepository<AuditableTestModel>>();
-            repo.Setup(r => r.GetAll(It.IsAny<IDictionary<string, string>>()))
+            repo.Setup(r => r.GetAll(It.Is<IDictionary<string, string>>(d => d == filter)))
                 .ReturnsAsync(new[] { model });
 
             var v = new Mock<ICrudValidator<AuditableTestModel>>();
@@ -265,7 +266,7 @@ namespace AnyService.Tests.Services
             var ekr = new EventKeyRecord(null, "read", null, null);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, _wc, eb.Object, ekr, null, logger.Object);
-            var res = await cSrv.GetAll();
+            var res = await cSrv.GetAll(filter);
             res.Result.ShouldBe(ServiceResult.Ok);
             (res.Data as IEnumerable<AuditableTestModel>).ShouldContain(model);
             eb.Verify(e => e.Publish(

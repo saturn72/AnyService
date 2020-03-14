@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Authorization;
 using AnyService.Services;
 using AnyService.Services.ServiceResponseMappers;
 using Microsoft.Extensions.Logging;
+using AnyService.Audity;
 
 namespace AnyService.Controllers
 {
@@ -137,11 +138,22 @@ namespace AnyService.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
+            var filter = new Dictionary<string, string> { { nameof(ICreatableAudit.CreatedByUserId), _workContext.CurrentUserId } };
             _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
-            var res = await _crudService.GetAll();
+            var res = await _crudService.GetAll(filter);
             _logger.LogDebug(LoggingEvents.Controller, "Get all service response value: " + res);
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
+        [HttpGet(Consts.PublicSuffix)]
+        public async Task<IActionResult> GetAllPublic()
+        {
+            var filter = new Dictionary<string, string>();
+            _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
+            var res = await _crudService.GetAll(filter);
+            _logger.LogDebug(LoggingEvents.Controller, "Get all public service response value: " + res);
+            return _serviceResponseMapper.Map(res as ServiceResponse);
+        }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(string id, [FromBody] TDomainModel model)
         {

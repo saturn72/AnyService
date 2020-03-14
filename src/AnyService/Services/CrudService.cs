@@ -134,7 +134,7 @@ namespace AnyService.Services
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
-        public async Task<ServiceResponse> GetAll()
+        public async Task<ServiceResponse> GetAll(IDictionary<string, string> filter)
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all flow");
 
@@ -145,9 +145,6 @@ namespace AnyService.Services
                 return serviceResponse;
             }
 
-            var filter = _workContext.CurrentEntityConfigRecord.PublicGet ?
-                null :
-                new Dictionary<string, string> { { "CreatedByUserId", _workContext.CurrentUserId } };
             _logger.LogDebug(LoggingEvents.Repository, "Get all filter = " + filter);
             _logger.LogDebug(LoggingEvents.Repository, "Get all from repository");
             var data = await _repository.Query(r => r.GetAll(filter), serviceResponse) ?? new TDomainModel[] { };
