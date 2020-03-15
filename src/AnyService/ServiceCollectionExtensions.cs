@@ -24,8 +24,7 @@ namespace Microsoft.Extensions.DependencyInjection
             };
             return AddAnyService(services, config);
         }
-        public static IServiceCollection AddAnyService(this IServiceCollection services,
-            AnyServiceConfig config)
+        public static IServiceCollection AddAnyService(this IServiceCollection services, AnyServiceConfig config)
         {
             NormalizeConfiguration(config);
             services.TryAddSingleton(config);

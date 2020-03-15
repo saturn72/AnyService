@@ -56,7 +56,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
             var sr = new ServiceResponse();
 
-            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(), sr);
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), sr);
             res.ShouldBe(dbData);
             sr.Data.ShouldBe(dbData);
             sr.Result.ShouldBe(ServiceResult.NotSet);
@@ -71,7 +71,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
             var sr = new ServiceResponse();
 
-            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(), sr);
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), sr);
             res.ShouldBe(dbData);
             sr.Data.ShouldBe(dbData);
             sr.Result.ShouldBe(ServiceResult.NotSet);

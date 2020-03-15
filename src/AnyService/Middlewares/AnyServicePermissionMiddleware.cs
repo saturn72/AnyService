@@ -48,9 +48,7 @@ namespace AnyService.Middlewares
             }
 
             //post, get-all and get-by-id when publicGet==true are always permitted 
-            var isGranted = httpMethodParse.IsPost ||
-                (httpMethodParse.IsGet && reqInfo.Path.HasValue() && reqInfo.Path.EndsWith(PublicSuffix) && workContext.CurrentEntityConfigRecord.PublicGet) ||
-                (httpMethodParse.IsGet && !workContext.RequestInfo.RequesteeId.HasValue()) ||
+            var isGranted = httpMethodParse.IsPost || IsPublicGet(httpMethodParse.IsGet, workContext, reqInfo) ||
                 await IsGranted(workContext, permissionManager);
 
             if (!isGranted)
@@ -63,6 +61,15 @@ namespace AnyService.Middlewares
 
             _logger.LogDebug(LoggingEvents.Permission, "User is permitted to perform this operation. Move to next middleware");
             await _next(httpContext);
+        }
+
+        private bool IsPublicGet(bool isGet, WorkContext workContext, RequestInfo reqInfo)
+        {
+            return isGet && workContext.CurrentEntityConfigRecord.PublicGet &&
+            //public get all
+           ((reqInfo.Path.HasValue() && reqInfo.Path.EndsWith(PublicSuffix)) ||
+            //get by id
+            workContext.RequestInfo.RequesteeId.HasValue());
         }
 
         private (bool IsSupported, bool IsPost, bool IsGet) IsSupported(string method)

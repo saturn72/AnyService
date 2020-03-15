@@ -49,7 +49,7 @@ namespace AnyService.LiteDb
                 return DateTime.UtcNow.ToString("yyyyMMddTHHmmssK") + "-" + Guid.NewGuid().ToString();
             }
         }
-        public Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter = null)
+        public Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter)
         {
             var res = LiteDbUtility.Query<IEnumerable<TDomainModel>>(_dbName, db =>
             {

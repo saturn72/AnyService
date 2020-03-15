@@ -21,9 +21,9 @@ namespace AnyService.EntityFramework
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter = null)
+        public async Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter)
         {
-            if (filter == null)
+            if (filter == null || !filter.Any())
                 return await IncludeNavigations(DbSet).ToArrayAsync();
 
             var query = ExpressionBuilder.ToExpression<TDomainModel>(filter);

@@ -66,7 +66,7 @@ namespace AnyService.EntityFramework.Tests
             e.Value.ShouldBe(dbEntity.Value);
         }
         [Fact]
-        public async Task GetAll_WithoutFilter()
+        public async Task GetAll_NullFilter()
         {
             _dbContext.Set<TestClass>().RemoveRange(_dbContext.Set<TestClass>());
             _dbContext.Set<TestNestedClass>().RemoveRange(_dbContext.Set<TestNestedClass>());
@@ -94,7 +94,45 @@ namespace AnyService.EntityFramework.Tests
             await _dbContext.Set<TestClass>().AddRangeAsync(tc);
             await _dbContext.SaveChangesAsync();
 
-            var e = await _repository.GetAll();
+            var e = await _repository.GetAll(null);
+            e.Count().ShouldBe(tc.Count);
+            for (int i = 0; i < tc.Count; i++)
+            {
+                e.Any(x => x.Id != null && x.Value == valuePrefix + i.ToString()).ShouldBeTrue();
+                e.ElementAt(i).NestedClasses.Count().ShouldBe(2);
+            }
+        }
+        [Fact]
+        public async Task GetAll_EmptyFilter()
+        {
+            _dbContext.Set<TestClass>().RemoveRange(_dbContext.Set<TestClass>());
+            _dbContext.Set<TestNestedClass>().RemoveRange(_dbContext.Set<TestNestedClass>());
+            await _dbContext.SaveChangesAsync();
+
+            var valuePrefix = "value-";
+            var tc = new List<TestClass>();
+            for (int i = 0; i < 3; i++)
+                tc.Add(new TestClass
+                {
+                    Value = valuePrefix + i.ToString(),
+                    NestedClasses = new[]
+                    {
+                        new TestNestedClass
+                        {
+                            Value = "v1",
+                        },
+                        new TestNestedClass
+                        {
+                            Value = "v2",
+                        },
+                    },
+                });
+
+            await _dbContext.Set<TestClass>().AddRangeAsync(tc);
+            await _dbContext.SaveChangesAsync();
+
+            var filter = new Dictionary<string, string>();
+            var e = await _repository.GetAll(filter);
             e.Count().ShouldBe(tc.Count);
             for (int i = 0; i < tc.Count; i++)
             {

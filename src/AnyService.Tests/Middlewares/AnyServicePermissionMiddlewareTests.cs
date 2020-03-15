@@ -14,10 +14,10 @@ namespace AnyService.Tests.Middlewares
     public class AnyServicePermissionMiddlewareTests
     {
         [Theory]
-        [InlineData("get", "/__public")]
-        [InlineData("get", null)]
-        [InlineData("post", null)]
-        public async Task InvokeAsync_PermittedMethods(string method, string route)
+        [InlineData("get", "/__public", null)]
+        [InlineData("get", null, "/123")]
+        [InlineData("post", null, null)]
+        public async Task InvokeAsync_PermittedMethods(string method, string route, string requestee)
         {
             int i = 0, expValue = 15;
             RequestDelegate reqDel = hc =>
@@ -37,7 +37,8 @@ namespace AnyService.Tests.Middlewares
                 RequestInfo = new RequestInfo
                 {
                     Path = route,
-                    Method = method
+                    Method = method,
+                    RequesteeId = requestee
                 }
             };
             var httpResponse = new Mock<HttpResponse>();
