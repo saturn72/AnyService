@@ -23,9 +23,9 @@ namespace AnyService.Tests.Services.Security
             PermissionFuncs.GetByHttpMethod(delete)(tc).ShouldBe(delete);
         }
         [Fact]
-        public void Throws()
+        public void ReturnsNullOnKeyNotExists()
         {
-            Should.Throw<KeyNotFoundException>(() => PermissionFuncs.GetByHttpMethod("not-existst"));
+             PermissionFuncs.GetByHttpMethod("not-existst").ShouldBeNull();
         }
     }
 }

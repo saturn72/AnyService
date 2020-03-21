@@ -30,31 +30,11 @@ namespace AnyService.Middlewares
                 await _next(httpContext);
                 return;
             }
-
-            var reqInfo = workContext.RequestInfo;
-            var entityId = reqInfo.RequesteeId;
-            var httpMethodParse = IsSupported(reqInfo.Method);
-
-            if (!httpMethodParse.IsSupported ||
-                (string.IsNullOrEmpty(reqInfo.RequesteeId) && !httpMethodParse.IsPost && !httpMethodParse.IsGet))
-            {
-                var msgSuffix = httpMethodParse.IsSupported ?
-                    "Missing entity id in request that requires it" :
-                     "Not supported http method";
-                _logger.LogDebug(LoggingEvents.Permission, "Bad request due to " + msgSuffix);
-
-                httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
-                return;
-            }
-
             //post, get-all and get-by-id when publicGet==true are always permitted 
-            var isGranted = httpMethodParse.IsPost || IsPublicGet(httpMethodParse.IsGet, workContext, reqInfo) ||
-                await IsGranted(workContext, permissionManager);
-
+            var isGranted = await IsGranted(workContext, permissionManager);
             if (!isGranted)
             {
                 _logger.LogDebug(LoggingEvents.Permission, "User is not permitted to perform this operation");
-
                 httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
                 return;
             }
@@ -63,42 +43,35 @@ namespace AnyService.Middlewares
             await _next(httpContext);
         }
 
-        private bool IsPublicGet(bool isGet, WorkContext workContext, RequestInfo reqInfo)
-        {
-            return isGet && workContext.CurrentEntityConfigRecord.PublicGet &&
-            //public get all
-           ((reqInfo.Path.HasValue() && reqInfo.Path.EndsWith(PublicSuffix)) ||
-            //get by id
-            workContext.RequestInfo.RequesteeId.HasValue());
-        }
-
-        private (bool IsSupported, bool IsPost, bool IsGet) IsSupported(string method)
-        {
-            var isPost = HttpMethods.IsPost(method);
-            var isGet = HttpMethods.IsGet(method);
-            var isSupported =
-                isPost ||
-                isGet ||
-                HttpMethods.IsPut(method) ||
-                HttpMethods.IsDelete(method);
-
-            return (isSupported, isPost, isGet);
-        }
-
         protected async Task<bool> IsGranted(WorkContext workContext, IPermissionManager permissionManager)
         {
-            var cfgRecord = workContext.CurrentEntityConfigRecord;
             var reqInfo = workContext.RequestInfo;
+            var cfgRecord = workContext.CurrentEntityConfigRecord;
             var isGet = HttpMethods.IsGet(reqInfo.Method);
 
-            var entityId = reqInfo.RequesteeId;
+            if (HttpMethods.IsPost(reqInfo.Method) || IsPublicGet())
+            {
+                _logger.LogDebug("User is granted - resource have public get");
+                return true;
+            }
 
+            _logger.LogDebug("Check usesr permissions");
             var userId = workContext.CurrentUserId;
-            var permissionKey = PermissionFuncs.GetByHttpMethod(reqInfo.Method)(cfgRecord);
+            _logger.LogDebug($"Request requires permissions for user Id valued: {userId}");
             var entityKey = cfgRecord.EntityKey;
-            if (isGet || HttpMethods.IsPut(reqInfo.Method) || HttpMethods.IsDelete(reqInfo.Method))
-                return await permissionManager.UserHasPermissionOnEntity(userId, entityKey, permissionKey, entityId);
-            return false;
+            _logger.LogDebug($"Request requires entity key valued: {entityKey}");
+            var entityId = reqInfo.RequesteeId;
+            _logger.LogDebug($"Request requires entity Id valued: {entityId}");
+            var permissionFunc= PermissionFuncs.GetByHttpMethod(reqInfo.Method);
+            if (permissionFunc == null)
+                return false;
+
+            var permissionKey = permissionFunc(cfgRecord);
+            _logger.LogDebug($"Request requires permission key valued: {permissionKey}");
+
+            return await permissionManager.UserHasPermissionOnEntity(userId, entityKey, permissionKey, entityId);
+
+            bool IsPublicGet() => isGet && cfgRecord.PublicGet && reqInfo.Path.HasValue() && reqInfo.Path.EndsWith(PublicSuffix);
         }
     }
 }

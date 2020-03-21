@@ -25,6 +25,5 @@ namespace AnyService.Tests.Middlewares
             await wcm.InvokeAsync(hc.Object, null);
             hr.VerifySet(r => r.StatusCode = StatusCodes.Status401Unauthorized, Times.Once);
         }
-
     }
 }

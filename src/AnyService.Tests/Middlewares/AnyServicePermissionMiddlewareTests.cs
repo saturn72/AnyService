@@ -13,11 +13,8 @@ namespace AnyService.Tests.Middlewares
 {
     public class AnyServicePermissionMiddlewareTests
     {
-        [Theory]
-        [InlineData("get", "/__public", null)]
-        [InlineData("get", null, "/123")]
-        [InlineData("post", null, null)]
-        public async Task InvokeAsync_PermittedMethods(string method, string route, string requestee)
+        [Fact]
+        public async Task InvokeAsync_PublicGet()
         {
             int i = 0, expValue = 15;
             RequestDelegate reqDel = hc =>
@@ -32,46 +29,99 @@ namespace AnyService.Tests.Middlewares
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
                     Type = typeof(TestModel),
-                    PublicGet = true
+                    PublicGet = true,
                 },
                 RequestInfo = new RequestInfo
                 {
-                    Path = route,
-                    Method = method,
-                    RequesteeId = requestee
+                    Path = "/__public",
+                    Method = "get",
                 }
             };
             var httpResponse = new Mock<HttpResponse>();
             var httpContext = new Mock<HttpContext>();
             httpContext.SetupGet(h => h.Response).Returns(httpResponse.Object);
+
             await mw.InvokeAsync(httpContext.Object, wc, null);
             i.ShouldBe(expValue);
         }
-
-        [Theory]
-        [InlineData("put")]
-        [InlineData("delete")]
-        public async Task InvokeAsync_BadRequestOnMissingIdForDeleteAndPut(string method)
+        [Fact]
+        public async Task InvokeAsync_PermittedMethods_Post()
         {
+            int i = 0, expValue = 15;
+            RequestDelegate reqDel = hc =>
+            {
+                i = 15;
+                return Task.CompletedTask;
+            };
             var logger = new Mock<ILogger<AnyServicePermissionMiddleware>>();
-            var mw = new AnyServicePermissionMiddleware(null, logger.Object);
+            var mw = new AnyServicePermissionMiddleware(reqDel, logger.Object);
+            var createPermissionKey = "create-key";
             var wc = new WorkContext
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
                     Type = typeof(TestModel),
+                    PermissionRecord = new PermissionRecord(createPermissionKey, null, null, null),
                 },
                 RequestInfo = new RequestInfo
                 {
-                    Method = method
+                    Method = "post",
                 }
             };
             var httpResponse = new Mock<HttpResponse>();
             var httpContext = new Mock<HttpContext>();
             httpContext.SetupGet(h => h.Response).Returns(httpResponse.Object);
-            await mw.InvokeAsync(httpContext.Object, wc, null);
+            var userPermissions = new UserPermissions
+            {
+                EntityPermissions = new[]
+                {
+                    new EntityPermission
+                    {
+                        EntityKey = createPermissionKey
+                    }
+                }
+            };
+            var mgr = new Mock<IPermissionManager>();
+            mgr.Setup(m => m.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(userPermissions);
+            await mw.InvokeAsync(httpContext.Object, wc, mgr.Object);
+            i.ShouldBe(expValue);
+        }
 
-            httpResponse.VerifySet(r => r.StatusCode = StatusCodes.Status400BadRequest, Times.Once);
+        [Theory]
+        [InlineData("put", null)]
+        [InlineData("delete", "123")]
+        public async Task InvokeAsync_BadRequestOnMissingIdForDeleteAndPut(string method, string reqesteeId)
+        {
+            var logger = new Mock<ILogger<AnyServicePermissionMiddleware>>();
+            var mw = new AnyServicePermissionMiddleware(null, logger.Object);
+            string entityKey = "entity-key", 
+                updateKey = "update-key",
+                deleteKey = "delete-key";
+
+            var wc = new WorkContext
+            {
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(TestModel),
+                    PermissionRecord = new PermissionRecord(null, null, updateKey, deleteKey),
+                    EntityKey = entityKey
+                },
+                RequestInfo = new RequestInfo
+                {
+                    Method = method,
+                    RequesteeId = reqesteeId,
+                }
+            };
+            var httpResponse = new Mock<HttpResponse>();
+            var httpContext = new Mock<HttpContext>();
+            httpContext.SetupGet(h => h.Response).Returns(httpResponse.Object);
+
+            var userPermissions = new UserPermissions();
+            var mgr = new Mock<IPermissionManager>();
+            mgr.Setup(m => m.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(userPermissions);
+            await mw.InvokeAsync(httpContext.Object, wc, mgr.Object);
+
+            httpResponse.VerifySet(r => r.StatusCode = StatusCodes.Status403Forbidden, Times.Once);
         }
         [Fact]
         public async Task IsGranted_NotSupportedMethod_ReturnsFalse()
@@ -94,12 +144,45 @@ namespace AnyService.Tests.Middlewares
             httpContext.SetupGet(h => h.Response).Returns(httpResponse.Object);
             await mw.InvokeAsync(httpContext.Object, wc, null);
 
-            httpResponse.VerifySet(r => r.StatusCode = StatusCodes.Status400BadRequest, Times.Once);
+            httpResponse.VerifySet(r => r.StatusCode = StatusCodes.Status403Forbidden, Times.Once);
         }
         #region IsGranted
         [Theory]
-        [MemberData(nameof(CRUD_RetunsMockedAnswer_DATA))]
-        public async Task CRUD_RetunsMockedAnswer(string method, UserPermissions userPermissions, bool isGranted)
+        [InlineData("get")]
+        [InlineData("post")]
+        public async Task CRUD_ReturnsTrue_OnPost_Or_OnPublicGet(string method)
+        {
+            var logger = new Mock<ILogger<AnyServicePermissionMiddleware>>();
+            var mw = new TestAnyServicePermissionware(null, logger.Object);
+            var wc = new WorkContext
+            {
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    PublicGet = true,
+                },
+                RequestInfo = new RequestInfo
+                {
+                    Method = method,
+                    Path = "/" + Consts.PublicSuffix,
+                },
+            };
+            var res = await mw.IsGrantedForTest(wc, null);
+            res.ShouldBeTrue();
+        }
+        [Theory]
+        [InlineData ("get", "some-entity-id", false, true)]
+        [InlineData ("get", "some-entity-id", true, false)]
+        [InlineData ("get", "diff-entity-id", false, false)]
+        [InlineData ("get", "diff-entity-id", true, false)]
+        [InlineData("put", "some-entity-id", false, true)]
+        [InlineData("put", "some-entity-id", true, false)]
+        [InlineData("put", "diff-entity-id", false, false)]
+        [InlineData("put", "diff-entity-id", true, false)]
+        [InlineData("delete", "some-entity-id", false, true)]
+        [InlineData("delete", "some-entity-id", true, false)]
+        [InlineData("delete", "diff-entity-id", false, false)]
+        [InlineData("delete", "diff-entity-id", true, false)]
+        public async Task CRUD_ReturnsExpResult(string method, string requesteeId, bool excluded, bool expGrantResult)
         {
             var ecr = new EntityConfigRecord
             {
@@ -107,6 +190,19 @@ namespace AnyService.Tests.Middlewares
                 Type = typeof(TestModel),
                 PermissionRecord = new PermissionRecord("create", "read", "update", "delete"),
                 PublicGet = true,
+            };
+            var userPermissions = new UserPermissions
+            {
+                EntityPermissions = new[]
+                {
+                    new EntityPermission
+                    {
+                        Excluded = excluded,
+                        EntityId = "some-entity-id",
+                        EntityKey = nameof(TestModel),
+                        PermissionKeys = new[]{ "create", "read", "update", "delete",},
+                    },
+                },
             };
 
             var pm = new Mock<IPermissionManager>();
@@ -121,120 +217,12 @@ namespace AnyService.Tests.Middlewares
                 RequestInfo = new RequestInfo
                 {
                     Method = method,
-                    RequesteeId = "some-id",
+                    RequesteeId =requesteeId,
                 },
             };
             var res = await mw.IsGrantedForTest(wc, pm.Object);
-            res.ShouldBe(isGranted);
+            res.ShouldBe(expGrantResult);
         }
-        public static IEnumerable<object[]> CRUD_RetunsMockedAnswer_DATA = new[]
-        {
-            new object[]
-            {
-                "get",
-                new UserPermissions
-                {
-                    EntityPermissions = new []
-                    {
-                        new EntityPermission
-                        {
-                            EntityId = "some-id",
-                            EntityKey = nameof(TestModel),
-                            PermissionKeys = new[]{ "create", "read", "update", "delete",},
-                            Excluded = true,
-                        },
-                    },
-                },
-                false
-            },
-            new object[]
-            {
-                "get",
-                new UserPermissions
-                {
-                    EntityPermissions = new []
-                    {
-                        new EntityPermission
-                        {
-                            EntityId = "some-id",
-                            EntityKey = nameof(TestModel),
-                            PermissionKeys = new[]{ "create", "read", "update", "delete",},
-                        },
-                    },
-                },
-                true
-            },
-                        new object[]
-            {
-                "put",
-                new UserPermissions
-                {
-                    EntityPermissions = new []
-                    {
-                        new EntityPermission
-                        {
-                            EntityId = "some-id",
-                            EntityKey = nameof(TestModel),
-                            PermissionKeys = new[]{ "create", "read", "update", "delete",},
-                            Excluded = true,
-                        },
-                    },
-                },
-                false
-            },
-            new object[]
-            {
-                "put",
-                new UserPermissions
-                {
-                    EntityPermissions = new []
-                    {
-                        new EntityPermission
-                        {
-                            EntityId = "some-id",
-                            EntityKey = nameof(TestModel),
-                            PermissionKeys = new[]{ "create", "read", "update", "delete",},
-                        },
-                    },
-                },
-                true
-            },
-            new object[]
-            {
-                "delete",
-                new UserPermissions
-                {
-                    EntityPermissions = new []
-                    {
-                        new EntityPermission
-                        {
-                            EntityId = "some-id",
-                            EntityKey = nameof(TestModel),
-                            PermissionKeys = new[]{ "create", "read", "update", "delete",},
-                            Excluded = true,
-                        },
-                    },
-                },
-                false
-            },
-            new object[]
-            {
-                "delete",
-                new UserPermissions
-                {
-                    EntityPermissions = new []
-                    {
-                        new EntityPermission
-                        {
-                            EntityId = "some-id",
-                            EntityKey = nameof(TestModel),
-                            PermissionKeys = new[]{ "create", "read", "update", "delete",},
-                        },
-                    },
-                },
-                true
-            },
-        };
 
         #endregion
         public class TestModel : IDomainModelBase
