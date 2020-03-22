@@ -34,6 +34,7 @@ namespace AnyService.Controllers
         private readonly Type _curType;
         private readonly WorkContext _workContext;
         private static readonly IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
+        private static readonly IDictionary<Type, IDictionary<string, string>> GetAllPublicFilterCollection = new Dictionary<Type, IDictionary<string, string>>();
         #endregion
         #region ctor
         public GenericController(
@@ -144,9 +145,23 @@ namespace AnyService.Controllers
         [HttpGet(Consts.PublicSuffix)]
         public async Task<IActionResult> GetAllPublic()
         {
-            var filter = new Dictionary<string, string>();
+            var filter = GetAllPublicFilter();
+
             return await GetAllFiltered(filter);
         }
+
+        private IDictionary<string, string> GetAllPublicFilter()
+        {
+            if (!GetAllPublicFilterCollection.TryGetValue(_curType, out IDictionary<string, string> filter))
+            {
+                filter = typeof(IPublishable).IsAssignableFrom(_curType) ?
+                    new Dictionary<string, string> { { nameof(IPublishable.Public), "true" } } :
+                    new Dictionary<string, string>();
+                GetAllPublicFilterCollection[_curType] = filter;
+            }
+            return filter;
+        }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(string id, [FromBody] TDomainModel model)
         {
@@ -173,7 +188,7 @@ namespace AnyService.Controllers
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
         #region Utilities
-        private async Task<IActionResult> GetAllFiltered(Dictionary<string, string> filter)
+        private async Task<IActionResult> GetAllFiltered(IDictionary<string, string> filter)
         {
             _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
             var res = await _crudService.GetAll(filter);
