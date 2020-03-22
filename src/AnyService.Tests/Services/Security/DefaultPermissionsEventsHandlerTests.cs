@@ -115,7 +115,8 @@ namespace AnyService.Tests.Services.Security
         public void EntityCreatedHandler_UpdatesExistsUserPermissions()
         {
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            EntityConfigRecordManager.EntityConfigRecords = new[] {
+            EntityConfigRecordManager.EntityConfigRecords = new[]
+            {
              new EntityConfigRecord {
                  Type = typeof(TestClass),
                  PermissionRecord = expPr

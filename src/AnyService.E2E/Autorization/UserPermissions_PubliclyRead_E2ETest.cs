@@ -121,12 +121,7 @@ namespace AnyService.E2E.Authorization
 
             //read by id by non-creator
             res = await HttpClient.GetAsync(uri + id);
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
-
+            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
             //update by non-creator
             res = await HttpClient.PutAsJsonAsync(uri + id, updateModel);
             res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);

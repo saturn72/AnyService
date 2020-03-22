@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Reflection;
 using AnyService.Controllers;
+using AnyService.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Shouldly;
@@ -18,14 +19,14 @@ namespace AnyService.Tests.Controllers
             route.Template.ShouldBe("[controller]");
         }
         [Theory]
-        [InlineData("Post", "POST", null)]
-        [InlineData("PostMultipart", "POST", "__multipart")]
-        [InlineData("PostMultipartStream", "POST", "__stream")]
-        [InlineData("PutMultipartStream", "PUT", "__stream/{id}")]
-        [InlineData("GetAll", "GET", null)]
-        [InlineData("GetAllPublic", "GET", "__public")]
-        [InlineData("Get", "GET", "{id}")]
-        [InlineData("Put", "PUT", "{id}")]
+        [InlineData(nameof(GenericController<MyClass>.Post), "POST", null)]
+        [InlineData(nameof(GenericController<MyClass>.PostMultipart), "POST", "__multipart")]
+        [InlineData(nameof(GenericController<MyClass>.PostMultipartStream), "POST", "__stream")]
+        [InlineData(nameof(GenericController<MyClass>.PutMultipartStream), "PUT", "__stream/{id}")]
+        [InlineData(nameof(GenericController<MyClass>.GetAll), "GET", null)]
+        [InlineData(nameof(GenericController<MyClass>.GetAllPublic), "GET", Consts.PublicSuffix)]
+        [InlineData(nameof(GenericController<MyClass>.Get), "GET", "{id}")]
+        [InlineData(nameof(GenericController<MyClass>.Put), "PUT", "{id}")]
         public void ValidateVerbs(string methodName, string expHttpVerb, string expTemplate)
         {
             var type = typeof(GenericController<>);
@@ -33,6 +34,10 @@ namespace AnyService.Tests.Controllers
             var att = mi.GetCustomAttributes(typeof(HttpMethodAttribute)).First() as HttpMethodAttribute;
             att.HttpMethods.First().ShouldBe(expHttpVerb);
             att.Template.ShouldBe(expTemplate);
+        }
+        public class MyClass : IDomainModelBase
+        {
+            public string Id { get;set; }
         }
     }
 }

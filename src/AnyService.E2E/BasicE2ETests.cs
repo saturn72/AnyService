@@ -41,7 +41,6 @@ namespace AnyService.E2E
             HttpClient = Factory.WithWebHostBuilder(configuration).CreateClient();
         }
         [Test]
-        [Ignore("there is unresolved bug")]
         public async Task CRUD_Dependent()
         {
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
@@ -81,8 +80,11 @@ namespace AnyService.E2E
 
             //get all public - forbid
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-            res = await HttpClient.GetAsync("dependentmodel/__public");
-            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+            var json = await HttpClient.GetStringAsync("dependentmodel/__public");
+            jObj = JObject.Parse(content);
+            jArr = jObj["data"] as JArray;
+            jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
+            jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
             #endregion
             //update
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);

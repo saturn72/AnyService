@@ -47,11 +47,12 @@ namespace AnyService.Middlewares
         {
             var reqInfo = workContext.RequestInfo;
             var cfgRecord = workContext.CurrentEntityConfigRecord;
-            var isGet = HttpMethods.IsGet(reqInfo.Method);
+            _logger.LogDebug($"Request requires entity Id valued: {reqInfo.RequesteeId}");
 
-            if (HttpMethods.IsPost(reqInfo.Method) || IsPublicGet())
-            {
-                _logger.LogDebug("User is granted - resource have public get");
+            if (HttpMethods.IsPost(reqInfo.Method) || 
+                (HttpMethods.IsGet(reqInfo.Method) && !reqInfo.RequesteeId.HasValue()))
+            { 
+                _logger.LogDebug("User is granted - get all and post are always");
                 return true;
             }
 
@@ -60,18 +61,14 @@ namespace AnyService.Middlewares
             _logger.LogDebug($"Request requires permissions for user Id valued: {userId}");
             var entityKey = cfgRecord.EntityKey;
             _logger.LogDebug($"Request requires entity key valued: {entityKey}");
-            var entityId = reqInfo.RequesteeId;
-            _logger.LogDebug($"Request requires entity Id valued: {entityId}");
-            var permissionFunc= PermissionFuncs.GetByHttpMethod(reqInfo.Method);
+            var permissionFunc = PermissionFuncs.GetByHttpMethod(reqInfo.Method);
             if (permissionFunc == null)
                 return false;
 
             var permissionKey = permissionFunc(cfgRecord);
             _logger.LogDebug($"Request requires permission key valued: {permissionKey}");
 
-            return await permissionManager.UserHasPermissionOnEntity(userId, entityKey, permissionKey, entityId);
-
-            bool IsPublicGet() => isGet && cfgRecord.PublicGet && reqInfo.Path.HasValue() && reqInfo.Path.EndsWith(PublicSuffix);
+            return await permissionManager.UserHasPermissionOnEntity(userId, entityKey, permissionKey, reqInfo.RequesteeId);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace AnyService.Middlewares
     {
         private readonly ILogger<WorkContextMiddleware> _logger;
         private readonly RequestDelegate _next;
-        private static readonly IDictionary<string, EntityConfigRecord> RouteMaps = new Dictionary<string, EntityConfigRecord>();
+        protected static readonly IDictionary<string, EntityConfigRecord> RouteMaps = new Dictionary<string, EntityConfigRecord>();
         public WorkContextMiddleware(RequestDelegate next, ILogger<WorkContextMiddleware> logger)
         {
             _logger = logger;
@@ -36,29 +36,29 @@ namespace AnyService.Middlewares
             if (typeConfigRecord != null && !typeConfigRecord.Equals(default))
             {
                 workContext.CurrentEntityConfigRecord = typeConfigRecord;
-                workContext.RequestInfo = ToRequestInfo(httpContext, httpContext.Request.Method, typeConfigRecord);
+                workContext.RequestInfo = ToRequestInfo(httpContext, typeConfigRecord);
             }
             _logger.LogDebug(LoggingEvents.WorkContext, "Finish parsing current WorkContext");
             await _next(httpContext);
         }
         private static EntityConfigRecord GetRouteMap(PathString path)
         {
-            if (RouteMaps.TryGetValue(path, out EntityConfigRecord value))
+            var segment = path.Value.Split('/', StringSplitOptions.RemoveEmptyEntries)[0];
+            if (RouteMaps.TryGetValue(segment, out EntityConfigRecord value))
                 return value;
 
             value = EntityConfigRecordManager.EntityConfigRecords.FirstOrDefault(r => path.StartsWithSegments(r.Route, StringComparison.CurrentCultureIgnoreCase));
             return (RouteMaps[path] = value);
         }
-        private static RequestInfo ToRequestInfo(HttpContext httpContext, string httpMethod, EntityConfigRecord typeConfigRecord)
+        private static RequestInfo ToRequestInfo(HttpContext httpContext, EntityConfigRecord typeConfigRecord)
         {
-            var uric = httpContext.Request.Path.ToUriComponent();
             var path = httpContext.Request.Path.ToString();
             return new RequestInfo
             {
                 Path = path,
-                Method = httpMethod,
+                Method = httpContext.Request.Method,
                 RequesteeId = GetRequesteeId(typeConfigRecord.Route, path),
-                Parameters = httpContext.Request.Query.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)).ToArray()
+                Parameters = httpContext.Request.Query?.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)).ToArray()
             };
         }
         private static string GetRequesteeId(string route, string path)
@@ -68,9 +68,11 @@ namespace AnyService.Middlewares
             while (requesteeId.StartsWith("/"))
                 requesteeId = requesteeId.Substring(1);
 
-            if (requesteeId.StartsWith(Consts.ReservedPrefix))
+            while (requesteeId.StartsWith(Consts.ReservedPrefix))
             {
                 idx = requesteeId.IndexOf("/");
+                if (idx < 0)
+                    return null;
                 requesteeId = requesteeId.Substring(idx + 1);
 
                 while (requesteeId.StartsWith("/"))

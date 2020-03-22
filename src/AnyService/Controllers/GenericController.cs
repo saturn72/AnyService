@@ -139,21 +139,14 @@ namespace AnyService.Controllers
         public async Task<IActionResult> GetAll()
         {
             var filter = new Dictionary<string, string> { { nameof(ICreatableAudit.CreatedByUserId), _workContext.CurrentUserId } };
-            _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
-            var res = await _crudService.GetAll(filter);
-            _logger.LogDebug(LoggingEvents.Controller, "Get all service response value: " + res);
-            return _serviceResponseMapper.Map(res as ServiceResponse);
+            return await GetAllFiltered(filter);
         }
         [HttpGet(Consts.PublicSuffix)]
         public async Task<IActionResult> GetAllPublic()
         {
             var filter = new Dictionary<string, string>();
-            _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
-            var res = await _crudService.GetAll(filter);
-            _logger.LogDebug(LoggingEvents.Controller, "Get all public service response value: " + res);
-            return _serviceResponseMapper.Map(res as ServiceResponse);
+            return await GetAllFiltered(filter);
         }
-
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(string id, [FromBody] TDomainModel model)
         {
@@ -180,6 +173,13 @@ namespace AnyService.Controllers
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
         #region Utilities
+        private async Task<IActionResult> GetAllFiltered(Dictionary<string, string> filter)
+        {
+            _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
+            var res = await _crudService.GetAll(filter);
+            _logger.LogDebug(LoggingEvents.Controller, "Get all public service response value: " + res);
+            return _serviceResponseMapper.Map(res as ServiceResponse);
+        }
         private async Task<TDomainModel> ExctractModelFromStream()
         {
             // Used to accumulate all the form url encoded key value pairs in the 
