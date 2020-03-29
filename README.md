@@ -95,8 +95,12 @@ public void ConfigureServices(IServiceCollection services)
 {
   ...
   var dbName = "anyservice-testsapp-db";
+    
+  var options = new DbContextOptionsBuilder<AvosetDbContext>()
+      .UseInMemoryDatabase(databaseName: dbName).Options;
+  services.AddTransient<DbContext>(sp  => new SampleAppDbContext>(options)); //inject dbContext instance
   services.AddTransient(typeof(IRepository<Model>), typeof(EfRepository<>); //inject Generic repository
-  services.AddTransient<DbContext, SampleAppDbContext>(); //inject dbContext imstance
+  services.AddTransient<IFileStoreManager, EfFileStoreManager>(); //injects file storage
   ...
 }
 ```
@@ -128,7 +132,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-#### 6. The final step is to add `AnyService` middleware to pipeline
+#### 6. The final step is to add `AnyService` middlewares to pipeline
 
 Add the following line to `Configure` method of `Startup.cs`
 
@@ -136,7 +140,7 @@ Add the following line to `Configure` method of `Startup.cs`
 public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 {
   //other middleware before
-  app.UseMiddleware<AnyServiceMiddleware>();
+  app.UseAnyService();
   //other middleware after
 }
 ```
