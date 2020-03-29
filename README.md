@@ -95,13 +95,8 @@ public void ConfigureServices(IServiceCollection services)
 {
   ...
   var dbName = "anyservice-testsapp-db";
-  services.AddTransient<IRepository<DependentModel>>(sp => new AnyService.EntityFramework.EfRepository<DependentModel>(liteDbName));
-  services.AddTransient<IRepository<UserPermissions>>(sp => new Repository<UserPermissions>(liteDbName));
-  using (var db = new LiteDatabase(liteDbName))
-  {
-      var mapper = BsonMapper.Global;
-      mapper.Entity<DependentModel>().Id(d => d.Id);
-  }
+  services.AddTransient(typeof(IRepository<Model>), typeof(EfRepository<>); //inject Generic repository
+  services.AddTransient<DbContext, SampleAppDbContext>(); //inject dbContext imstance
   ...
 }
 ```

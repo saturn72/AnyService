@@ -1,13 +1,14 @@
 using System;
 using AnyService.Audity;
 using AnyService.Core.Security;
+using AnyService.EntityFramework;
 using AnyService.SampleApp.Models;
 using AnyService.Services.FileStorage;
 using Microsoft.EntityFrameworkCore;
 
 namespace AnyService.SampleApp
 {
-    public sealed class SampleAppDbContext : DbContext
+    public sealed class SampleAppDbContext : DbContext, IAnyServiceDbContext
     {
         public SampleAppDbContext() : base()
         { }
