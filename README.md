@@ -66,10 +66,10 @@ public void ConfigureServices(IServiceCollection services)
 
 1. Add reference to `AnyService.EntityFramework` nuget package (see [here](https://www.nuget.org/packages/anyservice.entityframework))
 2. Add reference to `Microsoft.EntityFrameworkCore.InMemory` nuget packages (see [here](https://docs.microsoft.com/en-us/ef/core/providers/in-memory/?tabs=dotnet-core-cli))
-3. Create `DbContext`
+3. Create `DbContext` (it must have `public DbSet<UserPermissions> UserPermissions { get; set; }` in order to manage user permissions on an entity)
 
 ```
-public class SampleAppDbContext : DbContext
+public class SampleAppDbContext : DbContext, IAnyServiceDbContext
     {
         public SampleAppDbContext(DbContextOptions<SampleAppDbContext> options) : base(options)
         { }
