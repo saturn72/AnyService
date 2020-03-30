@@ -124,13 +124,23 @@ namespace Microsoft.Extensions.DependencyInjection
                 return;
 
             var ctrlAuthzAttribute = authzInfo.ControllerAuthorizationNode;
+            if (authzInfo.ControllerAuthorizationNode == null &&
+                authzInfo.PostAuthorizationNode == null &&
+                authzInfo.GetAuthorizationNode == null &&
+                authzInfo.PutAuthorizationNode == null &&
+                authzInfo.DeleteAuthorizationNode == null)
+            {
+                authzInfo = null;
+                return;
+            }
+
+
             if (ctrlAuthzAttribute == null && !ctrlAuthzAttribute.Roles.Any())
                 ctrlAuthzAttribute = null;
-
-            if (authzInfo.PostAuthorizeNode == null || !authzInfo.PostAuthorizeNode.Roles.Any()) authzInfo.PostAuthorizeNode = ctrlAuthzAttribute;
-            if (authzInfo.GetAuthorizeNode == null || !authzInfo.GetAuthorizeNode.Roles.Any()) authzInfo.GetAuthorizeNode = ctrlAuthzAttribute;
-            if (authzInfo.PutAuthorizeNode == null || !authzInfo.PutAuthorizeNode.Roles.Any()) authzInfo.PutAuthorizeNode = ctrlAuthzAttribute;
-            if (authzInfo.DeleteAuthorizeNode == null || !authzInfo.DeleteAuthorizeNode.Roles.Any()) authzInfo.DeleteAuthorizeNode = ctrlAuthzAttribute;
+            if (authzInfo.PostAuthorizationNode == null || !authzInfo.PostAuthorizationNode.Roles.Any()) authzInfo.PostAuthorizationNode = ctrlAuthzAttribute;
+            if (authzInfo.GetAuthorizationNode == null || !authzInfo.GetAuthorizationNode.Roles.Any()) authzInfo.GetAuthorizationNode = ctrlAuthzAttribute;
+            if (authzInfo.PutAuthorizationNode == null || !authzInfo.PutAuthorizationNode.Roles.Any()) authzInfo.PutAuthorizationNode = ctrlAuthzAttribute;
+            if (authzInfo.DeleteAuthorizationNode == null || !authzInfo.DeleteAuthorizationNode.Roles.Any()) authzInfo.DeleteAuthorizationNode = ctrlAuthzAttribute;
         }
     }
 }

@@ -20,10 +20,10 @@ namespace AnyService.Middlewares
             = new Dictionary<string, Func<ClaimsPrincipal, bool>>(StringComparer.CurrentCultureIgnoreCase);
         private static readonly IReadOnlyDictionary<string, Func<AuthorizationInfo, AuthorizationNode>> HttpMethodToAuthorizationNode = new Dictionary<string, Func<AuthorizationInfo, AuthorizationNode>>(StringComparer.CurrentCultureIgnoreCase)
         {
-            { "post", ai => ai.PostAuthorizeNode},
-            { "get",ai =>ai.GetAuthorizeNode},
-            { "put",ai => ai.PutAuthorizeNode},
-            { "delete",ai =>  ai.DeleteAuthorizeNode},
+            { "post", ai => ai.PostAuthorizationNode},
+            { "get",ai =>ai.GetAuthorizationNode},
+            { "put",ai => ai.PutAuthorizationNode},
+            { "delete",ai =>  ai.DeleteAuthorizationNode},
         };
         private static readonly object lockObj = new object();
         public DefaultAuthorizationMiddleware(RequestDelegate next, ILogger<DefaultAuthorizationMiddleware> logger)
