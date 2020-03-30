@@ -24,7 +24,8 @@ namespace AnyService
             apm.FeatureProviders.Add(new GenericControllerFeatureProvider());
 
             app.UseMiddleware<WorkContextMiddleware>();
-
+            if (DefaultAuthorizationMiddleware.ShouldUseMiddleware)
+                app.UseMiddleware<DefaultAuthorizationMiddleware>();
             AddPermissionComponents(app, sp);
             return app;
         }

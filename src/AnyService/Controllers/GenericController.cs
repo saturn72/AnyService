@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
-using Microsoft.AspNetCore.Authorization;
 using AnyService.Services;
 using AnyService.Services.ServiceResponseMappers;
 using Microsoft.Extensions.Logging;
@@ -23,7 +22,6 @@ namespace AnyService.Controllers
     [ApiController]
     [Route("[controller]")]
     [GenericControllerNameConvention]
-    [Authorize]
     public class GenericController<TDomainModel> : ControllerBase where TDomainModel : IDomainModelBase
     {
         #region fields

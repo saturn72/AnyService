@@ -96,24 +96,14 @@ namespace AnyService.E2E.Authorization
             jObj = JObject.Parse(content);
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
-
-            // //delete by cretor
-            // res = await HttpClient.DeleteAsync(uri + id);
-            // res.EnsureSuccessStatusCode();
-            // content = await res.Content.ReadAsStringAsync();
-            // jObj = JObject.Parse(content);
-            // jObj["data"]["id"].Value<string>().ShouldBe(id);
-            // jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
-            // await Task.Delay(250);// wait for background tasks (by simulating network delay)
-
-            // res = await HttpClient.GetAsync(uri + id);
-            // res.EnsureSuccessStatusCode();
             #endregion
             //un authorized requests
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.UnauthorizedUser1);
+            var unauthRes = await HttpClient.PostAsJsonAsync(uri, updateModel);
+            unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
-            var unauthRes = await HttpClient.GetAsync(uri);
+            unauthRes = await HttpClient.GetAsync(uri);
             unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
             unauthRes = await HttpClient.PutAsJsonAsync(uri + id, updateModel);

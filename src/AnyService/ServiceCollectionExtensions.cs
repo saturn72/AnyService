@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using AnyService.Services;
 using AnyService.Services.ServiceResponseMappers;
+using AnyService.Middlewares;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -34,7 +35,7 @@ namespace Microsoft.Extensions.DependencyInjection
             // services.
             services.AddSingleton(config.EntityConfigRecords);
             if (config.EntityConfigRecords.Any(t => t.Authorization != null))
-                services.AddTransient<IAuthorizationHandler, DefaultAuthorizationHandler>();
+                DefaultAuthorizationMiddleware.ShouldUseMiddleware = true;
             //mappers
             var mappers = config.EntityConfigRecords.Select(t => t.ResponseMapperType).ToArray();
             foreach (var m in mappers)
@@ -112,20 +113,24 @@ namespace Microsoft.Extensions.DependencyInjection
                     var v = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);
                     tcr.Validator = (ICrudValidator)Activator.CreateInstance(v);
                 }
-                if (tcr.Authorization != null)
-                    SetAuthorization(tcr.Authorization);
+                SetAuthorization(tcr.Authorization);
             }
             config.EntityConfigRecords = temp;
         }
 
         private static void SetAuthorization(AuthorizationInfo authzInfo)
         {
-            var ctrlAuthzAttribute = authzInfo.ControllerAuthorizationNode;
+            if (authzInfo == null)
+                return;
 
-            if (authzInfo.PostAuthorizeNode == null) authzInfo.PostAuthorizeNode = ctrlAuthzAttribute;
-            if (authzInfo.GetAuthorizeNode == null) authzInfo.GetAuthorizeNode = ctrlAuthzAttribute;
-            if (authzInfo.PutAuthorizeNode == null) authzInfo.PutAuthorizeNode = ctrlAuthzAttribute;
-            if (authzInfo.DeleteAuthorizeNode == null) authzInfo.DeleteAuthorizeNode = ctrlAuthzAttribute;
+            var ctrlAuthzAttribute = authzInfo.ControllerAuthorizationNode;
+            if (ctrlAuthzAttribute == null && !ctrlAuthzAttribute.Roles.Any())
+                ctrlAuthzAttribute = null;
+
+            if (authzInfo.PostAuthorizeNode == null || !authzInfo.PostAuthorizeNode.Roles.Any()) authzInfo.PostAuthorizeNode = ctrlAuthzAttribute;
+            if (authzInfo.GetAuthorizeNode == null || !authzInfo.GetAuthorizeNode.Roles.Any()) authzInfo.GetAuthorizeNode = ctrlAuthzAttribute;
+            if (authzInfo.PutAuthorizeNode == null || !authzInfo.PutAuthorizeNode.Roles.Any()) authzInfo.PutAuthorizeNode = ctrlAuthzAttribute;
+            if (authzInfo.DeleteAuthorizeNode == null || !authzInfo.DeleteAuthorizeNode.Roles.Any()) authzInfo.DeleteAuthorizeNode = ctrlAuthzAttribute;
         }
     }
 }

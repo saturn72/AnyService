@@ -38,7 +38,7 @@ namespace AnyService.SampleApp
 
             services.AddAuthentication(ManagedAuthenticationHandler.Schema)
                 .AddScheme<AuthenticationSchemeOptions, ManagedAuthenticationHandler>(ManagedAuthenticationHandler.Schema, options => { });
-
+            services.AddAuthorization();
             services.AddAnyService(entities);
             ConfigureEntityFramework(services);
             ConfigureCaching(services);
