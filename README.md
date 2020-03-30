@@ -229,14 +229,49 @@ Authorization has 2 aspects addressed by `AnyService`:
 ### 1. Configuring user's access to specific resource (URI)
 #### _Can user perform CRUD operation on a given URI?_
 
-<!--
-Configuring authrozation for specific controller is done by sending an instance of `AuthorizeAttribute` to the registration of you model.
-You may set authorization to controller and override each CRUD method. -->
+This snippet shows how to set role based authorization on controller and its methods
 
-TBD - add example for controller authorization
-TBD - add example for controller authorization with CRUD method override
-TBD - add example for CRUD method authorization
+```
+public void ConfigureServices(IServiceCollection services)
+{
+  ...
+  var config = new AnyServiceConfig
+              {
+                EntityConfigRecords = new[]{
+                    new EntityConfigRecord
+                    {
+                        Type = typeof(Product),
+                        Authorization = new AuthorizationInfo
+                        {
+                            ControllerAuthorizationNode = new AuthorizationNode //only users with role "admin" can access the controller
+                            {
+                                Roles = new []{"admin"},
+                            },
+                            PostAuthorizeNode = new AuthorizationNode //only users with role "creator" can access the controller
+                            {
+                                Roles = new []{"creator"},
+                            },
+                            GetAuthorizeNode = new AuthorizationNode //only users with role "reader" can access the controller
+                            {
+                                Roles = new []{"reader"},
+                            },
+                            PutAuthorizeNode = new AuthorizationNode //only users with role "updater" can access the controller
+                            {
+                                Roles = new []{"updater"},
+                            },
+                            DeleteAuthorizeNode = new AuthorizationNode //only users with role "deleter" can access the controller
+                            {
+                                Roles = new []{"deleter"},
+                            }
+                        }
+                    }
 
+                }
+            };
+    services.AddAnyService(config);
+    ...
+}          
+```
 ### 2. Manage CRUD Permissions on an authorized resource (URI)
 #### _Given that a user has permission to perform CRUD operation on given URI (entity), can the user perform read/update/delete operations on specific URI's entity?_
 
