@@ -222,10 +222,13 @@ To modify the `IServiceResponseMapper` used for an entity, set the value of `Any
 
 ## Authorization (Permission Management)
 
-By default Authorization is fully handled by `AnyService`. To disable this, set the value of `ManageEntityPermissions` of `AnyServiceOptions` class to `false`.
+### Disable Default Authorization Behavior
+1. `AnyService` uses the `DefaultAuthorizationMiddleware` to verify user has the required `Claim`s to access entity's `URI`. 
+To disable `DefaultAuthorizationMiddleware` set `DefaultAuthorizationMiddleware.ShouldUseMiddleware = false` AFTER `services.AddAnyService(...)` method call;
+2. Another aspect of authrization management is managing user **permissions** to perform `CRUD`'s on `URI` or n entity. 
+To disable this, set the value of `ManageEntityPermissions` of `AnyServiceOptions` class to `false`.
 
 Authorization has 2 aspects addressed by `AnyService`:
-
 ### 1. Configuring user's access to specific resource (URI)
 #### _Can user perform CRUD operation on a given URI?_
 
@@ -283,8 +286,6 @@ Once user has permission to create an entity on a resource, `AnyService` takes c
 
 2. Create, Update and Delete operations can be performed by the creator and only by the creator while Read operation can be performed by all users.
    This means the entities created by a priliged user are **managed** privatly by this user (entity's creator) and only by this user, but are publicly **accessed** by all users.
-
-TBD - Show how to disable the authz behavior in configuration
 
 ## Model Validation
 
