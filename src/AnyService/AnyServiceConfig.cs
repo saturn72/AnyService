@@ -9,6 +9,7 @@ namespace AnyService
             MaxMultipartBoundaryLength = 50;
             MaxValueCount = 25;
             ManageEntityPermissions = true;
+            UseAuthorizationMiddleware = true;
         }
 
         public IEnumerable<EntityConfigRecord> EntityConfigRecords { get; set; }
@@ -19,6 +20,7 @@ namespace AnyService
         /// </summary>
         /// <value></value>
         public bool ManageEntityPermissions { get; set; }
+        public bool UseAuthorizationMiddleware { get; set; }
         public int MaxMultipartBoundaryLength { get; set; }
         public int MaxValueCount { get; set; }
     }

@@ -34,8 +34,6 @@ namespace Microsoft.Extensions.DependencyInjection
 
             // services.
             services.AddSingleton(config.EntityConfigRecords);
-            if (config.EntityConfigRecords.Any(t => t.Authorization != null))
-                DefaultAuthorizationMiddleware.ShouldUseMiddleware = true;
             //mappers
             var mappers = config.EntityConfigRecords.Select(t => t.ResponseMapperType).ToArray();
             foreach (var m in mappers)
@@ -116,6 +114,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 SetAuthorization(tcr.Authorization);
             }
             config.EntityConfigRecords = temp;
+
+            // if (config.UseAuthorizationMiddleware && config.EntityConfigRecords.All(t => t.Authorization == null))
+            //     config.UseAuthorizationMiddleware = false;
         }
 
         private static void SetAuthorization(AuthorizationInfo authzInfo)

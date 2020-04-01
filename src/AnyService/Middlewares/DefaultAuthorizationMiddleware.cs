@@ -11,7 +11,6 @@ namespace AnyService.Middlewares
 {
     public sealed class DefaultAuthorizationMiddleware
     {
-        internal static bool ShouldUseMiddleware { get; set; }
         private readonly ILogger<DefaultAuthorizationMiddleware> _logger;
         private readonly RequestDelegate _next;
         private static readonly IDictionary<string, Func<ClaimsPrincipal, bool>> AuthorizationWorkers

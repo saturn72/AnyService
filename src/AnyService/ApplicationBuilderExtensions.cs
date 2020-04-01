@@ -17,19 +17,20 @@ namespace AnyService
         {
             var sp = app.ApplicationServices;
 
-            ValidateCoreServicesconfigured(sp);
+            ValidateCoreServicesConfigured(sp);
 
             var apm = sp.GetService<ApplicationPartManager>();
             var typeConfigRecords = sp.GetService<IEnumerable<EntityConfigRecord>>();
             apm.FeatureProviders.Add(new GenericControllerFeatureProvider());
 
             app.UseMiddleware<WorkContextMiddleware>();
-            if (DefaultAuthorizationMiddleware.ShouldUseMiddleware)
+            var options = sp.GetService<AnyServiceConfig>();
+            if (options.UseAuthorizationMiddleware)
                 app.UseMiddleware<DefaultAuthorizationMiddleware>();
             AddPermissionComponents(app, sp);
             return app;
         }
-        private static void ValidateCoreServicesconfigured(IServiceProvider serviceProvider)
+        private static void ValidateCoreServicesConfigured(IServiceProvider serviceProvider)
         {
             ThrowIfNotConfigured<ICacheManager>();
 
