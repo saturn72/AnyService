@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AnyService.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -33,8 +34,9 @@ namespace AnyService.Middlewares
         }
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
         {
-            var entityConfig = workContext.CurrentEntityConfigRecord;
-            if (entityConfig.Authorization == null)
+            _logger.LogDebug(LoggingEvents.Authorization, "Start middleware invokation");
+            var entityConfig = workContext?.CurrentEntityConfigRecord;
+            if (entityConfig?.Authorization == null)
             {
                 await _next(httpContext);
                 return;
@@ -57,6 +59,8 @@ namespace AnyService.Middlewares
                 return;
             }
             await _next(httpContext);
+            _logger.LogDebug(LoggingEvents.Authorization, "End middleware invokation");
+
         }
     }
 }

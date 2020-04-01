@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using AnyService.Core;
 using AnyService.Core.Security;
@@ -94,7 +93,7 @@ namespace AnyService.Tests.Middlewares
         {
             var logger = new Mock<ILogger<AnyServicePermissionMiddleware>>();
             var mw = new AnyServicePermissionMiddleware(null, logger.Object);
-            string entityKey = "entity-key", 
+            string entityKey = "entity-key",
                 updateKey = "update-key",
                 deleteKey = "delete-key";
 
@@ -170,10 +169,10 @@ namespace AnyService.Tests.Middlewares
             res.ShouldBeTrue();
         }
         [Theory]
-        [InlineData ("get", "some-entity-id", false, true)]
-        [InlineData ("get", "some-entity-id", true, false)]
-        [InlineData ("get", "diff-entity-id", false, false)]
-        [InlineData ("get", "diff-entity-id", true, false)]
+        [InlineData("get", "some-entity-id", false, true)]
+        [InlineData("get", "some-entity-id", true, false)]
+        [InlineData("get", "diff-entity-id", false, false)]
+        [InlineData("get", "diff-entity-id", true, false)]
         [InlineData("put", "some-entity-id", false, true)]
         [InlineData("put", "some-entity-id", true, false)]
         [InlineData("put", "diff-entity-id", false, false)]
@@ -217,7 +216,7 @@ namespace AnyService.Tests.Middlewares
                 RequestInfo = new RequestInfo
                 {
                     Method = method,
-                    RequesteeId =requesteeId,
+                    RequesteeId = requesteeId,
                 },
             };
             var res = await mw.IsGrantedForTest(wc, pm.Object);
