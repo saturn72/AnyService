@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using ServiceStack;
 
 namespace AnyService.Controllers
 {

@@ -10,6 +10,12 @@ namespace AnyService
             MaxValueCount = 25;
             ManageEntityPermissions = true;
             UseAuthorizationMiddleware = true;
+            DefaultPaginateSettings = new PaginateSettings
+            {
+                DefaultOffset = 1,
+                DefaultPageSize = 50,
+                DefaultSortOrder = PaginateSettings.Asc,
+            };
         }
 
         public IEnumerable<EntityConfigRecord> EntityConfigRecords { get; set; }
@@ -23,5 +29,6 @@ namespace AnyService
         public bool UseAuthorizationMiddleware { get; set; }
         public int MaxMultipartBoundaryLength { get; set; }
         public int MaxValueCount { get; set; }
+        public PaginateSettings DefaultPaginateSettings { get; set; }
     }
 }

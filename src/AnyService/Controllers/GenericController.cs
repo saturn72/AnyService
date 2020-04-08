@@ -135,10 +135,25 @@ namespace AnyService.Controllers
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(
+            [FromQuery]ulong? offset = null,
+            [FromQuery]ulong? pageSize = null,
+            [FromQuery]string sortOrder = "desc",
+            [FromQuery]string query = "")
         {
-            var filter = new Dictionary<string, string> { { nameof(ICreatableAudit.CreatedByUserId), _workContext.CurrentUserId } };
-            return await GetAllFiltered(filter);
+            var paginateSettings = _workContext.CurrentEntityConfigRecord.PaginateSettings;
+
+
+            var paginate = new Paginate<TDomainModel>
+            {
+                Offset = offset ?? paginateSettings.DefaultOffset,
+                PageSize = pageSize ?? paginateSettings.DefaultPageSize,
+                SortOrder = sortOrder ?? paginateSettings.DefaultSortOrder,
+                // Query = x => ((x as ICreatableAudit)?.CreatedByUserId == _workContext.CurrentUserId)
+                // new Func<TDomainModel, bool>(x => true),
+            };
+            var filterData = new Dictionary<string, string> { { nameof(ICreatableAudit.CreatedByUserId), _workContext.CurrentUserId } };
+            return await GetAllFiltered(filterData);
         }
         [HttpGet(Consts.PublicSuffix)]
         public async Task<IActionResult> GetAllPublic()

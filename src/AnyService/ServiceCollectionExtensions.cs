@@ -7,10 +7,9 @@ using AnyService;
 using AnyService.Core.Security;
 using AnyService.Services.Security;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.AspNetCore.Authorization;
 using AnyService.Services;
 using AnyService.Services.ServiceResponseMappers;
-using AnyService.Middlewares;
+using AnyService.Utilities;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -28,6 +27,13 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IServiceCollection AddAnyService(this IServiceCollection services, AnyServiceConfig config)
         {
             NormalizeConfiguration(config);
+            services.TryAddSingleton<IdGeneratorFactory>(sp =>
+            {
+                var stringGenerator = new StringIdGenerator();
+                var f = new IdGeneratorFactory();
+                f.AddOrReplace(typeof(string), stringGenerator);
+                return f;
+            });
             services.TryAddSingleton(config);
 
             services.TryAddTransient(typeof(CrudService<>));
@@ -86,32 +92,34 @@ namespace Microsoft.Extensions.DependencyInjection
         private static void NormalizeConfiguration(AnyServiceConfig config)
         {
             var temp = config.EntityConfigRecords.ToArray();
-            foreach (var tcr in temp)
+            foreach (var ecr in temp)
             {
-                var e = tcr.Type;
+                var e = ecr.Type;
                 var fn = e.FullName.ToLower();
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
 
-                if (!tcr.Route.HasValue()) tcr.Route = "/" + e.Name;
-                if (!tcr.Route.StartsWith("/") || tcr.Route.StartsWith("//"))
-                    throw new InvalidOperationException($"{nameof(EntityConfigRecord.Route)} must start with single'/'. Actual value: {tcr.Route}");
+                if (!ecr.Route.HasValue()) ecr.Route = "/" + e.Name;
+                if (!ecr.Route.StartsWith("/") || ecr.Route.StartsWith("//"))
+                    throw new InvalidOperationException($"{nameof(EntityConfigRecord.Route)} must start with single'/'. Actual value: {ecr.Route}");
 
-                var mapperType = tcr.ResponseMapperType;
+                var mapperType = ecr.ResponseMapperType;
                 if (mapperType != null && !typeof(IServiceResponseMapper).IsAssignableFrom(mapperType))
                     throw new InvalidOperationException($"{nameof(EntityConfigRecord.ResponseMapperType)} must implement {nameof(IServiceResponseMapper)}");
                 if (mapperType == null)
-                    tcr.ResponseMapperType = typeof(DefaultServiceResponseMapper);
+                    ecr.ResponseMapperType = typeof(DefaultServiceResponseMapper);
 
-                if (tcr.EventKeys == null) tcr.EventKeys = ekr;
-                if (tcr.PermissionRecord == null) tcr.PermissionRecord = pr;
-                if (tcr.EntityKey == null) tcr.EntityKey = fn;
-                if (tcr.Validator == null)
+                if (ecr.EventKeys == null) ecr.EventKeys = ekr;
+                if (ecr.PermissionRecord == null) ecr.PermissionRecord = pr;
+                if (ecr.EntityKey == null) ecr.EntityKey = fn;
+                if (ecr.PaginateSettings == null) ecr.PaginateSettings = config.DefaultPaginateSettings;
+                if (ecr.Validator == null)
                 {
                     var v = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);
-                    tcr.Validator = (ICrudValidator)Activator.CreateInstance(v);
+                    ecr.Validator = (ICrudValidator)Activator.CreateInstance(v);
                 }
-                SetAuthorization(tcr.Authorization);
+                SetAuthorization(ecr.Authorization);
+
             }
             config.EntityConfigRecords = temp;
 

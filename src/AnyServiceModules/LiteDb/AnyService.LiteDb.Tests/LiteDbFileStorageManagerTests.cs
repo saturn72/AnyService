@@ -55,7 +55,6 @@ namespace AnyService.LiteDb.Tests
         public async Task Delete_Tests()
         {
             var dbName = $"testdb-{GetCurrentMethodName()}-{DateTime.UtcNow.ToString("yyyy-mm-dd_hh-mm-dd-fff")}.db";
-            var fsm = new LiteDbFileStoreManager(dbName);
 
             var file1 = new FileModel
             {
@@ -80,6 +79,7 @@ namespace AnyService.LiteDb.Tests
                 }
             }
 
+            var fsm = new LiteDbFileStoreManager(dbName);
             var res = await fsm.Delete(files);
             res.Count().ShouldBe(files.Count());
             for (int i = 0; i < files.Length; i++)

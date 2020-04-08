@@ -9,6 +9,7 @@ namespace AnyService.Services
         Task<TDomainModel> Insert(TDomainModel entity);
         Task<TDomainModel> GetById(string id);
         Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter);
+        // Task<Paginate<TDomainModel>> GetAll(IDictionary<string, string> filter);
         Task<TDomainModel> Update(TDomainModel entity);
         Task<TDomainModel> Delete(TDomainModel entity);
     }

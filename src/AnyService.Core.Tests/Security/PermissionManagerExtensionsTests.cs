@@ -1,120 +1,135 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AnyService.Core.Security;
 using Moq;
 using Shouldly;
 using Xunit;
 
-namespace AnyService.Core.Tests.Security
+namespace AnyService.Core.Security
 {
     public class PermissionManagerExtensionsTests
     {
-        static readonly string _uId = "userId",
-            _ek = "e-key",
-            _pk = "p-key",
-            _eId = "e-Id";
-
-        #region UserHasPermissionOnEntity
+        private const string uId = "u-id",
+             ek = "ek",
+             pk = "pk",
+             eId = "e-id";
         [Fact]
         public async Task UserHasPermissionOnEntity_ReturnsTrue()
         {
-            var userPermissions = new UserPermissions
+            var up = new UserPermissions
             {
+                UserId = uId,
                 EntityPermissions = new[]
                 {
-                    new EntityPermission
-                    {
-                        EntityId = _eId ,
-                        EntityKey = _ek,
-                        PermissionKeys = new[]{ _pk}
-                    },
-                },
+                        new EntityPermission
+                        {
+                            EntityId = eId,
+                            EntityKey = ek,
+                            PermissionKeys = new []{pk}
+                        }
+                }
             };
             var pm = new Mock<IPermissionManager>();
-            pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(userPermissions);
+            pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(up);
 
-            var res = await PermissionManagerExtensions.UserHasPermissionOnEntity(pm.Object, _uId, _ek, _pk, _eId);
+            var res = await PermissionManagerExtensions.UserHasPermissionOnEntity(pm.Object, uId, ek, pk, eId);
             res.ShouldBeTrue();
         }
         [Theory]
-        [MemberData(nameof(UserHasPermissionOnEntity_ReturnsFalse_DATA))]
-        public async Task UserHasPermissionOnEntity_ReturnsFalse(UserPermissions userPermissions)
+        [MemberData(nameof(UserHasPermissionOnEntity_DATA))]
+        public async Task UserHasPermissionOnEntity_ReturnsFalse(UserPermissions up)
         {
             var pm = new Mock<IPermissionManager>();
-            pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(userPermissions);
+            pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(up);
 
-            var res = await PermissionManagerExtensions.UserHasPermissionOnEntity(pm.Object, _uId, _ek, _pk, _eId);
+            var res = await PermissionManagerExtensions.UserHasPermissionOnEntity(pm.Object, uId, ek, pk, eId);
             res.ShouldBeFalse();
         }
 
-        public static IEnumerable<object[]> UserHasPermissionOnEntity_ReturnsFalse_DATA => new[]
+        public static IEnumerable<object[]> UserHasPermissionOnEntity_DATA =>
+        new[]
         {
-            new object[] { null as UserPermissions},
-            new object[] { new  UserPermissions()},
-            new object[]
-            {
-                new  UserPermissions
-                {
-                    EntityPermissions = new []
-                    {
-                        new EntityPermission
-                        {
-                            EntityId = _eId + "www",
-                            EntityKey = _ek,
-                            PermissionKeys = new[]{ _pk}
-
-                        },
-                    },
-                },
-            },
-            new object[]
-            {
-                new  UserPermissions
-                {
-                    EntityPermissions = new []
-                    {
-                        new EntityPermission
-                        {
-                            EntityId = _eId,
-                            EntityKey = _ek+ "www",
-                            PermissionKeys = new[]{ _pk}
-
-                        },
-                    },
-                },
-            },
-            new object[]
-            {
+            new object[] { null as UserPermissions }, //null user permission
+            new object[] { new UserPermissions() }, //has no EntityPermissions
+            //has no EntityPermissions
+            new object[] {
                 new UserPermissions
                 {
-                    EntityPermissions = new []
-                    {
-                        new EntityPermission
-                        {
-                            EntityId = _eId,
-                            EntityKey = _ek,
-                            PermissionKeys = new[]{ _pk+ "www"},
-                        },
-                    },
-                },
-            },    new object[]
-            {
+                    EntityPermissions = new EntityPermission[]{}
+                }
+            }, 
+            //has no matching EntityPermissions
+            new object[] {
                 new UserPermissions
                 {
-                    EntityPermissions = new []
-                    {
+                    UserId = uId ,
+                    EntityPermissions = new []{
                         new EntityPermission
                         {
-                            EntityId = _eId,
-                            EntityKey = _ek,
-                            PermissionKeys = new[]{ _pk},
+                            EntityId = eId+ "fail",
+                            EntityKey = ek,
+                            PermissionKeys = new []{pk}
+                        }
+                }
+            },
+            },
+            //has no matching EntityPermissions
+            new object[] {
+                new UserPermissions
+                {
+                    UserId = uId ,
+                    EntityPermissions = new []{
+                        new EntityPermission
+                        {
+                            EntityId = eId,
+                            EntityKey = ek+ "fail",
+                            PermissionKeys = new []{pk}
+                        }
+                }
+            },
+          },
+            //has no matching EntityPermissions
+            new object[] {
+                new UserPermissions
+                {
+                    UserId = uId ,
+                    EntityPermissions = new []{
+                        new EntityPermission
+                        {
+                            EntityId = eId,
+                            EntityKey = ek,
+                            PermissionKeys = new []{pk+ "fail"}
+                        }
+                }
+            },
+            },
+            //excluded
+            new object[] {
+                new UserPermissions
+                {
+                    UserId = uId ,
+                    EntityPermissions = new []{
+                        new EntityPermission
+                        {
                             Excluded = true,
-                        },
-                    },
-                },
+                            EntityId = eId,
+                            EntityKey = ek,
+                            PermissionKeys = new []{pk}
+                        }
+                }
+            },
             },
         };
-
-        #endregion
+        // public static async Task<bool> UserHasPermissionOnEntity
+        //(this IPermissionManager manager, string userId, string entityKey, string permissionKey, string entityId)
+        // {
+        //     var userPermissions = await manager.GetUserPermissions(userId);
+        //     var hasPermission = userPermissions?
+        //         .EntityPermissions?
+        //         .FirstOrDefault(p => p.EntityId.Equals(entityId, StringComparison.InvariantCultureIgnoreCase)
+        //             && p.PermissionKeys.Contains(permissionKey, StringComparer.InvariantCultureIgnoreCase)
+        //             && p.EntityKey.Equals(entityKey, StringComparison.InvariantCultureIgnoreCase));
+        //     return !hasPermission?.Excluded ?? false;
+        // }
     }
 }

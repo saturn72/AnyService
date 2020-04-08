@@ -64,13 +64,15 @@ namespace AnyService.Services
             var dbData = await _repository.Command(r => r.Insert(entity), serviceResponse);
             _logger.LogDebug(LoggingEvents.Repository, $"Repository insert response: {dbData}");
 
-            if (dbData == null)
+            if (serviceResponse.Result == ServiceResult.BadOrMissingData)
             {
-                _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Repository insert response is null - return back");
+                _logger.LogWarning(LoggingEvents.BusinessLogicFlow, "Repository insert response is null - return back");
                 return serviceResponse;
             }
-            _logger.LogDebug(LoggingEvents.EventPublishing, $"Publish created event using {_eventKeyRecord.Create} key");
+            if (serviceResponse.Result == ServiceResult.Error)
+                return serviceResponse;
 
+            _logger.LogDebug(LoggingEvents.EventPublishing, $"Publish created event using {_eventKeyRecord.Create} key");
             _eventBus.Publish(_eventKeyRecord.Create, new DomainEventData
             {
                 Data = dbData,
@@ -130,7 +132,6 @@ namespace AnyService.Services
                     PerformedByUserId = _workContext.CurrentUserId
                 });
             }
-
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }

@@ -35,5 +35,9 @@ namespace AnyService
         public ICrudValidator Validator { get; set; }
         public Type ResponseMapperType { get; set; }
         public AuthorizationInfo Authorization { get; set; }
+        /// <summary>
+        /// Gets or sets paginate default settings
+        /// </summary>
+        public PaginateSettings PaginateSettings { get; set; }
     }
 }

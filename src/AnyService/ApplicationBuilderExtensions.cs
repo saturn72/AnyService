@@ -6,9 +6,12 @@ using AnyService.Core.Caching;
 using AnyService.Events;
 using AnyService.Middlewares;
 using AnyService.Services.Security;
+using AnyService.Utilities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
 namespace AnyService
 {
     public static class ApplicationBuilderExtensions
@@ -32,6 +35,12 @@ namespace AnyService
         }
         private static void ValidateCoreServicesConfigured(IServiceProvider serviceProvider)
         {
+            ExceptionsLogger.Init(
+                serviceProvider.GetService<ILogger<ExceptionsLogger>>(),
+                serviceProvider.GetService<IdGeneratorFactory>().GetGenerator(typeof(string)));
+
+            if (!ExceptionsLogger.WasInit)
+                throw new InvalidOperationException($"{nameof(ExceptionsLogger)} was not configured");
             ThrowIfNotConfigured<ICacheManager>();
 
             void ThrowIfNotConfigured<TService>()

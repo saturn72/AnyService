@@ -20,7 +20,8 @@ namespace AnyService.Services
             catch (Exception ex)
             {
                 serviceResponse.Result = ServiceResult.Error;
-                serviceResponse.Message = "Unlnown error command repository:\n\t" + ex.Message;
+                serviceResponse.Message = "Unlnown error while command repository";
+                serviceResponse.ExceptionId = ExceptionsLogger.Log(ex);
                 return data;
             }
 

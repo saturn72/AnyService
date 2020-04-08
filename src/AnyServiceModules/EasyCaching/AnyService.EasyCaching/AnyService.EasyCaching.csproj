@@ -16,4 +16,8 @@
     <ProjectReference Include="..\..\..\AnyService.Core\AnyService.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="EasyCaching.Core" Version="0.8.7" />
+  </ItemGroup>
+
 </Project>

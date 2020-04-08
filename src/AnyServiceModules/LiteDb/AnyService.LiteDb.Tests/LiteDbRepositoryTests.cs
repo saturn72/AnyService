@@ -22,15 +22,14 @@ namespace AnyService.LiteDb.Tests
         private string GetCurrentMethodName()
         {
             var st = new StackTrace();
-            var sf = st.GetFrame(1);
-
-            return sf.GetMethod().Name;
+            return st.GetFrame(4).GetMethod().Name;
         }
 
         [Fact]
         public async Task Insert()
         {
-            var dbName = $"testdb-{GetCurrentMethodName()}-{DateTime.UtcNow.ToString("yyyy-mm-dd_hh-mm-dd-fff")}.db";
+            var name = GetCurrentMethodName();
+            var dbName = $"testdb-{name}-{DateTime.UtcNow.ToString("yyyy-mm-dd_hh-mm-dd-fff")}.db";
 
             var lr = new LiteDbRepository<TestDomainModel>(dbName);
             var expValue = "my special value";
@@ -47,7 +46,8 @@ namespace AnyService.LiteDb.Tests
         [Fact]
         public async Task GetById()
         {
-            var dbName = $"testdb-{GetCurrentMethodName()}-{DateTime.UtcNow.ToString("yyyy-mm-dd_hh-mm-dd-fff")}.db";
+            var name = GetCurrentMethodName();
+            var dbName = $"testdb-{name}-{DateTime.UtcNow.ToString("yyyy-mm-dd_hh-mm-dd-fff")}.db";
             var entities = new[]{
                 new TestDomainModel{Id = "1", Value = "1"},
                 new TestDomainModel{Id = "2", Value = "2"},
@@ -66,7 +66,8 @@ namespace AnyService.LiteDb.Tests
         [Fact]
         public async Task Update()
         {
-            var dbName = $"testdb-{GetCurrentMethodName()}-{DateTime.UtcNow.ToString("yyyy-mm-dd_hh-mm-dd-fff")}.db";
+            var name = GetCurrentMethodName();
+            var dbName = $"testdb-{name}-{DateTime.UtcNow.ToString("yyyy-mm-dd_hh-mm-dd-fff")}.db";
             var entities = new[]{
                 new TestDomainModel{Id = "1", Value = "1"},
                 new TestDomainModel{Id = "2", Value = "2"},
@@ -91,7 +92,8 @@ namespace AnyService.LiteDb.Tests
         [Fact]
         public async Task GetAll()
         {
-            var dbName = $"testdb-{GetCurrentMethodName()}-{DateTime.UtcNow.ToString("yyyy-mm-dd_hh-mm-dd-fff")}.db";
+            var name = GetCurrentMethodName();
+            var dbName = $"testdb-{name}-{DateTime.UtcNow.ToString("yyyy-mm-dd_hh-mm-dd-fff")}.db";
             var entities = new[]{
                 new TestDomainModel{Id = "1", Value = "1"},
                 new TestDomainModel{Id = "2", Value = "2"},
@@ -117,7 +119,9 @@ namespace AnyService.LiteDb.Tests
         [Fact]
         public async Task Delete()
         {
-            var dbName = $"testdb-{GetCurrentMethodName()}-{DateTime.UtcNow.ToString("yyyy-mm-dd_hh-mm-dd-fff")}.db";
+            var name = GetCurrentMethodName();
+            var dbName = $"testdb-{name}-{DateTime.UtcNow.ToString("yyyy-mm-dd_hh-mm-dd-fff")}.db";
+
             var entities = new[]{
                 new TestDomainModel{Id = "1", Value = "1"},
                 new TestDomainModel{Id = "2", Value = "2"},

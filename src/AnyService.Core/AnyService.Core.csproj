@@ -11,8 +11,4 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="EasyCaching.Core" Version="0.8.0" />
-  </ItemGroup>
 </Project>
