@@ -23,7 +23,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetById(It.IsAny<string>())).Throws<Exception>();
             var sr = new ServiceResponse();
 
-            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetById("some-id"), sr);
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetById("some-id"), sr, null);
             res.ShouldBeNull();
             sr.Data.ShouldBeNull();
             sr.Result.ShouldBe(ServiceResult.Error);
@@ -36,7 +36,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetById(It.IsAny<string>())).ReturnsAsync(null as TestClass);
             var sr = new ServiceResponse();
 
-            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetById("some-id"), sr);
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetById("some-id"), sr, null);
             res.ShouldBeNull();
             sr.Data.ShouldBeNull();
             sr.Result.ShouldBe(ServiceResult.NotFound);
@@ -56,7 +56,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
             var sr = new ServiceResponse();
 
-            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), sr);
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), sr, null);
             res.ShouldBe(dbData);
             sr.Data.ShouldBe(dbData);
             sr.Result.ShouldBe(ServiceResult.NotSet);
@@ -71,7 +71,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
             var sr = new ServiceResponse();
 
-            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), sr);
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), sr, null);
             res.ShouldBe(dbData);
             sr.Data.ShouldBe(dbData);
             sr.Result.ShouldBe(ServiceResult.NotSet);

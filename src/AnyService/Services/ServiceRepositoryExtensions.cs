@@ -10,7 +10,7 @@ namespace AnyService.Services
         public static async Task<TDomainModel> Command<TDomainModel>(
             this IRepository<TDomainModel> repository,
             Func<IRepository<TDomainModel>, Task<TDomainModel>> command,
-            ServiceResponse serviceResponse) where TDomainModel : IDomainModelBase
+            ServiceResponse serviceResponse, Exception exception = null) where TDomainModel : IDomainModelBase
         {
             var data = default(TDomainModel);
             try
@@ -21,7 +21,7 @@ namespace AnyService.Services
             {
                 serviceResponse.Result = ServiceResult.Error;
                 serviceResponse.Message = "Unlnown error while command repository";
-                serviceResponse.ExceptionId = ExceptionsLogger.Log(ex);
+                exception = ex;
                 return data;
             }
 
@@ -38,7 +38,7 @@ namespace AnyService.Services
         public static async Task<TResult> Query<TDomainModel, TResult>(
             this IRepository<TDomainModel> repository,
             Func<IRepository<TDomainModel>, Task<TResult>> command,
-            ServiceResponse serviceResponse)
+            ServiceResponse serviceResponse, Exception exception)
             where TDomainModel : IDomainModelBase
         {
             var data = default(TResult);
@@ -48,6 +48,7 @@ namespace AnyService.Services
             }
             catch (Exception ex)
             {
+                exception = ex;
                 serviceResponse.Result = ServiceResult.Error;
                 serviceResponse.Message = "Unlnown error command repository:\n\t" + ex.Message;
                 return data;

@@ -13,14 +13,9 @@ public class ExceptionsLogger
     private static IIdGenerator IdGenerator;
     public static void Init(ILogger logger, IIdGenerator idGenerator)
     {
-        lock (lockObj)
-        {
-            if (WasInit)
-                throw new InvalidOperationException($"{nameof(ExceptionsLogger)} already initialized");
-            Logger = logger;
-            IdGenerator = idGenerator;
-            WasInit = true;
-        }
+        Logger = logger;
+        IdGenerator = idGenerator;
+        WasInit = true;
     }
 
     public static string Log(Exception exception)
