@@ -9,5 +9,11 @@ namespace System
                 return (T)pi.GetValue(obj);
             throw new InvalidOperationException();
         }
+
+        public static T GetPropertyValueOrDefaultByName<T>(this object obj, string propertyName)
+        {
+            var pi = obj.GetType().GetProperty(propertyName);
+            return pi != null ? (T)pi.GetValue(obj) : default(T);
+        }
     }
 }

@@ -23,24 +23,32 @@ namespace AnyService
             ValidateCoreServicesConfigured(sp);
 
             var apm = sp.GetService<ApplicationPartManager>();
-            var typeConfigRecords = sp.GetService<IEnumerable<EntityConfigRecord>>();
             apm.FeatureProviders.Add(new GenericControllerFeatureProvider());
 
             app.UseMiddleware<WorkContextMiddleware>();
             var options = sp.GetService<AnyServiceConfig>();
             if (options.UseAuthorizationMiddleware)
                 app.UseMiddleware<DefaultAuthorizationMiddleware>();
+            if (options.UseExceptionLogging)
+            {
+                var entityConfigRecords = sp.GetService<IEnumerable<EntityConfigRecord>>();
+                var eventKeys = entityConfigRecords.Select(e => e.EventKeys).ToArray();
+                var eventBus = sp.GetService<IDomainEventsBus>();
+                var exLogger = sp.GetService<ILogger<ExceptionsLoggingEventHandlers>>();
+                var handlers = new ExceptionsLoggingEventHandlers(exLogger);
+                foreach (var ek in eventKeys)
+                {
+                    eventBus.Subscribe(ek.Create, handlers.CreateEventHandler);
+                    eventBus.Subscribe(ek.Read, handlers.ReadEventHandler);
+                    eventBus.Subscribe(ek.Update, handlers.UpdateEventHandler);
+                    eventBus.Subscribe(ek.Delete, handlers.DeleteEventHandler);
+                }
+            }
             AddPermissionComponents(app, sp);
             return app;
         }
         private static void ValidateCoreServicesConfigured(IServiceProvider serviceProvider)
         {
-            ExceptionsLogger.Init(
-                serviceProvider.GetService<ILogger<ExceptionsLogger>>(),
-                serviceProvider.GetService<IdGeneratorFactory>().GetGenerator(typeof(string)));
-
-            if (!ExceptionsLogger.WasInit)
-                throw new InvalidOperationException($"{nameof(ExceptionsLogger)} was not configured");
             ThrowIfNotConfigured<ICacheManager>();
 
             void ThrowIfNotConfigured<TService>()

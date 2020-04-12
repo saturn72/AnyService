@@ -33,6 +33,32 @@ namespace AnyService.Tests.Extensions
             ObjectExtensionsFunctions.GetPropertyValueByName<string>(tc, "StringValue").ShouldBe(tc.StringValue);
             ObjectExtensionsFunctions.GetPropertyValueByName<MyTestClass>(tc, "TestClass").ShouldBe(tc.TestClass);
         }
+        [Fact]
+        public void GetPropertyValueOrDefaultByName_ReturnsDefault()
+        {
+            var tc = new MyTestClass
+            {
+                StringValue = "CCCEEE",
+                TestClass = new MyTestClass
+                { StringValue = "internal value" }
+            };
+
+            ObjectExtensionsFunctions.GetPropertyValueOrDefaultByName<string>(tc, "VVV").ShouldBe(default(string));
+            ObjectExtensionsFunctions.GetPropertyValueOrDefaultByName<MyTestClass>(tc, "testClass").ShouldBe(default(MyTestClass));
+        }
+        [Fact]
+        public void GetPropertyValueOrDefaultByName()
+        {
+            var tc = new MyTestClass
+            {
+                StringValue = "CCCEEE",
+                TestClass = new MyTestClass
+                { StringValue = "internal value" }
+            };
+
+            ObjectExtensionsFunctions.GetPropertyValueOrDefaultByName<string>(tc, "StringValue").ShouldBe(tc.StringValue);
+            ObjectExtensionsFunctions.GetPropertyValueOrDefaultByName<MyTestClass>(tc, "TestClass").ShouldBe(tc.TestClass);
+        }
     }
     public class MyTestClass
     {
