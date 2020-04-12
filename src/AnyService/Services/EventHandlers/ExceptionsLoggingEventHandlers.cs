@@ -22,11 +22,11 @@ public class ExceptionsLoggingEventHandlers
     #region Utilties
     private Func<DomainEventData, Task> LogErrorOnException => ed =>
     {
-        var exceptionId = ed.GetPropertyValueOrDefaultByName<string>("exceptionId");
+        var exceptionId = ed.Data?.GetPropertyValueOrDefaultByName<string>("exceptionId");
         if (!exceptionId.HasValue())
             return Task.CompletedTask;
 
-        _logger.LogError(GetEventId(), ed.GetPropertyValueByName<Exception>("exception"), exceptionId);
+        _logger.LogError(GetEventId(), ed.Data.GetPropertyValueByName<Exception>("exception"), exceptionId);
         return Task.CompletedTask;
     };
     private static EventId GetEventId()
