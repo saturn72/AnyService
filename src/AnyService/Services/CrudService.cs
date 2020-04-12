@@ -40,7 +40,7 @@ namespace AnyService.Services
             _auditHelper = auditHelper;
             _workContext = workContext;
             _eventBus = eventBus;
-            _eventKeys = workContext?.CurrentEntityConfigRecord?.EventKeys ?? new EventKeyRecord(null, null, null, null);
+            _eventKeys = workContext?.CurrentEntityConfigRecord?.EventKeys;
             _fileStorageManager = fileStorageManager;
             _logger = logger;
             _idGenerator = idGenerator;
@@ -176,7 +176,7 @@ namespace AnyService.Services
             var wrapper = new ServiceResponseWrapper(serviceResponse);
 
             var dbModel = await _repository.Query(async r => await r.GetById(id), wrapper);
-            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Update, entity))
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Update, id))
                 return serviceResponse;
 
             var deletable = dbModel as IDeletableAudit;
