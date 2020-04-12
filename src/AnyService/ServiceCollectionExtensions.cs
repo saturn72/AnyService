@@ -58,6 +58,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             EntityConfigRecordManager.EntityConfigRecords = config.EntityConfigRecords;
             services.TryAddScoped<WorkContext>();
+            services.TryAddSingleton<IIdGenerator, StringIdGenerator>();
             services.TryAddTransient<IPermissionManager, PermissionManager>();
 
             services.AddScoped(sp =>
