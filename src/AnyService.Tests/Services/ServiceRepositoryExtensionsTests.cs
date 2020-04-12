@@ -20,14 +20,16 @@ namespace AnyService.Tests.Services
         public async Task Query_RepositoryThrows()
         {
             var repo = new Mock<IRepository<TestClass>>();
-            repo.Setup(r => r.GetById(It.IsAny<string>())).Throws<Exception>();
+            var ex = new Exception();
+            repo.Setup(r => r.GetById(It.IsAny<string>())).Throws(ex);
             var sr = new ServiceResponse();
-
-            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetById("some-id"), sr, null);
+            var w = new ServiceResponseWrapper(sr);
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetById("some-id"), w);
             res.ShouldBeNull();
             sr.Data.ShouldBeNull();
             sr.Result.ShouldBe(ServiceResult.Error);
             sr.Message.ShouldNotBeNullOrEmpty();
+            w.Exception.ShouldBe(ex);
         }
         [Fact]
         public async Task Query_NotFound_SingleItem()
@@ -36,7 +38,8 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetById(It.IsAny<string>())).ReturnsAsync(null as TestClass);
             var sr = new ServiceResponse();
 
-            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetById("some-id"), sr, null);
+            var w = new ServiceResponseWrapper(sr);
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetById("some-id"), w);
             res.ShouldBeNull();
             sr.Data.ShouldBeNull();
             sr.Result.ShouldBe(ServiceResult.NotFound);
@@ -56,7 +59,8 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
             var sr = new ServiceResponse();
 
-            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), sr, null);
+            var w = new ServiceResponseWrapper(sr);
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), w);
             res.ShouldBe(dbData);
             sr.Data.ShouldBe(dbData);
             sr.Result.ShouldBe(ServiceResult.NotSet);
@@ -71,7 +75,8 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
             var sr = new ServiceResponse();
 
-            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), sr, null);
+            var w = new ServiceResponseWrapper(sr);
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), w);
             res.ShouldBe(dbData);
             sr.Data.ShouldBe(dbData);
             sr.Result.ShouldBe(ServiceResult.NotSet);
@@ -83,15 +88,19 @@ namespace AnyService.Tests.Services
         public async Task Command_RepositoryThrows()
         {
             var repo = new Mock<IRepository<TestClass>>();
-            repo.Setup(r => r.Insert(It.IsAny<TestClass>())).Throws<Exception>();
+            var ex = new Exception();
+            repo.Setup(r => r.Insert(It.IsAny<TestClass>())).Throws(ex);
             var sr = new ServiceResponse();
 
             var tc = new TestClass();
-            var res = await ServiceRepositoryExtensions.Command(repo.Object, r => r.Insert(tc), sr);
+            var w = new ServiceResponseWrapper(sr);
+
+            var res = await ServiceRepositoryExtensions.Command(repo.Object, r => r.Insert(tc), w);
             res.ShouldBeNull();
             sr.Data.ShouldBeNull();
             sr.Result.ShouldBe(ServiceResult.Error);
             sr.Message.ShouldNotBeNullOrEmpty();
+            w.Exception.ShouldBe(ex);
         }
         [Fact]
         public async Task Command_RepositoryReturnsNull()
@@ -101,7 +110,8 @@ namespace AnyService.Tests.Services
             var sr = new ServiceResponse();
 
             var tc = new TestClass();
-            var res = await ServiceRepositoryExtensions.Command(repo.Object, r => r.Insert(tc), sr);
+            var w = new ServiceResponseWrapper(sr);
+            var res = await ServiceRepositoryExtensions.Command(repo.Object, r => r.Insert(tc), w);
             res.ShouldBeNull();
             sr.Data.ShouldBeNull();
             sr.Result.ShouldBe(ServiceResult.BadOrMissingData);
@@ -115,7 +125,8 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Insert(It.IsAny<TestClass>())).ReturnsAsync(tc);
             var sr = new ServiceResponse();
 
-            var res = await ServiceRepositoryExtensions.Command(repo.Object, r => r.Insert(tc), sr);
+            var w = new ServiceResponseWrapper(sr);
+            var res = await ServiceRepositoryExtensions.Command(repo.Object, r => r.Insert(tc), w);
             res.ShouldBe(tc);
             sr.Data.ShouldBe(tc);
             sr.Result.ShouldBe(ServiceResult.NotSet);

@@ -19,7 +19,7 @@ namespace AnyService.Services
         private readonly AuditHelper _auditHelper;
         private readonly WorkContext _workContext;
         private readonly IDomainEventsBus _eventBus;
-        private readonly EventKeyRecord _eventKeyRecord;
+        private readonly EventKeyRecord _eventKeys;
         private readonly IFileStoreManager _fileStorageManager;
         private readonly ILogger<CrudService<TDomainModel>> _logger;
         private readonly IIdGenerator _idGenerator;
@@ -31,7 +31,6 @@ namespace AnyService.Services
             AuditHelper auditHelper,
             WorkContext workContext,
             IDomainEventsBus eventBus,
-            EventKeyRecord eventKeyRecord,
             IFileStoreManager fileStorageManager,
             ILogger<CrudService<TDomainModel>> logger,
             IIdGenerator idGenerator)
@@ -41,7 +40,7 @@ namespace AnyService.Services
             _auditHelper = auditHelper;
             _workContext = workContext;
             _eventBus = eventBus;
-            _eventKeyRecord = eventKeyRecord;
+            _eventKeys = workContext?.CurrentEntityConfigRecord?.EventKeys ?? new EventKeyRecord(null, null, null, null);
             _fileStorageManager = fileStorageManager;
             _logger = logger;
             _idGenerator = idGenerator;
@@ -67,22 +66,14 @@ namespace AnyService.Services
 
             _logger.LogDebug(LoggingEvents.Repository, $"Insert entity to repository");
 
-            Exception exception = null;
-            var dbData = await _repository.Command(r => r.Insert(entity), serviceResponse, exception);
+            var wrapper = new ServiceResponseWrapper(serviceResponse);
+            var dbData = await _repository.Command(r => r.Insert(entity), wrapper);
             _logger.LogDebug(LoggingEvents.Repository, $"Repository insert response: {dbData}");
 
-            if (serviceResponse.Result == ServiceResult.BadOrMissingData)
-            {
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Create, entity))
                 return serviceResponse;
-            }
-            if (exception != null || serviceResponse.Result == ServiceResult.Error)
-            {
-                PublishException(serviceResponse, _eventKeyRecord.Create, dbData, exception);
-                return serviceResponse;
-            }
-            Publish(_eventKeyRecord.Create, dbData);
 
-
+            Publish(_eventKeys.Create, serviceResponse.Data);
             serviceResponse.Result = ServiceResult.Ok;
 
             if (entity is IFileContainer)
@@ -123,15 +114,19 @@ namespace AnyService.Services
             }
 
             _logger.LogDebug(LoggingEvents.Repository, "Get by Id from repository");
-            Exception exception = null;
-            var data = await _repository.Query(r => r.GetById(id), serviceResponse, exception);
+
+            var wrapper = new ServiceResponseWrapper(serviceResponse);
+            var data = await _repository.Query(r => r.GetById(id), wrapper);
             _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
+
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Read, id))
+                return serviceResponse;
 
             if (data != null && serviceResponse.Result == ServiceResult.NotSet)
             {
                 serviceResponse.Data = data;
                 serviceResponse.Result = ServiceResult.Ok;
-                Publish(_eventKeyRecord.Read, data);
+                Publish(_eventKeys.Read, serviceResponse.Data);
             }
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
@@ -149,15 +144,18 @@ namespace AnyService.Services
 
             _logger.LogDebug(LoggingEvents.Repository, "Get all filter = " + filter);
             _logger.LogDebug(LoggingEvents.Repository, "Get all from repository");
-            Exception ex = null;
-            var data = await _repository.Query(r => r.GetAll(filter), serviceResponse, ex) ?? new TDomainModel[] { };
+            var wrapper = new ServiceResponseWrapper(serviceResponse);
+            var data = await _repository.Query(r => r.GetAll(filter), wrapper);
             _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
+
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Read, filter))
+                return serviceResponse;
 
             if (serviceResponse.Result == ServiceResult.NotSet)
             {
-                serviceResponse.Data = data;
+                serviceResponse.Data = data ?? new TDomainModel[] { };
                 serviceResponse.Result = ServiceResult.Ok;
-                Publish(_eventKeyRecord.Read, data);
+                Publish(_eventKeys.Read, serviceResponse.Data);
             }
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
@@ -175,13 +173,11 @@ namespace AnyService.Services
             }
 
             _logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
-            Exception ex = null;
-            var dbModel = await _repository.Query(async r => await r.GetById(id), serviceResponse, ex);
-            if (dbModel == null)
-            {
-                _logger.LogDebug(LoggingEvents.Repository, "Repository response is null");
+            var wrapper = new ServiceResponseWrapper(serviceResponse);
+
+            var dbModel = await _repository.Query(async r => await r.GetById(id), wrapper);
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Update, entity))
                 return serviceResponse;
-            }
 
             var deletable = dbModel as IDeletableAudit;
             if (deletable != null && deletable.Deleted)
@@ -198,13 +194,11 @@ namespace AnyService.Services
             }
 
             _logger.LogDebug(LoggingEvents.Repository, $"Update entity in repository");
-            var updateResponse = await _repository.Command(r => r.Update(entity), serviceResponse);
+            var updateResponse = await _repository.Command(r => r.Update(entity), wrapper);
             _logger.LogDebug(LoggingEvents.Repository, $"Repository update response: {updateResponse}");
-            if (updateResponse == null)
-            {
-                _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Repository get-by-id response is null");
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Update, entity))
                 return serviceResponse;
-            }
+
             if (entity is IFileContainer)
             {
                 var fileContainer = (entity as IFileContainer);
@@ -214,7 +208,7 @@ namespace AnyService.Services
                 await UploadFiles(fileContainer, serviceResponse);
             }
 
-            Publish(_eventKeyRecord.Update, updateResponse);
+            Publish(_eventKeys.Update, serviceResponse.Data);
             serviceResponse.Result = ServiceResult.Ok;
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
@@ -231,13 +225,11 @@ namespace AnyService.Services
             }
 
             _logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
-            Exception ex = null;
-            var dbModel = await _repository.Query(r => r.GetById(id), serviceResponse, ex);
-            if (dbModel == null)
-            {
-                _logger.LogDebug(LoggingEvents.Repository, "Repository response is null");
+            var wrapper = new ServiceResponseWrapper(serviceResponse);
+            var dbModel = await _repository.Query(r => r.GetById(id), wrapper);
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Delete, id))
                 return serviceResponse;
-            }
+
 
             TDomainModel deletedModel;
             if (dbModel is IDeletableAudit)
@@ -246,26 +238,41 @@ namespace AnyService.Services
 
                 _auditHelper.PrepareForDelete(dbModel as IDeletableAudit, _workContext.CurrentUserId);
                 _logger.LogDebug(LoggingEvents.Repository, $"Repository - update {nameof(IDeletableAudit)} entity");
-                deletedModel = await _repository.Command(r => r.Update(dbModel), serviceResponse);
+                deletedModel = await _repository.Command(r => r.Update(dbModel), wrapper);
             }
             else
             {
                 _logger.LogDebug(LoggingEvents.Repository, "Repository - delete entity with id " + id);
-                deletedModel = await _repository.Command(r => r.Delete(dbModel), serviceResponse);
+                deletedModel = await _repository.Command(r => r.Delete(dbModel), wrapper);
             }
 
-            if (deletedModel == null)
-            {
-                _logger.LogDebug(LoggingEvents.Repository, "Repository - return null");
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Delete, id))
                 return serviceResponse;
-            }
-            Publish(_eventKeyRecord.Delete, deletedModel);
+
+            Publish(_eventKeys.Delete, serviceResponse.Data);
             serviceResponse.Result = ServiceResult.Ok;
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
 
         #region Utilities
+        private bool IsNotFoundOrBadOrMissingDataOrError(ServiceResponseWrapper wrapper, string eventKey, object data)
+        {
+            var serviceResponse = wrapper.ServiceResponse;
+            _logger.LogDebug(LoggingEvents.Repository, $"Has {serviceResponse.Result} response");
+            if (serviceResponse.Result == ServiceResult.BadOrMissingData || serviceResponse.Result == ServiceResult.NotFound)
+            {
+                return true;
+            }
+            if (wrapper.Exception != null || serviceResponse.Result == ServiceResult.Error)
+            {
+                _logger.LogDebug(LoggingEvents.Repository, "Repository response is null");
+                PublishException(serviceResponse, eventKey, data, wrapper.Exception);
+                return true;
+            }
+            return false;
+        }
+
         private void Publish(string eventKey, object data)
         {
             _logger.LogDebug(LoggingEvents.EventPublishing, $"Publish event using {eventKey} key");
@@ -283,11 +290,11 @@ namespace AnyService.Services
 
             var exceptionData = new
             {
-                IncomingObject = data,
-                ExceptionId = serviceResponse.ExceptionId,
-                Exception = exception
+                incomingObject = data,
+                exceptionId = serviceResponse.ExceptionId,
+                exception = exception
             };
-            Publish(eventKey, data);
+            Publish(eventKey, exceptionData);
         }
         #endregion
     }

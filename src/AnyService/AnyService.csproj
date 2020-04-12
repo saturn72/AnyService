@@ -7,6 +7,10 @@
     <Authors>roi@saturn72.com</Authors>
     <Company>saturn technologies</Company>
   </PropertyGroup>
+  
+  <PropertyGroup>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="9.0.0" />
