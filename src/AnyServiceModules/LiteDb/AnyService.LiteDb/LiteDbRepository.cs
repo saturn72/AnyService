@@ -49,21 +49,21 @@ namespace AnyService.LiteDb
                 return DateTime.UtcNow.ToString("yyyyMMddTHHmmssK") + "-" + Guid.NewGuid().ToString();
             }
         }
-        public Task<IEnumerable<TDomainModel>> GetAll(IDictionary<string, string> filter)
+        public Task<Paginate<TDomainModel>> GetAll(Paginate<TDomainModel> paginate)
         {
-            var res = LiteDbUtility.Query<IEnumerable<TDomainModel>>(_dbName, db =>
+            paginate.Data = LiteDbUtility.Query<IEnumerable<TDomainModel>>(_dbName, db =>
             {
                 var col = db.GetCollection<TDomainModel>();
-                if (filter == null)
+                if (paginate == null)
                     return col.FindAll().ToArray();
 
-                var query = ExpressionBuilder.ToExpression<TDomainModel>(filter);
-                if (query == null)
-                    return null;
-                return col.Find(query).ToArray();
+                // var query = ExpressionBuilder.ToExpression<TDomainModel>(paginate.Query);
+                // if (query == null)
+                //     return null;
+                return col.Find(e => paginate.Query(e)).ToArray();
             });
 
-            return Task.FromResult(res);
+            return Task.FromResult(paginate);
         }
         public async Task<TDomainModel> GetById(string id)
         {

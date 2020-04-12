@@ -142,25 +142,22 @@ namespace AnyService.Controllers
             [FromQuery]string query = "")
         {
             var paginateSettings = _workContext.CurrentEntityConfigRecord.PaginateSettings;
-
-
             var paginate = new Paginate<TDomainModel>
             {
                 Offset = offset ?? paginateSettings.DefaultOffset,
                 PageSize = pageSize ?? paginateSettings.DefaultPageSize,
                 SortOrder = sortOrder ?? paginateSettings.DefaultSortOrder,
-                // Query = x => ((x as ICreatableAudit)?.CreatedByUserId == _workContext.CurrentUserId)
+                Query = x => ((x as ICreatableAudit)?.CreatedByUserId == _workContext.CurrentUserId)
                 // new Func<TDomainModel, bool>(x => true),
             };
-            var filterData = new Dictionary<string, string> { { nameof(ICreatableAudit.CreatedByUserId), _workContext.CurrentUserId } };
-            return await GetAllFiltered(filterData);
+            return await GetAllFiltered(paginate);
         }
         [HttpGet(Consts.PublicSuffix)]
         public async Task<IActionResult> GetAllPublic()
         {
             var filter = GetAllPublicFilter();
-
-            return await GetAllFiltered(filter);
+            throw new NotImplementedException();
+            // return await GetAllFiltered(filter);
         }
 
         private IDictionary<string, string> GetAllPublicFilter()
@@ -201,10 +198,10 @@ namespace AnyService.Controllers
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
         #region Utilities
-        private async Task<IActionResult> GetAllFiltered(IDictionary<string, string> filter)
+        private async Task<IActionResult> GetAllFiltered(Paginate<TDomainModel> paginate)
         {
             _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
-            var res = await _crudService.GetAll(filter);
+            var res = await _crudService.GetAll(paginate);
             _logger.LogDebug(LoggingEvents.Controller, "Get all public service response value: " + res);
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }

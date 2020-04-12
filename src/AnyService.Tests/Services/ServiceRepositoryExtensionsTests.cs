@@ -56,12 +56,12 @@ namespace AnyService.Tests.Services
         public async Task Query_Empty_Collection(IEnumerable<TestClass> dbData)
         {
             var repo = new Mock<IRepository<TestClass>>();
-            repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
+            repo.Setup(r => r.GetAll(null)).ReturnsAsync(new Paginate<TestClass> { Data = dbData });
             var sr = new ServiceResponse();
 
             var w = new ServiceResponseWrapper(sr);
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), w);
-            res.ShouldBe(dbData);
+            res.Data.ShouldBe(dbData);
             sr.Data.ShouldBe(dbData);
             sr.Result.ShouldBe(ServiceResult.NotSet);
             sr.Message.ShouldBeNullOrEmpty();
@@ -72,12 +72,12 @@ namespace AnyService.Tests.Services
         {
             var dbData = new[] { new TestClass() };
             var repo = new Mock<IRepository<TestClass>>();
-            repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
+            repo.Setup(r => r.GetAll(null)).ReturnsAsync(new Paginate<TestClass> { Data = dbData });
             var sr = new ServiceResponse();
 
             var w = new ServiceResponseWrapper(sr);
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), w);
-            res.ShouldBe(dbData);
+            res.Data.ShouldBe(dbData);
             sr.Data.ShouldBe(dbData);
             sr.Result.ShouldBe(ServiceResult.NotSet);
             sr.Message.ShouldBeNullOrEmpty();

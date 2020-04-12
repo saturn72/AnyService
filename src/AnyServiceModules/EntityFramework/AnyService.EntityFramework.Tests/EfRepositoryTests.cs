@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AnyService.Core;
 using System.Collections.Generic;
 using System.Linq;
+using AnyService.Services;
 
 namespace AnyService.EntityFramework.Tests
 {
@@ -95,11 +96,12 @@ namespace AnyService.EntityFramework.Tests
             await _dbContext.SaveChangesAsync();
 
             var e = await _repository.GetAll(null);
-            e.Count().ShouldBe(tc.Count);
+            var d = e.Data;
+            d.Count().ShouldBe(tc.Count);
             for (int i = 0; i < tc.Count; i++)
             {
-                e.Any(x => x.Id != null && x.Value == valuePrefix + i.ToString()).ShouldBeTrue();
-                e.ElementAt(i).NestedClasses.Count().ShouldBe(2);
+                d.Any(x => x.Id != null && x.Value == valuePrefix + i.ToString()).ShouldBeTrue();
+                d.ElementAt(i).NestedClasses.Count().ShouldBe(2);
             }
         }
         [Fact]
@@ -131,13 +133,14 @@ namespace AnyService.EntityFramework.Tests
             await _dbContext.Set<TestClass>().AddRangeAsync(tc);
             await _dbContext.SaveChangesAsync();
 
-            var filter = new Dictionary<string, string>();
+            var filter = new Paginate<TestClass>();
             var e = await _repository.GetAll(filter);
-            e.Count().ShouldBe(tc.Count);
+            var d = e.Data;
+            d.Count().ShouldBe(tc.Count);
             for (int i = 0; i < tc.Count; i++)
             {
-                e.Any(x => x.Id != null && x.Value == valuePrefix + i.ToString()).ShouldBeTrue();
-                e.ElementAt(i).NestedClasses.Count().ShouldBe(2);
+                d.Any(x => x.Id != null && x.Value == valuePrefix + i.ToString()).ShouldBeTrue();
+                d.ElementAt(i).NestedClasses.Count().ShouldBe(2);
             }
         }
         [Fact]

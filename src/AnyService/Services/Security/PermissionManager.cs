@@ -36,9 +36,12 @@ namespace AnyService.Services.Security
             var userPermissions = await _cacheManager.Get<UserPermissions>(GetCacheKey(userId));
             if (userPermissions == null)
             {
-                var filter = new Dictionary<string, string> { { nameof(UserPermissions.UserId), userId } };
-                var allUserPermissions = await _repository.GetAll(filter);
-                userPermissions = allUserPermissions?.FirstOrDefault();
+                var p = new Paginate<UserPermissions>
+                {
+                    Query = x => x.UserId == userId
+                };
+                var allUserPermissions = await _repository.GetAll(p);
+                userPermissions = allUserPermissions?.Data?.FirstOrDefault();
                 if (userPermissions != null)
                     await _cacheManager.Set(GetCacheKey(userId), userPermissions, DefaultCachingTime);
             }
@@ -49,9 +52,12 @@ namespace AnyService.Services.Security
         {
             if (userPermissions == null || !userPermissions.UserId.HasValue())
                 return null;
-            var filter = new Dictionary<string, string> { { nameof(UserPermissions.UserId), userPermissions.UserId } };
-            var allUserPermissions = await _repository.GetAll(filter);
-            var dbEntity = allUserPermissions?.FirstOrDefault();
+            var p = new Paginate<UserPermissions>
+            {
+                Query = x => x.UserId == userPermissions.UserId
+            };
+            var allUserPermissions = await _repository.GetAll(p);
+            var dbEntity = allUserPermissions?.Data?.FirstOrDefault();
 
             if (dbEntity == null) return null;
 

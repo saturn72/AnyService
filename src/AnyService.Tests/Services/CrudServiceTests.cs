@@ -348,8 +348,8 @@ namespace AnyService.Tests.Services
         {
             var model = new AuditableTestModel();
             var repo = new Mock<IRepository<AuditableTestModel>>();
-            repo.Setup(r => r.GetAll(It.IsAny<IDictionary<string, string>>()))
-                .ReturnsAsync(null as IEnumerable<AuditableTestModel>);
+            repo.Setup(r => r.GetAll(It.IsAny<Paginate<AuditableTestModel>>()))
+                .ReturnsAsync(null as Paginate<AuditableTestModel>);
 
             var v = new Mock<ICrudValidator<AuditableTestModel>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
@@ -383,7 +383,7 @@ namespace AnyService.Tests.Services
         {
             var repo = new Mock<IRepository<AuditableTestModel>>();
             var ex = new Exception();
-            repo.Setup(r => r.GetAll(It.IsAny<IDictionary<string, string>>())).ThrowsAsync(ex);
+            repo.Setup(r => r.GetAll(It.IsAny<Paginate<AuditableTestModel>>())).ThrowsAsync(ex);
 
             var v = new Mock<ICrudValidator<AuditableTestModel>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
@@ -409,7 +409,7 @@ namespace AnyService.Tests.Services
             var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, gn.Object);
             var model = new AuditableTestModel();
 
-            var filter = new Dictionary<string, string>();
+            var filter = new Paginate<AuditableTestModel>();
             var res = await cSrv.GetAll(filter);
 
             res.Result.ShouldBe(ServiceResult.Error);
@@ -417,7 +417,7 @@ namespace AnyService.Tests.Services
             eb.Verify(e => e.Publish(
                 It.Is<string>(s => s == ekr.Read),
                 It.Is<DomainEventData>(ed =>
-                     ed.Data.GetPropertyValueByName<Dictionary<string, string>>("incomingObject") == filter &&
+                     ed.Data.GetPropertyValueByName<Paginate<AuditableTestModel>>("incomingObject") == filter &&
                      ed.Data.GetPropertyValueByName<object>("exceptionId") == exId &&
                      ed.PerformedByUserId == wc.CurrentUserId)),
                 Times.Once);
@@ -426,10 +426,10 @@ namespace AnyService.Tests.Services
         public async Task GetAll_ReturnesResponseFromDB()
         {
             var model = new AuditableTestModel();
-            var filter = new Dictionary<string, string>();
+            var paginate = new Paginate<AuditableTestModel>();
             var repo = new Mock<IRepository<AuditableTestModel>>();
-            repo.Setup(r => r.GetAll(It.Is<IDictionary<string, string>>(d => d == filter)))
-                .ReturnsAsync(new[] { model });
+            repo.Setup(r => r.GetAll(It.Is<Paginate<AuditableTestModel>>(d => d == paginate)))
+                .ReturnsAsync(new Paginate<AuditableTestModel> { Data = new[] { model } });
 
             var v = new Mock<ICrudValidator<AuditableTestModel>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
@@ -450,7 +450,7 @@ namespace AnyService.Tests.Services
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, null);
-            var res = await cSrv.GetAll(filter);
+            var res = await cSrv.GetAll(paginate);
             res.Result.ShouldBe(ServiceResult.Ok);
             (res.Data as IEnumerable<AuditableTestModel>).ShouldContain(model);
             eb.Verify(e => e.Publish(

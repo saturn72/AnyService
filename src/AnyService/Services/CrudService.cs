@@ -131,7 +131,7 @@ namespace AnyService.Services
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
-        public async Task<ServiceResponse> GetAll(IDictionary<string, string> filter)
+        public async Task<ServiceResponse> GetAll(Paginate<TDomainModel> paginate)
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all flow");
 
@@ -142,18 +142,18 @@ namespace AnyService.Services
                 return serviceResponse;
             }
 
-            _logger.LogDebug(LoggingEvents.Repository, "Get all filter = " + filter);
+            _logger.LogDebug(LoggingEvents.Repository, "Get all filter = " + paginate);
             _logger.LogDebug(LoggingEvents.Repository, "Get all from repository");
             var wrapper = new ServiceResponseWrapper(serviceResponse);
-            var data = await _repository.Query(r => r.GetAll(filter), wrapper);
-            _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
+            var paginateRes = await _repository.Query(r => r.GetAll(paginate), wrapper);
+            _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {paginateRes}");
 
-            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Read, filter))
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Read, paginate))
                 return serviceResponse;
 
             if (serviceResponse.Result == ServiceResult.NotSet)
             {
-                serviceResponse.Data = data ?? new TDomainModel[] { };
+                serviceResponse.Data = paginateRes;
                 serviceResponse.Result = ServiceResult.Ok;
                 Publish(_eventKeys.Read, serviceResponse.Data);
             }
