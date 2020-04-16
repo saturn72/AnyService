@@ -135,25 +135,24 @@ namespace AnyService.Services
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all flow");
 
-            var serviceResponse = new ServiceResponse();
+            var serviceResponse = new ServiceResponse { Data = paginate };
             if (!await _validator.ValidateForGet(serviceResponse))
             {
                 _logger.LogDebug(LoggingEvents.Validation, "Request did not pass validation");
                 return serviceResponse;
             }
 
-            _logger.LogDebug(LoggingEvents.Repository, "Get all filter = " + paginate);
-            _logger.LogDebug(LoggingEvents.Repository, "Get all from repository");
+            _logger.LogDebug(LoggingEvents.Repository, "Get all from repository using paginate = " + paginate);
             var wrapper = new ServiceResponseWrapper(serviceResponse);
-            var paginateRes = await _repository.Query(r => r.GetAll(paginate), wrapper);
-            _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {paginateRes}");
+            var data = await _repository.Query(r => r.GetAll(paginate), wrapper);
+            _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Read, paginate))
                 return serviceResponse;
-
+            paginate.Data = data;
             if (serviceResponse.Result == ServiceResult.NotSet)
             {
-                serviceResponse.Data = paginateRes;
+                serviceResponse.Data = paginate;
                 serviceResponse.Result = ServiceResult.Ok;
                 Publish(_eventKeys.Read, serviceResponse.Data);
             }

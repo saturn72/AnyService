@@ -6,6 +6,14 @@ namespace AnyService.Services
 {
     public class Paginate<TDomainModel> where TDomainModel : IDomainModelBase
     {
+        public Paginate()
+        {
+            SortOrder = PaginateSettings.Asc;
+        }
+        public Paginate(Func<TDomainModel, bool> query) : this()
+        {
+            Query = query;
+        }
         /// <summary>
         /// Gets or sets the total number of entities 
         /// </summary>

@@ -41,7 +41,7 @@ namespace AnyService.Services.Security
                     Query = x => x.UserId == userId
                 };
                 var allUserPermissions = await _repository.GetAll(p);
-                userPermissions = allUserPermissions?.Data?.FirstOrDefault();
+                userPermissions = allUserPermissions?.FirstOrDefault();
                 if (userPermissions != null)
                     await _cacheManager.Set(GetCacheKey(userId), userPermissions, DefaultCachingTime);
             }
@@ -57,7 +57,7 @@ namespace AnyService.Services.Security
                 Query = x => x.UserId == userPermissions.UserId
             };
             var allUserPermissions = await _repository.GetAll(p);
-            var dbEntity = allUserPermissions?.Data?.FirstOrDefault();
+            var dbEntity = allUserPermissions?.FirstOrDefault();
 
             if (dbEntity == null) return null;
 

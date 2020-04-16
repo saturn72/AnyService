@@ -56,28 +56,43 @@ namespace AnyService.Tests.Services
         public async Task Query_Empty_Collection(IEnumerable<TestClass> dbData)
         {
             var repo = new Mock<IRepository<TestClass>>();
-            repo.Setup(r => r.GetAll(null)).ReturnsAsync(new Paginate<TestClass> { Data = dbData });
+            repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
             var sr = new ServiceResponse();
 
             var w = new ServiceResponseWrapper(sr);
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), w);
-            res.Data.ShouldBe(dbData);
+            res.ShouldBe(dbData);
             sr.Data.ShouldBe(dbData);
             sr.Result.ShouldBe(ServiceResult.NotSet);
             sr.Message.ShouldBeNullOrEmpty();
         }
+        [Fact]
+        public async Task Query_NotFound_Paginate()
+        {
+            var repo = new Mock<IRepository<TestClass>>();
+            repo.Setup(r => r.GetAll(It.IsAny<Paginate<TestClass>>())).ReturnsAsync(null as IEnumerable<TestClass>);
+            var sr = new ServiceResponse();
 
+            var w = new ServiceResponseWrapper(sr);
+            var p = new Paginate<TestClass>();
+            var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(p), w);
+            res.ShouldNotBeNull();
+            res.ShouldBeEmpty();
+            sr.Data.ShouldBe(res);
+            sr.Result.ShouldBe(ServiceResult.NotSet);
+            sr.Message.ShouldBeNullOrEmpty();
+        }
         [Fact]
         public async Task Query_Found()
         {
             var dbData = new[] { new TestClass() };
             var repo = new Mock<IRepository<TestClass>>();
-            repo.Setup(r => r.GetAll(null)).ReturnsAsync(new Paginate<TestClass> { Data = dbData });
+            repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
             var sr = new ServiceResponse();
 
             var w = new ServiceResponseWrapper(sr);
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), w);
-            res.Data.ShouldBe(dbData);
+            res.ShouldBe(dbData);
             sr.Data.ShouldBe(dbData);
             sr.Result.ShouldBe(ServiceResult.NotSet);
             sr.Message.ShouldBeNullOrEmpty();

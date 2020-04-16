@@ -347,9 +347,10 @@ namespace AnyService.Tests.Services
         public async Task GetAll_Returns_NullResponseFromDB()
         {
             var model = new AuditableTestModel();
+            var dbRes = null as IEnumerable<AuditableTestModel>;
             var repo = new Mock<IRepository<AuditableTestModel>>();
             repo.Setup(r => r.GetAll(It.IsAny<Paginate<AuditableTestModel>>()))
-                .ReturnsAsync(null as Paginate<AuditableTestModel>);
+                .ReturnsAsync(dbRes);
 
             var v = new Mock<ICrudValidator<AuditableTestModel>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
@@ -375,7 +376,7 @@ namespace AnyService.Tests.Services
             res.Data.ShouldBeOfType<AuditableTestModel[]>().Length.ShouldBe(0);
             eb.Verify(e => e.Publish(
                     It.Is<string>(k => k == ekr.Read),
-                    It.Is<DomainEventData>(ed => (ed.Data as IEnumerable<AuditableTestModel>).Count() == 0 && ed.PerformedByUserId == wc.CurrentUserId)),
+                    It.Is<DomainEventData>(ed => ed.Data == dbRes && ed.PerformedByUserId == wc.CurrentUserId)),
                 Times.Once);
         }
         [Fact]
@@ -427,9 +428,10 @@ namespace AnyService.Tests.Services
         {
             var model = new AuditableTestModel();
             var paginate = new Paginate<AuditableTestModel>();
+            var dbRes = new[] { model };
             var repo = new Mock<IRepository<AuditableTestModel>>();
             repo.Setup(r => r.GetAll(It.Is<Paginate<AuditableTestModel>>(d => d == paginate)))
-                .ReturnsAsync(new Paginate<AuditableTestModel> { Data = new[] { model } });
+                .ReturnsAsync(dbRes);
 
             var v = new Mock<ICrudValidator<AuditableTestModel>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
@@ -452,10 +454,11 @@ namespace AnyService.Tests.Services
             var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, null);
             var res = await cSrv.GetAll(paginate);
             res.Result.ShouldBe(ServiceResult.Ok);
-            (res.Data as IEnumerable<AuditableTestModel>).ShouldContain(model);
+            paginate.Data.ShouldBe(dbRes);
+            res.Data.ShouldBe(paginate);
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == ekr.Read),
-                It.Is<DomainEventData>(ed => (ed.Data as IEnumerable<object>).Contains(model) && ed.PerformedByUserId == wc.CurrentUserId)), Times.Once);
+                It.Is<DomainEventData>(ed => ed.Data == paginate && ed.PerformedByUserId == wc.CurrentUserId)), Times.Once);
         }
         #endregion
         #region Update

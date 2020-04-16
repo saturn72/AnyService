@@ -49,9 +49,9 @@ namespace AnyService.LiteDb
                 return DateTime.UtcNow.ToString("yyyyMMddTHHmmssK") + "-" + Guid.NewGuid().ToString();
             }
         }
-        public Task<Paginate<TDomainModel>> GetAll(Paginate<TDomainModel> paginate)
+        public Task<IEnumerable<TDomainModel>> GetAll(Paginate<TDomainModel> paginate)
         {
-            paginate.Data = LiteDbUtility.Query<IEnumerable<TDomainModel>>(_dbName, db =>
+            var data = LiteDbUtility.Query<IEnumerable<TDomainModel>>(_dbName, db =>
             {
                 var col = db.GetCollection<TDomainModel>();
                 if (paginate == null)
@@ -63,7 +63,7 @@ namespace AnyService.LiteDb
                 return col.Find(e => paginate.Query(e)).ToArray();
             });
 
-            return Task.FromResult(paginate);
+            return Task.FromResult(data);
         }
         public async Task<TDomainModel> GetById(string id)
         {

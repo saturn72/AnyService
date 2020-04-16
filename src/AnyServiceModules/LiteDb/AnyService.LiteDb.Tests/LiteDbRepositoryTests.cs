@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LiteDB;
 using System.Linq;
 using System.Collections.Generic;
+using AnyService.Services;
 
 namespace AnyService.LiteDb.Tests
 {
@@ -110,8 +111,9 @@ namespace AnyService.LiteDb.Tests
             foreach (var e in entities)
                 all.Any(x => x.Value == e.Value).ShouldBeTrue();
 
-            var filter = new Dictionary<string, string> { { nameof(TestDomainModel.Value), "2" } };
-            var allFiltered = await lr.GetAll(filter);
+            var q = new Func<TestDomainModel, bool>(c => c.Value == "2");
+            var p = new Paginate<TestDomainModel>(q);
+            var allFiltered = await lr.GetAll(p);
             allFiltered.Count().ShouldBe(2);
             foreach (var e in entities)
                 allFiltered.All(x => x.Value == "2").ShouldBeTrue();

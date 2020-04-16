@@ -96,12 +96,11 @@ namespace AnyService.EntityFramework.Tests
             await _dbContext.SaveChangesAsync();
 
             var e = await _repository.GetAll(null);
-            var d = e.Data;
-            d.Count().ShouldBe(tc.Count);
+            e.Count().ShouldBe(tc.Count);
             for (int i = 0; i < tc.Count; i++)
             {
-                d.Any(x => x.Id != null && x.Value == valuePrefix + i.ToString()).ShouldBeTrue();
-                d.ElementAt(i).NestedClasses.Count().ShouldBe(2);
+                e.Any(x => x.Id != null && x.Value == valuePrefix + i.ToString()).ShouldBeTrue();
+                e.ElementAt(i).NestedClasses.Count().ShouldBe(2);
             }
         }
         [Fact]
@@ -134,8 +133,7 @@ namespace AnyService.EntityFramework.Tests
             await _dbContext.SaveChangesAsync();
 
             var filter = new Paginate<TestClass>();
-            var e = await _repository.GetAll(filter);
-            var d = e.Data;
+            var d = await _repository.GetAll(filter);
             d.Count().ShouldBe(tc.Count);
             for (int i = 0; i < tc.Count; i++)
             {
@@ -171,8 +169,8 @@ namespace AnyService.EntityFramework.Tests
             await _dbContext.Set<TestClass>().AddRangeAsync(tc);
             await _dbContext.SaveChangesAsync();
 
-            var filter = new Dictionary<string, string> { { "value", "a" } };
-            var e = await _repository.GetAll(filter);
+            var p = new Paginate<TestClass>(t => t.Value == "a");
+            var e = await _repository.GetAll(p);
             e.Count().ShouldBe(4);
             for (int i = 0; i < e.Count(); i++)
             {

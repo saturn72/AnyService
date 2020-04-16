@@ -1,6 +1,7 @@
 using Xunit;
 using Shouldly;
 using System;
+using AnyService.Services;
 
 namespace AnyService.Tests
 {

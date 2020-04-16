@@ -21,17 +21,13 @@ namespace AnyService.EntityFramework
             _dbContext = dbContext;
         }
 
-        public async Task<Paginate<TDomainModel>> GetAll(Paginate<TDomainModel> paginate)
+        public async Task<IEnumerable<TDomainModel>> GetAll(Paginate<TDomainModel> paginate)
         {
             if (paginate.Query == null)
-            {
-                paginate.Data = await IncludeNavigations(DbSet).ToArrayAsync();
-                return paginate;
-            }
+                return await IncludeNavigations(DbSet).ToArrayAsync();
 
             var q = DbSet.Where(paginate.Query).AsQueryable();
-            paginate.Data = await IncludeNavigations(q).ToArrayAsync();
-            return paginate;
+            return await IncludeNavigations(q).ToArrayAsync();
         }
         public async Task<TDomainModel> GetById(string id)
         {

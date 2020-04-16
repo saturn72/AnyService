@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace AnyService
+namespace AnyService.Services
 {
     public class PaginateSettings
     {

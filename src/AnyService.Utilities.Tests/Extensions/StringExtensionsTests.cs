@@ -2,7 +2,7 @@ using Xunit;
 using System;
 using Shouldly;
 
-namespace AnyService.Tests.Extensions
+namespace AnyService.Utilities.Tests.Extensions
 {
     public class StringExtensionsTests
     {

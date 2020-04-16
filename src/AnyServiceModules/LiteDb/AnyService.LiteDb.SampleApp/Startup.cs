@@ -35,7 +35,6 @@ namespace AnyService.LiteDb.SampleApp
             {
                 typeof(Stock)
             };
-
             services.AddAlwaysPassAuthentication("123-abcd-user-id", null);
 
             services.AddAnyService(entities);

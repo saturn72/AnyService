@@ -142,6 +142,7 @@ namespace AnyService.Controllers
             [FromQuery]string query = "")
         {
             var paginateSettings = _workContext.CurrentEntityConfigRecord.PaginateSettings;
+            var queryData = QueryToDictionaryCollectionquery..
             var paginate = new Paginate<TDomainModel>
             {
                 Offset = offset ?? paginateSettings.DefaultOffset,
