@@ -30,8 +30,11 @@ namespace AnyService.Core
             {"|", (left, right) => Expression.Or(left,right)},
             {"||", (left, right) => Expression.OrElse(left,right)},
         };
-        protected const string EndsWithBracketPattern = @"^\s*(?'leftOperand'.*)\s*[^\|\&](?'evaluator'(((\|){1,2})|(\&{1,2})))\s*(?'rightOperand'\(.*\))\s*$";
-        protected const string StartsWithBracketPattern = @"^\s*(?'leftOperand'\(.*\))\s*(?'evaluator'((\|{1,2})|(\&{1,2})))\s*(?'rightOperand'.*)\s*$";
+
+        // protected const string HasNoBrackets = @"^\s*[^(]*$";
+        protected const string HasBrackets = @"^\s*(?'leftOperand'[^\|\&]*)\s*(?'evaluator_first'((\|)*|(\&)*))\s*(?'bracket'(\(\s*(.*)s*\)))\s*(?'evaluator_second'((\|{1,2})|(\&{1,2}))*)\s*(?'rightOperand'.*)\s*$";
+        // protected const string StartsWithBracketPattern = @"^\s*(?'leftOperand'\(.*\))\s*(?'evaluator'((\|{1,2})|(\&{1,2})))\s*(?'rightOperand'.*)\s*$";
+        // protected const string EndsWithBracketPattern = @"^\s*(?'leftOperand'.*)\s*[^\|\&](?'evaluator'(((\|){1,2})|(\&{1,2})))\s*(?'rightOperand'\(.*\))\s*$";
         protected const string EvalPattern = @"^(?'leftOperand'\S{1,}\s*(==|!=|<|<=|>|>=)\s*\S{1,})\s*(?'evaluator'((\|{1,2})|(\&{1,2})))\s*(?'rightOperand'\S{1,}\s*(==|!=|<|<=|>|>=)\S{1,})\s*$";
         protected const string BinaryPattern = @"^(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)$";
         private const string LeftOperand = "leftOperand";
@@ -48,10 +51,8 @@ namespace AnyService.Core
         private static Expression<Func<T, bool>> ToBinaryTreeWorker<T>(string query, ParameterExpression parameterExpression)
         {
             var q = query.Trim();
-            var startsWithBracket = Regex.Match(q, StartsWithBracketPattern);
-            var endsWithBracket = Regex.Match(q, EndsWithBracketPattern);
-
-            if (!startsWithBracket.Success && !endsWithBracket.Success)
+            var hasBrackets = Regex.Match(q, HasBrackets);
+            if (!hasBrackets.Success)
             {
                 var evalMatch = Regex.Match(q, EvalPattern);
                 if (evalMatch.Success)
@@ -81,15 +82,13 @@ namespace AnyService.Core
             //     var lastIndexOfComperar = subQuery.LastIndexOfAny(new[] { '&', '|' });
             //     if (lastIndexOfComperar < 0) return null;
             // }
-            if (startsWithBracket.Success)
-            {
-                var firstIndexOfCloseBracket = q.IndexOf(')');
-                var subQuery = q.Substring(firstIndexOfCloseBracket + 1).Trim();
-                var firstIndexOfComperar = subQuery.LastIndexOfAny(new[] { '&', '|' });
+            var lef
+            var firstIndexOfCloseBracket = q.IndexOf(')');
+            var subQuery = q.Substring(firstIndexOfCloseBracket + 1).Trim();
+            var firstIndexOfComperar = subQuery.LastIndexOfAny(new[] { '&', '|' });
 
-                if (firstIndexOfComperar < 0 || q.Substring(firstIndexOfCloseBracket + 1, firstIndexOfComperar).Trim().Any())
-                    return null;
-            }
+            if (firstIndexOfComperar < 0 || q.Substring(firstIndexOfCloseBracket + 1, firstIndexOfComperar).Trim().Any())
+                return null;
 
             throw new System.NotImplementedException();
         }

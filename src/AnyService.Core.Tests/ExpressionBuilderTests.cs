@@ -222,6 +222,23 @@ namespace AnyService.Core.Tests
                     new TestClass {},
                 },
             },
+             new object[]
+            {
+                "id == 2 || (numericvalue ==32 && stringValue ==a) || stringValue ==b",
+                new[]
+                {
+                    new TestClass {Id="2",  StringValue = "ttt"},
+                    new TestClass {Id="2", NumericValue = 22},
+                    new TestClass { StringValue = "a", NumericValue = 32 },
+                    new TestClass { StringValue = "b" },
+                },
+                new[]
+                {
+                    new TestClass { StringValue = "a" },
+                    new TestClass {},
+                },
+            },
+
         };
 
         [Theory]
@@ -279,6 +296,31 @@ namespace AnyService.Core.Tests
             Regex.Match(str, pattern).Success.ShouldBeFalse();
         }
         [Theory]
+        [InlineData("does_not_match > right")]
+        public void HasBrackets_PatternFalse(string str)
+        {
+            Regex.Match(str, ExpressionBuilderForTest.HasBracketValue).Success.ShouldBeFalse();
+        }
+
+        [Theory]
+        [InlineData("", "", "(x<40 || y>5)", "&&", "f == 123")]
+        [InlineData("", "", "(x<40 || y>5)", "", "")]
+        [InlineData(" f == 123", " || ", "(x < 40 || y > 5)", "", "")]
+        [InlineData("f == 123", "|| ", " (x < 40 || (y > 5))", " &&", " f == 123")]
+        [InlineData("f == 123 ", "|| ", "((x < 40 || y > 5) && f == 123 && f == 123 || (x < 40 || y > 5))()))))))((((( )", " &&", " f == 123")]
+        public void HasBracketsPatternSuccess(string leftOperand, string ev_first, string bracket, string ev_second, string rightOperand)
+        {
+            var str = leftOperand + ev_first + bracket + ev_second + rightOperand;
+            var m = Regex.Match(str, ExpressionBuilderForTest.HasBracketValue);
+            m.Success.ShouldBeTrue();
+            m.Groups["leftOperand"].Value.Trim().ShouldBe(leftOperand.Trim());
+            m.Groups["evaluator_first"].Value.Trim().ShouldBe(ev_first.Trim());
+            m.Groups["bracket"].Value.Trim().ShouldBe(bracket.Trim());
+            m.Groups["evaluator_second"].Value.Trim().ShouldBe(ev_second.Trim());
+            m.Groups["rightOperand"].Value.Trim().ShouldBe(rightOperand.Trim());
+        }
+
+
         [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "(left)", "|", "(right)")]
         [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "(left)", "|", "right")]
         [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "(left)", "||", "(right)")]
@@ -295,8 +337,7 @@ namespace AnyService.Core.Tests
         [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "left", "&", "(right)")]
         [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "(left)", "&&", "(right)")]
         [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "left", "&&", "(right)")]
-
-        public void PatternTests(string pattern, string left, string ev, string right)
+        public void PatternTests_BreaksToGroups(string pattern, string left, string ev, string right)
         {
             var m = Regex.Match($"{left} {ev} {right}", pattern);
             m.Success.ShouldBeTrue();
@@ -312,6 +353,7 @@ namespace AnyService.Core.Tests
             internal const string BinaryPatternValue = BinaryPattern;
             internal const string StartsWithBracketValue = StartsWithBracketPattern;
             internal const string EndsWithBracketValue = EndsWithBracketPattern;
+            internal const string HasBracketValue = HasBrackets;
         }
         [Theory]
         [MemberData(nameof(ToBinaryTree_EmptyOrNullOrIncorrectFilter_ReturnsNull_DATA))]
