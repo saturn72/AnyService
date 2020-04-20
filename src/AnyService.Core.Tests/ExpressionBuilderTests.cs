@@ -11,7 +11,7 @@ namespace AnyService.Core.Tests
     {
         public string Id { get; set; }
         public string Value1 { get; set; }
-        public int Value2 { get; set; }
+        public int NumericValue { get; set; }
     }
     public class ExpressionBuilderTests
     {
@@ -36,21 +36,114 @@ namespace AnyService.Core.Tests
         }
 
         [Theory]
-        // [InlineData("id == 2")]
-        // [InlineData("id > 2")]
-        // [InlineData("id >= 2")]
-        // [InlineData("id < 2")]
-        // [InlineData("id <= 2")]
-        // [InlineData("id == 2 && value1 ==32")]
-        [InlineData("id == 2 | value1 ==32")]
+        [MemberData(nameof(ToBinaryTree_FromString_DATA))]
+        public void ToBinaryTree_FromString(string query, IEnumerable<TestClass> willReturned, IEnumerable<TestClass> willNotReturned)
+        {
+            var func = ExpressionBuilder.ToBinaryTree<TestClass>(query);
+
+            var col = new List<TestClass>(willReturned);
+            col.AddRange(willNotReturned);
+
+            var result = col.Where(func);
+            result.Count().ShouldBe(willReturned.Count());
+            willReturned.All(x => result.Contains(x));
+        }
+
+        public static IEnumerable<object[]> ToBinaryTree_FromString_DATA => new[]
+        {
+            new object[]
+            {
+                "id == 2",
+                new[]{new TestClass{ Id = "2"}},
+                new[]
+                {
+                    new TestClass
+                    {
+                        Id = "should-never-returned-#1",
+                        NumericValue = 2,
+                    },
+                    new TestClass
+                    {
+                        Id = "should-never-returned-#2",
+                        Value1 = "32",
+                    }
+                }
+            },
+            new object[]
+            {
+                "NumericValue > 2",
+                new[]
+                {
+                    new TestClass { NumericValue = 3 }, new TestClass { NumericValue = 4 },
+                },
+                new[]
+                {
+                    new TestClass
+                    {
+                        Id = "should-never-returned-#1",
+                        NumericValue = 2,
+                    },
+                    new TestClass
+                    {
+                        Id = "should-never-returned-#2",
+                        Value1 = "32",
+                    }
+                }
+            },
+            new object[]
+            {
+                "NumericValue >= 3",
+                new[]
+                {
+                    new TestClass { NumericValue = 3 }, new TestClass { NumericValue = 4 },
+                },
+                new[]
+                {
+                    new TestClass
+                    {
+                        Id = "should-never-returned-#1",
+                        NumericValue = 2,
+                    },
+                },
+            },
+            new object[]
+            {
+                "NumericValue < 5",
+                new[]
+                {
+                    new TestClass { NumericValue = 3 }, new TestClass { NumericValue = 4 },
+                },
+               new TestClass[] { },
+            },
+            new object[]
+            {
+                "NumericValue <= 4",
+                new[]
+                {
+                    new TestClass { NumericValue = 3 }, new TestClass { NumericValue = 4 },
+                },
+                new TestClass[] { },
+            },
+            new object[]
+            {
+                "id == 2 && value1 ==32",
+                new[]
+                {
+                    new TestClass {Id="2", NumericValue = 32  }, new TestClass { Id="2", NumericValue = 32 },
+                },
+                new[]
+                {
+                    new TestClass {},
+                    new TestClass { Id="2", },
+                    new TestClass { NumericValue = 32  },
+                },
+            },
+        // [InlineData("")]
+        // [InlineData("id == 2 | value1 ==32")]
         // [InlineData("id == 2 || value1 ==32")]
         // [InlineData("(id == 2 || value1 ==32) && value2 <123")]
         // [InlineData("id == 2 || (value1 ==32 && value2 <123)")]
-        public void ToBinaryTree_FromString(string query)
-        {
-            ExpressionBuilder.ToBinaryTree<TestClass>(query);
-            throw new System.NotImplementedException();
-        }
+        };
 
         [Theory]
         [InlineData("==")]
@@ -85,8 +178,9 @@ namespace AnyService.Core.Tests
         }
         internal class ExpressionBuilderForTest : ExpressionBuilder
         {
-            internal static Func<MemberExpression, object, BinaryExpression> GetBinaryExpressionBuilder(string key) => ExpressionBuilder.BinaryExpressionBuilder[key];
-            internal static Func<BinaryExpression, BinaryExpression, BinaryExpression> GetEvaluationExpressionBuilder(string key) => ExpressionBuilder.EvaluationExpressionBuilder[key];
+            internal static Func<MemberExpression, object, Expression> GetBinaryExpressionBuilder(string key) => Core.ExpressionBuilder.BinaryExpressionBuilder[key];
+            // internal static Func<ParameterExpression, object, Expression> GetBinaryExpressionBuilder(string key) => Core.ExpressionBuilder.BinaryExpressionBuilder[key];
+            internal static Func<Expression, Expression, Expression> GetEvaluationExpressionBuilder(string key) => Core.ExpressionBuilder.EvaluationExpressionBuilder[key];
         }
         [Theory]
         [MemberData(nameof(ToBinaryTree_EmptyOrNullOrIncorrectFilter_ReturnsNull_DATA))]
@@ -99,7 +193,7 @@ namespace AnyService.Core.Tests
         {
             new object[]{null as IDictionary<string, string>},
             new object[]{new Dictionary<string, string>()},
-            new object[]{new Dictionary<string, string> { { nameof(TestClass.Value2), "d" } }}
+            new object[]{new Dictionary<string, string> { { nameof(TestClass.NumericValue), "d" } }}
         };
 
         [Fact]
@@ -113,12 +207,12 @@ namespace AnyService.Core.Tests
         {
             var col = new[]
             {
-                new TestClass{Id = "1", Value2  =1, Value1 = "1"},
-                new TestClass{Id = "2", Value2  =1, Value1 = "2"},
-                new TestClass{Id = "3", Value2  =3},
+                new TestClass{Id = "1", NumericValue  =1, Value1 = "1"},
+                new TestClass{Id = "2", NumericValue  =1, Value1 = "2"},
+                new TestClass{Id = "3", NumericValue  =3},
             };
 
-            var filter1 = new Dictionary<string, string> { { nameof(TestClass.Value2), "1" } };
+            var filter1 = new Dictionary<string, string> { { nameof(TestClass.NumericValue), "1" } };
             var f1 = ExpressionBuilder.ToBinaryTree<TestClass>(filter1);
             f1.ShouldNotBeNull();
             var res1 = col.Where(f1).ToArray();
@@ -126,7 +220,7 @@ namespace AnyService.Core.Tests
 
             var filter2 = new Dictionary<string, string> {
                 {nameof(TestClass.Value1), "1" } ,
-                {nameof(TestClass.Value2), "1" } ,
+                {nameof(TestClass.NumericValue), "1" } ,
                 };
             var f2 = ExpressionBuilder.ToBinaryTree<TestClass>(filter2);
             f2.ShouldNotBeNull();
