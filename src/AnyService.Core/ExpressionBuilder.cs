@@ -30,7 +30,10 @@ namespace AnyService.Core
             {"|", (left, right) => Expression.Or(left,right)},
             {"||", (left, right) => Expression.OrElse(left,right)},
         };
-        private const string EvalPattern = @"^(?'leftOperand'\S{1,}\s*(==|!=|<|<=|>|>=)\s*\S{1,})\s*(?'evaluator'(\|)(?!\1{2})|(\&)(?!\2{2}))\s*(?'rightOperand'\S{1,}\s*(==|!=|<|<=|>|>=)\S{1,})\s*$";
+        protected const string EndsWithBracketPattern = @"^\s*(?'leftOperand'.*)\s*[^\|\&](?'evaluator'(((\|){1,2})|(\&{1,2})))\s*(?'rightOperand'\(.*\))\s*$";
+        protected const string StartsWithBracketPattern = @"^\s*(?'leftOperand'\(.*\))\s*(?'evaluator'((\|{1,2})|(\&{1,2})))\s*(?'rightOperand'.*)\s*$";
+        protected const string EvalPattern = @"^(?'leftOperand'\S{1,}\s*(==|!=|<|<=|>|>=)\s*\S{1,})\s*(?'evaluator'((\|{1,2})|(\&{1,2})))\s*(?'rightOperand'\S{1,}\s*(==|!=|<|<=|>|>=)\S{1,})\s*$";
+        protected const string BinaryPattern = @"^(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)$";
         private const string LeftOperand = "leftOperand";
         private const string RightOperand = "rightOperand";
         private const string Evaluator = "evaluator";
@@ -40,14 +43,15 @@ namespace AnyService.Core
         {
             var pe = Expression.Parameter(typeof(T), "x");
             var bt = ToBinaryTreeWorker<T>(query, pe);
-            return bt?.Compile();
+            return bt.Compile();
         }
         private static Expression<Func<T, bool>> ToBinaryTreeWorker<T>(string query, ParameterExpression parameterExpression)
         {
-            var q = "id == 2 && value1 ==32";
-            // var q = query.Trim();
-            var firstIndexOfOpenBracket = q.IndexOf('(');
-            if (firstIndexOfOpenBracket < 0)
+            var q = query.Trim();
+            var startsWithBracket = Regex.Match(q, StartsWithBracketPattern);
+            var endsWithBracket = Regex.Match(q, EndsWithBracketPattern);
+
+            if (!startsWithBracket.Success && !endsWithBracket.Success)
             {
                 var evalMatch = Regex.Match(q, EvalPattern);
                 if (evalMatch.Success)
@@ -61,7 +65,7 @@ namespace AnyService.Core
                     var exp = Expression.Lambda<Func<T, bool>>(evaluation, leftBinaryExpression.Parameters);
                     return exp;
                 }
-                var binaryOperationData = Regex.Match(q, @"^(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)$");
+                var binaryOperationData = Regex.Match(q, BinaryPattern);
                 if (!binaryOperationData.Success)
                     return null;
 
@@ -71,13 +75,13 @@ namespace AnyService.Core
                     binaryOperationData.Groups[RightOperand].Value,
                     parameterExpression);
             }
-            if (firstIndexOfOpenBracket > 0)
-            {
-                var subQuery = q.Substring(0, firstIndexOfOpenBracket).Trim();
-                var lastIndexOfComperar = subQuery.LastIndexOfAny(new[] { '&', '|' });
-                if (lastIndexOfComperar < 0) return null;
-            }
-            if (firstIndexOfOpenBracket == 0)
+            // if (firstIndexOfOpenBracket > 0)
+            // {
+            //     var subQuery = q.Substring(0, firstIndexOfOpenBracket).Trim();
+            //     var lastIndexOfComperar = subQuery.LastIndexOfAny(new[] { '&', '|' });
+            //     if (lastIndexOfComperar < 0) return null;
+            // }
+            if (startsWithBracket.Success)
             {
                 var firstIndexOfCloseBracket = q.IndexOf(')');
                 var subQuery = q.Substring(firstIndexOfCloseBracket + 1).Trim();
