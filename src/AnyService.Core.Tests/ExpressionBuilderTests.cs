@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text.RegularExpressions;
 using Shouldly;
 using Xunit;
 
@@ -33,214 +32,34 @@ namespace AnyService.Core.Tests
         [InlineData("id == 2 (value1 ==32 && value2 <123)")] // missing evaluation
         public void ToBinaryTree_FromString_ReturnsNull(string query)
         {
-            ExpressionBuilder.ToBinaryTree<TestClass>(query).ShouldBeNull();
+            ExpressionBuilder.ToBinaryTreeExpression<TestClass>(query).ShouldBeNull();
         }
 
         [Theory]
-        [MemberData(nameof(ToBinaryTree_FromString_DATA))]
-        public void ToBinaryTree_FromString(string query, IEnumerable<TestClass> willReturned, IEnumerable<TestClass> willNotReturned)
+        [InlineData("id == 2", "x => (x.Id == \"2\")")]
+        [InlineData("(id == 2)", "x => (x.Id == \"2\")")]
+        [InlineData("NumericValue > 2", "x => (x.NumericValue > 2)")]
+        [InlineData("NumericValue >= 3", "x => (x.NumericValue >= 3)")]
+        [InlineData("NumericValue < 3", "x => (x.NumericValue < 3)")]
+        [InlineData("NumericValue <= 3", "x => (x.NumericValue <= 3)")]
+        [InlineData("id == 2 & numericValue ==32", "x => ((x.Id == \"2\") And (x.NumericValue == 32))")]
+        [InlineData("id == 2 && numericValue ==32", "x => ((x.Id == \"2\") AndAlso (x.NumericValue == 32))")]
+        [InlineData("id == 2 && numericValue ==32 & stringValue==a", "x => ((x.Id == \"2\") AndAlso ((x.NumericValue == 32) And (x.StringValue == \"a\")))")]
+        [InlineData("id == 2 & numericValue ==32 & stringValue==a", "x => ((x.Id == \"2\") And ((x.NumericValue == 32) And (x.StringValue == \"a\")))")]
+        [InlineData("id == 2 && numericValue ==32 && stringValue==a", "x => ((x.Id == \"2\") AndAlso ((x.NumericValue == 32) AndAlso (x.StringValue == \"a\")))")]
+        [InlineData("id == 2 | numericValue ==32", "x => ((x.Id == \"2\") Or (x.NumericValue == 32))")]
+        [InlineData("id == 2 || numericValue ==32", "x => ((x.Id == \"2\") OrElse (x.NumericValue == 32))")]
+        [InlineData("id == 2 || numericValue ==32 || stringValue==a", "x => ((x.Id == \"2\") OrElse ((x.NumericValue == 32) OrElse (x.StringValue == \"a\")))")]
+        [InlineData("id == 2 || numericValue ==32 |  stringValue==a", "x => ((x.Id == \"2\") OrElse ((x.NumericValue == 32) Or (x.StringValue == \"a\")))")]
+        [InlineData("(id == 2 || numericvalue <3 && stringValue ==a)", "x => ((x.Id == \"2\") OrElse ((x.NumericValue < 3) AndAlso (x.StringValue == \"a\")))")]
+        [InlineData("(id == 2 || numericvalue <3) && stringValue ==a", "x => (((x.Id == \"2\") OrElse (x.NumericValue < 3)) AndAlso (x.StringValue == \"a\"))")]
+        [InlineData("id == 2 || (numericvalue ==32 && stringValue ==a)", "x => ((x.Id == \"2\") OrElse ((x.NumericValue == 32) AndAlso (x.StringValue == \"a\")))")]
+        [InlineData("id == 2 || (numericvalue ==32 && stringValue ==a) || stringValue ==b", "x => ((x.Id == \"2\") OrElse (((x.NumericValue == 32) AndAlso (x.StringValue == \"a\")) OrElse (x.StringValue == \"b\")))")]
+        public void ToBinaryTree_FromString(string query, string expResult)
         {
-
-            var func = ExpressionBuilder.ToBinaryTree<TestClass>(query);
-
-            var col = new List<TestClass>(willReturned);
-            col.AddRange(willNotReturned);
-
-            var result = col.Where(func);
-            result.Count().ShouldBe(willReturned.Count());
-            willReturned.All(x => result.Contains(x));
+            var e = ExpressionBuilder.ToBinaryTreeExpression<TestClass>(query);
+            e.ToString().ShouldBe(expResult);
         }
-
-        public static IEnumerable<object[]> ToBinaryTree_FromString_DATA => new[]
-        {
-            new object[]
-            {
-                "id == 2",
-                new[]{new TestClass{ Id = "2"}},
-                new[]
-                {
-                    new TestClass
-                    {
-                        Id = "should-never-returned-#1",
-                        NumericValue = 2,
-                    },
-                    new TestClass
-                    {
-                        Id = "should-never-returned-#2",
-                        StringValue = "32",
-                    }
-                }
-            },
-            new object[]
-            {
-                "NumericValue > 2",
-                new[]
-                {
-                    new TestClass { NumericValue = 3 }, new TestClass { NumericValue = 4 },
-                },
-                new[]
-                {
-                    new TestClass
-                    {
-                        Id = "should-never-returned-#1",
-                        NumericValue = 2,
-                    },
-                    new TestClass
-                    {
-                        Id = "should-never-returned-#2",
-                        StringValue = "32",
-                    }
-                }
-            },
-            new object[]
-            {
-                "NumericValue >= 3",
-                new[]
-                {
-                    new TestClass { NumericValue = 3 }, new TestClass { NumericValue = 4 },
-                },
-                new[]
-                {
-                    new TestClass
-                    {
-                        Id = "should-never-returned-#1",
-                        NumericValue = 2,
-                    },
-                },
-            },
-            new object[]
-            {
-                "NumericValue < 5",
-                new[]
-                {
-                    new TestClass { NumericValue = 3 }, new TestClass { NumericValue = 4 },
-                },
-               new TestClass[] { },
-            },
-            new object[]
-            {
-                "NumericValue <= 4",
-                new[]
-                {
-                    new TestClass { NumericValue = 3 }, new TestClass { NumericValue = 4 },
-                },
-                new TestClass[] { },
-            },
-            new object[]
-            {
-                "id == 2 & numericValue ==32",
-                new[]
-                {
-                    new TestClass {Id="2", NumericValue = 32  }, new TestClass { Id="2", NumericValue = 32 },
-                },
-                new[]
-                {
-                    new TestClass {},
-                    new TestClass { Id="2", },
-                    new TestClass { NumericValue = 32  },
-                },
-            },
-            new object[]
-            {
-                "id == 2 && numericValue ==32",
-                new[]
-                {
-                    new TestClass {Id="2", NumericValue = 32  }, new TestClass { Id="2", NumericValue = 32 },
-                },
-                new[]
-                {
-                    new TestClass {},
-                    new TestClass { Id="2", },
-                    new TestClass { NumericValue = 32  },
-                },
-            },
-            new object[]
-            {
-                "id == 2 | numericValue ==32",
-                new[]
-                {
-                    new TestClass {Id="2",  }, new TestClass { NumericValue = 32 },
-                },
-                new[]
-                {
-                    new TestClass {},
-                },
-            },
-            new object[]
-            {
-                "id == 2 || numericValue ==32",
-                new[]
-                {
-                    new TestClass {Id="2",  }, new TestClass { NumericValue = 32 },
-                },
-                new[]
-                {
-                    new TestClass {},
-                },
-            },
-             new object[]
-            {
-                "id == 2 && numericValue ==32 && stringvalue=a",
-                new[]
-                {
-                    new TestClass {Id="2", NumericValue = 32  , StringValue = "a"},
-                },
-                new[]
-                {
-                    new TestClass {},
-                    new TestClass { Id="2", },
-                    new TestClass { NumericValue = 32  },
-                },
-            },
-             new object[]
-            {
-                "(id == 2 || stringValue ==a) && numericvalue <3",
-                new[]
-                {
-                    new TestClass {Id="2",  StringValue = "ttt"},
-                    new TestClass { StringValue = "a" },
-                },
-                new[]
-                {
-                    new TestClass {},
-                    new TestClass {Id="2", NumericValue = 22},
-                    new TestClass { StringValue = "a", NumericValue = 32 },
-                },
-            },
-               new object[]
-            {
-                "id == 2 || (numericvalue ==32 && stringValue ==a)",
-                new[]
-                {
-                    new TestClass {Id="2",  StringValue = "ttt"},
-                    new TestClass {Id="2", NumericValue = 22},
-                    new TestClass { StringValue = "a", NumericValue = 32 },
-                },
-                new[]
-                {
-                    new TestClass { StringValue = "a" },
-                    new TestClass {},
-                },
-            },
-             new object[]
-            {
-                "id == 2 || (numericvalue ==32 && stringValue ==a) || stringValue ==b",
-                new[]
-                {
-                    new TestClass {Id="2",  StringValue = "ttt"},
-                    new TestClass {Id="2", NumericValue = 22},
-                    new TestClass { StringValue = "a", NumericValue = 32 },
-                    new TestClass { StringValue = "b" },
-                },
-                new[]
-                {
-                    new TestClass { StringValue = "a" },
-                    new TestClass {},
-                },
-            },
-
-        };
-
         [Theory]
         [InlineData("==")]
         [InlineData("!=")]
@@ -276,84 +95,23 @@ namespace AnyService.Core.Tests
         [Fact]
         public void AllRegExPatterns()
         {
-            ExpressionBuilderForTest.StartsWithBracketValue.ShouldBe(@"^(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)$");
-            ExpressionBuilderForTest.EndsWithBracketValue.ShouldBe(@"^(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)$");
-            ExpressionBuilderForTest.BinaryPatternValue.ShouldBe(@"^(?'leftOperand'\S{1,}\s*(==|!=|<|<=|>|>=)\s*\S{1,})\s*(?'evaluator'((\|{1,2})|(\&{1,2})))\s*(?'rightOperand'\S{1,}\s*(==|!=|<|<=|>|>=)\S{1,})\s*$");
-            ExpressionBuilderForTest.EvalPatternValue.ShouldBe(@"^(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)$");
+            ExpressionBuilderForTest.HasBracketValue.ShouldBe(@"^\s*(?'leftOperand'[^\|\&]*)\s*(?'evaluator_first'((\|)*|(\&)*))\s*(?'brackets'(\(\s*(.*)s*\)))\s*(?'evaluator_second'((\|{1,2})|(\&{1,2}))*)\s*(?'rightOperand'.*)\s*$");
+            ExpressionBuilderForTest.HasSurroundingBracketsOnlyValue.ShouldBe(@"^\s*\(\s*(?'leftOperand'([^\(\)])+)\s*\)\s*$");
+            ExpressionBuilderForTest.EvalPatternValue.ShouldBe(@"^(?'leftOperand'\S{1,}\s*(==|!=|<|<=|>|>=)\s*\S{1,})\s*(?'evaluator_first'((\|{1,2})|(\&{1,2})))\s*(?'rightOperand'.*)\s*$");
+            ExpressionBuilderForTest.BinaryPatternValue.ShouldBe(@"^\s*(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)\s*$");
+            ExpressionBuilderForTest.BinaryWithBracketsPatternValue.ShouldBe(@"^\s*\(\s*(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)\s*\)\s*$");
         }
 
-        [Theory]
-        [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "does_not_match | (right)")]
-        [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "does_not_match || (right)")]
-        [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "does_not_match & (right)")]
-        [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "does_not_match && (right)")]
-        [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "does_not_match | right")]
-        [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "does_not_match || right")]
-        [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "does_not_match & right")]
-        [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "does_not_match && right")]
-        public void PatternTests_DoesNotMatch(string pattern, string str)
-        {
-            Regex.Match(str, pattern).Success.ShouldBeFalse();
-        }
-        [Theory]
-        [InlineData("does_not_match > right")]
-        public void HasBrackets_PatternFalse(string str)
-        {
-            Regex.Match(str, ExpressionBuilderForTest.HasBracketValue).Success.ShouldBeFalse();
-        }
-
-        [Theory]
-        [InlineData("", "", "(x<40 || y>5)", "&&", "f == 123")]
-        [InlineData("", "", "(x<40 || y>5)", "", "")]
-        [InlineData(" f == 123", " || ", "(x < 40 || y > 5)", "", "")]
-        [InlineData("f == 123", "|| ", " (x < 40 || (y > 5))", " &&", " f == 123")]
-        [InlineData("f == 123 ", "|| ", "((x < 40 || y > 5) && f == 123 && f == 123 || (x < 40 || y > 5))()))))))((((( )", " &&", " f == 123")]
-        public void HasBracketsPatternSuccess(string leftOperand, string ev_first, string bracket, string ev_second, string rightOperand)
-        {
-            var str = leftOperand + ev_first + bracket + ev_second + rightOperand;
-            var m = Regex.Match(str, ExpressionBuilderForTest.HasBracketValue);
-            m.Success.ShouldBeTrue();
-            m.Groups["leftOperand"].Value.Trim().ShouldBe(leftOperand.Trim());
-            m.Groups["evaluator_first"].Value.Trim().ShouldBe(ev_first.Trim());
-            m.Groups["bracket"].Value.Trim().ShouldBe(bracket.Trim());
-            m.Groups["evaluator_second"].Value.Trim().ShouldBe(ev_second.Trim());
-            m.Groups["rightOperand"].Value.Trim().ShouldBe(rightOperand.Trim());
-        }
-
-
-        [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "(left)", "|", "(right)")]
-        [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "(left)", "|", "right")]
-        [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "(left)", "||", "(right)")]
-        [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "(left)", "||", "right")]
-        [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "(left)", "&", "(right)")]
-        [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "(left)", "&", "right")]
-        [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "(left)", "&&", "(right)")]
-        [InlineData(ExpressionBuilderForTest.StartsWithBracketValue, "(left)", "&&", "right")]
-        [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "(left)", "|", "(right)")]
-        [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "left", "|", "(right)")]
-        [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "(left)", "||", "(right)")]
-        [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "left", "||", "(right)")]
-        [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "(left)", "&", "(right)")]
-        [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "left", "&", "(right)")]
-        [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "(left)", "&&", "(right)")]
-        [InlineData(ExpressionBuilderForTest.EndsWithBracketValue, "left", "&&", "(right)")]
-        public void PatternTests_BreaksToGroups(string pattern, string left, string ev, string right)
-        {
-            var m = Regex.Match($"{left} {ev} {right}", pattern);
-            m.Success.ShouldBeTrue();
-            m.Groups["leftOperand"].Value.ShouldBe(left);
-            m.Groups["evaluator"].Value.ShouldBe(ev);
-            m.Groups["rightOperand"].Value.ShouldBe(right);
-        }
         internal class ExpressionBuilderForTest : ExpressionBuilder
         {
             internal static Func<MemberExpression, object, Expression> GetBinaryExpressionBuilder(string key) => Core.ExpressionBuilder.BinaryExpressionBuilder[key];
             internal static Func<Expression, Expression, Expression> GetEvaluationExpressionBuilder(string key) => Core.ExpressionBuilder.EvaluationExpressionBuilder[key];
             internal const string EvalPatternValue = EvalPattern;
             internal const string BinaryPatternValue = BinaryPattern;
-            internal const string StartsWithBracketValue = StartsWithBracketPattern;
-            internal const string EndsWithBracketValue = EndsWithBracketPattern;
+            internal const string BinaryWithBracketsPatternValue = BinaryWithBracketsPattern;
             internal const string HasBracketValue = HasBrackets;
+            internal const string HasSurroundingBracketsOnlyValue = HasSurroundingBracketsOnly;
+
         }
         [Theory]
         [MemberData(nameof(ToBinaryTree_EmptyOrNullOrIncorrectFilter_ReturnsNull_DATA))]

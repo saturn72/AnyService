@@ -30,68 +30,95 @@ namespace AnyService.Core
             {"|", (left, right) => Expression.Or(left,right)},
             {"||", (left, right) => Expression.OrElse(left,right)},
         };
-
-        // protected const string HasNoBrackets = @"^\s*[^(]*$";
-        protected const string HasBrackets = @"^\s*(?'leftOperand'[^\|\&]*)\s*(?'evaluator_first'((\|)*|(\&)*))\s*(?'bracket'(\(\s*(.*)s*\)))\s*(?'evaluator_second'((\|{1,2})|(\&{1,2}))*)\s*(?'rightOperand'.*)\s*$";
-        // protected const string StartsWithBracketPattern = @"^\s*(?'leftOperand'\(.*\))\s*(?'evaluator'((\|{1,2})|(\&{1,2})))\s*(?'rightOperand'.*)\s*$";
-        // protected const string EndsWithBracketPattern = @"^\s*(?'leftOperand'.*)\s*[^\|\&](?'evaluator'(((\|){1,2})|(\&{1,2})))\s*(?'rightOperand'\(.*\))\s*$";
-        protected const string EvalPattern = @"^(?'leftOperand'\S{1,}\s*(==|!=|<|<=|>|>=)\s*\S{1,})\s*(?'evaluator'((\|{1,2})|(\&{1,2})))\s*(?'rightOperand'\S{1,}\s*(==|!=|<|<=|>|>=)\S{1,})\s*$";
-        protected const string BinaryPattern = @"^(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)$";
+        protected const string HasBrackets = @"^\s*(?'leftOperand'[^\|\&]*)\s*(?'evaluator_first'((\|)*|(\&)*))\s*(?'brackets'(\(\s*(.*)s*\)))\s*(?'evaluator_second'((\|{1,2})|(\&{1,2}))*)\s*(?'rightOperand'.*)\s*$";
+        protected const string HasSurroundingBracketsOnly = @"^\s*\(\s*(?'leftOperand'([^\(\)])+)\s*\)\s*$";
+        protected const string EvalPattern = @"^(?'leftOperand'\S{1,}\s*(==|!=|<|<=|>|>=)\s*\S{1,})\s*(?'evaluator_first'((\|{1,2})|(\&{1,2})))\s*(?'rightOperand'.*)\s*$";
+        private const string BinaryPatternCore = @"\s*(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)\s*";
+        protected const string BinaryPattern = "^" + BinaryPatternCore + "$";
+        protected const string BinaryWithBracketsPattern = @"^\s*\(" + BinaryPatternCore + @"\)\s*$";
         private const string LeftOperand = "leftOperand";
         private const string RightOperand = "rightOperand";
-        private const string Evaluator = "evaluator";
+        private const string Brackets = "brackets";
+        private const string EvaluatorFirst = "evaluator_first";
+        private const string EvaluatorSecond = "evaluator_second";
         private const string Operator = "operator";
 
-        public static Func<T, bool> ToBinaryTree<T>(string query)
+        public static Expression<Func<T, bool>> ToBinaryTreeExpression<T>(string query)
         {
             var pe = Expression.Parameter(typeof(T), "x");
-            var bt = ToBinaryTreeWorker<T>(query, pe);
-            return bt.Compile();
+            return ToBinaryTreeWorker<T>(query, pe);
         }
         private static Expression<Func<T, bool>> ToBinaryTreeWorker<T>(string query, ParameterExpression parameterExpression)
         {
             var q = query.Trim();
-            var hasBrackets = Regex.Match(q, HasBrackets);
-            if (!hasBrackets.Success)
+            var m = Regex.Match(q, HasSurroundingBracketsOnly);
+            if (m.Success)
+                return ToBinaryTreeWorker<T>(q.Substring(1, q.Length - 2), parameterExpression);
+
+            var binaryOperationMatch = GetMatch(q, BinaryPattern, BinaryWithBracketsPattern);
+
+            if (binaryOperationMatch != null && binaryOperationMatch.Success)
             {
-                var evalMatch = Regex.Match(q, EvalPattern);
-                if (evalMatch.Success)
-                {
-                    var leftBinaryExpression = ToBinaryTreeWorker<T>(evalMatch.Groups[LeftOperand].Value, parameterExpression);
-                    var rightBinaryExpression = ToBinaryTreeWorker<T>(evalMatch.Groups[RightOperand].Value, parameterExpression);
-                    if (leftBinaryExpression == null || rightBinaryExpression == null) return null;
-
-                    var builder = EvaluationExpressionBuilder[evalMatch.Groups[Evaluator].Value];
-                    var evaluation = builder(leftBinaryExpression.Body, rightBinaryExpression.Body);
-                    var exp = Expression.Lambda<Func<T, bool>>(evaluation, leftBinaryExpression.Parameters);
-                    return exp;
-                }
-                var binaryOperationData = Regex.Match(q, BinaryPattern);
-                if (!binaryOperationData.Success)
-                    return null;
-
                 return ToBinaryExpression<T>(
-                    binaryOperationData.Groups[LeftOperand].Value,
-                    binaryOperationData.Groups[Operator].Value,
-                    binaryOperationData.Groups[RightOperand].Value,
+                    binaryOperationMatch.Groups[LeftOperand].Value,
+                    binaryOperationMatch.Groups[Operator].Value,
+                    binaryOperationMatch.Groups[RightOperand].Value,
                     parameterExpression);
             }
-            // if (firstIndexOfOpenBracket > 0)
-            // {
-            //     var subQuery = q.Substring(0, firstIndexOfOpenBracket).Trim();
-            //     var lastIndexOfComperar = subQuery.LastIndexOfAny(new[] { '&', '|' });
-            //     if (lastIndexOfComperar < 0) return null;
-            // }
-            var lef
-            var firstIndexOfCloseBracket = q.IndexOf(')');
-            var subQuery = q.Substring(firstIndexOfCloseBracket + 1).Trim();
-            var firstIndexOfComperar = subQuery.LastIndexOfAny(new[] { '&', '|' });
+            var hasBrackets = GetMatch(q, HasBrackets); //DO NOT CHANGE EXPRESSIONS ORDER!!!
+            if (hasBrackets != null && hasBrackets.Success)
+            {
+                Group leftOp = hasBrackets.Groups[LeftOperand],
+                    evaluatorFirst = hasBrackets.Groups[EvaluatorFirst],
+                    brackets = hasBrackets.Groups[Brackets],
+                    evaluatorSecond = hasBrackets.Groups[EvaluatorSecond],
+                    rightOp = hasBrackets.Groups[RightOperand];
 
-            if (firstIndexOfComperar < 0 || q.Substring(firstIndexOfCloseBracket + 1, firstIndexOfComperar).Trim().Any())
-                return null;
+                if (leftOp.Value.HasValue() && rightOp.Value.HasValue() &&
+                    evaluatorFirst.Value.HasValue() && evaluatorSecond.Value.HasValue() && brackets.Value.HasValue())
+                {
+                    var e = evaluatorSecond.Value;
+                    var firstEvaluatorIndex = q.IndexOf(e) + e.Length;
+                    return SendToEvaluation<T>(leftOp.Value, e, q.Substring(firstEvaluatorIndex), parameterExpression);
+                }
 
-            throw new System.NotImplementedException();
+                string leftQuery = GetValueOrReplaceIfEmptyOrNull(leftOp.Value, brackets.Value),
+                    evaluator = GetValueOrReplaceIfEmptyOrNull(evaluatorFirst.Value, evaluatorSecond.Value),
+                    rightQuery = GetValueOrReplaceIfEmptyOrNull(rightOp.Value, brackets.Value);
+                return SendToEvaluation<T>(leftQuery, evaluator, rightQuery, parameterExpression);
+            }
+
+            var evalMatch = Regex.Match(q, EvalPattern);
+            if (evalMatch.Success)
+                return SendToEvaluation<T>(evalMatch.Groups[LeftOperand].Value, evalMatch.Groups[EvaluatorFirst].Value, evalMatch.Groups[RightOperand].Value, parameterExpression);
+
+            return null;
+
+            string GetValueOrReplaceIfEmptyOrNull(string source, string onEmptyOrNullValue) => source.HasValue() ? source : onEmptyOrNullValue;
         }
+
+        private static Match GetMatch(string q, params string[] patterns)
+        {
+            for (int i = 0; i < patterns.Length; i++)
+            {
+                var m = Regex.Match(q, patterns[i]);
+                if (m.Success)
+                    return m;
+            }
+            return null;
+        }
+
+        private static Expression<Func<T, bool>> SendToEvaluation<T>(string leftQuery, string evaluator, string rightQuery, ParameterExpression parameterExpression)
+        {
+            var leftBinaryExpression = ToBinaryTreeWorker<T>(leftQuery, parameterExpression);
+            var rightBinaryExpression = ToBinaryTreeWorker<T>(rightQuery, parameterExpression);
+            if (leftBinaryExpression == null || rightBinaryExpression == null) return null;
+
+            var builder = EvaluationExpressionBuilder[evaluator];
+            var evaluation = builder(leftBinaryExpression.Body, rightBinaryExpression.Body);
+            return Expression.Lambda<Func<T, bool>>(evaluation, leftBinaryExpression.Parameters);
+        }
+
         public static Expression<Func<T, bool>> ToBinaryExpression<T>(string propertyName, string @operator, string value, ParameterExpression parameterExpression)
         {
             if (!propertyName.HasValue() || !@operator.HasValue() || !value.HasValue())
