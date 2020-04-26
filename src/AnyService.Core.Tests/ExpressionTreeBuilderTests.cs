@@ -13,7 +13,7 @@ namespace AnyService.Core.Tests
         public string StringValue { get; set; }
         public int NumericValue { get; set; }
     }
-    public class ExpressionBuilderTests
+    public class ExpressionTreeBuilderTests
     {
         [Theory]
         [InlineData("idsfdsadffffdsfsdf2")] //no equality
@@ -32,7 +32,7 @@ namespace AnyService.Core.Tests
         [InlineData("id == 2 (value1 ==32 && value2 <123)")] // missing evaluation
         public void ToBinaryTree_FromString_ReturnsNull(string query)
         {
-            ExpressionBuilder.ToBinaryTreeExpression<TestClass>(query).ShouldBeNull();
+            ExpressionTreeBuilder.BuildBinaryTreeExpression<TestClass>(query).ShouldBeNull();
         }
 
         [Theory]
@@ -57,7 +57,7 @@ namespace AnyService.Core.Tests
         [InlineData("id == 2 || (numericvalue ==32 && stringValue ==a) || stringValue ==b", "x => ((x.Id == \"2\") OrElse (((x.NumericValue == 32) AndAlso (x.StringValue == \"a\")) OrElse (x.StringValue == \"b\")))")]
         public void ToBinaryTree_FromString(string query, string expResult)
         {
-            var e = ExpressionBuilder.ToBinaryTreeExpression<TestClass>(query);
+            var e = ExpressionTreeBuilder.BuildBinaryTreeExpression<TestClass>(query);
             e.ToString().ShouldBe(expResult);
         }
         [Theory]
@@ -102,10 +102,10 @@ namespace AnyService.Core.Tests
             ExpressionBuilderForTest.BinaryWithBracketsPatternValue.ShouldBe(@"^\s*\(\s*(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)\s*\)\s*$");
         }
 
-        internal class ExpressionBuilderForTest : ExpressionBuilder
+        internal class ExpressionBuilderForTest : ExpressionTreeBuilder
         {
-            internal static Func<MemberExpression, object, Expression> GetBinaryExpressionBuilder(string key) => Core.ExpressionBuilder.BinaryExpressionBuilder[key];
-            internal static Func<Expression, Expression, Expression> GetEvaluationExpressionBuilder(string key) => Core.ExpressionBuilder.EvaluationExpressionBuilder[key];
+            internal static Func<MemberExpression, object, Expression> GetBinaryExpressionBuilder(string key) => Core.ExpressionTreeBuilder.BinaryExpressionBuilder[key];
+            internal static Func<Expression, Expression, Expression> GetEvaluationExpressionBuilder(string key) => Core.ExpressionTreeBuilder.EvaluationExpressionBuilder[key];
             internal const string EvalPatternValue = EvalPattern;
             internal const string BinaryPatternValue = BinaryPattern;
             internal const string BinaryWithBracketsPatternValue = BinaryWithBracketsPattern;
@@ -117,7 +117,7 @@ namespace AnyService.Core.Tests
         [MemberData(nameof(ToBinaryTree_EmptyOrNullOrIncorrectFilter_ReturnsNull_DATA))]
         public void ToBinaryTree_EmptyOrNullFilter_ReturnsNull(IDictionary<string, string> filter)
         {
-            ExpressionBuilder.ToBinaryTree<TestClass>(filter).ShouldBeNull();
+            ExpressionTreeBuilder.BuildBinaryTreeExpression<TestClass>(filter).ShouldBeNull();
         }
 
         public static IEnumerable<object[]> ToBinaryTree_EmptyOrNullOrIncorrectFilter_ReturnsNull_DATA => new[]
@@ -131,7 +131,7 @@ namespace AnyService.Core.Tests
         public void ToBinaryTree_PropertyNotExists()
         {
             var filter = new Dictionary<string, string> { { "p", "d" } };
-            ExpressionBuilder.ToBinaryTree<TestClass>(filter).ShouldBeNull();
+            ExpressionTreeBuilder.BuildBinaryTreeExpression<TestClass>(filter).ShouldBeNull();
         }
         [Fact]
         public void ToBinaryTree_BuildsExpression()
@@ -144,7 +144,7 @@ namespace AnyService.Core.Tests
             };
 
             var filter1 = new Dictionary<string, string> { { nameof(TestClass.NumericValue), "1" } };
-            var f1 = ExpressionBuilder.ToBinaryTree<TestClass>(filter1);
+            var f1 = ExpressionTreeBuilder.BuildBinaryTreeExpression<TestClass>(filter1);
             f1.ShouldNotBeNull();
             var res1 = col.Where(f1).ToArray();
             res1.Count().ShouldBe(2);
@@ -153,7 +153,7 @@ namespace AnyService.Core.Tests
                 {nameof(TestClass.StringValue), "1" } ,
                 {nameof(TestClass.NumericValue), "1" } ,
                 };
-            var f2 = ExpressionBuilder.ToBinaryTree<TestClass>(filter2);
+            var f2 = ExpressionTreeBuilder.BuildBinaryTreeExpression<TestClass>(filter2);
             f2.ShouldNotBeNull();
             var res2 = col.Where(f2).ToArray();
             res2.Count().ShouldBe(1);

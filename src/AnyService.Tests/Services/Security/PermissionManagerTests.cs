@@ -45,7 +45,7 @@ namespace AnyService.Tests.Services.Security
             var cm = new Mock<ICacheManager>();
             cm.Setup(c => c.Get<UserPermissions>(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
             var repo = new Mock<IRepository<UserPermissions>>();
-            repo.Setup(r => r.GetAll(It.IsAny<Paginate<UserPermissions>>())).ReturnsAsync(data);
+            repo.Setup(r => r.GetAll(It.IsAny<Pagination<UserPermissions>>())).ReturnsAsync(data);
 
             var pm = new PermissionManager(cm.Object, repo.Object);
 
@@ -66,7 +66,7 @@ namespace AnyService.Tests.Services.Security
             var cm = new Mock<ICacheManager>();
             cm.Setup(c => c.Get<UserPermissions>(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
             var repo = new Mock<IRepository<UserPermissions>>();
-            repo.Setup(r => r.GetAll(It.IsAny<Paginate<UserPermissions>>())).ReturnsAsync(new[] { up });
+            repo.Setup(r => r.GetAll(It.IsAny<Pagination<UserPermissions>>())).ReturnsAsync(new[] { up });
 
             var pm = new PermissionManager(cm.Object, repo.Object);
 
@@ -134,7 +134,7 @@ namespace AnyService.Tests.Services.Security
         {
             var repo = new Mock<IRepository<UserPermissions>>();
             var cm = new Mock<ICacheManager>();
-            repo.Setup(r => r.GetAll(It.IsAny<Paginate<UserPermissions>>())).ReturnsAsync(data);
+            repo.Setup(r => r.GetAll(It.IsAny<Pagination<UserPermissions>>())).ReturnsAsync(data);
 
             var userId = "some-user";
             var toCreate = new UserPermissions
@@ -174,7 +174,7 @@ namespace AnyService.Tests.Services.Security
 
             var repo = new Mock<IRepository<UserPermissions>>();
             var cm = new Mock<ICacheManager>();
-            repo.Setup(r => r.GetAll(It.IsAny<Paginate<UserPermissions>>())).ReturnsAsync(new[] { dbEntity });
+            repo.Setup(r => r.GetAll(It.IsAny<Pagination<UserPermissions>>())).ReturnsAsync(new[] { dbEntity });
             repo.Setup(r => r.Update(It.IsAny<UserPermissions>())).ReturnsAsync(dbEntity);
 
             var pm = new PermissionManager(cm.Object, repo.Object);

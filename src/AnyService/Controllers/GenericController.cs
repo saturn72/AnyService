@@ -136,22 +136,25 @@ namespace AnyService.Controllers
         }
         [HttpGet]
         public async Task<IActionResult> GetAll(
+            [FromQuery]string orderBy = null,
             [FromQuery]ulong? offset = null,
             [FromQuery]ulong? pageSize = null,
             [FromQuery]string sortOrder = "desc",
             [FromQuery]string query = "")
         {
-            var paginateSettings = _workContext.CurrentEntityConfigRecord.PaginateSettings;
-            var queryData = QueryToDictionaryCollectionquery..
-            var paginate = new Paginate<TDomainModel>
+            var paginationSettings = _workContext.CurrentEntityConfigRecord.PaginateSettings;
+            if (typeof(TDomainModel) is ICreatableAudit)
+                query = $"{nameof(ICreatableAudit.CreatedByUserId)} == {_workContext.CurrentUserId} && ({query})";
+
+            var pagination = new Pagination<TDomainModel>
             {
-                Offset = offset ?? paginateSettings.DefaultOffset,
-                PageSize = pageSize ?? paginateSettings.DefaultPageSize,
-                SortOrder = sortOrder ?? paginateSettings.DefaultSortOrder,
-                Query = x => ((x as ICreatableAudit)?.CreatedByUserId == _workContext.CurrentUserId)
-                // new Func<TDomainModel, bool>(x => true),
+                OrderBy = orderBy ?? paginationSettings.DefaultOrderBy,
+                Offset = offset ?? paginationSettings.DefaultOffset,
+                PageSize = pageSize ?? paginationSettings.DefaultPageSize,
+                SortOrder = sortOrder ?? paginationSettings.DefaultSortOrder,
+                Query = query,
             };
-            return await GetAllFiltered(paginate);
+            return await GetAllFiltered(pagination);
         }
         [HttpGet(Consts.PublicSuffix)]
         public async Task<IActionResult> GetAllPublic()
@@ -199,7 +202,7 @@ namespace AnyService.Controllers
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
         #region Utilities
-        private async Task<IActionResult> GetAllFiltered(Paginate<TDomainModel> paginate)
+        private async Task<IActionResult> GetAllFiltered(Pagination<TDomainModel> paginate)
         {
             _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
             var res = await _crudService.GetAll(paginate);

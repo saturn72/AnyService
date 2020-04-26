@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using AnyService.Core;
 using AnyService.Services;
 
 namespace AnyService
@@ -12,11 +13,12 @@ namespace AnyService
             ManageEntityPermissions = true;
             UseAuthorizationMiddleware = true;
             UseExceptionLogging = true;
-            DefaultPaginateSettings = new PaginateSettings
+            DefaultPaginationSettings = new PaginationSettings
             {
+                DefaultOrderBy = nameof(IDomainModelBase.Id),
                 DefaultOffset = 1,
                 DefaultPageSize = 50,
-                DefaultSortOrder = PaginateSettings.Asc,
+                DefaultSortOrder = PaginationSettings.Asc,
             };
         }
 
@@ -32,6 +34,6 @@ namespace AnyService
         public bool UseExceptionLogging { get; set; }
         public int MaxMultipartBoundaryLength { get; set; }
         public int MaxValueCount { get; set; }
-        public PaginateSettings DefaultPaginateSettings { get; set; }
+        public PaginationSettings DefaultPaginationSettings { get; set; }
     }
 }

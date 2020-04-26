@@ -70,11 +70,11 @@ namespace AnyService.Tests.Services
         public async Task Query_NotFound_Paginate()
         {
             var repo = new Mock<IRepository<TestClass>>();
-            repo.Setup(r => r.GetAll(It.IsAny<Paginate<TestClass>>())).ReturnsAsync(null as IEnumerable<TestClass>);
+            repo.Setup(r => r.GetAll(It.IsAny<Pagination<TestClass>>())).ReturnsAsync(null as IEnumerable<TestClass>);
             var sr = new ServiceResponse();
 
             var w = new ServiceResponseWrapper(sr);
-            var p = new Paginate<TestClass>();
+            var p = new Pagination<TestClass>();
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(p), w);
             res.ShouldNotBeNull();
             res.ShouldBeEmpty();

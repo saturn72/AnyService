@@ -132,7 +132,7 @@ namespace AnyService.EntityFramework.Tests
             await _dbContext.Set<TestClass>().AddRangeAsync(tc);
             await _dbContext.SaveChangesAsync();
 
-            var filter = new Paginate<TestClass>();
+            var filter = new Pagination<TestClass>();
             var d = await _repository.GetAll(filter);
             d.Count().ShouldBe(tc.Count);
             for (int i = 0; i < tc.Count; i++)
@@ -168,8 +168,8 @@ namespace AnyService.EntityFramework.Tests
 
             await _dbContext.Set<TestClass>().AddRangeAsync(tc);
             await _dbContext.SaveChangesAsync();
-
-            var p = new Paginate<TestClass>(t => t.Value == "a");
+            var q = $"{nameof(TestClass.Value)} == a";
+            var p = new Pagination<TestClass>(q);
             var e = await _repository.GetAll(p);
             e.Count().ShouldBe(4);
             for (int i = 0; i < e.Count(); i++)

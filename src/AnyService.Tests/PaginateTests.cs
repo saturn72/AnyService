@@ -15,13 +15,13 @@ namespace AnyService.Tests
         [Fact]
         public void ctor()
         {
-            new Paginate<TestClass>().SortOrder.ShouldBe("asc");
+            new Pagination<TestClass>().SortOrder.ShouldBe("asc");
         }
         [Fact]
         public void ctor_Query()
         {
-            var q = new Func<TestClass, bool>(t => t.Id == "123");
-            var p = new Paginate<TestClass>(q);
+            var q = "t.Id == 123";
+            var p = new Pagination<TestClass>(q);
             p.Query.ShouldBe(q);
             p.SortOrder.ShouldBe("asc");
         }

@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace AnyService.Core
 {
-    public class ExpressionBuilder
+    public class ExpressionTreeBuilder
     {
         private static readonly ConcurrentDictionary<Type, PropertyDescriptorCollection> _typePropertyCollection
             = new ConcurrentDictionary<Type, PropertyDescriptorCollection>();
@@ -43,23 +43,23 @@ namespace AnyService.Core
         private const string EvaluatorSecond = "evaluator_second";
         private const string Operator = "operator";
 
-        public static Expression<Func<T, bool>> ToBinaryTreeExpression<T>(string query)
+        public static Expression<Func<T, bool>> BuildBinaryTreeExpression<T>(string query)
         {
             var pe = Expression.Parameter(typeof(T), "x");
-            return ToBinaryTreeWorker<T>(query, pe);
+            return BuildBinaryTreeExpressionWorker<T>(query, pe);
         }
-        private static Expression<Func<T, bool>> ToBinaryTreeWorker<T>(string query, ParameterExpression parameterExpression)
+        private static Expression<Func<T, bool>> BuildBinaryTreeExpressionWorker<T>(string query, ParameterExpression parameterExpression)
         {
             var q = query.Trim();
             var m = Regex.Match(q, HasSurroundingBracketsOnly);
             if (m.Success)
-                return ToBinaryTreeWorker<T>(q.Substring(1, q.Length - 2), parameterExpression);
+                return BuildBinaryTreeExpressionWorker<T>(q.Substring(1, q.Length - 2), parameterExpression);
 
             var binaryOperationMatch = GetMatch(q, BinaryPattern, BinaryWithBracketsPattern);
 
             if (binaryOperationMatch != null && binaryOperationMatch.Success)
             {
-                return ToBinaryExpression<T>(
+                return BuildBinaryTreeExpression<T>(
                     binaryOperationMatch.Groups[LeftOperand].Value,
                     binaryOperationMatch.Groups[Operator].Value,
                     binaryOperationMatch.Groups[RightOperand].Value,
@@ -110,8 +110,8 @@ namespace AnyService.Core
 
         private static Expression<Func<T, bool>> SendToEvaluation<T>(string leftQuery, string evaluator, string rightQuery, ParameterExpression parameterExpression)
         {
-            var leftBinaryExpression = ToBinaryTreeWorker<T>(leftQuery, parameterExpression);
-            var rightBinaryExpression = ToBinaryTreeWorker<T>(rightQuery, parameterExpression);
+            var leftBinaryExpression = BuildBinaryTreeExpressionWorker<T>(leftQuery, parameterExpression);
+            var rightBinaryExpression = BuildBinaryTreeExpressionWorker<T>(rightQuery, parameterExpression);
             if (leftBinaryExpression == null || rightBinaryExpression == null) return null;
 
             var builder = EvaluationExpressionBuilder[evaluator];
@@ -119,7 +119,7 @@ namespace AnyService.Core
             return Expression.Lambda<Func<T, bool>>(evaluation, leftBinaryExpression.Parameters);
         }
 
-        public static Expression<Func<T, bool>> ToBinaryExpression<T>(string propertyName, string @operator, string value, ParameterExpression parameterExpression)
+        public static Expression<Func<T, bool>> BuildBinaryTreeExpression<T>(string propertyName, string @operator, string value, ParameterExpression parameterExpression)
         {
             if (!propertyName.HasValue() || !@operator.HasValue() || !value.HasValue())
                 return null;
@@ -142,7 +142,7 @@ namespace AnyService.Core
                 return null;
             }
         }
-        public static Func<T, bool> ToBinaryTree<T>(IDictionary<string, string> filter)
+        public static Func<T, bool> BuildBinaryTreeExpression<T>(IDictionary<string, string> filter)
         {
             var exp = ToExpression<T>(filter);
             return exp?.Compile();

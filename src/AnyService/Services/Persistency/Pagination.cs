@@ -4,13 +4,13 @@ using AnyService.Core;
 
 namespace AnyService.Services
 {
-    public class Paginate<TDomainModel> where TDomainModel : IDomainModelBase
+    public class Pagination<TDomainModel> where TDomainModel : IDomainModelBase
     {
-        public Paginate()
+        public Pagination()
         {
-            SortOrder = PaginateSettings.Asc;
+            SortOrder = PaginationSettings.Asc;
         }
-        public Paginate(Func<TDomainModel, bool> query) : this()
+        public Pagination(string query) : this()
         {
             Query = query;
         }
@@ -31,6 +31,11 @@ namespace AnyService.Services
         public ulong PageSize { get; set; }
         public string SortOrder { get; set; }
         /// <summary>
+        /// Gets or sets value indicating sort by property name
+        /// </summary>
+        /// <value></value>
+        public string OrderBy { get; set; }
+        /// <summary>
         /// Gets or sets current page data
         /// </summary>
         /// <value>ulong</value>
@@ -40,6 +45,6 @@ namespace AnyService.Services
         /// gets or sets query
         /// </summary>
         /// <value></value>
-        public Func<TDomainModel, bool> Query { get; set; }
+        public string Query { get; set; }
     }
 }

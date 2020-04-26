@@ -1,7 +1,8 @@
+using System;
 using Shouldly;
 using Xunit;
 
-namespace System
+namespace AnyService.Utilities.Tests.Extensions
 {
     public class DateTimeExtensionsTests
     {

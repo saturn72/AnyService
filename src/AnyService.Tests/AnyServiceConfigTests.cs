@@ -12,10 +12,10 @@ namespace AnyService.Tests
             c.ManageEntityPermissions.ShouldBeTrue();
             c.UseAuthorizationMiddleware.ShouldBeTrue();
             c.UseExceptionLogging.ShouldBeTrue();
-            c.DefaultPaginateSettings.ShouldSatisfyAllConditions(
-                () => c.DefaultPaginateSettings.DefaultOffset.ShouldBe((ulong)1),
-                () => c.DefaultPaginateSettings.DefaultPageSize.ShouldBe((ulong)50),
-                () => c.DefaultPaginateSettings.DefaultSortOrder.ShouldBe("asc")
+            c.DefaultPaginationSettings.ShouldSatisfyAllConditions(
+                () => c.DefaultPaginationSettings.DefaultOffset.ShouldBe((ulong)1),
+                () => c.DefaultPaginationSettings.DefaultPageSize.ShouldBe((ulong)50),
+                () => c.DefaultPaginationSettings.DefaultSortOrder.ShouldBe("asc")
                 );
         }
     }

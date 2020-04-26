@@ -8,7 +8,7 @@ namespace AnyService.Services
     {
         Task<TDomainModel> Insert(TDomainModel entity);
         Task<TDomainModel> GetById(string id);
-        Task<IEnumerable<TDomainModel>> GetAll(Paginate<TDomainModel> paginate);
+        Task<IEnumerable<TDomainModel>> GetAll(Pagination<TDomainModel> paginate);
         Task<TDomainModel> Update(TDomainModel entity);
         Task<TDomainModel> Delete(TDomainModel entity);
     }

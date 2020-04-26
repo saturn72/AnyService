@@ -38,6 +38,6 @@ namespace AnyService
         /// <summary>
         /// Gets or sets paginate default settings
         /// </summary>
-        public PaginateSettings PaginateSettings { get; set; }
+        public PaginationSettings PaginateSettings { get; set; }
     }
 }

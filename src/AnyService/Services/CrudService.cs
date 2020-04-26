@@ -131,28 +131,28 @@ namespace AnyService.Services
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
-        public async Task<ServiceResponse> GetAll(Paginate<TDomainModel> paginate)
+        public async Task<ServiceResponse> GetAll(Pagination<TDomainModel> pagination)
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all flow");
 
-            var serviceResponse = new ServiceResponse { Data = paginate };
+            var serviceResponse = new ServiceResponse { Data = pagination };
             if (!await _validator.ValidateForGet(serviceResponse))
             {
                 _logger.LogDebug(LoggingEvents.Validation, "Request did not pass validation");
                 return serviceResponse;
             }
 
-            _logger.LogDebug(LoggingEvents.Repository, "Get all from repository using paginate = " + paginate);
+            _logger.LogDebug(LoggingEvents.Repository, "Get all from repository using paginate = " + pagination);
             var wrapper = new ServiceResponseWrapper(serviceResponse);
-            var data = await _repository.Query(r => r.GetAll(paginate), wrapper);
+            var data = await _repository.Query(r => r.GetAll(pagination), wrapper);
             _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
 
-            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Read, paginate))
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Read, pagination))
                 return serviceResponse;
-            paginate.Data = data;
+            pagination.Data = data;
             if (serviceResponse.Result == ServiceResult.NotSet)
             {
-                serviceResponse.Data = paginate;
+                serviceResponse.Data = pagination;
                 serviceResponse.Result = ServiceResult.Ok;
                 Publish(_eventKeys.Read, serviceResponse.Data);
             }

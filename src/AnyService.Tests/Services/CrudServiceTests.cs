@@ -349,7 +349,7 @@ namespace AnyService.Tests.Services
             var model = new AuditableTestModel();
             var dbRes = null as IEnumerable<AuditableTestModel>;
             var repo = new Mock<IRepository<AuditableTestModel>>();
-            repo.Setup(r => r.GetAll(It.IsAny<Paginate<AuditableTestModel>>()))
+            repo.Setup(r => r.GetAll(It.IsAny<Pagination<AuditableTestModel>>()))
                 .ReturnsAsync(dbRes);
 
             var v = new Mock<ICrudValidator<AuditableTestModel>>();
@@ -384,7 +384,7 @@ namespace AnyService.Tests.Services
         {
             var repo = new Mock<IRepository<AuditableTestModel>>();
             var ex = new Exception();
-            repo.Setup(r => r.GetAll(It.IsAny<Paginate<AuditableTestModel>>())).ThrowsAsync(ex);
+            repo.Setup(r => r.GetAll(It.IsAny<Pagination<AuditableTestModel>>())).ThrowsAsync(ex);
 
             var v = new Mock<ICrudValidator<AuditableTestModel>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
@@ -410,7 +410,7 @@ namespace AnyService.Tests.Services
             var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, gn.Object);
             var model = new AuditableTestModel();
 
-            var filter = new Paginate<AuditableTestModel>();
+            var filter = new Pagination<AuditableTestModel>();
             var res = await cSrv.GetAll(filter);
 
             res.Result.ShouldBe(ServiceResult.Error);
@@ -418,7 +418,7 @@ namespace AnyService.Tests.Services
             eb.Verify(e => e.Publish(
                 It.Is<string>(s => s == ekr.Read),
                 It.Is<DomainEventData>(ed =>
-                     ed.Data.GetPropertyValueByName<Paginate<AuditableTestModel>>("incomingObject") == filter &&
+                     ed.Data.GetPropertyValueByName<Pagination<AuditableTestModel>>("incomingObject") == filter &&
                      ed.Data.GetPropertyValueByName<object>("exceptionId") == exId &&
                      ed.PerformedByUserId == wc.CurrentUserId)),
                 Times.Once);
@@ -427,10 +427,10 @@ namespace AnyService.Tests.Services
         public async Task GetAll_ReturnesResponseFromDB()
         {
             var model = new AuditableTestModel();
-            var paginate = new Paginate<AuditableTestModel>();
+            var paginate = new Pagination<AuditableTestModel>();
             var dbRes = new[] { model };
             var repo = new Mock<IRepository<AuditableTestModel>>();
-            repo.Setup(r => r.GetAll(It.Is<Paginate<AuditableTestModel>>(d => d == paginate)))
+            repo.Setup(r => r.GetAll(It.Is<Pagination<AuditableTestModel>>(d => d == paginate)))
                 .ReturnsAsync(dbRes);
 
             var v = new Mock<ICrudValidator<AuditableTestModel>>();

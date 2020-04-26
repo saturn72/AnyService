@@ -2,10 +2,46 @@ using Xunit;
 using System;
 using Shouldly;
 
-namespace AnyService.Tests.Extensions
+namespace AnyService.Utilities.Tests
 {
+    public class TestClass
+    {
+        public int Value { get; set; }
+    }
     public class ObjectExtensionsTests
     {
+        [Fact]
+        public void GetPropertyInfo_ReturnsNull()
+        {
+            typeof(TestClass).GetPropertyInfo("v").ShouldBeNull();
+            typeof(TestClass).GetPropertyInfo("value").ShouldBeNull();
+        }
+
+        [Fact]
+        public void GetPropertyInfo_ReturnsPropertyInfo()
+        {
+            typeof(TestClass).GetPropertyInfo("Value").ShouldNotBeNull();
+        }
+
+        /*
+         public static PropertyInfo GetPropertyInfo(this object obj, string propertyName)
+        {
+            var type = obj.GetType();
+            if (!PropertyInfos.TryGetValue(type, out IDictionary<string, PropertyInfo> curPropertyInfo))
+            {
+                curPropertyInfo = new Dictionary<string, PropertyInfo>();
+                PropertyInfos[type] = curPropertyInfo;
+            }
+            if (!curPropertyInfo.TryGetValue(propertyName, out PropertyInfo pi))
+            {
+                pi = obj.GetType().GetProperty(propertyName);
+                if (pi != null)
+                    curPropertyInfo[propertyName] = pi;
+                return pi;
+            }
+            return null;
+        }
+        */
         [Fact]
         public void GetPropertyValueByName_ThrowsOnNotExists()
         {

@@ -2,7 +2,7 @@
 using System.Text.Json;
 using Xunit;
 
-namespace AnyService.Tests.Extensions
+namespace AnyService.Utilities.Tests.Extensions
 {
     public class JsonExtensionsTests
     {

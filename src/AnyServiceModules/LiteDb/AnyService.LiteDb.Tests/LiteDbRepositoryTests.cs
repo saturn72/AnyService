@@ -111,8 +111,8 @@ namespace AnyService.LiteDb.Tests
             foreach (var e in entities)
                 all.Any(x => x.Value == e.Value).ShouldBeTrue();
 
-            var q = new Func<TestDomainModel, bool>(c => c.Value == "2");
-            var p = new Paginate<TestDomainModel>(q);
+            var q = $"{nameof(TestDomainModel.Value)} == 2";
+            var p = new Pagination<TestDomainModel>(q);
             var allFiltered = await lr.GetAll(p);
             allFiltered.Count().ShouldBe(2);
             foreach (var e in entities)
