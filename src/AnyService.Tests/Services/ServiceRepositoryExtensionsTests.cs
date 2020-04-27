@@ -67,7 +67,7 @@ namespace AnyService.Tests.Services
             sr.Message.ShouldBeNullOrEmpty();
         }
         [Fact]
-        public async Task Query_NotFound_Paginate()
+        public async Task Query_NotFound_Paginate_ReturnsNull()
         {
             var repo = new Mock<IRepository<TestClass>>();
             repo.Setup(r => r.GetAll(It.IsAny<Pagination<TestClass>>())).ReturnsAsync(null as IEnumerable<TestClass>);
@@ -76,11 +76,7 @@ namespace AnyService.Tests.Services
             var w = new ServiceResponseWrapper(sr);
             var p = new Pagination<TestClass>();
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(p), w);
-            res.ShouldNotBeNull();
-            res.ShouldBeEmpty();
-            sr.Data.ShouldBe(res);
-            sr.Result.ShouldBe(ServiceResult.NotSet);
-            sr.Message.ShouldBeNullOrEmpty();
+            res.ShouldBeNull();
         }
         [Fact]
         public async Task Query_Found()

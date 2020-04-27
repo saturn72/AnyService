@@ -149,7 +149,7 @@ namespace AnyService.Services
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, _eventKeys.Read, pagination))
                 return serviceResponse;
-            pagination.Data = data;
+            pagination.Data = data ?? new TDomainModel[] { };
             if (serviceResponse.Result == ServiceResult.NotSet)
             {
                 serviceResponse.Data = pagination;

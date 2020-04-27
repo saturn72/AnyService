@@ -371,12 +371,14 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
             var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, null);
-            var res = await cSrv.GetAll(null);
+            var p = new Pagination<AuditableTestModel>();
+            var res = await cSrv.GetAll(p);
             res.Result.ShouldBe(ServiceResult.Ok);
-            res.Data.ShouldBeOfType<AuditableTestModel[]>().Length.ShouldBe(0);
+            var data = res.Data.GetPropertyValueByName<object>("Data");
+            data.ShouldBeOfType<AuditableTestModel[]>().Length.ShouldBe(0);
             eb.Verify(e => e.Publish(
                     It.Is<string>(k => k == ekr.Read),
-                    It.Is<DomainEventData>(ed => ed.Data == dbRes && ed.PerformedByUserId == wc.CurrentUserId)),
+                    It.Is<DomainEventData>(ed => ed.Data == p && ed.PerformedByUserId == wc.CurrentUserId)),
                 Times.Once);
         }
         [Fact]
