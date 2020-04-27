@@ -6,6 +6,7 @@ using AnyService.Core;
 using System.Collections.Generic;
 using System.Linq;
 using AnyService.Services;
+using System;
 
 namespace AnyService.EntityFramework.Tests
 {
@@ -69,39 +70,7 @@ namespace AnyService.EntityFramework.Tests
         [Fact]
         public async Task GetAll_NullFilter()
         {
-            _dbContext.Set<TestClass>().RemoveRange(_dbContext.Set<TestClass>());
-            _dbContext.Set<TestNestedClass>().RemoveRange(_dbContext.Set<TestNestedClass>());
-            await _dbContext.SaveChangesAsync();
-
-            var valuePrefix = "value-";
-            var tc = new List<TestClass>();
-            for (int i = 0; i < 3; i++)
-                tc.Add(new TestClass
-                {
-                    Value = valuePrefix + i.ToString(),
-                    NestedClasses = new[]
-                    {
-                        new TestNestedClass
-                        {
-                            Value = "v1",
-                        },
-                        new TestNestedClass
-                        {
-                            Value = "v2",
-                        },
-                    },
-                });
-
-            await _dbContext.Set<TestClass>().AddRangeAsync(tc);
-            await _dbContext.SaveChangesAsync();
-
-            var e = await _repository.GetAll(null);
-            e.Count().ShouldBe(tc.Count);
-            for (int i = 0; i < tc.Count; i++)
-            {
-                e.Any(x => x.Id != null && x.Value == valuePrefix + i.ToString()).ShouldBeTrue();
-                e.ElementAt(i).NestedClasses.Count().ShouldBe(2);
-            }
+            await Should.ThrowAsync<NullReferenceException>(() => _repository.GetAll(null));
         }
         [Fact]
         public async Task GetAll_EmptyFilter()
@@ -165,13 +134,17 @@ namespace AnyService.EntityFramework.Tests
                     },
                 });
 
-
             await _dbContext.Set<TestClass>().AddRangeAsync(tc);
             await _dbContext.SaveChangesAsync();
             var q = $"{nameof(TestClass.Value)} == a";
-            var p = new Pagination<TestClass>(q);
+            var p = new Pagination<TestClass>(q)
+            {
+                OrderBy = "Id"
+            };
             var e = await _repository.GetAll(p);
             e.Count().ShouldBe(4);
+            p.Data.ShouldBeNull();
+            p.Total.ShouldBe((ulong)7);
             for (int i = 0; i < e.Count(); i++)
             {
                 e.Any(x => x.Id != null && x.Value == a).ShouldBeTrue();

@@ -34,7 +34,6 @@ namespace AnyService.EntityFramework
             else q.OrderByDescending(pi => pInfo.GetValue(pi, null));
 
             q.Skip((int)pagination.Offset).Take((int)pagination.PageSize);
-
             return await IncludeNavigations(q).ToArrayAsync();
         }
         public async Task<TDomainModel> GetById(string id)
