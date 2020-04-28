@@ -30,7 +30,8 @@ namespace AnyService.EntityFramework
             var q = DbSet.Where(func);
 
             var pInfo = typeof(TDomainModel).GetPropertyInfo(pagination.OrderBy);
-            if (pagination.SortOrder == PaginationSettings.Asc) q.OrderBy(pi => pInfo.GetValue(pi, null));
+            if (pagination.SortOrder == PaginationSettings.Asc)
+                q.OrderBy(pi => pInfo.GetValue(pi, null));
             else q.OrderByDescending(pi => pInfo.GetValue(pi, null));
 
             q.Skip((int)pagination.Offset).Take((int)pagination.PageSize);
