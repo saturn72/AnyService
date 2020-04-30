@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AnyService.Audity;
@@ -53,10 +52,7 @@ namespace AnyService.Services
 
             var serviceResponse = new ServiceResponse();
             if (!await _validator.ValidateForCreate(entity, serviceResponse))
-            {
-                _logger.LogDebug(LoggingEvents.Validation, "Entity did not pass validation");
-                return serviceResponse;
-            }
+                return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Entity did not pass validation");
 
             if (entity is ICreatableAudit)
             {
@@ -108,10 +104,7 @@ namespace AnyService.Services
                 Data = id
             };
             if (!await _validator.ValidateForGet(serviceResponse))
-            {
-                _logger.LogDebug(LoggingEvents.Validation, "Entity did not pass validation");
-                return serviceResponse;
-            }
+                return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Entity did not pass validation");
 
             _logger.LogDebug(LoggingEvents.Repository, "Get by Id from repository");
 
@@ -134,13 +127,13 @@ namespace AnyService.Services
         public async Task<ServiceResponse> GetAll(Pagination<TDomainModel> pagination)
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all flow");
-
             var serviceResponse = new ServiceResponse { Data = pagination };
+
             if (!await _validator.ValidateForGet(serviceResponse))
-            {
-                _logger.LogDebug(LoggingEvents.Validation, "Request did not pass validation");
-                return serviceResponse;
-            }
+                return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Request did not pass validation");
+
+            if (pagination == null || !pagination.Query.HasValue())
+                return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Missing query data");
 
             _logger.LogDebug(LoggingEvents.Repository, "Get all from repository using paginate = " + pagination);
             var wrapper = new ServiceResponseWrapper(serviceResponse);
@@ -159,6 +152,9 @@ namespace AnyService.Services
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
+
+
+
         public async Task<ServiceResponse> Update(string id, TDomainModel entity)
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start update flow for id: {id}, entity: {entity}");
@@ -166,10 +162,7 @@ namespace AnyService.Services
             var serviceResponse = new ServiceResponse();
 
             if (!await _validator.ValidateForUpdate(entity, serviceResponse))
-            {
-                _logger.LogDebug(LoggingEvents.Validation, "Entity did not pass validation");
-                return serviceResponse;
-            }
+                return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Entity did not pass validation");
 
             _logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
             var wrapper = new ServiceResponseWrapper(serviceResponse);
@@ -218,10 +211,7 @@ namespace AnyService.Services
             var serviceResponse = new ServiceResponse();
 
             if (!await _validator.ValidateForDelete(id, serviceResponse))
-            {
-                _logger.LogDebug(LoggingEvents.Validation, "Entity did not pass validation");
-                return serviceResponse;
-            }
+                return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Entity did not pass validation");
 
             _logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
             var wrapper = new ServiceResponseWrapper(serviceResponse);
@@ -255,6 +245,12 @@ namespace AnyService.Services
         }
 
         #region Utilities
+        private ServiceResponse SetServiceResponse(ServiceResponse serviceResponse, string serviceResponseResult, EventId eventId, string logMessage)
+        {
+            _logger.LogDebug(eventId, logMessage);
+            serviceResponse.Result = serviceResponseResult;
+            return serviceResponse;
+        }
         private bool IsNotFoundOrBadOrMissingDataOrError(ServiceResponseWrapper wrapper, string eventKey, object data)
         {
             var serviceResponse = wrapper.ServiceResponse;

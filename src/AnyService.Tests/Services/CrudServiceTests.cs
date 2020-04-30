@@ -49,7 +49,7 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var cSrv = new CrudService<AuditableTestModel>(null, v.Object, null, null, null, null, logger.Object, null);
             var res = await cSrv.Create(new AuditableTestModel());
-            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
+            res.Result.ShouldBe(ServiceResult.Unauthorized);
         }
         [Fact]
         public async Task Create_BadRequestFromRepository()
@@ -218,7 +218,7 @@ namespace AnyService.Tests.Services
             var cSrv = new CrudService<AuditableTestModel>(null, v.Object, null, null, null, null, logger.Object, null);
             var id = "some-id";
             var res = await cSrv.GetById(id);
-            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
+            res.Result.ShouldBe(ServiceResult.Unauthorized);
             res.Data.ShouldBe(id);
         }
         [Fact]
@@ -331,6 +331,18 @@ namespace AnyService.Tests.Services
         #endregion
         #region get all
         [Fact]
+        public async Task GetAll_NullPaginationReturnesBadRequest()
+        {
+            var v = new Mock<ICrudValidator<AuditableTestModel>>();
+            v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
+                .ReturnsAsync(true);
+            var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
+            var cSrv = new CrudService<AuditableTestModel>(null, v.Object, null, null, null, null, logger.Object, null);
+            var res = await cSrv.GetAll(null);
+            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
+            res.Data.ShouldBeNull();
+        }
+        [Fact]
         public async Task GetAll_BadRequest_OnValidatorFailure()
         {
             var v = new Mock<ICrudValidator<AuditableTestModel>>();
@@ -340,9 +352,26 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var cSrv = new CrudService<AuditableTestModel>(null, v.Object, null, null, null, null, logger.Object, null);
             var res = await cSrv.GetAll(null);
-            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
+            res.Result.ShouldBe(ServiceResult.Unauthorized);
             res.Data.ShouldBeNull();
         }
+        [Theory]
+        [MemberData(nameof(GetAll_EmptyQuery_DATA))]
+        public async Task GetAll_EmptyQuery(Pagination<AuditableTestModel> pagination)
+        {
+            var v = new Mock<ICrudValidator<AuditableTestModel>>();
+            v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
+                .ReturnsAsync(true);
+            var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
+            var cSrv = new CrudService<AuditableTestModel>(null, v.Object, null, null, null, null, logger.Object, null);
+            var res = await cSrv.GetAll(pagination);
+            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
+        }
+        public static IEnumerable<object[]> GetAll_EmptyQuery_DATA => new[]{
+            new object[]{ new Pagination<AuditableTestModel>() },
+            new object[]{ new Pagination<AuditableTestModel>("") },
+        };
+
         [Fact]
         public async Task GetAll_Returns_NullResponseFromDB()
         {
@@ -371,7 +400,7 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
             var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, null);
-            var p = new Pagination<AuditableTestModel>();
+            var p = new Pagination<AuditableTestModel>("id>0");
             var res = await cSrv.GetAll(p);
             res.Result.ShouldBe(ServiceResult.Ok);
             var data = res.Data.GetPropertyValueByName<object>("Data");
@@ -412,15 +441,15 @@ namespace AnyService.Tests.Services
             var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, gn.Object);
             var model = new AuditableTestModel();
 
-            var filter = new Pagination<AuditableTestModel>();
-            var res = await cSrv.GetAll(filter);
+            var pagination = new Pagination<AuditableTestModel>("id>0");
+            var res = await cSrv.GetAll(pagination);
 
             res.Result.ShouldBe(ServiceResult.Error);
 
             eb.Verify(e => e.Publish(
                 It.Is<string>(s => s == ekr.Read),
                 It.Is<DomainEventData>(ed =>
-                     ed.Data.GetPropertyValueByName<Pagination<AuditableTestModel>>("incomingObject") == filter &&
+                     ed.Data.GetPropertyValueByName<Pagination<AuditableTestModel>>("incomingObject") == pagination &&
                      ed.Data.GetPropertyValueByName<object>("exceptionId") == exId &&
                      ed.PerformedByUserId == wc.CurrentUserId)),
                 Times.Once);
@@ -429,7 +458,7 @@ namespace AnyService.Tests.Services
         public async Task GetAll_ReturnesResponseFromDB()
         {
             var model = new AuditableTestModel();
-            var paginate = new Pagination<AuditableTestModel>();
+            var paginate = new Pagination<AuditableTestModel>("id > 0");
             var dbRes = new[] { model };
             var repo = new Mock<IRepository<AuditableTestModel>>();
             repo.Setup(r => r.GetAll(It.Is<Pagination<AuditableTestModel>>(d => d == paginate)))
@@ -476,7 +505,7 @@ namespace AnyService.Tests.Services
             var cSrv = new CrudService<AuditableTestModel>(null, v.Object, null, null, null, null, logger.Object, null);
             var res = await cSrv.Update("123", entity);
 
-            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
+            res.Result.ShouldBe(ServiceResult.Unauthorized);
             res.Data.ShouldBeNull();
         }
         [Fact]
