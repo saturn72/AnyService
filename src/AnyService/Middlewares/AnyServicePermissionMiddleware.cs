@@ -49,9 +49,9 @@ namespace AnyService.Middlewares
             var cfgRecord = workContext.CurrentEntityConfigRecord;
             _logger.LogDebug($"Request requires entity Id valued: {reqInfo.RequesteeId}");
 
-            if (HttpMethods.IsPost(reqInfo.Method) || 
+            if (HttpMethods.IsPost(reqInfo.Method) ||
                 (HttpMethods.IsGet(reqInfo.Method) && !reqInfo.RequesteeId.HasValue()))
-            { 
+            {
                 _logger.LogDebug("User is granted - get all and post are always");
                 return true;
             }

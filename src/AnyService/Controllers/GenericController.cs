@@ -15,7 +15,6 @@ using System.Net;
 using AnyService.Services;
 using AnyService.Services.ServiceResponseMappers;
 using Microsoft.Extensions.Logging;
-using AnyService.Audity;
 
 namespace AnyService.Controllers
 {
@@ -151,7 +150,10 @@ namespace AnyService.Controllers
                 SortOrder = sortOrder ?? paginationSettings.DefaultSortOrder,
                 QueryAsString = query,
             };
-            return await GetAllFiltered(pagination);
+            _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
+            var res = await _crudService.GetAll(pagination);
+            _logger.LogDebug(LoggingEvents.Controller, "Get all public service response value: " + res);
+            return _serviceResponseMapper.Map(res as ServiceResponse);
         }
         [HttpGet(Consts.PublicSuffix)]
         public async Task<IActionResult> GetAllPublic()
@@ -199,13 +201,6 @@ namespace AnyService.Controllers
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
         #region Utilities
-        private async Task<IActionResult> GetAllFiltered(Pagination<TDomainModel> paginate)
-        {
-            _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
-            var res = await _crudService.GetAll(paginate);
-            _logger.LogDebug(LoggingEvents.Controller, "Get all public service response value: " + res);
-            return _serviceResponseMapper.Map(res as ServiceResponse);
-        }
         private async Task<TDomainModel> ExctractModelFromStream()
         {
             // Used to accumulate all the form url encoded key value pairs in the 
