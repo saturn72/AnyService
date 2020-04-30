@@ -12,6 +12,7 @@ namespace AnyService.Core.Tests
         public string Id { get; set; }
         public string StringValue { get; set; }
         public int NumericValue { get; set; }
+        public IEnumerable<string> Collection { get; set; }
     }
     public class ExpressionTreeBuilderTests
     {
@@ -30,12 +31,14 @@ namespace AnyService.Core.Tests
         [InlineData("(id == 2  value1 ==32)")] // missing evaluation
         [InlineData("(id == 2 || value1 ==32) value2 <123 || claue3 = 9898")] // missing evaluation
         [InlineData("id == 2 (value1 ==32 && value2 <123)")] // missing evaluation
+        [InlineData("\"this-is-id\" == id")] // property name is second
         public void ToBinaryTree_FromString_ReturnsNull(string query)
         {
             ExpressionTreeBuilder.BuildBinaryTreeExpression<TestClass>(query).ShouldBeNull();
         }
 
         [Theory]
+        [InlineData("id == \"this-is-id\"", "x => (x.Id == \"this-is-id\")")]
         [InlineData("id == 2", "x => (x.Id == \"2\")")]
         [InlineData("(id == 2)", "x => (x.Id == \"2\")")]
         [InlineData("NumericValue > 2", "x => (x.NumericValue > 2)")]
@@ -99,6 +102,7 @@ namespace AnyService.Core.Tests
             ExpressionBuilderForTest.HasSurroundingBracketsOnlyValue.ShouldBe(@"^\s*\(\s*(?'leftOperand'([^\(\)])+)\s*\)\s*$");
             ExpressionBuilderForTest.EvalPatternValue.ShouldBe(@"^(?'leftOperand'\S{1,}\s*(==|!=|<|<=|>|>=)\s*\S{1,})\s*(?'evaluator_first'((\|{1,2})|(\&{1,2})))\s*(?'rightOperand'.*)\s*$");
             ExpressionBuilderForTest.BinaryPatternValue.ShouldBe(@"^\s*(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)\s*$");
+            ExpressionBuilderForTest.EscapedBinaryPatternValue.ShouldBe(@"^\s*(\""\s*(?'leftOperand'.*)\s*\""\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)|(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*\""\s*(?'rightOperand'.*)\s*\""\s*)\s*$");
             ExpressionBuilderForTest.BinaryWithBracketsPatternValue.ShouldBe(@"^\s*\(\s*(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)\s*\)\s*$");
         }
 
@@ -108,6 +112,7 @@ namespace AnyService.Core.Tests
             internal static Func<Expression, Expression, Expression> GetEvaluationExpressionBuilder(string key) => Core.ExpressionTreeBuilder.EvaluationExpressionBuilder[key];
             internal const string EvalPatternValue = EvalPattern;
             internal const string BinaryPatternValue = BinaryPattern;
+            internal const string EscapedBinaryPatternValue = EscapedBinaryPattern;
             internal const string BinaryWithBracketsPatternValue = BinaryWithBracketsPattern;
             internal const string HasBracketValue = HasBrackets;
             internal const string HasSurroundingBracketsOnlyValue = HasSurroundingBracketsOnly;

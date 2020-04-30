@@ -67,49 +67,17 @@ namespace AnyService.EntityFramework.Tests
             e.Id.ShouldBe(dbEntity.Id);
             e.Value.ShouldBe(dbEntity.Value);
         }
-        [Fact]
-        public async Task GetAll_NullFilter()
+        [Theory]
+        [MemberData(nameof(GetAll_NullFilter_DATA))]
+        public async Task GetAll_MissingFilter(Pagination<TestClass> filter)
         {
-            await Should.ThrowAsync<NullReferenceException>(() => _repository.GetAll(null));
+            await Should.ThrowAsync<ArgumentNullException>(() => _repository.GetAll(filter));
         }
-        [Fact]
-        public async Task GetAll_EmptyFilter()
-        {
-            _dbContext.Set<TestClass>().RemoveRange(_dbContext.Set<TestClass>());
-            _dbContext.Set<TestNestedClass>().RemoveRange(_dbContext.Set<TestNestedClass>());
-            await _dbContext.SaveChangesAsync();
+        public static IEnumerable<object[]> GetAll_NullFilter_DATA => new[]{
+            new object[]{null as Pagination<TestClass> },
+            new object[]{new Pagination<TestClass>() },
+        };
 
-            var valuePrefix = "value-";
-            var tc = new List<TestClass>();
-            for (int i = 0; i < 3; i++)
-                tc.Add(new TestClass
-                {
-                    Value = valuePrefix + i.ToString(),
-                    NestedClasses = new[]
-                    {
-                        new TestNestedClass
-                        {
-                            Value = "v1",
-                        },
-                        new TestNestedClass
-                        {
-                            Value = "v2",
-                        },
-                    },
-                });
-
-            await _dbContext.Set<TestClass>().AddRangeAsync(tc);
-            await _dbContext.SaveChangesAsync();
-
-            var filter = new Pagination<TestClass>();
-            var d = await _repository.GetAll(filter);
-            d.Count().ShouldBe(tc.Count);
-            for (int i = 0; i < tc.Count; i++)
-            {
-                d.Any(x => x.Id != null && x.Value == valuePrefix + i.ToString()).ShouldBeTrue();
-                d.ElementAt(i).NestedClasses.Count().ShouldBe(2);
-            }
-        }
         [Fact]
         public async Task GetAll_Filtered()
         {

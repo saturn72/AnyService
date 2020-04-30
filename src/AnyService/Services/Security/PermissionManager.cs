@@ -63,7 +63,7 @@ namespace AnyService.Services.Security
         {
             return new Pagination<UserPermissions>
             {
-                Query = $"{nameof(UserPermissions.UserId)} == {userId}",
+                QueryAsString = $"{nameof(UserPermissions.UserId)} == {userId}",
                 OrderBy = nameof(IDomainModelBase.Id),
             };
         }

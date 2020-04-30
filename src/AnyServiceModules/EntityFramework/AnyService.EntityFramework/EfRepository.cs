@@ -20,14 +20,12 @@ namespace AnyService.EntityFramework
         {
             _dbContext = dbContext;
         }
-
         public async Task<IEnumerable<TDomainModel>> GetAll(Pagination<TDomainModel> pagination)
         {
-            if (pagination.Query == null)
-                return await IncludeNavigations(DbSet).ToArrayAsync();
+            if (pagination == null || pagination.QueryFunc == null)
+                throw new ArgumentNullException(nameof(pagination));
             pagination.Total = (ulong)DbSet.Count();
-            var func = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(pagination.Query);
-            var q = DbSet.Where(func);
+            var q = DbSet.Where(pagination.QueryFunc);
 
             var pInfo = typeof(TDomainModel).GetPropertyInfo(pagination.OrderBy);
             if (pagination.SortOrder == PaginationSettings.Asc)

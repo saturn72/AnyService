@@ -35,6 +35,7 @@ namespace AnyService.Core
         protected const string EvalPattern = @"^(?'leftOperand'\S{1,}\s*(==|!=|<|<=|>|>=)\s*\S{1,})\s*(?'evaluator_first'((\|{1,2})|(\&{1,2})))\s*(?'rightOperand'.*)\s*$";
         private const string BinaryPatternCore = @"\s*(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)\s*";
         protected const string BinaryPattern = "^" + BinaryPatternCore + "$";
+        protected const string EscapedBinaryPattern = @"^\s*(\""\s*(?'leftOperand'.*)\s*\""\s*(?'operator'(==|!=|<|<=|>|>=))\s*(?'rightOperand'\w+)|(?'leftOperand'\w+)\s*(?'operator'(==|!=|<|<=|>|>=))\s*\""\s*(?'rightOperand'.*)\s*\""\s*)\s*$";
         protected const string BinaryWithBracketsPattern = @"^\s*\(" + BinaryPatternCore + @"\)\s*$";
         private const string LeftOperand = "leftOperand";
         private const string RightOperand = "rightOperand";
@@ -55,7 +56,7 @@ namespace AnyService.Core
             if (m.Success)
                 return BuildBinaryTreeExpressionWorker<T>(q.Substring(1, q.Length - 2), parameterExpression);
 
-            var binaryOperationMatch = GetMatch(q, BinaryPattern, BinaryWithBracketsPattern);
+            var binaryOperationMatch = GetMatch(q, BinaryPattern, EscapedBinaryPattern, BinaryWithBracketsPattern);
 
             if (binaryOperationMatch != null && binaryOperationMatch.Success)
             {

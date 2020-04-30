@@ -1,18 +1,27 @@
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using AnyService.Core;
 
 namespace AnyService.Services
 {
     public class Pagination<TDomainModel> where TDomainModel : IDomainModelBase
     {
+        private string _queryAsString;
+        private Expression<Func<TDomainModel, bool>> _queryFunc;
         public Pagination()
         {
             SortOrder = PaginationSettings.Asc;
         }
-        public Pagination(string query) : this()
+        public Pagination(string queryAsString) : this()
         {
-            Query = query;
+            _queryAsString = queryAsString;
+            _queryFunc = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(queryAsString);
+        }
+        public Pagination(Expression<Func<TDomainModel, bool>> queryFunc) : this()
+        {
+            _queryFunc = queryFunc;
+            _queryAsString = queryFunc.ToString();
         }
         /// <summary>
         /// Gets or sets the total number of entities 
@@ -42,9 +51,29 @@ namespace AnyService.Services
         public IEnumerable<TDomainModel> Data { get; set; }
 
         /// <summary>
-        /// gets or sets query
+        /// gets or sets query string value
         /// </summary>
         /// <value></value>
-        public string Query { get; set; }
+        public string QueryAsString
+        {
+            get => _queryAsString;
+            set
+            {
+                _queryAsString = value;
+                _queryFunc = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(value);
+            }
+        }
+        /// <summary>
+        /// gets or sets query func
+        /// </summary>
+        /// <value></value>
+        public Expression<Func<TDomainModel, bool>> QueryFunc
+        {
+            get => _queryFunc; set
+            {
+                _queryFunc = value;
+                _queryAsString = _queryFunc?.ToString();
+            }
+        }
     }
 }

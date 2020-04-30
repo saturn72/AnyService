@@ -143,16 +143,13 @@ namespace AnyService.Controllers
             [FromQuery]string query = "")
         {
             var paginationSettings = _workContext.CurrentEntityConfigRecord.PaginateSettings;
-            if (typeof(TDomainModel) is ICreatableAudit)
-                query = $"{nameof(ICreatableAudit.CreatedByUserId)} == {_workContext.CurrentUserId} && ({query})";
-
             var pagination = new Pagination<TDomainModel>
             {
                 OrderBy = orderBy ?? paginationSettings.DefaultOrderBy,
                 Offset = offset ?? paginationSettings.DefaultOffset,
                 PageSize = pageSize ?? paginationSettings.DefaultPageSize,
                 SortOrder = sortOrder ?? paginationSettings.DefaultSortOrder,
-                Query = query,
+                QueryAsString = query,
             };
             return await GetAllFiltered(pagination);
         }

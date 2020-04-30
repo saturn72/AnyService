@@ -70,14 +70,19 @@ namespace AnyService.E2E
             jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
 
             //read all
+            //no query provided
             res = await HttpClient.GetAsync("dependentmodel/");
-            res.EnsureSuccessStatusCode();
+            res.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            res = await HttpClient.GetAsync($"dependentmodel?query=id==\"{id}\"");
+            res.StatusCode.ShouldBe(HttpStatusCode.OK);
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
             var jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
 
+
+            throw new NotImplementedException("add getall for unpermitted entities");
             //get all public - forbid
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
             var json = await HttpClient.GetStringAsync("dependentmodel/__public");

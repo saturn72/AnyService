@@ -132,7 +132,7 @@ namespace AnyService.Services
             if (!await _validator.ValidateForGet(serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Request did not pass validation");
 
-            if (pagination == null || !pagination.Query.HasValue())
+            if (pagination == null || !pagination.QueryAsString.HasValue())
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Missing query data");
 
             _logger.LogDebug(LoggingEvents.Repository, "Get all from repository using paginate = " + pagination);
