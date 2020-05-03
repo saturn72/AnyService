@@ -74,10 +74,10 @@ namespace AnyService.E2E
             res = await HttpClient.GetAsync("dependentmodel/");
             res.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
             res = await HttpClient.GetAsync($"dependentmodel?query=id==\"{id}\"");
-            res.StatusCode.ShouldBe(HttpStatusCode.OK);
+            res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            var jArr = jObj["data"] as JArray;
+            var jArr = jObj["data"]["data"] as JArray;
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
 

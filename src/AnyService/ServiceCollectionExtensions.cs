@@ -113,7 +113,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 if (ecr.EventKeys == null) ecr.EventKeys = ekr;
                 if (ecr.PermissionRecord == null) ecr.PermissionRecord = pr;
                 if (ecr.EntityKey == null) ecr.EntityKey = fn;
-                if (ecr.PaginateSettings == null) ecr.PaginateSettings = config.DefaultPaginationSettings;
+                if (ecr.PaginationSettings == null) ecr.PaginationSettings = config.DefaultPaginationSettings;
                 if (ecr.GetAllQueries == null) ecr.GetAllQueries = config.GetAllQueries;
                 if (ecr.Validator == null)
                 {

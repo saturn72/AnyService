@@ -33,21 +33,23 @@ namespace AnyService.EntityFramework
             else q.OrderByDescending(pi => pInfo.GetValue(pi, null));
 
             q.Skip((int)pagination.Offset).Take((int)pagination.PageSize);
-            return await IncludeNavigations(q).ToArrayAsync();
+            var res = await IncludeNavigations(q).ToArrayAsync();
+            await DetachEntities(res);
+            return res;
         }
         public async Task<TDomainModel> GetById(string id)
         {
             var entity = await GetEntityById_Internal(id);
             if (entity == null)
                 return null;
-            DetachEntity(entity);
+            await DetachEntities(new[] { entity });
             return entity;
         }
         public async Task<TDomainModel> Insert(TDomainModel entity)
         {
             await _dbContext.Set<TDomainModel>().AddAsync(entity);
             await _dbContext.SaveChangesAsync();
-            DetachEntity(entity);
+            await DetachEntities(new[] { entity });
             return entity;
         }
         public async Task<TDomainModel> Update(TDomainModel entity)
@@ -64,11 +66,9 @@ namespace AnyService.EntityFramework
             }
             _dbContext.Update(dbEntity);
             await _dbContext.SaveChangesAsync();
-            DetachEntity(dbEntity);
+            await DetachEntities(new[] { dbEntity });
             return dbEntity;
         }
-
-
         public async Task<TDomainModel> Delete(TDomainModel entity)
         {
             var dbEntity = await GetEntityById_Internal(entity.Id);
@@ -84,12 +84,17 @@ namespace AnyService.EntityFramework
             var query = DbSet.Where(x => x.Id.Equals(id, StringComparison.InvariantCultureIgnoreCase));
             return await IncludeNavigations(query).FirstOrDefaultAsync();
         }
-        private void DetachEntity(TDomainModel entity)
+        private Task DetachEntities(IEnumerable<TDomainModel> entities)
         {
-            _dbContext.Entry(entity).State = EntityState.Detached;
-
-            foreach (var col in _dbContext.Entry(entity).Collections)
-                col.EntityEntry.State = EntityState.Detached;
+            return Task.Run(() =>
+            {
+                foreach (var e in entities)
+                {
+                    _dbContext.Entry(e).State = EntityState.Detached;
+                    foreach (var col in _dbContext.Entry(e).Collections)
+                        col.EntityEntry.State = EntityState.Detached;
+                }
+            });
         }
         private static readonly ConcurrentDictionary<Type, IEnumerable<string>> NavigationPropertyNames
             = new ConcurrentDictionary<Type, IEnumerable<string>>();

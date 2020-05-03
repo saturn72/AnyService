@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 
 namespace AnyService.Tests
 {
-    public class PaginateTests
+    public class PaginationTests
     {
         public class TestClass : IDomainModelBase
         {

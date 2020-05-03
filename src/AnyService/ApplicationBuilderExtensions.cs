@@ -6,7 +6,6 @@ using AnyService.Core.Caching;
 using AnyService.Events;
 using AnyService.Middlewares;
 using AnyService.Services.Security;
-using AnyService.Utilities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,6 +55,9 @@ namespace AnyService
                 if (serviceProvider.GetService<TService>() == null)
                     throw new InvalidOperationException($"{nameof(TService)} is not configured");
             }
+            //Mapping extensions
+            if (!MappingExtensions.WasConfigured)
+                MappingExtensions.Configure(cfg => { });
         }
         private static void AddPermissionComponents(IApplicationBuilder app, IServiceProvider serviceProvider)
         {
