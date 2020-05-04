@@ -81,11 +81,9 @@ namespace AnyService.E2E
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
 
-
-            throw new NotImplementedException("add getall for unpermitted entities");
             //get all public - forbid
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-            var json = await HttpClient.GetStringAsync("dependentmodel/__public");
+            var json = await HttpClient.GetStringAsync("dependentmodel/?query=__public");
             jObj = JObject.Parse(content);
             jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);

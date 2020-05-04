@@ -7,21 +7,19 @@ namespace AnyService.Services
 {
     public class Pagination<TDomainModel> where TDomainModel : IDomainModelBase
     {
-        private string _queryAsString;
-        private Expression<Func<TDomainModel, bool>> _queryFunc;
         public Pagination()
         {
             SortOrder = PaginationSettings.Asc;
         }
         public Pagination(string queryAsString) : this()
         {
-            _queryAsString = queryAsString;
-            _queryFunc = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(queryAsString);
+            QueryAsString = queryAsString;
+            QueryFunc = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(queryAsString);
         }
         public Pagination(Expression<Func<TDomainModel, bool>> queryFunc) : this()
         {
-            _queryFunc = queryFunc;
-            _queryAsString = queryFunc.ToString();
+            QueryFunc = queryFunc;
+            QueryAsString = queryFunc.ToString();
         }
         /// <summary>
         /// Gets or sets the total number of entities 
@@ -54,27 +52,12 @@ namespace AnyService.Services
         /// gets or sets query string value
         /// </summary>
         /// <value></value>
-        public string QueryAsString
-        {
-            get => _queryAsString;
-            set
-            {
-                _queryAsString = value;
-                _queryFunc = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(value);
-            }
-        }
+        public string QueryAsString { get; set; }
         /// <summary>
         /// gets or sets query func
         /// </summary>
         /// <value></value>
-        public Expression<Func<TDomainModel, bool>> QueryFunc
-        {
-            get => _queryFunc; set
-            {
-                _queryFunc = value;
-                _queryAsString = _queryFunc?.ToString();
-            }
-        }
+        public Expression<Func<TDomainModel, bool>> QueryFunc { get; set; }
     }
     public class PaginationApiModel<T>
     {

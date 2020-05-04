@@ -40,6 +40,6 @@ namespace AnyService
         /// Gets or sets paginate default settings
         /// </summary>
         public PaginationSettings PaginationSettings { get; set; }
-        public IReadOnlyDictionary<string, Func<object, Func<object, string>>> GetAllQueries { get; set; }
+        public IReadOnlyDictionary<string, Func<object, Func<object, bool>>> GetAllQueries { get; set; }
     }
 }

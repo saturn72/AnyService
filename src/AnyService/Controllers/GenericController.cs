@@ -15,6 +15,7 @@ using System.Net;
 using AnyService.Services;
 using AnyService.Services.ServiceResponseMappers;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 
 namespace AnyService.Controllers
 {
@@ -142,20 +143,48 @@ namespace AnyService.Controllers
             [FromQuery]string query = "")
         {
             var paginationSettings = _workContext.CurrentEntityConfigRecord.PaginationSettings;
-            var pagination = new Pagination<TDomainModel>
-            {
-                OrderBy = orderBy ?? paginationSettings.DefaultOrderBy,
-                Offset = offset ?? paginationSettings.DefaultOffset,
-                PageSize = pageSize ?? paginationSettings.DefaultPageSize,
-                SortOrder = sortOrder ?? paginationSettings.DefaultSortOrder,
-                QueryAsString = query,
-            };
+            var pagination = GetPagination(orderBy, offset, pageSize, sortOrder, query);
+
             _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
             var res = await _crudService.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller, "Get all public service response value: " + res);
             res.Data = pagination?.Map<PaginationApiModel<TDomainModel>>();
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
+
+        private Pagination<TDomainModel> GetPagination(string orderBy, ulong? offset, ulong? pageSize, string sortOrder, string query)
+        {
+            var curCfg = _workContext.CurrentEntityConfigRecord;
+            Pagination<TDomainModel> pagination;
+
+            if (curCfg.GetAllQueries.TryGetValue(query, out Func<object, Func<object, bool>> value))
+            {
+                var payload = new
+                {
+                    Type = typeof(TDomainModel),
+                    UserId = _workContext.CurrentUserId,
+                    Query = query
+                };
+                var func = value(payload).Convert<object, TDomainModel, bool>();
+                Expression<Func<TDomainModel, bool>> objExp = x => func(x);
+                pagination = new Pagination<TDomainModel>(objExp);
+            }
+            else
+            {
+                pagination = new Pagination<TDomainModel>(query);
+            }
+
+            var paginationSettings = curCfg.PaginationSettings;
+
+            pagination.OrderBy = orderBy ?? paginationSettings.DefaultOrderBy;
+            pagination.Offset = offset ?? paginationSettings.DefaultOffset;
+            pagination.PageSize = pageSize ?? paginationSettings.DefaultPageSize;
+            pagination.SortOrder = sortOrder ?? paginationSettings.DefaultSortOrder;
+
+            return pagination;
+
+        }
+
         [HttpGet(Consts.PublicSuffix)]
         public async Task<IActionResult> GetAllPublic()
         {

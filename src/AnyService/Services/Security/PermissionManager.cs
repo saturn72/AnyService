@@ -3,6 +3,7 @@ using AnyService.Core.Caching;
 using AnyService.Core.Security;
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace AnyService.Services.Security
@@ -61,9 +62,10 @@ namespace AnyService.Services.Security
 
         private Pagination<UserPermissions> GetPaginationSettings(string userId)
         {
-            return new Pagination<UserPermissions>
+            var q = $"{nameof(UserPermissions.UserId)} == {userId}";
+
+            return new Pagination<UserPermissions>(q)
             {
-                QueryAsString = $"{nameof(UserPermissions.UserId)} == {userId}",
                 OrderBy = nameof(IDomainModelBase.Id),
             };
         }

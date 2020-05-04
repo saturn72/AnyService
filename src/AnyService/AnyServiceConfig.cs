@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using AnyService.Audity;
 using AnyService.Core;
@@ -39,57 +40,65 @@ namespace AnyService
         public int MaxValueCount { get; set; }
         public PaginationSettings DefaultPaginationSettings { get; set; }
 
-        public IReadOnlyDictionary<string, Func<object, Func<object, string>>> GetAllQueries { get; set; }
+        public IReadOnlyDictionary<string, Func<object, Func<object, bool>>> GetAllQueries { get; set; }
 
         #region nested classes
         private class DefaultGetAllQueries
         {
+            internal IReadOnlyDictionary<string, Func<object, Func<object, bool>>> Queries { get; private set; }
             internal DefaultGetAllQueries()
             {
-                Queries = new Dictionary<string, Func<object, Func<object, string>>>
+                var rq = new Dictionary<string, Func<object, Func<object, bool>>>()
                 {
-                    {"__created", _createdByUser },
-                    // {"__updated", UpdatedByUser },
-                    {"__deleted", _deletedByUser },
-                    {"__public", _isPublic}
+                    {"__created",  _createdByUser()},
+                    {"__updated", _updatedByUser()},
+                    {"__deleted", _deletedByUser()},
+                    {"__public", _isPublic()},
+                };
+                Queries = rq;
+            }
+
+            private Func<object, Func<object, bool>> _createdByUser()
+            {
+                return payload =>
+                {
+                    var type = payload.GetPropertyValueByName<Type>("Type");
+                    var userId = payload.GetPropertyValueByName<string>("UserId");
+                    return type is ICreatableAudit ?
+                        x => (x as ICreatableAudit).CreatedByUserId == userId :
+                        null as Func<object, bool>;
                 };
             }
-
-            private Func<object, string> _createdByUser(object payload)
+            private Func<object, Func<object, bool>> _deletedByUser()
             {
-                var type = payload.GetPropertyValueByName<Type>("Type");
-                var userId = payload.GetPropertyValueByName<Type>("UserId");
-                if (type is ICreatableAudit)
-                    return o => $"{nameof(ICreatableAudit.CreatedByUserId)} == {userId}";
-
-                return null;
+                return payload =>
+               {
+                   var type = payload.GetPropertyValueByName<Type>("Type");
+                   var userId = payload.GetPropertyValueByName<string>("UserId");
+                   return type is IDeletableAudit ?
+                       x => (x as IDeletableAudit).DeletedByUserId == userId :
+                       null as Func<object, bool>;
+               };
             }
-            private Func<object, string> _deletedByUser(object payload)
+            private Func<object, Func<object, bool>> _updatedByUser()
             {
-                var type = payload.GetPropertyValueByName<Type>("Type");
-                var userId = payload.GetPropertyValueByName<Type>("UserId");
-                if (type is IDeletableAudit)
-                    return o => $"{nameof(IDeletableAudit.DeletedByUserId)} == {userId}";
-
-                return null;
+                return payload =>
+                {
+                    var type = payload.GetPropertyValueByName<Type>("Type");
+                    var userId = payload.GetPropertyValueByName<string>("UserId");
+                    return type is IUpdatableAudit ? x => (x as IUpdatableAudit).UpdateRecords.Any(ur => ur.UpdatedByUserId == userId) :
+                        null as Func<object, bool>;
+                };
             }
-            // private Func<object, string> _updatedByUser(object payload)
-            // {
-            //     var type = payload.GetPropertyValueByName<Type>("Type");
-            //     var userId = payload.GetPropertyValueByName<Type>("UserId");
-            //     if ((type as IUpdatableAudit) != null)
-            //         return o => $"{nameof(IUpdatableAudit.UpdateRecords).Equals.CreatedByUserId)} == {userId}";
-
-            //     return null;
-            // }
-            private Func<object, string> _isPublic(object payload)
+            private Func<object, Func<object, bool>> _isPublic()
             {
-                var type = payload.GetPropertyValueByName<Type>("Type");
-                if (type is IPublishable)
-                    return o => $"{nameof(IPublishable.Public)} == true";
-                return null;
+                return payload =>
+                {
+                    var type = payload.GetPropertyValueByName<Type>("Type");
+                    return type is IPublishable ? x => (x as IPublishable).Public :
+                        null as Func<object, bool>;
+                };
             }
-            internal IReadOnlyDictionary<string, Func<object, Func<object, string>>> Queries { get; private set; }
         }
         #endregion
     }
