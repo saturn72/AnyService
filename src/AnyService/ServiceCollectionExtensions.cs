@@ -82,14 +82,13 @@ namespace Microsoft.Extensions.DependencyInjection
             });
 
             services.TryAddScoped<AuditHelper>();
-            services.TryAddSingleton<IDomainEventsBus, DomainEventsBus>();
+            services.TryAddSingleton<IEventsBus, DefaultEventsBus>();
 
             if (config.ManageEntityPermissions)
                 services.TryAddSingleton<IPermissionEventsHandler, DefaultPermissionsEventsHandler>();
 
             return services;
         }
-
         private static void NormalizeConfiguration(AnyServiceConfig config)
         {
             var temp = config.EntityConfigRecords.ToArray();

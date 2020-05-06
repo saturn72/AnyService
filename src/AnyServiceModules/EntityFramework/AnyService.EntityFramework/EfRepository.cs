@@ -15,7 +15,7 @@ namespace AnyService.EntityFramework
     {
         private readonly DbContext _dbContext;
         private IQueryable<TDomainModel> DbSet => _dbContext.Set<TDomainModel>().AsNoTracking();
-        private static readonly IDictionary<Type, IEnumerable<PropertyInfo>> TypeProperties = new Dictionary<Type, IEnumerable<PropertyInfo>>();
+        private static readonly ConcurrentDictionary<Type, IEnumerable<PropertyInfo>> TypeProperties = new ConcurrentDictionary<Type, IEnumerable<PropertyInfo>>();
         public EfRepository(DbContext dbContext)
         {
             _dbContext = dbContext;
@@ -33,7 +33,8 @@ namespace AnyService.EntityFramework
             else q.OrderByDescending(pi => pInfo.GetValue(pi, null));
 
             q.Skip((int)pagination.Offset).Take((int)pagination.PageSize);
-            var res = await IncludeNavigations(q).ToArrayAsync();
+            var navs = IncludeNavigations(q);
+            var res = await navs.ToArrayAsync();
             await DetachEntities(res);
             return res;
         }
@@ -98,7 +99,7 @@ namespace AnyService.EntityFramework
         }
         private static readonly ConcurrentDictionary<Type, IEnumerable<string>> NavigationPropertyNames
             = new ConcurrentDictionary<Type, IEnumerable<string>>();
-        private IQueryable<TDomainModel> IncludeNavigations(IQueryable<TDomainModel> query)
+        private IQueryable<TDomainModel> IncludeNavigations(IEnumerable<TDomainModel> source)
         {
             var type = typeof(TDomainModel);
 
@@ -109,8 +110,8 @@ namespace AnyService.EntityFramework
                 NavigationPropertyNames.TryAdd(type, navigationPropertiesNames);
             }
             foreach (var name in navigationPropertiesNames)
-                query = query.Include(name);
-            return query;
+                source = source.AsQueryable().Include(name);
+            return source.AsQueryable();
         }
         private IEnumerable<PropertyInfo> GetTypePropertyInfos()
         {
@@ -119,7 +120,7 @@ namespace AnyService.EntityFramework
             {
                 pInfos = type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
                     .Where(p => p.CanRead && p.CanWrite);
-                TypeProperties[type] = pInfos;
+                TypeProperties.TryAdd(type, pInfos);
             }
             return pInfos;
         }

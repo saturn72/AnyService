@@ -136,11 +136,11 @@ namespace AnyService.Controllers
         }
         [HttpGet]
         public async Task<IActionResult> GetAll(
-            [FromQuery]string orderBy = null,
-            [FromQuery]ulong? offset = null,
-            [FromQuery]ulong? pageSize = null,
-            [FromQuery]string sortOrder = "desc",
-            [FromQuery]string query = "")
+            [FromQuery] string orderBy = null,
+            [FromQuery] ulong? offset = null,
+            [FromQuery] ulong? pageSize = null,
+            [FromQuery] string sortOrder = "desc",
+            [FromQuery] string query = "")
         {
             var paginationSettings = _workContext.CurrentEntityConfigRecord.PaginationSettings;
             var pagination = GetPagination(orderBy, offset, pageSize, sortOrder, query);
@@ -157,7 +157,7 @@ namespace AnyService.Controllers
             var curCfg = _workContext.CurrentEntityConfigRecord;
             Pagination<TDomainModel> pagination;
 
-            if (curCfg.GetAllQueries.TryGetValue(query, out Func<object, Func<object, bool>> value))
+            if (curCfg.GetAllQueries.TryGetValue(query, out Func<object, LambdaExpression> value))
             {
                 var payload = new
                 {
@@ -165,9 +165,12 @@ namespace AnyService.Controllers
                     UserId = _workContext.CurrentUserId,
                     Query = query
                 };
-                var func = value(payload).Convert<object, TDomainModel, bool>();
-                Expression<Func<TDomainModel, bool>> objExp = x => func(x);
-                pagination = new Pagination<TDomainModel>(objExp);
+                var exp = value(payload);
+                if (exp == null)
+                    return new Pagination<TDomainModel>();
+
+                var c = exp as Expression<Func<TDomainModel, bool>>;
+                pagination = new Pagination<TDomainModel>(c);
             }
             else
             {

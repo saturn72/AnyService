@@ -41,6 +41,43 @@ namespace AnyService.E2E
             HttpClient = Factory.WithWebHostBuilder(configuration).CreateClient();
         }
         [Test]
+        public async Task Read_ReservedQueries()
+        {
+            var totalEntities = 6;
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
+            var model = new DependentModel
+            {
+                Value = "init value",
+                Public = false
+            };
+            for (int i = 0; i < totalEntities; i++)
+            {
+                model.Public = i % 2 == 0;
+                await HttpClient.PostAsJsonAsync("dependentmodel", model);
+            }
+            var res = await HttpClient.GetAsync($"dependentmodel?query=__created");
+            res.EnsureSuccessStatusCode();
+            var content = await res.Content.ReadAsStringAsync();
+            var jObj = JObject.Parse(content);
+            var jArr = jObj["data"]["data"] as JArray;
+            jArr.Count.ShouldBe(totalEntities);
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
+            res = await HttpClient.GetAsync($"dependentmodel?query=__created");
+            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jArr = jObj["data"]["data"] as JArray;
+            jArr.Count.ShouldBe(0);
+
+            res = await HttpClient.GetAsync($"dependentmodel?query=__public");
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jArr = jObj["data"]["data"] as JArray;
+            jArr.Count.ShouldBe(totalEntities / 2);
+        }
+        [Test]
         public async Task CRUD_Dependent()
         {
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
@@ -69,7 +106,9 @@ namespace AnyService.E2E
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
 
-            //read all
+            //read created
+            res = await HttpClient.GetAsync($"dependentmodel?query=__created");
+            content = await res.Content.ReadAsStringAsync();
             //no query provided
             res = await HttpClient.GetAsync("dependentmodel/");
             res.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -78,14 +117,6 @@ namespace AnyService.E2E
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
             var jArr = jObj["data"]["data"] as JArray;
-            jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
-            jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
-
-            //get all public - forbid
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-            var json = await HttpClient.GetStringAsync("dependentmodel/?query=__public");
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
             #endregion
@@ -115,6 +146,7 @@ namespace AnyService.E2E
             await Task.Delay(250);// wait for background tasks (by simulating network delay)
             res = await HttpClient.GetAsync("dependentmodel/" + id);
             res.EnsureSuccessStatusCode();
+
         }
 
         [Test]

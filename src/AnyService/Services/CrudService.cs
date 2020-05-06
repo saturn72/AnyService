@@ -17,7 +17,7 @@ namespace AnyService.Services
         private readonly ICrudValidator<TDomainModel> _validator;
         private readonly AuditHelper _auditHelper;
         private readonly WorkContext _workContext;
-        private readonly IDomainEventsBus _eventBus;
+        private readonly IEventsBus _eventBus;
         private readonly EventKeyRecord _eventKeys;
         private readonly IFileStoreManager _fileStorageManager;
         private readonly ILogger<CrudService<TDomainModel>> _logger;
@@ -29,7 +29,7 @@ namespace AnyService.Services
             ICrudValidator<TDomainModel> validator,
             AuditHelper auditHelper,
             WorkContext workContext,
-            IDomainEventsBus eventBus,
+            IEventsBus eventBus,
             IFileStoreManager fileStorageManager,
             ILogger<CrudService<TDomainModel>> logger,
             IIdGenerator idGenerator)
@@ -152,9 +152,6 @@ namespace AnyService.Services
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
-
-
-
         public async Task<ServiceResponse> Update(string id, TDomainModel entity)
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start update flow for id: {id}, entity: {entity}");

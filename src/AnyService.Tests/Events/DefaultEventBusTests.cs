@@ -7,7 +7,7 @@ using Xunit;
 
 namespace AnyService.Tests.Events
 {
-    public class EventBusTests
+    public class DefaultEventBusTests
     {
         [Fact]
         public void PublishWithoutSubscription()
@@ -18,7 +18,7 @@ namespace AnyService.Tests.Events
                 Data = "thjis is data"
             };
 
-            var eb = new DomainEventsBus();
+            var eb = new DefaultEventsBus();
 
             eb.Publish(ek, ed);
             ed.PublishedOnUtc.ShouldBe(default(DateTime));
@@ -38,7 +38,7 @@ namespace AnyService.Tests.Events
                 return Task.CompletedTask;
             });
 
-            var eb = new DomainEventsBus();
+            var eb = new DefaultEventsBus();
             var handlerId = eb.Subscribe(ek, handler);
             eb.Publish(ek, ed);
             Thread.Sleep(50);

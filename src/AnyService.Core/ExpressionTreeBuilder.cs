@@ -46,21 +46,27 @@ namespace AnyService.Core
 
         public static Expression<Func<T, bool>> BuildBinaryTreeExpression<T>(string query)
         {
-            var pe = Expression.Parameter(typeof(T), "x");
-            return BuildBinaryTreeExpressionWorker<T>(query, pe);
+            var exp = BuildBinaryTreeExpression(typeof(T), query);
+            return exp as Expression<Func<T, bool>>;
         }
-        private static Expression<Func<T, bool>> BuildBinaryTreeExpressionWorker<T>(string query, ParameterExpression parameterExpression)
+
+        public static LambdaExpression BuildBinaryTreeExpression(Type type, string query)
+        {
+            var pe = Expression.Parameter(type, "x");
+            return BuildBinaryTreeExpressionWorker(type, query, pe);
+        }
+        private static LambdaExpression BuildBinaryTreeExpressionWorker(Type type, string query, ParameterExpression parameterExpression)
         {
             var q = query.Trim();
             var m = Regex.Match(q, HasSurroundingBracketsOnly);
             if (m.Success)
-                return BuildBinaryTreeExpressionWorker<T>(q.Substring(1, q.Length - 2), parameterExpression);
+                return BuildBinaryTreeExpressionWorker(type, q.Substring(1, q.Length - 2), parameterExpression);
 
             var binaryOperationMatch = GetMatch(q, BinaryPattern, EscapedBinaryPattern, BinaryWithBracketsPattern);
 
             if (binaryOperationMatch != null && binaryOperationMatch.Success)
             {
-                return BuildBinaryTreeExpression<T>(
+                return BuildBinaryTreeExpression(type,
                     binaryOperationMatch.Groups[LeftOperand].Value,
                     binaryOperationMatch.Groups[Operator].Value,
                     binaryOperationMatch.Groups[RightOperand].Value,
@@ -80,18 +86,18 @@ namespace AnyService.Core
                 {
                     var e = evaluatorSecond.Value;
                     var firstEvaluatorIndex = q.IndexOf(e) + e.Length;
-                    return SendToEvaluation<T>(leftOp.Value, e, q.Substring(firstEvaluatorIndex), parameterExpression);
+                    return SendToEvaluation(type, leftOp.Value, e, q.Substring(firstEvaluatorIndex), parameterExpression);
                 }
 
                 string leftQuery = GetValueOrReplaceIfEmptyOrNull(leftOp.Value, brackets.Value),
                     evaluator = GetValueOrReplaceIfEmptyOrNull(evaluatorFirst.Value, evaluatorSecond.Value),
                     rightQuery = GetValueOrReplaceIfEmptyOrNull(rightOp.Value, brackets.Value);
-                return SendToEvaluation<T>(leftQuery, evaluator, rightQuery, parameterExpression);
+                return SendToEvaluation(type, leftQuery, evaluator, rightQuery, parameterExpression);
             }
 
             var evalMatch = Regex.Match(q, EvalPattern);
             if (evalMatch.Success)
-                return SendToEvaluation<T>(evalMatch.Groups[LeftOperand].Value, evalMatch.Groups[EvaluatorFirst].Value, evalMatch.Groups[RightOperand].Value, parameterExpression);
+                return SendToEvaluation(type, evalMatch.Groups[LeftOperand].Value, evalMatch.Groups[EvaluatorFirst].Value, evalMatch.Groups[RightOperand].Value, parameterExpression);
 
             return null;
 
@@ -109,22 +115,24 @@ namespace AnyService.Core
             return null;
         }
 
-        private static Expression<Func<T, bool>> SendToEvaluation<T>(string leftQuery, string evaluator, string rightQuery, ParameterExpression parameterExpression)
+        private static LambdaExpression SendToEvaluation(Type type, string leftQuery, string evaluator, string rightQuery, ParameterExpression parameterExpression)
         {
-            var leftBinaryExpression = BuildBinaryTreeExpressionWorker<T>(leftQuery, parameterExpression);
-            var rightBinaryExpression = BuildBinaryTreeExpressionWorker<T>(rightQuery, parameterExpression);
+            var leftBinaryExpression = BuildBinaryTreeExpressionWorker(type, leftQuery, parameterExpression);
+            var rightBinaryExpression = BuildBinaryTreeExpressionWorker(type, rightQuery, parameterExpression);
             if (leftBinaryExpression == null || rightBinaryExpression == null) return null;
 
             var builder = EvaluationExpressionBuilder[evaluator];
-            var evaluation = builder(leftBinaryExpression.Body, rightBinaryExpression.Body);
-            return Expression.Lambda<Func<T, bool>>(evaluation, leftBinaryExpression.Parameters);
+            var body = builder(leftBinaryExpression.Body, rightBinaryExpression.Body);
+            // return  Expression.Lambda<Func<T, bool>>(body, leftBinaryExpression.Parameters);
+            var delegateType = typeof(Func<,>).MakeGenericType(type, typeof(bool));
+
+            return Expression.Lambda(delegateType, body, leftBinaryExpression.Parameters);
         }
 
-        public static Expression<Func<T, bool>> BuildBinaryTreeExpression<T>(string propertyName, string @operator, string value, ParameterExpression parameterExpression)
+        public static LambdaExpression BuildBinaryTreeExpression(Type type, string propertyName, string @operator, string value, ParameterExpression parameterExpression)
         {
             if (!propertyName.HasValue() || !@operator.HasValue() || !value.HasValue())
                 return null;
-            var type = typeof(T);
             var props = GetTypeProperties(type);
 
             var prop = GetPropertyByName(props, propertyName);
@@ -135,8 +143,9 @@ namespace AnyService.Core
             try
             {
                 v = Convert.ChangeType(value, me.Type);
-                var be = BinaryExpressionBuilder[@operator](me, v);
-                return Expression.Lambda<Func<T, bool>>(be, parameterExpression);
+                var body = BinaryExpressionBuilder[@operator](me, v);
+                var delegateType = typeof(Func<,>).MakeGenericType(type, typeof(bool));
+                return Expression.Lambda(delegateType, body, parameterExpression);
             }
             catch
             {

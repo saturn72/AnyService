@@ -34,7 +34,7 @@ namespace AnyService.Core.Tests
         [InlineData("\"this-is-id\" == id")] // property name is second
         public void ToBinaryTree_FromString_ReturnsNull(string query)
         {
-            ExpressionTreeBuilder.BuildBinaryTreeExpression<TestClass>(query).ShouldBeNull();
+            ExpressionTreeBuilder.BuildBinaryTreeExpression(typeof(TestClass), query).ShouldBeNull();
         }
 
         [Theory]
@@ -60,7 +60,7 @@ namespace AnyService.Core.Tests
         [InlineData("id == 2 || (numericvalue ==32 && stringValue ==a) || stringValue ==b", "x => ((x.Id == \"2\") OrElse (((x.NumericValue == 32) AndAlso (x.StringValue == \"a\")) OrElse (x.StringValue == \"b\")))")]
         public void ToBinaryTree_FromString(string query, string expResult)
         {
-            var e = ExpressionTreeBuilder.BuildBinaryTreeExpression<TestClass>(query);
+            var e = ExpressionTreeBuilder.BuildBinaryTreeExpression(typeof(TestClass), query);
             e.ToString().ShouldBe(expResult);
         }
         [Theory]

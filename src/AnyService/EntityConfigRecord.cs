@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using AnyService.Core;
 using AnyService.Core.Security;
 using AnyService.Services;
 
@@ -40,6 +42,6 @@ namespace AnyService
         /// Gets or sets paginate default settings
         /// </summary>
         public PaginationSettings PaginationSettings { get; set; }
-        public IReadOnlyDictionary<string, Func<object, Func<object, bool>>> GetAllQueries { get; set; }
+        public IReadOnlyDictionary<string, Func<object, LambdaExpression>> GetAllQueries { get; set; }
     }
 }

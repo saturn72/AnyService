@@ -63,7 +63,7 @@ namespace AnyService.Tests.Services
 
             var ah = new Mock<AuditHelper>();
 
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var ekr = new EventKeyRecord("create", null, null, null);
             var wc = new WorkContext
@@ -95,7 +95,7 @@ namespace AnyService.Tests.Services
 
             var ah = new Mock<AuditHelper>();
 
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
             var exId = "exId" as object;
@@ -138,7 +138,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(true);
 
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var ekr = new EventKeyRecord("create", null, null, null);
             var wc = new WorkContext
             {
@@ -176,7 +176,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(true);
 
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var ekr = new EventKeyRecord("create", null, null, null);
             var wc = new WorkContext
             {
@@ -235,7 +235,7 @@ namespace AnyService.Tests.Services
 
             var ah = new Mock<AuditHelper>();
 
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var ekr = new EventKeyRecord("create", null, null, null);
             var wc = new WorkContext
@@ -264,7 +264,7 @@ namespace AnyService.Tests.Services
 
             var ah = new Mock<AuditHelper>();
 
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
             var exId = "exId" as object;
@@ -308,7 +308,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(true);
 
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var ekr = new EventKeyRecord(null, "read", null, null);
             var wc = new WorkContext
             {
@@ -387,7 +387,7 @@ namespace AnyService.Tests.Services
 
             var ah = new Mock<AuditHelper>();
 
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var ekr = new EventKeyRecord(null, "read", null, null);
             var wc = new WorkContext
             {
@@ -423,7 +423,7 @@ namespace AnyService.Tests.Services
 
             var ah = new Mock<AuditHelper>();
 
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
             var exId = "exId" as object;
@@ -470,7 +470,7 @@ namespace AnyService.Tests.Services
 
             var ah = new Mock<AuditHelper>();
 
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
 
             var ekr = new EventKeyRecord(null, "read", null, null);
             var wc = new WorkContext
@@ -552,7 +552,7 @@ namespace AnyService.Tests.Services
                 .ThrowsAsync(ex);
 
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var ekr = new EventKeyRecord(null, null, "update", null);
             var wc = new WorkContext
@@ -599,7 +599,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(null as AuditableTestModel);
 
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var ekr = new EventKeyRecord(null, null, "update", null);
             var wc = new WorkContext
             {
@@ -639,7 +639,7 @@ namespace AnyService.Tests.Services
                 .ThrowsAsync(ex);
 
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var ekr = new EventKeyRecord(null, null, "update", null);
             var wc = new WorkContext
             {
@@ -688,7 +688,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(entity);
 
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var ekr = new EventKeyRecord(null, null, "update", null);
             var wc = new WorkContext
             {
@@ -768,7 +768,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Update(It.IsAny<TestFileContainer>()))
                 .ReturnsAsync(entity);
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var logger = new Mock<ILogger<CrudService<TestFileContainer>>>();
             var fsm = new Mock<IFileStoreManager>();
             fsm.Setup(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()))
@@ -892,7 +892,7 @@ namespace AnyService.Tests.Services
                 .ThrowsAsync(ex);
 
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var ekr = new EventKeyRecord(null, null, null, "delete");
             var wc = new WorkContext
             {
@@ -978,7 +978,7 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
             var gn = new Mock<IIdGenerator>();
             var exId = "ex-id";
             gn.Setup(g => g.GetNext()).Returns(exId);
@@ -999,7 +999,7 @@ namespace AnyService.Tests.Services
         public async Task Delete_IDeletableAudit_Success()
         {
             var ah = new Mock<AuditHelper>();
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
 
             var dbModel = new AuditableTestModel();
 
@@ -1036,7 +1036,7 @@ namespace AnyService.Tests.Services
         [Fact]
         public async Task Delete_Success()
         {
-            var eb = new Mock<IDomainEventsBus>();
+            var eb = new Mock<IEventsBus>();
 
             var dbModel = new TestModel();
 

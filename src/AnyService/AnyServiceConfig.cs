@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using AnyService.Audity;
 using AnyService.Core;
 using AnyService.Services;
+using System.Linq.Expressions;
 
 namespace AnyService
 {
@@ -40,15 +41,15 @@ namespace AnyService
         public int MaxValueCount { get; set; }
         public PaginationSettings DefaultPaginationSettings { get; set; }
 
-        public IReadOnlyDictionary<string, Func<object, Func<object, bool>>> GetAllQueries { get; set; }
+        public IReadOnlyDictionary<string, Func<object, LambdaExpression>> GetAllQueries { get; set; }
 
         #region nested classes
         private class DefaultGetAllQueries
         {
-            internal IReadOnlyDictionary<string, Func<object, Func<object, bool>>> Queries { get; private set; }
+            internal IReadOnlyDictionary<string, Func<object, LambdaExpression>> Queries { get; private set; }
             internal DefaultGetAllQueries()
             {
-                var rq = new Dictionary<string, Func<object, Func<object, bool>>>()
+                var rq = new Dictionary<string, Func<object, LambdaExpression>>()
                 {
                     {"__created",  _createdByUser()},
                     {"__updated", _updatedByUser()},
@@ -58,47 +59,72 @@ namespace AnyService
                 Queries = rq;
             }
 
-            private Func<object, Func<object, bool>> _createdByUser()
+            private Func<object, LambdaExpression> _createdByUser()
             {
                 return payload =>
                 {
                     var type = payload.GetPropertyValueByName<Type>("Type");
                     var userId = payload.GetPropertyValueByName<string>("UserId");
-                    return type is ICreatableAudit ?
-                        x => (x as ICreatableAudit).CreatedByUserId == userId :
-                        null as Func<object, bool>;
+                    return ExpressionTreeBuilder.BuildBinaryTreeExpression(type, $"{nameof(ICreatableAudit.CreatedByUserId)} == {userId}");
+                    // if (IsOfType<ICreatableAudit>(type))
+                    // {
+                    //     Func<IDomainModelBase, bool> f = x =>
+                    //     {
+                    //         var r = (x as ICreatableAudit).CreatedByUserId == userId;
+                    //         return r;
+                    //     };
+                    //     Expression<Func<IDomainModelBase, bool>> exp = i => f(i);
+                    //     return exp;
+                    // }
+                    // return null;
                 };
             }
-            private Func<object, Func<object, bool>> _deletedByUser()
+            private Func<object, LambdaExpression> _deletedByUser()
             {
                 return payload =>
                {
                    var type = payload.GetPropertyValueByName<Type>("Type");
                    var userId = payload.GetPropertyValueByName<string>("UserId");
-                   return type is IDeletableAudit ?
-                       x => (x as IDeletableAudit).DeletedByUserId == userId :
-                       null as Func<object, bool>;
+                   if (IsOfType<IDeletableAudit>(type))
+                   {
+                       Func<object, bool> f = x => (x as IDeletableAudit).DeletedByUserId == userId;
+                       Expression<Func<IDomainModelBase, bool>> exp = i => f(i);
+                       return exp;
+                   }
+                   return null;
                };
             }
-            private Func<object, Func<object, bool>> _updatedByUser()
+            private Func<object, LambdaExpression> _updatedByUser()
             {
                 return payload =>
                 {
                     var type = payload.GetPropertyValueByName<Type>("Type");
                     var userId = payload.GetPropertyValueByName<string>("UserId");
-                    return type is IUpdatableAudit ? x => (x as IUpdatableAudit).UpdateRecords.Any(ur => ur.UpdatedByUserId == userId) :
-                        null as Func<object, bool>;
+                    if (IsOfType<IUpdatableAudit>(type))
+                    {
+                        Func<object, bool> f = x => (x as IUpdatableAudit).UpdateRecords.Any(u => u.UpdatedByUserId == userId);
+                        Expression<Func<IDomainModelBase, bool>> exp = i => f(i);
+                        return exp;
+                    }
+                    return null;
                 };
             }
-            private Func<object, Func<object, bool>> _isPublic()
+            private Func<object, LambdaExpression> _isPublic()
             {
                 return payload =>
                 {
                     var type = payload.GetPropertyValueByName<Type>("Type");
-                    return type is IPublishable ? x => (x as IPublishable).Public :
-                        null as Func<object, bool>;
+                    if (IsOfType<IPublishable>(type))
+                    {
+                        Func<object, bool> f = x => (x as IPublishable).Public;
+                        Expression<Func<IDomainModelBase, bool>> exp = i => f(i);
+                        return exp;
+                    }
+                    return null;
                 };
             }
+
+            private bool IsOfType<T>(Type type) => typeof(T).IsAssignableFrom(type);
         }
         #endregion
     }

@@ -32,7 +32,7 @@ namespace AnyService
             {
                 var entityConfigRecords = sp.GetService<IEnumerable<EntityConfigRecord>>();
                 var eventKeys = entityConfigRecords.Select(e => e.EventKeys).ToArray();
-                var eventBus = sp.GetService<IDomainEventsBus>();
+                var eventBus = sp.GetService<IEventsBus>();
                 var exLogger = sp.GetService<ILogger<ExceptionsLoggingEventHandlers>>();
                 var handlers = new ExceptionsLoggingEventHandlers(exLogger);
                 foreach (var ek in eventKeys)
@@ -68,7 +68,7 @@ namespace AnyService
             app.UseMiddleware<AnyServicePermissionMiddleware>();
 
             //subscribe to events event listener
-            var eventBus = serviceProvider.GetService<IDomainEventsBus>();
+            var eventBus = serviceProvider.GetService<IEventsBus>();
             var ekr = EntityConfigRecordManager.EntityConfigRecords.Select(e => e.EventKeys);
             var peh = serviceProvider.GetService<IPermissionEventsHandler>();
             foreach (var e in ekr)
