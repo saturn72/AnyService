@@ -63,8 +63,7 @@ namespace AnyService.E2E
             jArr.Count.ShouldBe(totalEntities);
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
             res = await HttpClient.GetAsync($"dependentmodel?query=__created");
-            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-
+            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden, "Do not expose un permitted entries");
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
             jArr = jObj["data"]["data"] as JArray;

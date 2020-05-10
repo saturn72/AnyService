@@ -3,7 +3,6 @@ using AnyService.Core.Caching;
 using AnyService.Core.Security;
 using System;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace AnyService.Services.Security
@@ -43,7 +42,6 @@ namespace AnyService.Services.Security
             }
             return userPermissions;
         }
-
         public async Task<UserPermissions> UpdateUserPermissions(UserPermissions userPermissions)
         {
             if (userPermissions == null || !userPermissions.UserId.HasValue())

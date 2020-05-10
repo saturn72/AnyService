@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AnyService.Audity;
-using AnyService.Events;
 using AnyService;
 using AnyService.Core.Security;
-using AnyService.Services.Security;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using AnyService.Services;
 using AnyService.Services.ServiceResponseMappers;
 using AnyService.Utilities;
+using AnyService.Services.Security;
+using AnyService.Audity;
+using AnyService.Events;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -27,6 +27,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IServiceCollection AddAnyService(this IServiceCollection services, AnyServiceConfig config)
         {
             NormalizeConfiguration(config);
+
             services.TryAddSingleton<IdGeneratorFactory>(sp =>
             {
                 var stringGenerator = new StringIdGenerator();
@@ -55,6 +56,14 @@ namespace Microsoft.Extensions.DependencyInjection
                 foreach (var vt in vType.GetInterfaces())
                     services.TryAddTransient(vt, vType);
             }
+            foreach (var ecr in config.EntityConfigRecords)
+                services.AddTransient(ecr.FilterFactoryType);
+            services.AddTransient(typeof(IFilterFactory), sp =>
+            {
+                var wc = sp.GetService<WorkContext>();
+                var ct = wc.CurrentType;
+                return sp.GetService(ct) as IFilterFactory;
+            });
 
             EntityConfigRecordManager.EntityConfigRecords = config.EntityConfigRecords;
             services.TryAddScoped<WorkContext>();
@@ -113,7 +122,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 if (ecr.PermissionRecord == null) ecr.PermissionRecord = pr;
                 if (ecr.EntityKey == null) ecr.EntityKey = fn;
                 if (ecr.PaginationSettings == null) ecr.PaginationSettings = config.DefaultPaginationSettings;
-                if (ecr.GetAllQueries == null) ecr.GetAllQueries = config.GetAllQueries;
+                if (ecr.FilterFactoryType == null) ecr.FilterFactoryType = config.FilterFactoryType;
                 if (ecr.Validator == null)
                 {
                     var v = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);

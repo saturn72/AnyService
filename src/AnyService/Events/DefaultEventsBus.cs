@@ -19,7 +19,6 @@ namespace AnyService.Events
                 }
             }
         }
-
         public string Subscribe(string eventKey, Func<DomainEventData, Task> handler)
         {
             var handlerId = Convert

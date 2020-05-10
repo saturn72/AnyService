@@ -15,7 +15,7 @@ namespace AnyService.Tests.Events
             var ek = "event-key";
             var ed = new DomainEventData
             {
-                Data = "thjis is data"
+                Data = "this is data"
             };
 
             var eb = new DefaultEventsBus();

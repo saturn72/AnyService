@@ -32,16 +32,16 @@ namespace AnyService.Middlewares
             }
             workContext.CurrentUserId = userId;
 
-            var typeConfigRecord = GetRouteMap(httpContext.Request.Path);
-            if (typeConfigRecord != null && !typeConfigRecord.Equals(default))
+            var ecr = GetEntityconfigRecordByRoute(httpContext.Request.Path);
+            if (ecr != null && !ecr.Equals(default))
             {
-                workContext.CurrentEntityConfigRecord = typeConfigRecord;
-                workContext.RequestInfo = ToRequestInfo(httpContext, typeConfigRecord);
+                workContext.CurrentEntityConfigRecord = ecr;
+                workContext.RequestInfo = ToRequestInfo(httpContext, ecr);
             }
             _logger.LogDebug(LoggingEvents.WorkContext, "Finish parsing current WorkContext");
             await _next(httpContext);
         }
-        private static EntityConfigRecord GetRouteMap(PathString path)
+        private static EntityConfigRecord GetEntityconfigRecordByRoute(PathString path)
         {
             var segment = path.Value.Split('/', StringSplitOptions.RemoveEmptyEntries)[0];
             if (RouteMaps.TryGetValue(segment, out EntityConfigRecord value))

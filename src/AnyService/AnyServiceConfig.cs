@@ -1,14 +1,11 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using AnyService.Audity;
 using AnyService.Core;
 using AnyService.Services;
-using System.Linq.Expressions;
 
 namespace AnyService
 {
-    public sealed class AnyServiceConfig
+    public sealed partial class AnyServiceConfig
     {
         public AnyServiceConfig()
         {
@@ -24,7 +21,7 @@ namespace AnyService
                 DefaultPageSize = 50,
                 DefaultSortOrder = PaginationSettings.Asc,
             };
-            GetAllQueries = new DefaultGetAllQueries().Queries;
+            FilterFactoryType = typeof(DefaultFilterFactory);
         }
 
         public IEnumerable<EntityConfigRecord> EntityConfigRecords { get; set; }
@@ -40,92 +37,11 @@ namespace AnyService
         public int MaxMultipartBoundaryLength { get; set; }
         public int MaxValueCount { get; set; }
         public PaginationSettings DefaultPaginationSettings { get; set; }
-
-        public IReadOnlyDictionary<string, Func<object, LambdaExpression>> GetAllQueries { get; set; }
-
-        #region nested classes
-        private class DefaultGetAllQueries
-        {
-            internal IReadOnlyDictionary<string, Func<object, LambdaExpression>> Queries { get; private set; }
-            internal DefaultGetAllQueries()
-            {
-                var rq = new Dictionary<string, Func<object, LambdaExpression>>()
-                {
-                    {"__created",  _createdByUser()},
-                    {"__updated", _updatedByUser()},
-                    {"__deleted", _deletedByUser()},
-                    {"__public", _isPublic()},
-                };
-                Queries = rq;
-            }
-
-            private Func<object, LambdaExpression> _createdByUser()
-            {
-                return payload =>
-                {
-                    var type = payload.GetPropertyValueByName<Type>("Type");
-                    var userId = payload.GetPropertyValueByName<string>("UserId");
-                    return ExpressionTreeBuilder.BuildBinaryTreeExpression(type, $"{nameof(ICreatableAudit.CreatedByUserId)} == {userId}");
-                    // if (IsOfType<ICreatableAudit>(type))
-                    // {
-                    //     Func<IDomainModelBase, bool> f = x =>
-                    //     {
-                    //         var r = (x as ICreatableAudit).CreatedByUserId == userId;
-                    //         return r;
-                    //     };
-                    //     Expression<Func<IDomainModelBase, bool>> exp = i => f(i);
-                    //     return exp;
-                    // }
-                    // return null;
-                };
-            }
-            private Func<object, LambdaExpression> _deletedByUser()
-            {
-                return payload =>
-               {
-                   var type = payload.GetPropertyValueByName<Type>("Type");
-                   var userId = payload.GetPropertyValueByName<string>("UserId");
-                   if (IsOfType<IDeletableAudit>(type))
-                   {
-                       Func<object, bool> f = x => (x as IDeletableAudit).DeletedByUserId == userId;
-                       Expression<Func<IDomainModelBase, bool>> exp = i => f(i);
-                       return exp;
-                   }
-                   return null;
-               };
-            }
-            private Func<object, LambdaExpression> _updatedByUser()
-            {
-                return payload =>
-                {
-                    var type = payload.GetPropertyValueByName<Type>("Type");
-                    var userId = payload.GetPropertyValueByName<string>("UserId");
-                    if (IsOfType<IUpdatableAudit>(type))
-                    {
-                        Func<object, bool> f = x => (x as IUpdatableAudit).UpdateRecords.Any(u => u.UpdatedByUserId == userId);
-                        Expression<Func<IDomainModelBase, bool>> exp = i => f(i);
-                        return exp;
-                    }
-                    return null;
-                };
-            }
-            private Func<object, LambdaExpression> _isPublic()
-            {
-                return payload =>
-                {
-                    var type = payload.GetPropertyValueByName<Type>("Type");
-                    if (IsOfType<IPublishable>(type))
-                    {
-                        Func<object, bool> f = x => (x as IPublishable).Public;
-                        Expression<Func<IDomainModelBase, bool>> exp = i => f(i);
-                        return exp;
-                    }
-                    return null;
-                };
-            }
-
-            private bool IsOfType<T>(Type type) => typeof(T).IsAssignableFrom(type);
-        }
-        #endregion
+        /// <summary>
+        /// type of filter factory old reserved queries for GetAll operation
+        /// MUST inherit from IFilterFactory
+        /// </summary>
+        /// <value></value>
+        public Type FilterFactoryType { get; set; }
     }
 }

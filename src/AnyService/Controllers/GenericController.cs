@@ -28,6 +28,7 @@ namespace AnyService.Controllers
         private readonly CrudService<TDomainModel> _crudService;
         private readonly IServiceResponseMapper _serviceResponseMapper;
         private readonly ILogger<GenericController<TDomainModel>> _logger;
+        private readonly IFilterFactory _filterFactory;
         private readonly AnyServiceConfig _config;
         private readonly Type _curType;
         private readonly WorkContext _workContext;
@@ -38,13 +39,14 @@ namespace AnyService.Controllers
         public GenericController(
             IServiceProvider serviceProvider, AnyServiceConfig config,
             IServiceResponseMapper serviceResponseMapper, WorkContext workContext,
-            ILogger<GenericController<TDomainModel>> logger)
+            ILogger<GenericController<TDomainModel>> logger, IFilterFactory filterFactory)
         {
             _crudService = serviceProvider.GetService<CrudService<TDomainModel>>();
             _config = config;
             _serviceResponseMapper = serviceResponseMapper;
             _workContext = workContext;
             _logger = logger;
+            _filterFactory = filterFactory;
             _curType = typeof(TDomainModel);
         }
         #endregion
@@ -143,7 +145,7 @@ namespace AnyService.Controllers
             [FromQuery] string query = "")
         {
             var paginationSettings = _workContext.CurrentEntityConfigRecord.PaginationSettings;
-            var pagination = GetPagination(orderBy, offset, pageSize, sortOrder, query);
+            var pagination = await GetPagination(orderBy, offset, pageSize, sortOrder, query);
 
             _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
             var res = await _crudService.GetAll(pagination);
@@ -152,32 +154,29 @@ namespace AnyService.Controllers
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
 
-        private Pagination<TDomainModel> GetPagination(string orderBy, ulong? offset, ulong? pageSize, string sortOrder, string query)
+        private async Task<Pagination<TDomainModel>> GetPagination(string orderBy, ulong? offset, ulong? pageSize, string sortOrder, string query)
         {
-            var curCfg = _workContext.CurrentEntityConfigRecord;
             Pagination<TDomainModel> pagination;
+            var filter = _filterFactory.GetFilter<TDomainModel>(query);
 
-            if (curCfg.GetAllQueries.TryGetValue(query, out Func<object, LambdaExpression> value))
+            if (filter != null)
             {
                 var payload = new
                 {
-                    Type = typeof(TDomainModel),
-                    UserId = _workContext.CurrentUserId,
                     Query = query
                 };
-                var exp = value(payload);
-                if (exp == null)
+                var f = await filter(payload);
+                if (f == null)
                     return new Pagination<TDomainModel>();
-
-                var c = exp as Expression<Func<TDomainModel, bool>>;
-                pagination = new Pagination<TDomainModel>(c);
+                Expression<Func<TDomainModel, bool>> exp = a => f(a);
+                pagination = new Pagination<TDomainModel>(exp);
             }
             else
             {
                 pagination = new Pagination<TDomainModel>(query);
             }
 
-            var paginationSettings = curCfg.PaginationSettings;
+            var paginationSettings = _workContext.CurrentEntityConfigRecord.PaginationSettings;
 
             pagination.OrderBy = orderBy ?? paginationSettings.DefaultOrderBy;
             pagination.Offset = offset ?? paginationSettings.DefaultOffset;

@@ -29,17 +29,19 @@ namespace AnyService.SampleApp
                 .AddMvcCore(o => o.EnableEndpointRouting = false)
                 .AddAuthorization();
 
+            services.AddAuthentication(ManagedAuthenticationHandler.Schema)
+                .AddScheme<AuthenticationSchemeOptions, ManagedAuthenticationHandler>(ManagedAuthenticationHandler.Schema, options => { });
+            services.AddAuthorization();
+
             var entities = new[]
             {
                 typeof(DependentModel),
                 typeof(Dependent2),
-                typeof(MultipartSampleModel)
+                typeof(MultipartSampleModel),
             };
 
-            services.AddAuthentication(ManagedAuthenticationHandler.Schema)
-                .AddScheme<AuthenticationSchemeOptions, ManagedAuthenticationHandler>(ManagedAuthenticationHandler.Schema, options => { });
-            services.AddAuthorization();
             services.AddAnyService(entities);
+
             ConfigureEntityFramework(services);
             ConfigureCaching(services);
         }

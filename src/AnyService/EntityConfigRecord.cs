@@ -42,6 +42,7 @@ namespace AnyService
         /// Gets or sets paginate default settings
         /// </summary>
         public PaginationSettings PaginationSettings { get; set; }
-        public IReadOnlyDictionary<string, Func<object, LambdaExpression>> GetAllQueries { get; set; }
+        public Type FilterFactoryType { get; set; }
+        public IFilterFactory FilterFactory { get; set; }
     }
 }
