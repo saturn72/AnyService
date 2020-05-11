@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using AnyService.Core;
 
 namespace AnyService.Services
@@ -15,11 +14,11 @@ namespace AnyService.Services
         public Pagination(string queryAsString) : this()
         {
             QueryAsString = queryAsString;
-            QueryFunc = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(queryAsString);
+            QueryFunc = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(queryAsString)?.Compile();
         }
         public Pagination(Expression<Func<TDomainModel, bool>> queryFunc) : this()
         {
-            QueryFunc = queryFunc;
+            QueryFunc = queryFunc?.Compile();
             QueryAsString = queryFunc.ToString();
         }
         /// <summary>
@@ -58,7 +57,8 @@ namespace AnyService.Services
         /// gets or sets query func
         /// </summary>
         /// <value></value>
-        public Expression<Func<TDomainModel, bool>> QueryFunc { get; set; }
+        public Func<TDomainModel, bool> QueryFunc { get; set; }
+        public bool IncludeNested { get; set; }
     }
     public class PaginationApiModel<T>
     {
@@ -69,5 +69,6 @@ namespace AnyService.Services
         public string OrderBy { get; set; }
         public IEnumerable<T> Data { get; set; }
         public string Query { get; set; }
+        public bool IncludeNavigationProperties { get; set; }
     }
 }

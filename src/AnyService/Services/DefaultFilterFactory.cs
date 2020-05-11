@@ -4,6 +4,7 @@ using AnyService.Audity;
 using AnyService.Core;
 using AnyService.Core.Security;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace AnyService.Services
 {
@@ -20,70 +21,97 @@ namespace AnyService.Services
             _workContext = workContext;
             _permissionManager = permissionManager;
         }
-        public Func<object, Task<Func<TDomainModel, bool>>> GetFilter<TDomainModel>(string filterKey) where TDomainModel : IDomainModelBase
+        public Task<Func<object, Func<TDomainModel, bool>>> GetFilter<TDomainModel>(string filterKey) where TDomainModel : IDomainModelBase
         {
             switch (filterKey)
             {
                 case "__created": return _createdByUser<TDomainModel>();
                 case "__updated": return _updatedByUser<TDomainModel>();
                 case "__deleted": return _deletedByUser<TDomainModel>();
-                case "__canread": return _canRead<TDomainModel>();
-                case "__canupdate": return _canUpdate<TDomainModel>();
-                case "__candelete": return _canDelete<TDomainModel>();
+                case "__canRead": return _canRead<TDomainModel>();
+                case "__canUpdate": return _canUpdate<TDomainModel>();
+                case "__canDelete": return _canDelete<TDomainModel>();
                 case "__public": return _isPublic<TDomainModel>();
 
                 default:
                     return null;
             }
         }
-        private Func<object, Task<Func<TDomainModel, bool>>> _createdByUser<TDomainModel>()
+        private Task<Func<object, Func<TDomainModel, bool>>> _createdByUser<TDomainModel>() where TDomainModel : IDomainModelBase
         {
-            return payload =>
+            var userId = _workContext.CurrentUserId;
+
+            Func<object, Func<TDomainModel, bool>> p = payload =>
             {
                 return IsOfType<ICreatableAudit>() ?
-                    Task.FromResult(new Func<TDomainModel, bool>(x => (x as ICreatableAudit).CreatedByUserId == _workContext.CurrentUserId)) :
+                    ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>($"{nameof(ICreatableAudit.CreatedByUserId)} == {userId}")?.Compile() :
                     null;
             };
+
+            return Task.FromResult(p);
         }
-        private Func<object, Task<Func<TDomainModel, bool>>> _updatedByUser<TDomainModel>()
+        private Task<Func<object, Func<TDomainModel, bool>>> _updatedByUser<TDomainModel>()
         {
-            return payload =>
+            var userId = _workContext.CurrentUserId;
+            Func<object, Func<TDomainModel, bool>> p = payload =>
             {
                 return IsOfType<IUpdatableAudit>() ?
-                    Task.FromResult(new Func<TDomainModel, bool>(x => (x as IUpdatableAudit).UpdateRecords.Any(x => x.UpdatedByUserId == _workContext.CurrentUserId))) :
+                    new Func<TDomainModel, bool>(x =>
+                    {
+                        var updaterecords = (x as IUpdatableAudit).UpdateRecords;
+                        return !updaterecords.IsNullOrEmpty() && updaterecords.Any(x => x.UpdatedByUserId == userId);
+                    }) :
                     null;
             };
+            return Task.FromResult(p);
         }
-        private Func<object, Task<Func<TDomainModel, bool>>> _deletedByUser<TDomainModel>()
+        private Task<Func<object, Func<TDomainModel, bool>>> _deletedByUser<TDomainModel>()
         {
-            return payload =>
+            var userId = _workContext.CurrentUserId;
+            Func<object, Func<TDomainModel, bool>> p = payload =>
             {
                 return IsOfType<IDeletableAudit>() ?
-                    Task.FromResult(new Func<TDomainModel, bool>(x => (x as IDeletableAudit).DeletedByUserId == _workContext.CurrentUserId)) :
+                    ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>($"{nameof(IDeletableAudit.DeletedByUserId)} == {userId}")?.Compile() :
                     null;
             };
+            return Task.FromResult(p);
         }
-        private Func<object, Task<Func<TDomainModel, bool>>> _isPublic<TDomainModel>()
+        private Task<Func<object, Func<TDomainModel, bool>>> _isPublic<TDomainModel>()
         {
-            return payload =>
+            Func<object, Func<TDomainModel, bool>> p = payload =>
             {
-                return IsOfType<IPublishable>() ?
-                    Task.FromResult(new Func<TDomainModel, bool>(x => (x as IPublishable).Public)) :
+                return IsOfType<ICreatableAudit>() ?
+                    ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>($"{nameof(IPublishable.Public)} == {true}")?.Compile() :
                     null;
             };
+
+            return Task.FromResult(p);
         }
-        private Func<object, Task<Func<TDomainModel, bool>>> _canRead<TDomainModel>()
+        private async Task<Func<object, Func<TDomainModel, bool>>> _canRead<TDomainModel>() where TDomainModel : IDomainModelBase
         {
-            return payload => throw new NotImplementedException(); ;
+            var permittedIds = await GetPermittedIds(_workContext.CurrentEntityConfigRecord.PermissionRecord.ReadKey);
+            return payload => a => permittedIds.Any(x => x == a.Id);
         }
-        private Func<object, Task<Func<TDomainModel, bool>>> _canUpdate<TDomainModel>()
+        private async Task<Func<object, Func<TDomainModel, bool>>> _canUpdate<TDomainModel>() where TDomainModel : IDomainModelBase
         {
-            return payload => throw new NotImplementedException(); ;
+            var permittedIds = await GetPermittedIds(_workContext.CurrentEntityConfigRecord.PermissionRecord.UpdateKey);
+            return payload => a => permittedIds.Any(x => x == a.Id);
         }
-        private Func<object, Task<Func<TDomainModel, bool>>> _canDelete<TDomainModel>()
+        private async Task<Func<object, Func<TDomainModel, bool>>> _canDelete<TDomainModel>() where TDomainModel : IDomainModelBase
         {
-            return payload => throw new NotImplementedException(); ;
+            var permittedIds = await GetPermittedIds(_workContext.CurrentEntityConfigRecord.PermissionRecord.DeleteKey);
+            return payload => a => permittedIds.Any(x => x == a.Id);
         }
+
+        private async Task<IEnumerable<string>> GetPermittedIds(string permissionKey)
+        {
+            var userId = _workContext.CurrentUserId;
+            var ups = await _permissionManager.GetUserPermissions(userId);
+            return ups?.EntityPermissions?
+                .Where(ep => ep.EntityKey == _workContext.CurrentEntityConfigRecord.EntityKey && !ep.Excluded && ep.PermissionKeys.Contains(permissionKey))?
+                .Select(e => e.EntityId).ToArray() ?? new string[] { };
+        }
+
 
         private bool IsOfType<T>() => typeof(T).IsAssignableFrom(_workContext.CurrentType);
     }

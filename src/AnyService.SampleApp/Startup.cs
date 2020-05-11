@@ -62,7 +62,6 @@ namespace AnyService.SampleApp
             var options = new DbContextOptionsBuilder<SampleAppDbContext>()
                 .UseInMemoryDatabase(databaseName: DbName).Options;
 
-            // services.AddDbContext<DbContext>(sp => new SampleAppDbContext(options));
             services.AddTransient<DbContext>(sp => new SampleAppDbContext(options));
             services.AddTransient(typeof(IRepository<>), typeof(EfRepository<>));
             services.AddTransient<IFileStoreManager, EfFileStoreManager>();

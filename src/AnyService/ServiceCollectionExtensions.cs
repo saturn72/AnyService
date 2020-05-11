@@ -57,12 +57,12 @@ namespace Microsoft.Extensions.DependencyInjection
                     services.TryAddTransient(vt, vType);
             }
             foreach (var ecr in config.EntityConfigRecords)
-                services.AddTransient(ecr.FilterFactoryType);
-            services.AddTransient(typeof(IFilterFactory), sp =>
+                services.TryAddScoped(ecr.FilterFactoryType);
+            services.TryAddTransient(typeof(IFilterFactory), sp =>
             {
                 var wc = sp.GetService<WorkContext>();
-                var ct = wc.CurrentType;
-                return sp.GetService(ct) as IFilterFactory;
+                var ffType = wc.CurrentEntityConfigRecord.FilterFactoryType;
+                return sp.GetService(ffType) as IFilterFactory;
             });
 
             EntityConfigRecordManager.EntityConfigRecords = config.EntityConfigRecords;
@@ -70,7 +70,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IIdGenerator, StringIdGenerator>();
             services.TryAddTransient<IPermissionManager, PermissionManager>();
 
-            services.AddScoped(sp =>
+            services.TryAddScoped(sp =>
             {
                 var wc = sp.GetService<WorkContext>();
                 var ct = wc.CurrentType;

@@ -51,7 +51,7 @@ namespace AnyService.Tests
             Expression<Func<TestClass, bool>> q = (a => f(a));
             var p = new Pagination<TestClass>(q);
             p.QueryAsString.ShouldNotBeNull();
-            p.QueryFunc.ShouldBe(q);
+            p.QueryFunc.ShouldBeOfType<Func<TestClass, bool>>();
             p.SortOrder.ShouldBe("asc");
         }
     }

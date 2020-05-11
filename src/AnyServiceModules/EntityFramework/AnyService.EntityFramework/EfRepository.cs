@@ -13,6 +13,7 @@ namespace AnyService.EntityFramework
     public class EfRepository<TDomainModel> : IRepository<TDomainModel>
         where TDomainModel : class, IDomainModelBase
     {
+
         private readonly DbContext _dbContext;
         private IQueryable<TDomainModel> DbSet => _dbContext.Set<TDomainModel>().AsNoTracking();
         private static readonly ConcurrentDictionary<Type, IEnumerable<PropertyInfo>> TypeProperties = new ConcurrentDictionary<Type, IEnumerable<PropertyInfo>>();
@@ -24,8 +25,8 @@ namespace AnyService.EntityFramework
         {
             if (pagination == null || pagination.QueryFunc == null)
                 throw new ArgumentNullException(nameof(pagination));
-            pagination.Total = (ulong)DbSet.Count();
-            var q = DbSet.Where(pagination.QueryFunc);
+            pagination.Total = (ulong)DbSet.Where(pagination.QueryFunc).Count();
+            var q = DbSet;
 
             var pInfo = typeof(TDomainModel).GetPropertyInfo(pagination.OrderBy);
             if (pagination.SortOrder == PaginationSettings.Asc)
@@ -33,10 +34,13 @@ namespace AnyService.EntityFramework
             else q.OrderByDescending(pi => pInfo.GetValue(pi, null));
 
             q.Skip((int)pagination.Offset).Take((int)pagination.PageSize);
-            var navs = IncludeNavigations(q);
-            var res = await navs.ToArrayAsync();
-            await DetachEntities(res);
-            return res;
+
+            if (pagination.IncludeNested)
+                q = IncludeNavigations(q);
+
+            var dbRes = q.Where(pagination.QueryFunc);
+            await DetachEntities(q);
+            return dbRes.ToArray();
         }
         public async Task<TDomainModel> GetById(string id)
         {

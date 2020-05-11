@@ -24,7 +24,6 @@ namespace AnyService.Tests.Controllers
         [InlineData(nameof(GenericController<MyClass>.PostMultipartStream), "POST", "__stream")]
         [InlineData(nameof(GenericController<MyClass>.PutMultipartStream), "PUT", "__stream/{id}")]
         [InlineData(nameof(GenericController<MyClass>.GetAll), "GET", null)]
-        [InlineData(nameof(GenericController<MyClass>.GetAllPublic), "GET", Consts.PublicSuffix)]
         [InlineData(nameof(GenericController<MyClass>.Get), "GET", "{id}")]
         [InlineData(nameof(GenericController<MyClass>.Put), "PUT", "{id}")]
         public void ValidateVerbs(string methodName, string expHttpVerb, string expTemplate)
@@ -37,7 +36,7 @@ namespace AnyService.Tests.Controllers
         }
         public class MyClass : IDomainModelBase
         {
-            public string Id { get;set; }
+            public string Id { get; set; }
         }
     }
 }

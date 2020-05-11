@@ -25,6 +25,7 @@ namespace AnyService.Services.Security
             if (!userPermissions.UserId.HasValue())
                 return null;
             await _cacheManager.Remove(GetCacheKey(userPermissions.UserId));
+            userPermissions.CreatedOnUtc = DateTime.UtcNow;
             return await _repository.Insert(userPermissions);
         }
         public async Task<UserPermissions> GetUserPermissions(string userId)
@@ -42,6 +43,7 @@ namespace AnyService.Services.Security
             }
             return userPermissions;
         }
+
         public async Task<UserPermissions> UpdateUserPermissions(UserPermissions userPermissions)
         {
             if (userPermissions == null || !userPermissions.UserId.HasValue())
@@ -53,6 +55,7 @@ namespace AnyService.Services.Security
             if (dbEntity == null) return null;
 
             await _cacheManager.Remove(GetCacheKey(userPermissions.UserId));
+            dbEntity.UpdatedOnUtc = DateTime.UtcNow;
             dbEntity.EntityPermissions = userPermissions.EntityPermissions;
 
             return await _repository.Update(dbEntity);
@@ -64,7 +67,10 @@ namespace AnyService.Services.Security
 
             return new Pagination<UserPermissions>(q)
             {
-                OrderBy = nameof(IDomainModelBase.Id),
+                OrderBy = nameof(UserPermissions.CreatedOnUtc),
+                IncludeNested = true,
+                PageSize = ulong.MaxValue,
+                SortOrder = PaginationSettings.Desc
             };
         }
     }

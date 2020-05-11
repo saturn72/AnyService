@@ -141,11 +141,12 @@ namespace AnyService.Controllers
             [FromQuery] string orderBy = null,
             [FromQuery] ulong? offset = null,
             [FromQuery] ulong? pageSize = null,
+            [FromQuery] bool withNavProps = true,
             [FromQuery] string sortOrder = "desc",
             [FromQuery] string query = "")
         {
             var paginationSettings = _workContext.CurrentEntityConfigRecord.PaginationSettings;
-            var pagination = await GetPagination(orderBy, offset, pageSize, sortOrder, query);
+            var pagination = await GetPagination(orderBy, offset, pageSize, withNavProps, sortOrder, query);
 
             _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
             var res = await _crudService.GetAll(pagination);
@@ -154,10 +155,10 @@ namespace AnyService.Controllers
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
 
-        private async Task<Pagination<TDomainModel>> GetPagination(string orderBy, ulong? offset, ulong? pageSize, string sortOrder, string query)
+        private async Task<Pagination<TDomainModel>> GetPagination(string orderBy, ulong? offset, ulong? pageSize, bool withNavProps, string sortOrder, string query)
         {
             Pagination<TDomainModel> pagination;
-            var filter = _filterFactory.GetFilter<TDomainModel>(query);
+            var filter = await _filterFactory.GetFilter<TDomainModel>(query);
 
             if (filter != null)
             {
@@ -165,11 +166,11 @@ namespace AnyService.Controllers
                 {
                     Query = query
                 };
-                var f = await filter(payload);
+                var f = filter(payload);
                 if (f == null)
                     return new Pagination<TDomainModel>();
-                Expression<Func<TDomainModel, bool>> exp = a => f(a);
-                pagination = new Pagination<TDomainModel>(exp);
+
+                pagination = new Pagination<TDomainModel>(c => f(c));
             }
             else
             {
@@ -181,20 +182,12 @@ namespace AnyService.Controllers
             pagination.OrderBy = orderBy ?? paginationSettings.DefaultOrderBy;
             pagination.Offset = offset ?? paginationSettings.DefaultOffset;
             pagination.PageSize = pageSize ?? paginationSettings.DefaultPageSize;
+            pagination.IncludeNested = withNavProps;
             pagination.SortOrder = sortOrder ?? paginationSettings.DefaultSortOrder;
 
             return pagination;
 
         }
-
-        [HttpGet(Consts.PublicSuffix)]
-        public async Task<IActionResult> GetAllPublic()
-        {
-            var filter = GetAllPublicFilter();
-            throw new NotImplementedException();
-            // return await GetAllFiltered(filter);
-        }
-
         private IDictionary<string, string> GetAllPublicFilter()
         {
             if (!GetAllPublicFilterCollection.TryGetValue(_curType, out IDictionary<string, string> filter))

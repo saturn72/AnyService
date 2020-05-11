@@ -11,6 +11,7 @@ namespace AnyService.Services.Security
 {
     public sealed class DefaultPermissionsEventsHandler : IPermissionEventsHandler
     {
+        private static readonly object lockObj = new object();
         private readonly IServiceProvider _serviceProvider;
 
         public DefaultPermissionsEventsHandler(IServiceProvider serviceProvider)
@@ -26,34 +27,38 @@ namespace AnyService.Services.Security
               var manager = _serviceProvider.GetService<IPermissionManager>();
               var userId = eventData.PerformedByUserId;
 
-              var tcr = EntityConfigRecordManager.GetRecord(createdEntity.GetType());
+              var ecr = EntityConfigRecordManager.GetRecord(createdEntity.GetType());
 
               var entityPermission = new EntityPermission
               {
                   EntityId = createdEntity.Id,
-                  EntityKey = tcr.EntityKey,
-                  PermissionKeys = new[] { tcr.PermissionRecord.ReadKey, tcr.PermissionRecord.UpdateKey, tcr.PermissionRecord.DeleteKey, },
+                  EntityKey = ecr.EntityKey,
+                  PermissionKeys = new[] { ecr.PermissionRecord.ReadKey, ecr.PermissionRecord.UpdateKey, ecr.PermissionRecord.DeleteKey, },
               };
 
-              var isUpdate = true;
-              var userPermissions = await manager.GetUserPermissions(userId);
-              if (userPermissions == null)
+              var userPermissions = new UserPermissions
               {
-                  isUpdate = false;
-                  userPermissions = new UserPermissions
+                  UserId = userId
+              };
+
+              lock (lockObj)
+              {
+                  var temp = manager.GetUserPermissions(userId).Result;
+                  var isUpdate = temp != null;
+                  if (isUpdate)
+                      userPermissions = temp;
+
+                  var eps = userPermissions.EntityPermissions?.ToList() ?? new List<EntityPermission>();
+                  eps.Add(entityPermission);
+                  userPermissions.EntityPermissions = eps;
+
+                  if (!isUpdate)
                   {
-                      UserId = userId
-                  };
+                      var up = manager.CreateUserPermissions(userPermissions).Result;
+                      return;
+                  }
               }
-
-              var eps = userPermissions.EntityPermissions?.ToList() ?? new List<EntityPermission>();
-              eps.Add(entityPermission);
-              userPermissions.EntityPermissions = eps.ToArray();
-
-              if (isUpdate)
-                  await manager.UpdateUserPermissions(userPermissions);
-              else
-                  await manager.CreateUserPermissions(userPermissions);
+              await manager.UpdateUserPermissions(userPermissions);
           };
 
 

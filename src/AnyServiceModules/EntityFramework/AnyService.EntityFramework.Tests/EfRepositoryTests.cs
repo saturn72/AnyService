@@ -107,12 +107,13 @@ namespace AnyService.EntityFramework.Tests
             var q = $"{nameof(TestClass.Value)} == a";
             var p = new Pagination<TestClass>(q)
             {
-                OrderBy = "Id"
+                OrderBy = "Id",
+                IncludeNested = true
             };
             var e = await _repository.GetAll(p);
             e.Count().ShouldBe(4);
             p.Data.ShouldBeNull();
-            p.Total.ShouldBe((ulong)7);
+            p.Total.ShouldBe((ulong)4);
             for (int i = 0; i < e.Count(); i++)
             {
                 e.Any(x => x.Id != null && x.Value == a).ShouldBeTrue();
