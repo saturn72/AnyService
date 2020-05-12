@@ -43,6 +43,9 @@ namespace AnyService.Services
 
             Func<object, Func<TDomainModel, bool>> p = payload =>
             {
+                var s = IsOfType<ICreatableAudit>();
+                var e = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>($"{nameof(ICreatableAudit.CreatedByUserId)} == {userId}")?.Compile();
+
                 return IsOfType<ICreatableAudit>() ?
                     ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>($"{nameof(ICreatableAudit.CreatedByUserId)} == {userId}")?.Compile() :
                     null;
@@ -102,17 +105,6 @@ namespace AnyService.Services
             var permittedIds = await GetPermittedIds(_workContext.CurrentEntityConfigRecord.PermissionRecord.DeleteKey);
             return payload => a => permittedIds.Any(x => x == a.Id);
         }
-
-        private async Task<IEnumerable<string>> GetPermittedIds(string permissionKey)
-        {
-            var userId = _workContext.CurrentUserId;
-            var ups = await _permissionManager.GetUserPermissions(userId);
-            return ups?.EntityPermissions?
-                .Where(ep => ep.EntityKey == _workContext.CurrentEntityConfigRecord.EntityKey && !ep.Excluded && ep.PermissionKeys.Contains(permissionKey))?
-                .Select(e => e.EntityId).ToArray() ?? new string[] { };
-        }
-
-
         private bool IsOfType<T>() => typeof(T).IsAssignableFrom(_workContext.CurrentType);
     }
 }

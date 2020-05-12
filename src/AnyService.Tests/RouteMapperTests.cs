@@ -1,13 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Shouldly;
 using Xunit;
 
 namespace AnyService.Tests
 {
-    public class Myclass
+    public class MyClass
     {
 
     }
@@ -19,7 +17,7 @@ namespace AnyService.Tests
             var type = typeof(EntityConfigRecordManager);
             var pi = type.GetProperty(nameof(EntityConfigRecordManager.EntityConfigRecords));
 
-            var expType = typeof(Myclass);
+            var expType = typeof(MyClass);
             var expRoutePrefix = "some-route-prefix";
             var maps = new[]
             {

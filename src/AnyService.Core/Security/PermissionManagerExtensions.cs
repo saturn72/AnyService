@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,6 +16,13 @@ namespace AnyService.Core.Security
                     && p.PermissionKeys.Contains(permissionKey, StringComparer.InvariantCultureIgnoreCase)
                     && p.EntityKey.Equals(entityKey, StringComparison.InvariantCultureIgnoreCase));
             return !hasPermission?.Excluded ?? false;
+        }
+        public static async Task<IEnumerable<string>> GetPermittedIds(this IPermissionManager manager, string userId, string entityKey, string permissionKey)
+        {
+            var ups = await manager.GetUserPermissions(userId);
+            return ups?.EntityPermissions?
+                .Where(ep => ep.EntityKey == entityKey && !ep.Excluded && ep.PermissionKeys.Contains(permissionKey))?
+                .Select(e => e.EntityId).ToArray() ?? new string[] { };
         }
     }
 }
