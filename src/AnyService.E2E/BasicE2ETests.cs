@@ -255,7 +255,6 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
 
         }
-
         [Test]
         public async Task MultipartFormSampleFlow()
         {
@@ -396,70 +395,6 @@ namespace AnyService.E2E
             jObj["data"]["firstName"].Value<string>().ShouldBe(updateModel.firstName);
             (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
             #endregion
-        }
-        [Test]
-        [Ignore("feature postpond")]
-        public async Task CRUD_ControllerRouteOverwrite()
-        {
-            var uri = "dependent2/";
-            var model = new
-            {
-                Value = "init value"
-            };
-            //create
-            var res = await HttpClient.PostAsJsonAsync(uri, model);
-            res.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-
-            var content = await res.Content.ReadAsStringAsync();
-            res.EnsureSuccessStatusCode();
-            var jObj = JObject.Parse(content);
-            var id = jObj["data"]["id"].Value<string>();
-            id.ShouldNotBeNullOrEmpty();
-            jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
-
-            //read
-            res = await HttpClient.GetAsync(uri + id);
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
-
-            //read all
-            res = await HttpClient.GetAsync(uri);
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            var jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
-            jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
-
-            //update
-            var updateModel = new
-            {
-                Value = "new Value"
-            };
-            res = await HttpClient.PutAsJsonAsync(uri + id, updateModel);
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
-
-            //delete
-            res = await HttpClient.DeleteAsync(uri + id);
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
-
-            //get deleted
-            res = await HttpClient.GetAsync(uri + id);
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["data"]["deleted"].Value<bool>().ShouldBeTrue();
         }
     }
 }

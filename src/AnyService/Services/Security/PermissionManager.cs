@@ -1,5 +1,4 @@
-﻿using AnyService.Core;
-using AnyService.Core.Caching;
+﻿using AnyService.Core.Caching;
 using AnyService.Core.Security;
 using System;
 using System.Linq;
