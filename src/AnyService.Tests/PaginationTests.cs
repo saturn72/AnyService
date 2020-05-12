@@ -41,7 +41,7 @@ namespace AnyService.Tests
             var q = "Id == 123";
             var p = new Pagination<TestClass>(q);
             p.QueryAsString.ShouldBe(q);
-            p.QueryFunc.ShouldNotBeNull();
+            p.QueryFunc.ShouldBeNull();
             p.SortOrder.ShouldBe("asc");
         }
         [Fact]

@@ -76,15 +76,6 @@ namespace AnyService.E2E.Authorization
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
 
-            //read all by creator
-            res = await HttpClient.GetAsync(uri);
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            var jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
-            jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
-
             //update by cretor
             var updateModel = new
             {

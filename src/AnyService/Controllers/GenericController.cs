@@ -28,7 +28,6 @@ namespace AnyService.Controllers
         private readonly CrudService<TDomainModel> _crudService;
         private readonly IServiceResponseMapper _serviceResponseMapper;
         private readonly ILogger<GenericController<TDomainModel>> _logger;
-        private readonly IFilterFactory _filterFactory;
         private readonly AnyServiceConfig _config;
         private readonly Type _curType;
         private readonly WorkContext _workContext;
@@ -39,14 +38,13 @@ namespace AnyService.Controllers
         public GenericController(
             IServiceProvider serviceProvider, AnyServiceConfig config,
             IServiceResponseMapper serviceResponseMapper, WorkContext workContext,
-            ILogger<GenericController<TDomainModel>> logger, IFilterFactory filterFactory)
+            ILogger<GenericController<TDomainModel>> logger)
         {
             _crudService = serviceProvider.GetService<CrudService<TDomainModel>>();
             _config = config;
             _serviceResponseMapper = serviceResponseMapper;
             _workContext = workContext;
             _logger = logger;
-            _filterFactory = filterFactory;
             _curType = typeof(TDomainModel);
         }
         #endregion
@@ -145,7 +143,8 @@ namespace AnyService.Controllers
             [FromQuery] string sortOrder = "desc",
             [FromQuery] string query = "")
         {
-            var pagination = await GetPagination(orderBy, offset, pageSize, withNavProps, sortOrder, query);
+
+            var pagination = GetPagination(orderBy, offset, pageSize, withNavProps, sortOrder, query);
             _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
             var res = await _crudService.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller, "Get all public service response value: " + res);
@@ -153,49 +152,18 @@ namespace AnyService.Controllers
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
 
-        private async Task<Pagination<TDomainModel>> GetPagination(string orderBy, ulong? offset, ulong? pageSize, bool withNavProps, string sortOrder, string query)
+        private Pagination<TDomainModel> GetPagination(string orderBy, ulong? offset, ulong? pageSize, bool withNavProps, string sortOrder, string query)
         {
-            Pagination<TDomainModel> pagination;
-            var filter = await _filterFactory.GetFilter<TDomainModel>(query);
-
-            if (filter != null)
+            return new Pagination<TDomainModel>
             {
-                var payload = new
-                {
-                    Query = query
-                };
-                var f = filter(payload);
-                if (f == null)
-                    return new Pagination<TDomainModel>();
+                OrderBy = orderBy,
+                Offset = offset,
+                PageSize = pageSize,
+                IncludeNested = withNavProps,
+                SortOrder = sortOrder,
+                QueryAsString = query
+            };
 
-                pagination = new Pagination<TDomainModel>(c => f(c));
-            }
-            else
-            {
-                pagination = new Pagination<TDomainModel>(query);
-            }
-
-            var paginationSettings = _workContext.CurrentEntityConfigRecord.PaginationSettings;
-
-            pagination.OrderBy = orderBy ?? paginationSettings.DefaultOrderBy;
-            pagination.Offset = offset ?? paginationSettings.DefaultOffset;
-            pagination.PageSize = pageSize ?? paginationSettings.DefaultPageSize;
-            pagination.IncludeNested = withNavProps;
-            pagination.SortOrder = sortOrder ?? paginationSettings.DefaultSortOrder;
-
-            return pagination;
-
-        }
-        private IDictionary<string, string> GetAllPublicFilter()
-        {
-            if (!GetAllPublicFilterCollection.TryGetValue(_curType, out IDictionary<string, string> filter))
-            {
-                filter = typeof(IPublishable).IsAssignableFrom(_curType) ?
-                    new Dictionary<string, string> { { nameof(IPublishable.Public), "true" } } :
-                    new Dictionary<string, string>();
-                GetAllPublicFilterCollection[_curType] = filter;
-            }
-            return filter;
         }
 
         [HttpPut("{id}")]

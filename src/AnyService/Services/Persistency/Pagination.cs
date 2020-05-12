@@ -14,7 +14,6 @@ namespace AnyService.Services
         public Pagination(string queryAsString) : this()
         {
             QueryAsString = queryAsString;
-            QueryFunc = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(queryAsString)?.Compile();
         }
         public Pagination(Expression<Func<TDomainModel, bool>> queryFunc) : this()
         {
@@ -30,12 +29,12 @@ namespace AnyService.Services
         /// Gets or sets current page offset
         /// </summary>
         /// <value>ulong</value>
-        public ulong Offset { get; set; }
+        public ulong? Offset { get; set; }
         /// <summary>
         /// Gets or sets current page size
         /// </summary>
         /// <value>ulong</value>
-        public ulong PageSize { get; set; }
+        public ulong? PageSize { get; set; }
         public string SortOrder { get; set; }
         /// <summary>
         /// Gets or sets value indicating sort by property name

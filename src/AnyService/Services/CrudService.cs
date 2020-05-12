@@ -22,6 +22,7 @@ namespace AnyService.Services
         private readonly IFileStoreManager _fileStorageManager;
         private readonly ILogger<CrudService<TDomainModel>> _logger;
         private readonly IIdGenerator _idGenerator;
+        private readonly IFilterFactory _filterFactory;
         #endregion
         #region ctor
         public CrudService(
@@ -32,7 +33,8 @@ namespace AnyService.Services
             IEventsBus eventBus,
             IFileStoreManager fileStorageManager,
             ILogger<CrudService<TDomainModel>> logger,
-            IIdGenerator idGenerator)
+            IIdGenerator idGenerator,
+            IFilterFactory filterFactory)
         {
             _repository = repository;
             _validator = validator;
@@ -43,6 +45,7 @@ namespace AnyService.Services
             _fileStorageManager = fileStorageManager;
             _logger = logger;
             _idGenerator = idGenerator;
+            _filterFactory = filterFactory;
         }
 
         #endregion
@@ -132,7 +135,7 @@ namespace AnyService.Services
             if (!await _validator.ValidateForGet(serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Request did not pass validation");
 
-            if (pagination == null || (!pagination.QueryAsString.HasValue() && pagination.QueryFunc == null))
+            if (!await NormalizePagination(pagination))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Missing query data");
 
             _logger.LogDebug(LoggingEvents.Repository, "Get all from repository using paginate = " + pagination);
@@ -152,6 +155,37 @@ namespace AnyService.Services
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
+
+        private async Task<bool> NormalizePagination(Pagination<TDomainModel> pagination)
+        {
+            if (pagination == null || !pagination.QueryAsString.HasValue()) return false;
+
+            var filter = await _filterFactory.GetFilter<TDomainModel>(pagination.QueryAsString);
+
+            if (filter != null)
+            {
+                var f = filter(new object());
+                if (f == null)
+                    return false;
+                pagination.QueryFunc = c => f(c);
+            }
+            else
+            {
+                pagination.QueryFunc = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(pagination.QueryAsString)?.Compile(); ;
+            }
+
+            if (pagination.QueryFunc == null) return false;
+
+            var paginationSettings = _workContext.CurrentEntityConfigRecord.PaginationSettings;
+            pagination.OrderBy = pagination.OrderBy ?? paginationSettings.DefaultOrderBy;
+            pagination.Offset = pagination.Offset ?? paginationSettings.DefaultOffset;
+            pagination.PageSize = pagination.PageSize ?? paginationSettings.DefaultPageSize;
+            pagination.IncludeNested = pagination.IncludeNested;
+            pagination.SortOrder = pagination.SortOrder ?? paginationSettings.DefaultSortOrder;
+
+            return true;
+        }
+
         public async Task<ServiceResponse> Update(string id, TDomainModel entity)
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start update flow for id: {id}, entity: {entity}");
