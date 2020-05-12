@@ -81,9 +81,13 @@ namespace AnyService.Services
         }
         private Task<Func<object, Func<TDomainModel, bool>>> _isPublic<TDomainModel>()
         {
+            var isDeletable = IsOfType<IDeletableAudit>();
+            var isPublishable = IsOfType<IPublishable>();
             Func<object, Func<TDomainModel, bool>> p = payload =>
             {
-                return IsOfType<ICreatableAudit>() ?
+                if (isPublishable && isDeletable)
+                    return x => (x as IPublishable).Public && !(x as IDeletableAudit).Deleted;
+                return isPublishable ?
                     ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>($"{nameof(IPublishable.Public)} == {true}")?.Compile() :
                     null;
             };
@@ -92,17 +96,29 @@ namespace AnyService.Services
         }
         private async Task<Func<object, Func<TDomainModel, bool>>> _canRead<TDomainModel>() where TDomainModel : IDomainModelBase
         {
-            var permittedIds = await GetPermittedIds(_workContext.CurrentEntityConfigRecord.PermissionRecord.ReadKey);
+            var ecr = _workContext.CurrentEntityConfigRecord;
+            var permittedIds = await _permissionManager.GetPermittedIds(
+                _workContext.CurrentUserId,
+                ecr.EntityKey,
+                ecr.PermissionRecord.ReadKey);
             return payload => a => permittedIds.Any(x => x == a.Id);
         }
         private async Task<Func<object, Func<TDomainModel, bool>>> _canUpdate<TDomainModel>() where TDomainModel : IDomainModelBase
         {
-            var permittedIds = await GetPermittedIds(_workContext.CurrentEntityConfigRecord.PermissionRecord.UpdateKey);
+            var ecr = _workContext.CurrentEntityConfigRecord;
+            var permittedIds = await _permissionManager.GetPermittedIds(
+                _workContext.CurrentUserId,
+                ecr.EntityKey,
+                ecr.PermissionRecord.UpdateKey);
             return payload => a => permittedIds.Any(x => x == a.Id);
         }
         private async Task<Func<object, Func<TDomainModel, bool>>> _canDelete<TDomainModel>() where TDomainModel : IDomainModelBase
         {
-            var permittedIds = await GetPermittedIds(_workContext.CurrentEntityConfigRecord.PermissionRecord.DeleteKey);
+            var ecr = _workContext.CurrentEntityConfigRecord;
+            var permittedIds = await _permissionManager.GetPermittedIds(
+                _workContext.CurrentUserId,
+                ecr.EntityKey,
+                ecr.PermissionRecord.DeleteKey);
             return payload => a => permittedIds.Any(x => x == a.Id);
         }
         private bool IsOfType<T>() => typeof(T).IsAssignableFrom(_workContext.CurrentType);
