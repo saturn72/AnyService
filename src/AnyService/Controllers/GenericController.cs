@@ -145,9 +145,7 @@ namespace AnyService.Controllers
             [FromQuery] string sortOrder = "desc",
             [FromQuery] string query = "")
         {
-            var paginationSettings = _workContext.CurrentEntityConfigRecord.PaginationSettings;
             var pagination = await GetPagination(orderBy, offset, pageSize, withNavProps, sortOrder, query);
-
             _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
             var res = await _crudService.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller, "Get all public service response value: " + res);

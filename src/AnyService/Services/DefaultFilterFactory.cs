@@ -34,7 +34,7 @@ namespace AnyService.Services
                 case "__public": return _isPublic<TDomainModel>();
 
                 default:
-                    return null;
+                    return Task.FromResult(null as Func<object, Func<TDomainModel, bool>>);
             }
         }
         private Task<Func<object, Func<TDomainModel, bool>>> _createdByUser<TDomainModel>() where TDomainModel : IDomainModelBase

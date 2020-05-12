@@ -17,9 +17,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using AnyService.SampleApp;
 using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
-using System.Threading;
-using System.Collections.Generic;
 
 namespace AnyService.E2E
 {
@@ -219,9 +216,6 @@ namespace AnyService.E2E
             jObj["data"]["id"].Value<string>().ShouldBe(id);
             jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
 
-            //read created
-            res = await HttpClient.GetAsync($"dependentmodel?query=__created");
-            content = await res.Content.ReadAsStringAsync();
             //no query provided
             res = await HttpClient.GetAsync("dependentmodel/");
             res.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
