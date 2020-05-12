@@ -63,10 +63,9 @@ namespace AnyService.Services.Security
 
         private Pagination<UserPermissions> GetPaginationSettings(string userId)
         {
-            var q = $"{nameof(UserPermissions.UserId)} == {userId}";
-
-            return new Pagination<UserPermissions>(q)
+            return new Pagination<UserPermissions>
             {
+                QueryFunc = new Func<UserPermissions, bool>(up => up.UserId == userId),
                 OrderBy = nameof(UserPermissions.CreatedOnUtc),
                 IncludeNested = true,
                 PageSize = ulong.MaxValue,

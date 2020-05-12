@@ -29,12 +29,12 @@ namespace AnyService.Services
         /// Gets or sets current page offset
         /// </summary>
         /// <value>ulong</value>
-        public ulong? Offset { get; set; }
+        public ulong? Offset { get; set; } = (ulong)0;
         /// <summary>
         /// Gets or sets current page size
         /// </summary>
         /// <value>ulong</value>
-        public ulong? PageSize { get; set; }
+        public ulong? PageSize { get; set; } = (long)50;
         public string SortOrder { get; set; }
         /// <summary>
         /// Gets or sets value indicating sort by property name

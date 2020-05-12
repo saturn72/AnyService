@@ -104,8 +104,8 @@ namespace AnyService.EntityFramework.Tests
 
             await _dbContext.Set<TestClass>().AddRangeAsync(tc);
             await _dbContext.SaveChangesAsync();
-            var q = $"{nameof(TestClass.Value)} == a";
-            var p = new Pagination<TestClass>(q)
+            Func<TestClass, bool> q = x => x.Value == "a";
+            var p = new Pagination<TestClass>(x => q(x))
             {
                 OrderBy = "Id",
                 IncludeNested = true
