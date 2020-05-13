@@ -1,8 +1,10 @@
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using AnyService.Audity;
 using AnyService.Core;
+using AnyService.Core.Security;
 using AnyService.Events;
 using AnyService.Services.FileStorage;
 using AnyService.Utilities;
@@ -23,6 +25,7 @@ namespace AnyService.Services
         private readonly ILogger<CrudService<TDomainModel>> _logger;
         private readonly IIdGenerator _idGenerator;
         private readonly IFilterFactory _filterFactory;
+        private readonly IPermissionManager _permissionManager;
         #endregion
         #region ctor
         public CrudService(
@@ -34,7 +37,8 @@ namespace AnyService.Services
             IFileStoreManager fileStorageManager,
             ILogger<CrudService<TDomainModel>> logger,
             IIdGenerator idGenerator,
-            IFilterFactory filterFactory)
+            IFilterFactory filterFactory,
+            IPermissionManager permissionManager)
         {
             _repository = repository;
             _validator = validator;
@@ -46,6 +50,7 @@ namespace AnyService.Services
             _logger = logger;
             _idGenerator = idGenerator;
             _filterFactory = filterFactory;
+            _permissionManager = permissionManager;
         }
 
         #endregion
@@ -171,7 +176,12 @@ namespace AnyService.Services
             }
             else
             {
-                pagination.QueryFunc = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(pagination.QueryAsString)?.Compile(); ;
+                var right = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(pagination.QueryAsString)?.Compile();
+                if (right == null) return false;
+                var ecr = _workContext.CurrentEntityConfigRecord;
+                var permittedIds = await _permissionManager.GetPermittedIds(_workContext.CurrentUserId, ecr.EntityKey, ecr.PermissionRecord.ReadKey);
+                Func<TDomainModel, bool> left = a => permittedIds.Contains(a.Id);
+                pagination.QueryFunc = x => left(x) && right(x);
             }
 
             if (pagination.QueryFunc == null) return false;

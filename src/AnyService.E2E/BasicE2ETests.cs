@@ -55,6 +55,34 @@ namespace AnyService.E2E
             HttpClient = Factory.WithWebHostBuilder(configuration).CreateClient();
         }
         [Fact]
+        public async Task ReadsOnlyPermittedEntries()
+        {
+            var users = new[]{
+                ManagedAuthenticationHandler.AuthorizedJson1,
+                ManagedAuthenticationHandler.AuthorizedJson2
+            };
+            var totalEntitiesPerUser = 6;
+            var model = new DependentModel
+            {
+                Value = "some-value",
+                Public = false
+            };
+            foreach (var usr in users)
+            {
+                HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(usr);
+                for (var i = 0; i < totalEntitiesPerUser; i++)
+                {
+                    var r = await HttpClient.PostAsJsonAsync("dependentmodel", model);
+
+                    r.EnsureSuccessStatusCode();
+                }
+            }
+            var c = await HttpClient.GetStringAsync($"dependentmodel?query=value ==\"" + model.Value + "\"");
+            var jObj = JObject.Parse(c);
+            var jArr = jObj["data"]["data"] as JArray;
+            jArr.Count.ShouldBe(totalEntitiesPerUser);
+        }
+        [Fact]
         public async Task Use_ReservedQueries()
         {
             var totalEntities = 6;
@@ -71,7 +99,6 @@ namespace AnyService.E2E
 
                 r.EnsureSuccessStatusCode();
             }
-            var c = await HttpClient.GetStringAsync($"dependentmodel?query=id!=abc");
             #region create
             var res = await HttpClient.GetAsync($"dependentmodel?query=__created");
             res.EnsureSuccessStatusCode();
@@ -94,7 +121,7 @@ namespace AnyService.E2E
             jObj = JObject.Parse(content);
             jArr = jObj["data"]["data"] as JArray;
             jArr.Count.ShouldBe(totalEntities / 2);
-            #endregion 
+            #endregion
             #region updated
             var id1 = jArr.ElementAt(0).Value<string>("id");
             var id2 = jArr.ElementAt(1).Value<string>("id");
