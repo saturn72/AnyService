@@ -7,7 +7,11 @@ namespace AnyService.Events
 {
     public class DefaultEventsBus : IEventsBus
     {
-        private static IDictionary<string, ICollection<HandlerData>> _handlers = new Dictionary<string, ICollection<HandlerData>>();
+        private readonly IDictionary<string, ICollection<HandlerData>> _handlers;
+        public DefaultEventsBus()
+        {
+            _handlers = new Dictionary<string, ICollection<HandlerData>>();
+        }
         public void Publish(string eventKey, DomainEventData eventData)
         {
             if (_handlers.TryGetValue(eventKey, out ICollection<HandlerData> handlerDatas))
