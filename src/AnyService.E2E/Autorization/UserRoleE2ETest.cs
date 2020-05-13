@@ -91,10 +91,7 @@ namespace AnyService.E2E.Authorization
             //un authorized requests
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.UnauthorizedUser1);
-            var unauthRes = await HttpClient.PostAsJsonAsync(uri, updateModel);
-            unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-
-            unauthRes = await HttpClient.GetAsync(uri);
+            var unauthRes = await HttpClient.GetAsync(uri + id);
             unauthRes.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
             unauthRes = await HttpClient.PutAsJsonAsync(uri + id, updateModel);
