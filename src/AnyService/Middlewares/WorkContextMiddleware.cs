@@ -13,16 +13,13 @@ namespace AnyService.Middlewares
     {
         private readonly ILogger<WorkContextMiddleware> _logger;
         private readonly RequestDelegate _next;
-        protected static readonly IReadOnlyDictionary<string, EntityConfigRecord> RouteMaps;
+        protected readonly IReadOnlyDictionary<string, EntityConfigRecord> RouteMaps;
 
-        static WorkContextMiddleware()
-        {
-            RouteMaps = LoadRoutes();
-        }
         public WorkContextMiddleware(RequestDelegate next, ILogger<WorkContextMiddleware> logger)
         {
             _logger = logger;
             _next = next;
+            RouteMaps = LoadRoutes();
         }
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
@@ -46,7 +43,7 @@ namespace AnyService.Middlewares
             _logger.LogDebug(LoggingEvents.WorkContext, "Finish parsing current WorkContext");
             await _next(httpContext);
         }
-        private static IReadOnlyDictionary<string, EntityConfigRecord> LoadRoutes()
+        private IReadOnlyDictionary<string, EntityConfigRecord> LoadRoutes()
         {
             var startupLock = new object();
             var res = new Dictionary<string, EntityConfigRecord>(StringComparer.InvariantCultureIgnoreCase);
@@ -54,7 +51,7 @@ namespace AnyService.Middlewares
                 res[ecr.Route.Substring(1)] = ecr;
             return res;
         }
-        private static EntityConfigRecord GetEntityconfigRecordByRoute(PathString path)
+        private EntityConfigRecord GetEntityconfigRecordByRoute(PathString path)
         {
             var segment = path.Value.Split('/', StringSplitOptions.RemoveEmptyEntries)[0];
             RouteMaps.TryGetValue(segment, out EntityConfigRecord value);

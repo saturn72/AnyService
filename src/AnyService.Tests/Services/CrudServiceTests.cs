@@ -508,6 +508,11 @@ namespace AnyService.Tests.Services
                 It.Is<string>(k => k == ekr.Read),
                 It.Is<DomainEventData>(ed => ed.Data == paginate && ed.PerformedByUserId == wc.CurrentUserId)), Times.Once);
         }
+        [Fact]
+        public async Task GetAll_FiltersUnPermittedEntities()
+        {
+            throw new NotImplementedException();
+        }
         #endregion
         #region Update
         [Fact]
