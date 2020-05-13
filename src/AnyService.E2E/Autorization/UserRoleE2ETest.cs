@@ -1,10 +1,8 @@
-using NUnit.Framework;
 using System.Threading.Tasks;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using System;
 using Shouldly;
-using System.Linq;
 using AnyService.SampleApp.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
@@ -14,6 +12,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using AnyService.SampleApp;
 using System.Net;
 using AnyService.SampleApp.Identity;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace AnyService.E2E.Authorization
 {
@@ -40,13 +40,13 @@ namespace AnyService.E2E.Authorization
                 services.AddAnyService(cfg);
             });
         };
-        public UserRoleE2ETest() : base(configuration)
+        public UserRoleE2ETest(ITestOutputHelper outputHelper) : base(outputHelper, configuration)
         {
             Factory = new WebApplicationFactory<Startup>();
             HttpClient = Factory.WithWebHostBuilder(configuration).CreateClient();
         }
 
-        [Test]
+        [Fact]
         public async Task CRUD_Entities_Possible_By_Authorized_User_Only()
         {
             #region authorized user

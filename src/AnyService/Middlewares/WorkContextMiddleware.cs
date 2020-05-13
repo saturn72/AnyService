@@ -13,7 +13,12 @@ namespace AnyService.Middlewares
     {
         private readonly ILogger<WorkContextMiddleware> _logger;
         private readonly RequestDelegate _next;
-        protected static readonly IDictionary<string, EntityConfigRecord> RouteMaps = new Dictionary<string, EntityConfigRecord>();
+        protected static readonly IReadOnlyDictionary<string, EntityConfigRecord> RouteMaps;
+
+        static WorkContextMiddleware()
+        {
+            RouteMaps = LoadRoutes();
+        }
         public WorkContextMiddleware(RequestDelegate next, ILogger<WorkContextMiddleware> logger)
         {
             _logger = logger;
@@ -41,14 +46,19 @@ namespace AnyService.Middlewares
             _logger.LogDebug(LoggingEvents.WorkContext, "Finish parsing current WorkContext");
             await _next(httpContext);
         }
+        private static IReadOnlyDictionary<string, EntityConfigRecord> LoadRoutes()
+        {
+            var startupLock = new object();
+            var res = new Dictionary<string, EntityConfigRecord>(StringComparer.InvariantCultureIgnoreCase);
+            foreach (var ecr in EntityConfigRecordManager.EntityConfigRecords)
+                res[ecr.Route.Substring(1)] = ecr;
+            return res;
+        }
         private static EntityConfigRecord GetEntityconfigRecordByRoute(PathString path)
         {
             var segment = path.Value.Split('/', StringSplitOptions.RemoveEmptyEntries)[0];
-            if (RouteMaps.TryGetValue(segment, out EntityConfigRecord value))
-                return value;
-
-            value = EntityConfigRecordManager.EntityConfigRecords.FirstOrDefault(r => path.StartsWithSegments(r.Route, StringComparison.CurrentCultureIgnoreCase));
-            return (RouteMaps[path] = value);
+            RouteMaps.TryGetValue(segment, out EntityConfigRecord value);
+            return value;
         }
         private static RequestInfo ToRequestInfo(HttpContext httpContext, EntityConfigRecord typeConfigRecord)
         {

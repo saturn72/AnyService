@@ -8,7 +8,6 @@ using AnyService.SampleApp.Models;
 using Microsoft.AspNetCore.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NUnit.Framework;
 using Shouldly;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,8 +16,9 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using AnyService.SampleApp;
 using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace AnyService.E2E
 {
@@ -49,12 +49,12 @@ namespace AnyService.E2E
                   });
               });
           };
-        public BasicE2ETests() : base(configuration)
+        public BasicE2ETests(ITestOutputHelper outputHelper) : base(outputHelper, configuration)
         {
             Factory = new WebApplicationFactory<Startup>();
             HttpClient = Factory.WithWebHostBuilder(configuration).CreateClient();
         }
-        [Test]
+        [Fact]
         public async Task Use_ReservedQueries()
         {
             var totalEntities = 6;
@@ -195,7 +195,7 @@ namespace AnyService.E2E
             jArr.Count.ShouldBe(0);
             #endregion
         }
-        [Test]
+        [Fact]
         public async Task CRUD_Dependent()
         {
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
@@ -263,7 +263,7 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
 
         }
-        [Test]
+        [Fact]
         public async Task MultipartFormSampleFlow()
         {
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
@@ -304,7 +304,7 @@ namespace AnyService.E2E
             jObj["data"]["firstName"].Value<string>().ShouldBe(model.firstName);
             (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
         }
-        [Test]
+        [Fact]
         public async Task MultipartFormStreamSampleFlow_Create()
         {
             #region setup
@@ -349,7 +349,7 @@ namespace AnyService.E2E
             (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
             #endregion
         }
-        [Test]
+        [Fact]
         public async Task MultipartFormStreamSampleFlow_Update()
         {
             #region setup

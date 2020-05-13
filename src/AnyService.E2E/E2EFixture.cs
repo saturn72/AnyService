@@ -4,29 +4,27 @@ using AnyService.SampleApp;
 using NUnit.Framework;
 using System;
 using Microsoft.AspNetCore.Hosting;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace AnyService.E2E
 {
-    [TestFixture]
-    public abstract class E2EFixture : WebApplicationFactory<Startup>
+    public abstract class E2EFixture : IClassFixture<WebApplicationFactory<Startup>>
     {
-        private Action<IWebHostBuilder> _configuration;
+        private readonly ITestOutputHelper _output;
+        private readonly Action<IWebHostBuilder> _configuration;
 
-        public E2EFixture(Action<IWebHostBuilder> configuration)
+        public E2EFixture(ITestOutputHelper output, Action<IWebHostBuilder> configuration)
         {
+            _output = output;
             _configuration = configuration;
-        }
-
-        protected static void WriteLineToConsole(string line) => TestContext.Progress.WriteLine(line);
-        protected WebApplicationFactory<Startup> Factory { get; set; }
-        protected HttpClient HttpClient { get; set; }
-
-        [OneTimeSetUp]
-        public void Init()
-        {
             Factory = new WebApplicationFactory<Startup>();
             HttpClient = Factory.WithWebHostBuilder(builder => _configuration(builder))
             .CreateClient();
         }
+
+        protected void WriteLineToConsole(string line) => _output.WriteLine(line);
+        protected WebApplicationFactory<Startup> Factory { get; set; }
+        protected HttpClient HttpClient { get; set; }
     }
 }
