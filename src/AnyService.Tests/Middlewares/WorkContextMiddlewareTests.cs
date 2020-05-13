@@ -15,7 +15,13 @@ namespace AnyService.Tests.Middlewares
         public async Task UserIdIsNull_ReturnUnauthroized()
         {
             var logger = new Mock<ILogger<WorkContextMiddleware>>();
-            var wcm = new WorkContextMiddleware(null, logger.Object);
+            var ecr = new EntityConfigRecord
+            {
+                Route = "/some-resource",
+                Type = typeof(string),
+            };
+            var entityConfigRecords = new[] { ecr };
+            var wcm = new WorkContextMiddleware(null, logger.Object, entityConfigRecords);
 
             var user = new Mock<ClaimsPrincipal>();
             user.Setup(u => u.Claims).Returns(new Claim[] { });
@@ -42,12 +48,12 @@ namespace AnyService.Tests.Middlewares
                 Route = route,
                 Type = typeof(string),
             };
+            var entityConfigRecords = new[] { ecr };
             RequestDelegate reqDel = hc =>
             {
                 i = expI;
                 return Task.CompletedTask;
             };
-            EntityConfigRecordManager.EntityConfigRecords = new[] { ecr };
 
             var logger = new Mock<ILogger<WorkContextMiddleware>>();
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, expUserId) }));
@@ -62,7 +68,7 @@ namespace AnyService.Tests.Middlewares
             ctx.Setup(h => h.Response).Returns(response.Object);
             var wc = new WorkContext();
 
-            var wcm = new WorkContextMiddleware(reqDel, logger.Object);
+            var wcm = new WorkContextMiddleware(reqDel, logger.Object, entityConfigRecords);
             await wcm.InvokeAsync(ctx.Object, wc);
             i.ShouldBe(expI);
             wc.CurrentEntityConfigRecord.ShouldBe(ecr);

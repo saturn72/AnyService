@@ -15,11 +15,11 @@ namespace AnyService.Middlewares
         private readonly RequestDelegate _next;
         protected readonly IReadOnlyDictionary<string, EntityConfigRecord> RouteMaps;
 
-        public WorkContextMiddleware(RequestDelegate next, ILogger<WorkContextMiddleware> logger)
+        public WorkContextMiddleware(RequestDelegate next, ILogger<WorkContextMiddleware> logger, IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
             _logger = logger;
             _next = next;
-            RouteMaps = LoadRoutes();
+            RouteMaps = LoadRoutes(entityConfigRecords);
         }
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
@@ -43,11 +43,11 @@ namespace AnyService.Middlewares
             _logger.LogDebug(LoggingEvents.WorkContext, "Finish parsing current WorkContext");
             await _next(httpContext);
         }
-        private IReadOnlyDictionary<string, EntityConfigRecord> LoadRoutes()
+        private IReadOnlyDictionary<string, EntityConfigRecord> LoadRoutes(IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
             var startupLock = new object();
             var res = new Dictionary<string, EntityConfigRecord>(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var ecr in EntityConfigRecordManager.EntityConfigRecords)
+            foreach (var ecr in entityConfigRecords)
                 res[ecr.Route.Substring(1)] = ecr;
             return res;
         }
