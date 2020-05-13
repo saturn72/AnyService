@@ -16,6 +16,8 @@ namespace AnyService.E2E
         {
             _configuration = configuration;
         }
+
+        protected static void WriteLineToConsole(string line) => TestContext.Progress.WriteLine(line);
         protected WebApplicationFactory<Startup> Factory { get; set; }
         protected HttpClient HttpClient { get; set; }
 

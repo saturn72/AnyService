@@ -17,6 +17,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using AnyService.SampleApp;
 using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace AnyService.E2E
 {
@@ -40,6 +42,11 @@ namespace AnyService.E2E
                   _ctx = new SampleAppDbContext(options);
 
                   services.AddTransient<DbContext>(sp => new SampleAppDbContext(options));
+                  services.AddLogging(builder =>
+                  {
+                      builder.AddConsole();
+                      builder.AddDebug();
+                  });
               });
           };
         public BasicE2ETests() : base(configuration)
@@ -48,7 +55,7 @@ namespace AnyService.E2E
             HttpClient = Factory.WithWebHostBuilder(configuration).CreateClient();
         }
         [Test]
-        public async Task Read_ReservedQueries()
+        public async Task Use_ReservedQueries()
         {
             var totalEntities = 6;
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
@@ -61,9 +68,10 @@ namespace AnyService.E2E
             {
                 model.Public = i % 2 == 0;
                 var r = await HttpClient.PostAsJsonAsync("dependentmodel", model);
+
                 r.EnsureSuccessStatusCode();
             }
-
+            var c = await HttpClient.GetStringAsync($"dependentmodel?query=id!=abc");
             #region create
             var res = await HttpClient.GetAsync($"dependentmodel?query=__created");
             res.EnsureSuccessStatusCode();
