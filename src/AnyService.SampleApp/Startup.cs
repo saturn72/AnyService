@@ -70,10 +70,12 @@ namespace AnyService.SampleApp
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            var services = app.ApplicationServices;
+            var exHandler = services.GetService<IExceptionHandler>();
             app.UseExceptionHandler(app =>
             {
-                var exHandler = app.ApplicationServices.GetService<IExceptionHandler>();
-                app.Run(ctx => exHandler.Handle(ctx, LoggingEvents.UnexpectedException.Name));
+                var wc = services.GetService<WorkContext>();
+                app.Run(ctx => exHandler.Handle(ctx, wc, LoggingEvents.UnexpectedException.Name));
             });
             app.UseHsts();
             app.UseHttpsRedirection();

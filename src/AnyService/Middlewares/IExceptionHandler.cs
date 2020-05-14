@@ -5,6 +5,6 @@ namespace AnyService.Middlewares
 {
     public interface IExceptionHandler
     {
-        Task Handle(HttpContext context, object payload);
+        Task Handle(HttpContext context, WorkContext workContext, object payload);
     }
 }
