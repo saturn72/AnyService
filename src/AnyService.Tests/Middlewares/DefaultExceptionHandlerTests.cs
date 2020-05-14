@@ -32,7 +32,9 @@ namespace AnyService.Tests.Middlewares
             i.Setup(ig => ig.GetNext()).Returns(exId);
             var l = new Mock<ILogger<DefaultExceptionHandler>>();
             var eb = new Mock<IEventBus>();
-            var h = new DefaultExceptionHandler(i.Object, l.Object, eb.Object);
+            var sp = new Mock<IServiceProvider>();
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            var h = new DefaultExceptionHandler(i.Object, l.Object, eb.Object, sp.Object);
 
             var ctx = new Mock<HttpContext>();
 
@@ -50,7 +52,7 @@ namespace AnyService.Tests.Middlewares
                     .Callback((byte[] data, int offset, int length, CancellationToken token) => actualBody = Encoding.UTF8.GetString(data));
             ctx.SetupGet(c => c.Request).Returns(req.Object);
             ctx.SetupGet(c => c.Response).Returns(res.Object);
-            await h.Handle(ctx.Object, wc, ek);
+            await h.Handle(ctx.Object, ek);
 
             actualBody.ShouldBe($"{{\"exeptionId\":\"{exId}\"}}");
             res.VerifySet(r => r.StatusCode = StatusCodes.Status500InternalServerError);

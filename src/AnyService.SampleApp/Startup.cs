@@ -12,6 +12,9 @@ using AnyService.Services;
 using Microsoft.EntityFrameworkCore;
 using AnyService.EntityFramework;
 using AnyService.Middlewares;
+using AnyService.Utilities;
+using Microsoft.Extensions.Logging;
+using AnyService.Events;
 
 namespace AnyService.SampleApp
 {
@@ -42,7 +45,13 @@ namespace AnyService.SampleApp
             };
 
             services.AddAnyService(entities);
-            services.AddSingleton<IExceptionHandler, DefaultExceptionHandler>();
+            services.AddSingleton<IExceptionHandler>(sp =>
+            {
+                var idg = sp.GetService<IIdGenerator>();
+                var l = sp.GetService<ILogger<DefaultExceptionHandler>>();
+                var eb = sp.GetService<IEventBus>();
+                return new DefaultExceptionHandler(idg, l, eb, sp);
+            });
             ConfigureEntityFramework(services);
             ConfigureCaching(services);
         }
@@ -72,11 +81,7 @@ namespace AnyService.SampleApp
         {
             var services = app.ApplicationServices;
             var exHandler = services.GetService<IExceptionHandler>();
-            app.UseExceptionHandler(app =>
-            {
-                var wc = services.GetService<WorkContext>();
-                app.Run(ctx => exHandler.Handle(ctx, wc, LoggingEvents.UnexpectedException.Name));
-            });
+            app.UseExceptionHandler(app => app.Run(ctx => exHandler.Handle(ctx, LoggingEvents.UnexpectedException.Name)));
             app.UseHsts();
             app.UseHttpsRedirection();
             app.UseRouting();

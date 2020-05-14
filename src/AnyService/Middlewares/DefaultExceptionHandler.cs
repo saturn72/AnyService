@@ -5,6 +5,8 @@ using AnyService.Utilities;
 using Microsoft.Extensions.Logging;
 using AnyService.Services;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace AnyService.Middlewares
 {
@@ -13,19 +15,23 @@ namespace AnyService.Middlewares
         private readonly IIdGenerator _idGenerator;
         private readonly ILogger<DefaultExceptionHandler> _logger;
         private readonly IEventBus _eventBus;
+        private readonly IServiceProvider _serviceProvider;
         private const string ResponseJsonFormat = "{{\"exeptionId\":\"{0}\"}}";
-        public DefaultExceptionHandler(IIdGenerator idGenerator, ILogger<DefaultExceptionHandler> logger,
-         IEventBus eventBus)
+        public DefaultExceptionHandler(IIdGenerator idGenerator,
+        ILogger<DefaultExceptionHandler> logger, IEventBus eventBus,
+        IServiceProvider serviceProvider)
         {
             _idGenerator = idGenerator;
             _logger = logger;
             _eventBus = eventBus;
+            _serviceProvider = serviceProvider;
         }
-        public async Task Handle(HttpContext context, WorkContext workContext, object payload)
+        public async Task Handle(HttpContext context, object payload)
         {
+            var wc = _serviceProvider.GetService<WorkContext>();
             _logger.LogDebug(LoggingEvents.UnexpectedException, $"UnexpectedException");
             var exId = _idGenerator.GetNext();
-            HandleEventSourcing(context, workContext, exId, payload.ToString());
+            HandleEventSourcing(context, wc, exId, payload.ToString());
             await HandleHttpResponseContent(context, exId);
         }
         private void HandleEventSourcing(HttpContext context, WorkContext workContext, object exId, string eventKey)
