@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace AnyService.Events
 {
-    public class DefaultEventsBus : IEventsBus
+    public class DefaultEventsBus : IEventBus
     {
         private readonly IDictionary<string, ICollection<HandlerData>> _handlers;
         public DefaultEventsBus()

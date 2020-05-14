@@ -11,6 +11,7 @@ using AnyService.SampleApp.Identity;
 using AnyService.Services;
 using Microsoft.EntityFrameworkCore;
 using AnyService.EntityFramework;
+using AnyService.Middlewares;
 
 namespace AnyService.SampleApp
 {
@@ -41,7 +42,7 @@ namespace AnyService.SampleApp
             };
 
             services.AddAnyService(entities);
-
+            services.AddSingleton<IExceptionHandler, DefaultExceptionHandler>();
             ConfigureEntityFramework(services);
             ConfigureCaching(services);
         }
@@ -69,6 +70,11 @@ namespace AnyService.SampleApp
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseExceptionHandler(app =>
+            {
+                var exHandler = app.ApplicationServices.GetService<IExceptionHandler>();
+                app.Run(ctx => exHandler.Handle(ctx, LoggingEvents.UnexpectedException.Name));
+            });
             app.UseHsts();
             app.UseHttpsRedirection();
             app.UseRouting();

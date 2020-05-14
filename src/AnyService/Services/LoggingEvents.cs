@@ -13,5 +13,6 @@ namespace AnyService.Services
         public static readonly EventId Permission = new EventId(7, "permission");
         public static readonly EventId WorkContext = new EventId(7, "workcontext");
         public static readonly EventId Authorization = new EventId(8, "authorization");
+        public static readonly EventId UnexpectedException = new EventId(9, "unexpected-system-exception");
     }
 }

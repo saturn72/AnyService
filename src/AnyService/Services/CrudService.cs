@@ -19,7 +19,7 @@ namespace AnyService.Services
         private readonly ICrudValidator<TDomainModel> _validator;
         private readonly AuditHelper _auditHelper;
         private readonly WorkContext _workContext;
-        private readonly IEventsBus _eventBus;
+        private readonly IEventBus _eventBus;
         private readonly EventKeyRecord _eventKeys;
         private readonly IFileStoreManager _fileStorageManager;
         private readonly ILogger<CrudService<TDomainModel>> _logger;
@@ -33,7 +33,7 @@ namespace AnyService.Services
             ICrudValidator<TDomainModel> validator,
             AuditHelper auditHelper,
             WorkContext workContext,
-            IEventsBus eventBus,
+            IEventBus eventBus,
             IFileStoreManager fileStorageManager,
             ILogger<CrudService<TDomainModel>> logger,
             IIdGenerator idGenerator,
@@ -318,7 +318,6 @@ namespace AnyService.Services
                 PerformedByUserId = _workContext.CurrentUserId
             });
         }
-
         private void PublishException(ServiceResponse serviceResponse, string eventKey, object data, Exception exception)
         {
             serviceResponse.ExceptionId = _idGenerator.GetNext();
