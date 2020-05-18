@@ -10,8 +10,6 @@ namespace AnyService.Tests
             c.MaxMultipartBoundaryLength.ShouldBe(50);
             c.MaxValueCount.ShouldBe(25);
             c.ManageEntityPermissions.ShouldBeTrue();
-            c.UseAuthorizationMiddleware.ShouldBeTrue();
-            c.UseExceptionLogging.ShouldBeTrue();
             c.DefaultPaginationSettings.ShouldSatisfyAllConditions(
                 () => c.DefaultPaginationSettings.DefaultOffset.ShouldBe((ulong)1),
                 () => c.DefaultPaginationSettings.DefaultPageSize.ShouldBe((ulong)50),

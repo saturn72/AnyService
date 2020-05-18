@@ -15,7 +15,8 @@ namespace AnyService
 {
     public static class ApplicationBuilderExtensions
     {
-        public static IApplicationBuilder UseAnyService(this IApplicationBuilder app)
+        public static IApplicationBuilder UseAnyService(this IApplicationBuilder app, bool useWorkContextMiddleware = true,
+        bool useAuthorizationMiddleware = true, bool useExceptionLogging = true)
         {
             var sp = app.ApplicationServices;
 
@@ -24,11 +25,10 @@ namespace AnyService
             var apm = sp.GetService<ApplicationPartManager>();
             apm.FeatureProviders.Add(new GenericControllerFeatureProvider());
 
-            app.UseMiddleware<WorkContextMiddleware>();
-            var options = sp.GetService<AnyServiceConfig>();
-            if (options.UseAuthorizationMiddleware)
-                app.UseMiddleware<DefaultAuthorizationMiddleware>();
-            if (options.UseExceptionLogging)
+            if (useWorkContextMiddleware) app.UseMiddleware<WorkContextMiddleware>();
+            if (useAuthorizationMiddleware) app.UseMiddleware<DefaultAuthorizationMiddleware>();
+
+            if (useExceptionLogging)
             {
                 var entityConfigRecords = sp.GetService<IEnumerable<EntityConfigRecord>>();
                 var eventKeys = entityConfigRecords.Select(e => e.EventKeys).ToArray();
