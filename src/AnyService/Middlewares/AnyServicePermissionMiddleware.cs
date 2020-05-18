@@ -10,7 +10,6 @@ namespace AnyService.Middlewares
 {
     public class AnyServicePermissionMiddleware
     {
-        private const string PublicSuffix = "/" + Consts.PublicSuffix;
         private readonly ILogger<AnyServicePermissionMiddleware> _logger;
         private readonly RequestDelegate _next;
         public AnyServicePermissionMiddleware(RequestDelegate next, ILogger<AnyServicePermissionMiddleware> logger)

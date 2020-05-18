@@ -162,7 +162,7 @@ namespace AnyService.Tests.Middlewares
                 RequestInfo = new RequestInfo
                 {
                     Method = method,
-                    Path = "/" + Consts.PublicSuffix,
+                    Path = "/",
                 },
             };
             var res = await mw.IsGrantedForTest(wc, null);
