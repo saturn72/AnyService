@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using AnyService.Core;
 using AnyService.Core.Security;
 using AnyService.Services;
 
@@ -43,6 +40,6 @@ namespace AnyService
         /// </summary>
         public PaginationSettings PaginationSettings { get; set; }
         public Type FilterFactoryType { get; set; }
-        public IFilterFactory FilterFactory { get; set; }
+        public Type ModelPrepararType { get; set; }
     }
 }

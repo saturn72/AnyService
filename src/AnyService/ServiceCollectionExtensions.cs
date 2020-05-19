@@ -57,7 +57,14 @@ namespace Microsoft.Extensions.DependencyInjection
                     services.TryAddTransient(vt, vType);
             }
             foreach (var ecr in config.EntityConfigRecords)
+            {
                 services.TryAddScoped(ecr.FilterFactoryType);
+                var srv = typeof(IModelPreparar<>).MakeGenericType(ecr.Type);
+                var impl = ecr.ModelPrepararType.IsGenericTypeDefinition ?
+                    ecr.ModelPrepararType.MakeGenericType(ecr.Type) :
+                    ecr.ModelPrepararType;
+                services.TryAddTransient(srv, impl);
+            }
             services.TryAddTransient(typeof(IFilterFactory), sp =>
             {
                 var wc = sp.GetService<WorkContext>();
@@ -123,6 +130,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 if (ecr.EntityKey == null) ecr.EntityKey = fn;
                 if (ecr.PaginationSettings == null) ecr.PaginationSettings = config.DefaultPaginationSettings;
                 if (ecr.FilterFactoryType == null) ecr.FilterFactoryType = config.FilterFactoryType;
+                if (ecr.ModelPrepararType == null) ecr.ModelPrepararType = config.ModelPrepararType;
                 if (ecr.Validator == null)
                 {
                     var v = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);

@@ -60,7 +60,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
 
             var eb = new Mock<IEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
@@ -73,13 +73,13 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
             var model = new AuditableTestModel();
             var res = await cSrv.Create(model);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
 
             eb.Verify(e => e.Publish(It.IsAny<string>(), It.IsAny<DomainEventData>()), Times.Never);
-            ah.Verify(a => a.PrepareForCreate(It.Is<AuditableTestModel>(e => e == model), It.Is<string>(s => s == wc.CurrentUserId)), Times.Once);
+            mp.Verify(a => a.PrepareForCreate(It.Is<AuditableTestModel>(e => e == model)), Times.Once);
         }
         [Fact]
         public async Task Create_ErrorFromRepository()
@@ -92,7 +92,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
 
             var eb = new Mock<IEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
@@ -109,7 +109,7 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
             var model = new AuditableTestModel();
             var res = await cSrv.Create(model);
             res.Result.ShouldBe(ServiceResult.Error);
@@ -122,7 +122,7 @@ namespace AnyService.Tests.Services
                      ed.PerformedByUserId == wc.CurrentUserId)),
                 Times.Once);
 
-            ah.Verify(a => a.PrepareForCreate(It.Is<AuditableTestModel>(e => e == model), It.Is<string>(s => s == wc.CurrentUserId)), Times.Once);
+            mp.Verify(a => a.PrepareForCreate(It.Is<AuditableTestModel>(e => e == model)), Times.Once);
         }
 
         [Fact]
@@ -136,7 +136,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
             var eb = new Mock<IEventBus>();
             var ekr = new EventKeyRecord("create", null, null, null);
             var wc = new WorkContext
@@ -150,12 +150,12 @@ namespace AnyService.Tests.Services
             var fsm = new Mock<IFileStoreManager>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, fsm.Object, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, fsm.Object, logger.Object, null, null, null);
             var res = await cSrv.Create(model);
             res.Result.ShouldBe(ServiceResult.Ok);
             res.Data.ShouldBe(model);
 
-            ah.Verify(a => a.PrepareForCreate(It.Is<AuditableTestModel>(e => e == model), It.Is<string>(s => s == wc.CurrentUserId)), Times.Once);
+            mp.Verify(a => a.PrepareForCreate(It.Is<AuditableTestModel>(e => e == model)), Times.Once);
             eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<DomainEventData>()), Times.Once);
             fsm.Verify(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()), Times.Never);
         }
@@ -174,7 +174,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForCreate(It.IsAny<TestFileContainer>(), It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<TestFileContainer>>();
             var eb = new Mock<IEventBus>();
             var ekr = new EventKeyRecord("create", null, null, null);
             var wc = new WorkContext
@@ -195,11 +195,11 @@ namespace AnyService.Tests.Services
             }});
             var logger = new Mock<ILogger<CrudService<TestFileContainer>>>();
 
-            var cSrv = new CrudService<TestFileContainer>(repo.Object, v.Object, ah.Object, wc, eb.Object, fsm.Object, logger.Object, null, null, null);
+            var cSrv = new CrudService<TestFileContainer>(repo.Object, v.Object, mp.Object, wc, eb.Object, fsm.Object, logger.Object, null, null, null);
             var res = await cSrv.Create(model);
             res.Result.ShouldBe(ServiceResult.Ok);
 
-            ah.Verify(a => a.PrepareForCreate(It.Is<TestFileContainer>(e => e == model), It.Is<string>(s => s == wc.CurrentUserId)), Times.Once);
+            mp.Verify(a => a.PrepareForCreate(It.Is<TestFileContainer>(e => e == model)), Times.Once);
             eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<DomainEventData>()), Times.Once);
             fsm.Verify(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()), Times.Once);
         }
@@ -232,7 +232,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
 
             var eb = new Mock<IEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
@@ -245,7 +245,7 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
             var res = await cSrv.GetById("123");
             res.Result.ShouldBe(ServiceResult.NotFound);
             res.Data.ShouldBeNull();
@@ -261,7 +261,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
 
             var eb = new Mock<IEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
@@ -278,7 +278,7 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
             var model = new AuditableTestModel();
 
             var id = "123";
@@ -306,7 +306,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
             var eb = new Mock<IEventBus>();
             var ekr = new EventKeyRecord(null, "read", null, null);
             var wc = new WorkContext
@@ -319,7 +319,7 @@ namespace AnyService.Tests.Services
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
             var res = await cSrv.GetById("123");
             res.Result.ShouldBe(ServiceResult.Ok);
             res.Data.ShouldBe(model);
@@ -385,7 +385,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
 
             var eb = new Mock<IEventBus>();
             var ekr = new EventKeyRecord(null, "read", null, null);
@@ -405,7 +405,7 @@ namespace AnyService.Tests.Services
 
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, null, ff.Object, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, ff.Object, null);
             var p = new Pagination<AuditableTestModel>("id>0");
             var res = await cSrv.GetAll(p);
             res.Result.ShouldBe(ServiceResult.Ok);
@@ -427,7 +427,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
 
             var eb = new Mock<IEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
@@ -449,7 +449,7 @@ namespace AnyService.Tests.Services
             var ff = new Mock<IFilterFactory>();
             var f = new Func<object, Func<AuditableTestModel, bool>>(p => (x => x.Id != ""));
             ff.Setup(f => f.GetFilter<AuditableTestModel>(It.IsAny<string>())).ReturnsAsync(f);
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, gn.Object, ff.Object, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, ff.Object, null);
             var model = new AuditableTestModel();
 
             var pagination = new Pagination<AuditableTestModel>("id>0");
@@ -479,7 +479,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
 
             var eb = new Mock<IEventBus>();
 
@@ -499,7 +499,7 @@ namespace AnyService.Tests.Services
             ff.Setup(f => f.GetFilter<AuditableTestModel>(It.IsAny<string>())).ReturnsAsync(f);
 
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, null, ff.Object, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, ff.Object, null);
             var res = await cSrv.GetAll(paginate);
             res.Result.ShouldBe(ServiceResult.Ok);
             paginate.Data.ShouldBe(dbRes);
@@ -569,7 +569,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetById(It.IsAny<string>()))
                 .ThrowsAsync(ex);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
             var eb = new Mock<IEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var ekr = new EventKeyRecord(null, null, "update", null);
@@ -584,7 +584,7 @@ namespace AnyService.Tests.Services
             var gn = new Mock<IIdGenerator>();
             var exId = "ex-id";
             gn.Setup(g => g.GetNext()).Returns(exId);
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
             var res = await cSrv.Update(id, entity);
 
             res.Result.ShouldBe(ServiceResult.Error);
@@ -616,7 +616,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Update(It.IsAny<AuditableTestModel>()))
                 .ReturnsAsync(null as AuditableTestModel);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
             var eb = new Mock<IEventBus>();
             var ekr = new EventKeyRecord(null, null, "update", null);
             var wc = new WorkContext
@@ -628,13 +628,13 @@ namespace AnyService.Tests.Services
                 }
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
             var res = await cSrv.Update(id, entity);
 
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
 
             v.Verify(x => x.ValidateForUpdate(It.Is<AuditableTestModel>(ep => ep.Id == id), It.IsAny<ServiceResponse>()));
-            ah.Verify(a => a.PrepareForUpdate(It.Is<AuditableTestModel>(e => e == entity), It.Is<AuditableTestModel>(e => e == dbModel), It.Is<string>(s => s == wc.CurrentUserId)), Times.Once);
+            mp.Verify(a => a.PrepareForUpdate(It.Is<AuditableTestModel>(e => e == dbModel), It.Is<AuditableTestModel>(e => e == entity)), Times.Once);
             eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Update), It.IsAny<DomainEventData>()), Times.Never);
         }
         [Fact]
@@ -656,7 +656,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Update(It.IsAny<AuditableTestModel>()))
                 .ThrowsAsync(ex);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
             var eb = new Mock<IEventBus>();
             var ekr = new EventKeyRecord(null, null, "update", null);
             var wc = new WorkContext
@@ -671,13 +671,13 @@ namespace AnyService.Tests.Services
             var exId = "ex-id";
             gn.Setup(g => g.GetNext()).Returns(exId);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
             var res = await cSrv.Update(id, entity);
 
             res.Result.ShouldBe(ServiceResult.Error);
 
             v.Verify(x => x.ValidateForUpdate(It.Is<AuditableTestModel>(ep => ep.Id == id), It.IsAny<ServiceResponse>()));
-            ah.Verify(a => a.PrepareForUpdate(It.Is<AuditableTestModel>(e => e == entity), It.Is<AuditableTestModel>(e => e == dbModel), It.Is<string>(s => s == wc.CurrentUserId)), Times.Once);
+            mp.Verify(a => a.PrepareForUpdate(It.Is<AuditableTestModel>(e => e == dbModel), It.Is<AuditableTestModel>(e => e == entity)), Times.Once);
 
             eb.Verify(e => e.Publish(
                 It.Is<string>(s => s == ekr.Update),
@@ -705,7 +705,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Update(It.IsAny<AuditableTestModel>()))
                 .ReturnsAsync(entity);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
             var eb = new Mock<IEventBus>();
             var ekr = new EventKeyRecord(null, null, "update", null);
             var wc = new WorkContext
@@ -717,13 +717,13 @@ namespace AnyService.Tests.Services
                 }
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
             var res = await cSrv.Update(id, entity);
 
             res.Result.ShouldBe(ServiceResult.Ok);
 
             v.Verify(x => x.ValidateForUpdate(It.Is<AuditableTestModel>(ep => ep.Id == id), It.IsAny<ServiceResponse>()));
-            ah.Verify(a => a.PrepareForUpdate(It.Is<AuditableTestModel>(e => e == entity), It.Is<AuditableTestModel>(e => e == dbModel), It.Is<string>(s => s == wc.CurrentUserId)), Times.Once);
+            mp.Verify(a => a.PrepareForUpdate(It.Is<AuditableTestModel>(e => e == dbModel), It.Is<AuditableTestModel>(e => e == entity)), Times.Once);
             eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Update), It.IsAny<DomainEventData>()), Times.Once);
         }
         [Fact]
@@ -785,7 +785,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(dbModel);
             repo.Setup(r => r.Update(It.IsAny<TestFileContainer>()))
                 .ReturnsAsync(entity);
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<TestFileContainer>>();
             var eb = new Mock<IEventBus>();
             var logger = new Mock<ILogger<CrudService<TestFileContainer>>>();
             var fsm = new Mock<IFileStoreManager>();
@@ -807,7 +807,7 @@ namespace AnyService.Tests.Services
             };
             var cSrv = new CrudService<TestFileContainer>(
                 repo.Object, v.Object,
-                ah.Object, wc,
+                mp.Object, wc,
                 eb.Object,
                 fsm.Object, logger.Object, null, null, null);
             var res = await cSrv.Update(id, entity);
@@ -815,7 +815,7 @@ namespace AnyService.Tests.Services
             res.Result.ShouldBe(ServiceResult.Ok);
 
             v.Verify(x => x.ValidateForUpdate(It.Is<TestFileContainer>(ep => ep.Id == id), It.IsAny<ServiceResponse>()));
-            ah.Verify(a => a.PrepareForUpdate(It.Is<AuditableTestModel>(e => e == entity), It.Is<AuditableTestModel>(e => e == dbModel), It.Is<string>(s => s == wc.CurrentUserId)), Times.Once);
+            mp.Verify(a => a.PrepareForUpdate(It.Is<TestFileContainer>(e => e == dbModel), It.Is<TestFileContainer>(e => e == entity)), Times.Once);
             eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Update), It.IsAny<DomainEventData>()), Times.Once);
         }
         #endregion
@@ -862,7 +862,7 @@ namespace AnyService.Tests.Services
         [Fact]
         public async Task Delete_IDeletableAudit_NullOnRepositoryUpdate()
         {
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
             var dbModel = new AuditableTestModel();
 
             var repo = new Mock<IRepository<AuditableTestModel>>();
@@ -885,11 +885,11 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, null, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, null, null, logger.Object, null, null, null);
             var id = "some-id";
             var res = await cSrv.Delete(id);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
-            ah.Verify(a => a.PrepareForDelete(It.Is<AuditableTestModel>(e => e == dbModel), It.Is<string>(s => s == wc.CurrentUserId)), Times.Once);
+            mp.Verify(a => a.PrepareForDelete(It.Is<AuditableTestModel>(e => e == dbModel)), Times.Once);
         }
         [Fact]
         public async Task delete_RepositoryUpdate_Throws()
@@ -909,7 +909,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Update(It.IsAny<AuditableTestModel>()))
                 .ThrowsAsync(ex);
 
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
             var eb = new Mock<IEventBus>();
             var ekr = new EventKeyRecord(null, null, null, "delete");
             var wc = new WorkContext
@@ -924,13 +924,13 @@ namespace AnyService.Tests.Services
             var exId = "ex-id";
             gn.Setup(g => g.GetNext()).Returns(exId);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
             var res = await cSrv.Delete(id);
 
             res.Result.ShouldBe(ServiceResult.Error);
 
             v.Verify(x => x.ValidateForDelete(It.Is<string>(s => s == id), It.IsAny<ServiceResponse>()));
-            ah.Verify(a => a.PrepareForDelete(It.Is<IDeletableAudit>(e => e == dbModel), It.Is<string>(s => s == wc.CurrentUserId)), Times.Once);
+            mp.Verify(a => a.PrepareForDelete(It.Is<AuditableTestModel>(e => e == dbModel)), Times.Once);
 
             eb.Verify(e => e.Publish(
                 It.Is<string>(s => s == ekr.Delete),
@@ -1016,7 +1016,7 @@ namespace AnyService.Tests.Services
         [Fact]
         public async Task Delete_IDeletableAudit_Success()
         {
-            var ah = new Mock<AuditHelper>();
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
             var eb = new Mock<IEventBus>();
 
             var dbModel = new AuditableTestModel();
@@ -1041,11 +1041,11 @@ namespace AnyService.Tests.Services
                 }
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, ah.Object, wc, eb.Object, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
             var id = "some-id";
             var res = await cSrv.Delete(id);
             res.Result.ShouldBe(ServiceResult.Ok);
-            ah.Verify(a => a.PrepareForDelete(It.Is<AuditableTestModel>(e => e == dbModel), It.Is<string>(s => s == wc.CurrentUserId)), Times.Once);
+            mp.Verify(a => a.PrepareForDelete(It.Is<AuditableTestModel>(e => e == dbModel)), Times.Once);
             eb.Verify(e => e.Publish(
                 It.Is<string>(ek => ek == ekr.Delete),
                 It.Is<DomainEventData>(

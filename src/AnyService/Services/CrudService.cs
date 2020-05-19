@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using AnyService.Audity;
 using AnyService.Core;
@@ -17,7 +16,7 @@ namespace AnyService.Services
         #region fields
         private readonly IRepository<TDomainModel> _repository;
         private readonly ICrudValidator<TDomainModel> _validator;
-        private readonly AuditHelper _auditHelper;
+        private readonly IModelPreparar<TDomainModel> _modelPreparar;
         private readonly WorkContext _workContext;
         private readonly IEventBus _eventBus;
         private readonly EventKeyRecord _eventKeys;
@@ -31,7 +30,7 @@ namespace AnyService.Services
         public CrudService(
             IRepository<TDomainModel> repository,
             ICrudValidator<TDomainModel> validator,
-            AuditHelper auditHelper,
+            IModelPreparar<TDomainModel> modelPreparar,
             WorkContext workContext,
             IEventBus eventBus,
             IFileStoreManager fileStorageManager,
@@ -42,7 +41,7 @@ namespace AnyService.Services
         {
             _repository = repository;
             _validator = validator;
-            _auditHelper = auditHelper;
+            _modelPreparar = modelPreparar;
             _workContext = workContext;
             _eventBus = eventBus;
             _eventKeys = workContext?.CurrentEntityConfigRecord?.EventKeys;
@@ -61,12 +60,7 @@ namespace AnyService.Services
             var serviceResponse = new ServiceResponse();
             if (!await _validator.ValidateForCreate(entity, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Entity did not pass validation");
-
-            if (entity is ICreatableAudit)
-            {
-                _logger.LogDebug(LoggingEvents.Audity, "Audity - prepare for creation");
-                _auditHelper.PrepareForCreate(entity as ICreatableAudit, _workContext.CurrentUserId);
-            }
+            await _modelPreparar.PrepareForCreate(entity);
 
             _logger.LogDebug(LoggingEvents.Repository, $"Insert entity to repository");
 
@@ -219,12 +213,7 @@ namespace AnyService.Services
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
                 return serviceResponse;
             }
-
-            if (entity is IUpdatableAudit)
-            {
-                _logger.LogDebug(LoggingEvents.Audity, "Audity - prepare for update");
-                _auditHelper.PrepareForUpdate(entity as IUpdatableAudit, dbModel as IUpdatableAudit, _workContext.CurrentUserId);
-            }
+            await _modelPreparar.PrepareForUpdate(dbModel, entity);
 
             _logger.LogDebug(LoggingEvents.Repository, $"Update entity in repository");
             var updateResponse = await _repository.Command(r => r.Update(entity), wrapper);
@@ -266,7 +255,7 @@ namespace AnyService.Services
             {
                 _logger.LogDebug(LoggingEvents.Audity, "Audity - prepare for deletion");
 
-                _auditHelper.PrepareForDelete(dbModel as IDeletableAudit, _workContext.CurrentUserId);
+                await _modelPreparar.PrepareForDelete(dbModel);
                 _logger.LogDebug(LoggingEvents.Repository, $"Repository - update {nameof(IDeletableAudit)} entity");
                 deletedModel = await _repository.Command(r => r.Update(dbModel), wrapper);
             }

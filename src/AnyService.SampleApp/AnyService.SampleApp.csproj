@@ -7,7 +7,6 @@
 
   <ItemGroup>
     <PackageReference Include="AnyService.EasyCaching" Version="1.0.0" />
-    <!-- <PackageReference Include="AnyService.EntityFramework" Version="1.0.0" /> -->
     <PackageReference Include="EasyCaching.InMemory" Version="0.8.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.1" />
   </ItemGroup>
