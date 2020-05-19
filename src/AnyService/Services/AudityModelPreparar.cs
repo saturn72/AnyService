@@ -13,7 +13,7 @@ namespace AnyService.Services
         private static readonly Type UpdateableType = typeof(IUpdatableAudit);
         private static readonly Type DeletableType = typeof(IDeletableAudit);
         private static IReadOnlyDictionary<Type, IDictionary<Type, bool>> _isOfTypeCollection;
-        private IReadOnlyDictionary<Type, IDictionary<Type, bool>> IsOfTypeCollection => 
+        private IReadOnlyDictionary<Type, IDictionary<Type, bool>> IsOfTypeCollection =>
             _isOfTypeCollection ?? (_isOfTypeCollection =
             new Dictionary<Type, IDictionary<Type, bool>>{
                 {CreatableType, new Dictionary<Type, bool>()},
