@@ -9,20 +9,16 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/AnyService.SampleApp/bin/Debug/netcoreapp3.0/AnyService.SampleApp.dll",
+      "program": "${workspaceFolder}/AnyService.SampleApp/bin/Debug/netcoreapp3.1/AnyService.SampleApp.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/AnyService.SampleApp",
+      "cwd": "${workspaceFolder}/AnyService.SampleApp/",
       "stopAtEntry": false,
-      // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "^\\s*Now listening on:\\s+(https?://\\S+)"
       },
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "COMPlus_ZapDisable": "1",
-        "COMPlus_ReadyToRun": "0"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "sourceFileMap": {
         "/Views": "${workspaceFolder}/Views"

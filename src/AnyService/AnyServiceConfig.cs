@@ -20,7 +20,7 @@ namespace AnyService
                 DefaultSortOrder = PaginationSettings.Asc,
             };
             FilterFactoryType = typeof(DefaultFilterFactory);
-            ModelPrepararType = typeof(DefaultModelPreparar<>);
+            ModelPrepararType = typeof(AudityModelPreparar<>);
         }
 
         public IEnumerable<EntityConfigRecord> EntityConfigRecords { get; set; }

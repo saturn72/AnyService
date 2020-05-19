@@ -35,7 +35,7 @@ namespace AnyService.Tests.Audity
             var a = new MyAudity();
             var ah = new AuditHelper();
 
-            ah.PrepareForUpdate(a, dbModel, userId);
+            ah.PrepareForUpdate(dbModel, a, userId);
 
             var uRec = a.UpdateRecords.First();
             uRec.UpdatedByUserId.ShouldBe(userId);

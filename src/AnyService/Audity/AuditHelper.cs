@@ -13,19 +13,19 @@ namespace AnyService.Audity
             creatable.CreatedByUserId = userId;
         }
 
-        public virtual void PrepareForUpdate(IUpdatableAudit updatable, IUpdatableAudit dbModel, string userId)
+        public virtual void PrepareForUpdate(IUpdatableAudit before, IUpdatableAudit after, string userId)
         {
-            if (updatable is ICreatableAudit)
+            if (after is ICreatableAudit)
             {
-                var c = updatable as ICreatableAudit;
-                var dc = dbModel as ICreatableAudit;
+                var c = after as ICreatableAudit;
+                var dc = before as ICreatableAudit;
                 c.CreatedByUserId = dc.CreatedByUserId;
                 c.CreatedOnUtc = dc.CreatedOnUtc;
             }
 
-            var updateRecords = dbModel.UpdateRecords?.ToList() ?? new List<UpdateRecord>();
+            var updateRecords = before.UpdateRecords?.ToList() ?? new List<UpdateRecord>();
             updateRecords.Add(new UpdateRecord { UpdatedOnUtc = DateTime.UtcNow.ToIso8601(), UpdatedByUserId = userId });
-            updatable.UpdateRecords = updateRecords;
+            after.UpdateRecords = updateRecords;
         }
 
         public virtual void PrepareForDelete(IDeletableAudit deletable, string userId)
