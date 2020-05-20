@@ -12,22 +12,22 @@ namespace AnyService.Services
         private static readonly Type CreatableType = typeof(ICreatableAudit);
         private static readonly Type UpdateableType = typeof(IUpdatableAudit);
         private static readonly Type DeletableType = typeof(IDeletableAudit);
-        private static IReadOnlyDictionary<Type, IDictionary<Type, bool>> _isOfTypeCollection;
-        protected IReadOnlyDictionary<Type, IDictionary<Type, bool>> IsOfTypeCollection =>
-            _isOfTypeCollection ??= new Dictionary<Type, IDictionary<Type, bool>>{
-                {CreatableType, new Dictionary<Type, bool>()},
-                {UpdateableType, new Dictionary<Type, bool>()},
-                {DeletableType, new Dictionary<Type, bool>()},
-            };
         protected readonly AuditHelper AuditHelper;
         protected readonly WorkContext WorkContext;
         protected readonly ILogger<AudityModelPreparar<TDomainModel>> Logger;
+        protected IReadOnlyDictionary<Type, IDictionary<Type, bool>> IsOfTypeCollection { get; set; }
 
         public AudityModelPreparar(AuditHelper auditHelper, WorkContext workContext, ILogger<AudityModelPreparar<TDomainModel>> logger)
         {
             AuditHelper = auditHelper;
             WorkContext = workContext;
             Logger = logger;
+            IsOfTypeCollection = new Dictionary<Type, IDictionary<Type, bool>>
+            {
+                {CreatableType, new Dictionary<Type, bool>()},
+                {UpdateableType, new Dictionary<Type, bool>()},
+                {DeletableType, new Dictionary<Type, bool>()},
+            };
         }
         public virtual Task PrepareForCreate(TDomainModel model)
         {
@@ -54,7 +54,7 @@ namespace AnyService.Services
             return Task.CompletedTask;
         }
         #region Utilities
-        private bool IsOfType(Type key, Type type)
+        protected bool IsOfType(Type key, Type type)
         {
             var col = IsOfTypeCollection[key];
 
