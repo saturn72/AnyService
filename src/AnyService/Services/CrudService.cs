@@ -53,7 +53,7 @@ namespace AnyService.Services
         }
 
         #endregion
-        public async Task<ServiceResponse> Create(TDomainModel entity)
+        public virtual async Task<ServiceResponse> Create(TDomainModel entity)
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start create flow for entity: {entity}");
 
@@ -83,7 +83,7 @@ namespace AnyService.Services
             return serviceResponse;
         }
 
-        public async Task UploadFiles(IFileContainer fileContainer, ServiceResponse serviceResponse)
+        public virtual async Task UploadFiles(IFileContainer fileContainer, ServiceResponse serviceResponse)
         {
             var files = fileContainer?.Files;
             if (files == null || !files.Any())
@@ -97,7 +97,7 @@ namespace AnyService.Services
             var uploadResponses = await _fileStorageManager.Upload(files);
             serviceResponse.Data = new { entity = serviceResponse.Data, filesUploadStatus = uploadResponses };
         }
-        public async Task<ServiceResponse> GetById(string id)
+        public virtual async Task<ServiceResponse> GetById(string id)
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start get by id with id = {id}");
 
@@ -126,7 +126,7 @@ namespace AnyService.Services
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
-        public async Task<ServiceResponse> GetAll(Pagination<TDomainModel> pagination)
+        public virtual async Task<ServiceResponse> GetAll(Pagination<TDomainModel> pagination)
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all flow");
             var serviceResponse = new ServiceResponse { Data = pagination };
@@ -190,7 +190,7 @@ namespace AnyService.Services
             return true;
         }
 
-        public async Task<ServiceResponse> Update(string id, TDomainModel entity)
+        public virtual async Task<ServiceResponse> Update(string id, TDomainModel entity)
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start update flow for id: {id}, entity: {entity}");
             entity.Id = id;
@@ -235,7 +235,7 @@ namespace AnyService.Services
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
-        public async Task<ServiceResponse> Delete(string id)
+        public virtual async Task<ServiceResponse> Delete(string id)
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start delete flow for id: {id}");
             var serviceResponse = new ServiceResponse();
