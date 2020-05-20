@@ -171,7 +171,7 @@ namespace AnyService.Services
             }
             else
             {
-                if (pagination.QueryFunc != null) //build only if func not exists
+                if (pagination.QueryFunc == null) //build only if func not exists
                 {
                     var right = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(pagination.QueryAsString)?.Compile();
                     if (right == null) return false;
