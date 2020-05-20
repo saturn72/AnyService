@@ -13,45 +13,44 @@ namespace AnyService.Services
         private static readonly Type UpdateableType = typeof(IUpdatableAudit);
         private static readonly Type DeletableType = typeof(IDeletableAudit);
         private static IReadOnlyDictionary<Type, IDictionary<Type, bool>> _isOfTypeCollection;
-        private IReadOnlyDictionary<Type, IDictionary<Type, bool>> IsOfTypeCollection =>
-            _isOfTypeCollection ?? (_isOfTypeCollection =
-            new Dictionary<Type, IDictionary<Type, bool>>{
+        protected IReadOnlyDictionary<Type, IDictionary<Type, bool>> IsOfTypeCollection =>
+            _isOfTypeCollection ??= new Dictionary<Type, IDictionary<Type, bool>>{
                 {CreatableType, new Dictionary<Type, bool>()},
                 {UpdateableType, new Dictionary<Type, bool>()},
                 {DeletableType, new Dictionary<Type, bool>()},
-            });
-        private readonly AuditHelper _auditHelper;
-        private readonly WorkContext _workContext;
-        private readonly ILogger<AudityModelPreparar<TDomainModel>> _logger;
+            };
+        protected readonly AuditHelper AuditHelper;
+        protected readonly WorkContext WorkContext;
+        protected readonly ILogger<AudityModelPreparar<TDomainModel>> Logger;
 
         public AudityModelPreparar(AuditHelper auditHelper, WorkContext workContext, ILogger<AudityModelPreparar<TDomainModel>> logger)
         {
-            _auditHelper = auditHelper;
-            _workContext = workContext;
-            _logger = logger;
+            AuditHelper = auditHelper;
+            WorkContext = workContext;
+            Logger = logger;
         }
-        public Task PrepareForCreate(TDomainModel model)
+        public virtual Task PrepareForCreate(TDomainModel model)
         {
             if (IsOfType(CreatableType, typeof(TDomainModel)))
             {
-                _logger.LogDebug(LoggingEvents.Audity, "Audity - prepare for creation");
-                _auditHelper.PrepareForCreate(model as ICreatableAudit, _workContext.CurrentUserId);
+                Logger.LogDebug(LoggingEvents.Audity, "Audity - prepare for creation");
+                AuditHelper.PrepareForCreate(model as ICreatableAudit, WorkContext.CurrentUserId);
             }
             return Task.CompletedTask;
         }
-        public Task PrepareForUpdate(TDomainModel beforeModel, TDomainModel afterModel)
+        public virtual Task PrepareForUpdate(TDomainModel beforeModel, TDomainModel afterModel)
         {
             if (IsOfType(UpdateableType, typeof(TDomainModel)))
             {
-                _logger.LogDebug(LoggingEvents.Audity, "Audity - prepare for update");
-                _auditHelper.PrepareForUpdate(beforeModel as IUpdatableAudit, afterModel as IUpdatableAudit, _workContext.CurrentUserId);
+                Logger.LogDebug(LoggingEvents.Audity, "Audity - prepare for update");
+                AuditHelper.PrepareForUpdate(beforeModel as IUpdatableAudit, afterModel as IUpdatableAudit, WorkContext.CurrentUserId);
             }
             return Task.CompletedTask;
         }
-        public Task PrepareForDelete(TDomainModel model)
+        public virtual Task PrepareForDelete(TDomainModel model)
         {
             if (IsOfType(DeletableType, typeof(TDomainModel)))
-                _auditHelper.PrepareForDelete(model as IDeletableAudit, _workContext.CurrentUserId);
+                AuditHelper.PrepareForDelete(model as IDeletableAudit, WorkContext.CurrentUserId);
             return Task.CompletedTask;
         }
         #region Utilities
