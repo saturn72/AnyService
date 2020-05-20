@@ -157,7 +157,8 @@ namespace AnyService.Services
 
         private async Task<bool> NormalizePagination(Pagination<TDomainModel> pagination)
         {
-            if (pagination == null || !pagination.QueryAsString.HasValue()) return false;
+            if (pagination == null || (!pagination.QueryAsString.HasValue() && pagination.QueryFunc == null))
+                return false;
 
             var filter = await _filterFactory.GetFilter<TDomainModel>(pagination.QueryAsString);
 
@@ -170,22 +171,25 @@ namespace AnyService.Services
             }
             else
             {
-                var right = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(pagination.QueryAsString)?.Compile();
-                if (right == null) return false;
-                var ecr = _workContext.CurrentEntityConfigRecord;
-                var permittedIds = await _permissionManager.GetPermittedIds(_workContext.CurrentUserId, ecr.EntityKey, ecr.PermissionRecord.ReadKey);
-                Func<TDomainModel, bool> left = a => permittedIds.Contains(a.Id);
-                pagination.QueryFunc = x => left(x) && right(x);
+                if (pagination.QueryFunc != null) //build only if func not exists
+                {
+                    var right = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(pagination.QueryAsString)?.Compile();
+                    if (right == null) return false;
+                    var ecr = _workContext.CurrentEntityConfigRecord;
+                    var permittedIds = await _permissionManager.GetPermittedIds(_workContext.CurrentUserId, ecr.EntityKey, ecr.PermissionRecord.ReadKey);
+                    Func<TDomainModel, bool> left = a => permittedIds.Contains(a.Id);
+                    pagination.QueryFunc = x => left(x) && right(x);
+                }
             }
 
             if (pagination.QueryFunc == null) return false;
 
             var paginationSettings = _workContext.CurrentEntityConfigRecord.PaginationSettings;
-            pagination.OrderBy = pagination.OrderBy ?? paginationSettings.DefaultOrderBy;
-            pagination.Offset = pagination.Offset ?? paginationSettings.DefaultOffset;
-            pagination.PageSize = pagination.PageSize ?? paginationSettings.DefaultPageSize;
+            pagination.OrderBy ??= paginationSettings.DefaultOrderBy;
+            pagination.Offset ??= paginationSettings.DefaultOffset;
+            pagination.PageSize ??= paginationSettings.DefaultPageSize;
             pagination.IncludeNested = pagination.IncludeNested;
-            pagination.SortOrder = pagination.SortOrder ?? paginationSettings.DefaultSortOrder;
+            pagination.SortOrder ??= paginationSettings.DefaultSortOrder;
 
             return true;
         }
