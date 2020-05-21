@@ -1,4 +1,5 @@
 ﻿using AnyService.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 using System;
@@ -78,5 +79,20 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
             new object[]{ ServiceResult.Unauthorized, null, "some-message", typeof(UnauthorizedObjectResult)},
             new object[]{ ServiceResult.Unauthorized, null, null, typeof(UnauthorizedResult)},
         };
+
+        #region ToHttpStatusCode
+        [Theory]
+        [InlineData(ServiceResult.Accepted, StatusCodes.Status202Accepted)]
+        [InlineData(ServiceResult.BadOrMissingData, StatusCodes.Status400BadRequest)]
+        [InlineData(ServiceResult.NotFound, StatusCodes.Status404NotFound)]
+        [InlineData(ServiceResult.NotSet, StatusCodes.Status403Forbidden)]
+        [InlineData(ServiceResult.Ok, StatusCodes.Status200OK)]
+        [InlineData(ServiceResult.Unauthorized, StatusCodes.Status401Unauthorized)]
+        [InlineData("not-exists", StatusCodes.Status500InternalServerError)]
+        public void ToHttpStatusCode_AllCodes(string result, int exp)
+        {
+            new ServiceResponse { Result = result }.ToHttpStatusCode().ShouldBe(exp);
+        }
+        #endregion
     }
 }

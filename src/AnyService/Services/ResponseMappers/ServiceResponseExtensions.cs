@@ -73,5 +73,20 @@ namespace Microsoft.AspNetCore.Mvc
         {
             return ConversionFuncs[serviceResponse.Result](serviceResponse);
         }
+        public static readonly IDictionary<string, int> ToStatusCodes = new Dictionary<string, int>
+        {
+            {ServiceResult. Accepted , StatusCodes.Status202Accepted },
+            {ServiceResult.BadOrMissingData , StatusCodes.Status400BadRequest },
+            {ServiceResult.Error, StatusCodes.Status500InternalServerError },
+            { ServiceResult.NotFound , StatusCodes.Status404NotFound },
+            {ServiceResult.NotSet , StatusCodes.Status403Forbidden },
+            {ServiceResult.Ok , StatusCodes.Status200OK},
+            {ServiceResult.Unauthorized , StatusCodes.Status401Unauthorized },
+        };
+        public static int ToHttpStatusCode(this ServiceResponse serviceResponse)
+        {
+            return ToStatusCodes.TryGetValue(serviceResponse.Result, out int value) ?
+                value : StatusCodes.Status500InternalServerError;
+        }
     }
 }
