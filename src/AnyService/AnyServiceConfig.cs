@@ -21,6 +21,7 @@ namespace AnyService
             };
             FilterFactoryType = typeof(DefaultFilterFactory);
             ModelPrepararType = typeof(AudityModelPreparar<>);
+            ServiceResponseMapperType = typeof(DefaultServiceResponseMapper);
         }
 
         public IEnumerable<EntityConfigRecord> EntityConfigRecords { get; set; }
@@ -41,5 +42,6 @@ namespace AnyService
         /// <value></value>
         public Type FilterFactoryType { get; set; }
         public Type ModelPrepararType { get; set; }
+        public Type ServiceResponseMapperType { get; set; }
     }
 }

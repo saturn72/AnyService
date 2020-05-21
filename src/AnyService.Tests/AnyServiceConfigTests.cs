@@ -1,3 +1,4 @@
+using AnyService.Services;
 using Shouldly;
 
 namespace AnyService.Tests
@@ -15,6 +16,9 @@ namespace AnyService.Tests
                 () => c.DefaultPaginationSettings.DefaultPageSize.ShouldBe((ulong)50),
                 () => c.DefaultPaginationSettings.DefaultSortOrder.ShouldBe("asc")
                 );
+            c.FilterFactoryType.ShouldBeOfType<DefaultFilterFactory>();
+            c.ModelPrepararType.ShouldBeOfType(typeof(AudityModelPreparar<>));
+            c.ServiceResponseMapperType.ShouldBeOfType<DefaultServiceResponseMapper>();
         }
     }
 }

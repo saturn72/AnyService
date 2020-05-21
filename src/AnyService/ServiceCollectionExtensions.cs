@@ -58,7 +58,9 @@ namespace Microsoft.Extensions.DependencyInjection
             }
             foreach (var ecr in config.EntityConfigRecords)
             {
+                ValidateInjectedType<IFilterFactory>(ecr.FilterFactoryType);
                 services.TryAddScoped(ecr.FilterFactoryType);
+
                 var srv = typeof(IModelPreparar<>).MakeGenericType(ecr.Type);
                 var impl = ecr.ModelPrepararType.IsGenericTypeDefinition ?
                     ecr.ModelPrepararType.MakeGenericType(ecr.Type) :
@@ -119,18 +121,15 @@ namespace Microsoft.Extensions.DependencyInjection
                 if (!ecr.Route.StartsWith("/") || ecr.Route.StartsWith("//"))
                     throw new InvalidOperationException($"{nameof(EntityConfigRecord.Route)} must start with single'/'. Actual value: {ecr.Route}");
 
-                var mapperType = ecr.ResponseMapperType;
-                if (mapperType != null && !typeof(IServiceResponseMapper).IsAssignableFrom(mapperType))
-                    throw new InvalidOperationException($"{nameof(EntityConfigRecord.ResponseMapperType)} must implement {nameof(IServiceResponseMapper)}");
-                if (mapperType == null)
-                    ecr.ResponseMapperType = typeof(DefaultServiceResponseMapper);
+                ecr.ResponseMapperType ??= config.ServiceResponseMapperType;
+                ValidateInjectedType<IServiceResponseMapper>(ecr.ResponseMapperType);
+                ecr.EventKeys ??= ekr;
+                ecr.PermissionRecord ??= pr;
+                ecr.EntityKey ??= fn;
+                ecr.PaginationSettings ??= config.DefaultPaginationSettings;
+                ecr.FilterFactoryType ??= config.FilterFactoryType;
+                ecr.ModelPrepararType ??= config.ModelPrepararType;
 
-                if (ecr.EventKeys == null) ecr.EventKeys = ekr;
-                if (ecr.PermissionRecord == null) ecr.PermissionRecord = pr;
-                if (ecr.EntityKey == null) ecr.EntityKey = fn;
-                if (ecr.PaginationSettings == null) ecr.PaginationSettings = config.DefaultPaginationSettings;
-                if (ecr.FilterFactoryType == null) ecr.FilterFactoryType = config.FilterFactoryType;
-                if (ecr.ModelPrepararType == null) ecr.ModelPrepararType = config.ModelPrepararType;
                 if (ecr.Validator == null)
                 {
                     var v = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);
@@ -143,6 +142,12 @@ namespace Microsoft.Extensions.DependencyInjection
 
             // if (config.UseAuthorizationMiddleware && config.EntityConfigRecords.All(t => t.Authorization == null))
             //     config.UseAuthorizationMiddleware = false;
+        }
+
+        private static void ValidateInjectedType<TService>(Type injectedType)
+        {
+            if (injectedType != null && !typeof(TService).IsAssignableFrom(injectedType))
+                throw new InvalidOperationException($"{injectedType.Name} must implement {nameof(TService)}");
         }
 
         private static void SetAuthorization(AuthorizationInfo authzInfo)
