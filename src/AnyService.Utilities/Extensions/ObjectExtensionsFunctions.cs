@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.Json;
 
 namespace System
 {
@@ -30,10 +31,16 @@ namespace System
             throw new InvalidOperationException();
         }
 
+        private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        };
+
         public static T GetPropertyValueOrDefaultByName<T>(this object obj, string propertyName)
         {
             var pi = obj.GetType().GetProperty(propertyName);
-            return pi != null ? (T)pi.GetValue(obj) : default(T);
+            return pi != null ? (T)pi.GetValue(obj) : default;
         }
+        public static string ToJsonString(this object obj) => JsonSerializer.Serialize(obj, JsonSerializerOptions);
     }
 }

@@ -1,6 +1,7 @@
 using Xunit;
 using System;
 using Shouldly;
+using System.ComponentModel;
 
 namespace AnyService.Utilities.Tests
 {
@@ -95,6 +96,19 @@ namespace AnyService.Utilities.Tests
             ObjectExtensionsFunctions.GetPropertyValueOrDefaultByName<string>(tc, "StringValue").ShouldBe(tc.StringValue);
             ObjectExtensionsFunctions.GetPropertyValueOrDefaultByName<MyTestClass>(tc, "TestClass").ShouldBe(tc.TestClass);
         }
+
+        #region ToJsonString
+        [Fact]
+        public void  ToJsonString()
+        {
+            var exp = "{\"value\":123}";
+            var t = new TestClass
+            {
+                Value = 123
+            };
+            t.ToJsonString().ShouldBe(exp);
+        }
+        #endregion
     }
     public class MyTestClass
     {
