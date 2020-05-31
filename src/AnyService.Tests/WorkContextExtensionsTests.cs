@@ -8,12 +8,9 @@ namespace AnyService.Tests
     public class WorkContextExtensionsTests
     {
         [Fact]
-        public void GetParameterByIndex_NullParameters_Throws()
+        public void GetParameterByIndex_NullParameters_RetrunsDefault()
         {
-            var wc = new WorkContext
-            {
-            };
-            Should.Throw<NullReferenceException>(() => wc.GetParameterByIndex<string>("some-key", 1));
+            new WorkContext().GetParameterByIndex<string>("some-key", 1).ShouldBe(default);
         }
         [Fact]
         public void GetParameterByIndex_NullParameters_ThrowsOnOutOfRange()
@@ -26,6 +23,7 @@ namespace AnyService.Tests
                     {key, new[]{"eee" } }
                 }
             };
+
             Should.Throw<ArgumentOutOfRangeException>(() => wc.GetParameterByIndex<string>(key, 1));
         }
         [Fact]
