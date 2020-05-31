@@ -5,6 +5,7 @@ namespace AnyService
 {
     public class WorkContext
     {
+        private readonly Dictionary<string, object> _parameters = new Dictionary<string, object>();
         public Type CurrentType => CurrentEntityConfigRecord?.Type;
         public EntityConfigRecord CurrentEntityConfigRecord { get; set; }
         public string CurrentUserId { get; set; }
@@ -14,6 +15,8 @@ namespace AnyService
         /// Placeholder for all workcontext items that do nt have dedicated property
         /// </summary>
         /// <value></value>
-        public IReadOnlyDictionary<string, object> Parameters { get; set; }
+        public IReadOnlyDictionary<string, object> Parameters => _parameters;
+
+        protected virtual void SetParameter(string key, object value) => _parameters[key] = value;
     }
 }
