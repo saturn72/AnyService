@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AnyService.Controllers;
 using AnyService.Core.Caching;
+using AnyService.Core.Security;
 using AnyService.Events;
 using AnyService.Middlewares;
 using AnyService.Services.Security;
@@ -15,8 +16,11 @@ namespace AnyService
 {
     public static class ApplicationBuilderExtensions
     {
-        public static IApplicationBuilder UseAnyService(this IApplicationBuilder app, bool useWorkContextMiddleware = true,
-        bool useAuthorizationMiddleware = true, bool useExceptionLogging = true)
+        public static IApplicationBuilder UseAnyService(this IApplicationBuilder app,
+            bool useWorkContextMiddleware = true,
+            bool useAuthorizationMiddleware = true,
+            bool useExceptionLogging = true,
+            bool usePermissionMiddleware = true)
         {
             var sp = app.ApplicationServices;
 
@@ -43,7 +47,7 @@ namespace AnyService
                     eventBus.Subscribe(ek.Delete, handlers.DeleteEventHandler);
                 }
             }
-            AddPermissionComponents(app, sp);
+            if (usePermissionMiddleware) AddPermissionComponents(app, sp);
             return app;
         }
         private static void ValidateCoreServicesConfigured(IServiceProvider serviceProvider)

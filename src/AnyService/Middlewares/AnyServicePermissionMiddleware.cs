@@ -51,7 +51,7 @@ namespace AnyService.Middlewares
             if (HttpMethods.IsPost(reqInfo.Method) ||
                 (HttpMethods.IsGet(reqInfo.Method) && !reqInfo.RequesteeId.HasValue()))
             {
-                _logger.LogDebug("User is granted - get all and post are always");
+                _logger.LogDebug("User is granted - get all and post are always granted");
                 return true;
             }
 
