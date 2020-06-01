@@ -37,6 +37,7 @@ namespace AnyService.Tests.Services
 
     public class CrudServiceTests
     {
+        AnyServiceConfig _config = new AnyServiceConfig();
         #region Create
         [Fact]
         public async Task Create_BadRequest_OnValidatorFailure()
@@ -46,7 +47,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(false)
                 .Callback<AuditableTestModel, ServiceResponse>((ep, sr) => sr.Result = ServiceResult.BadOrMissingData);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(null, v.Object, null, null, null, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null);
             var res = await cSrv.Create(new AuditableTestModel());
             res.Result.ShouldBe(ServiceResult.Unauthorized);
         }
@@ -73,7 +74,7 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
             var model = new AuditableTestModel();
             var res = await cSrv.Create(model);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
@@ -109,7 +110,7 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
             var model = new AuditableTestModel();
             var res = await cSrv.Create(model);
             res.Result.ShouldBe(ServiceResult.Error);
@@ -150,7 +151,7 @@ namespace AnyService.Tests.Services
             var fsm = new Mock<IFileStoreManager>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, fsm.Object, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, fsm.Object, logger.Object, null, null, null);
             var res = await cSrv.Create(model);
             res.Result.ShouldBe(ServiceResult.Ok);
             res.Data.ShouldBe(model);
@@ -195,7 +196,7 @@ namespace AnyService.Tests.Services
             }});
             var logger = new Mock<ILogger<CrudService<TestFileContainer>>>();
 
-            var cSrv = new CrudService<TestFileContainer>(repo.Object, v.Object, mp.Object, wc, eb.Object, fsm.Object, logger.Object, null, null, null);
+            var cSrv = new CrudService<TestFileContainer>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, fsm.Object, logger.Object, null, null, null);
             var res = await cSrv.Create(model);
             res.Result.ShouldBe(ServiceResult.Ok);
 
@@ -214,7 +215,7 @@ namespace AnyService.Tests.Services
                 .Callback<ServiceResponse>(sr => sr.Result = ServiceResult.BadOrMissingData);
 
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(null, v.Object, null, null, null, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null);
             var id = "some-id";
             var res = await cSrv.GetById(id);
             res.Result.ShouldBe(ServiceResult.Unauthorized);
@@ -245,7 +246,7 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
             var res = await cSrv.GetById("123");
             res.Result.ShouldBe(ServiceResult.NotFound);
             res.Data.ShouldBeNull();
@@ -278,7 +279,7 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
             var model = new AuditableTestModel();
 
             var id = "123";
@@ -319,7 +320,7 @@ namespace AnyService.Tests.Services
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
             var res = await cSrv.GetById("123");
             res.Result.ShouldBe(ServiceResult.Ok);
             res.Data.ShouldBe(model);
@@ -337,7 +338,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(true);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
-            var cSrv = new CrudService<AuditableTestModel>(null, v.Object, null, null, null, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null);
             var res = await cSrv.GetAll(null);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
             res.Data.ShouldBeNull();
@@ -350,7 +351,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(false)
                 .Callback<ServiceResponse>(sr => sr.Result = ServiceResult.BadOrMissingData);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(null, v.Object, null, null, null, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null);
             var res = await cSrv.GetAll(null);
             res.Result.ShouldBe(ServiceResult.Unauthorized);
             res.Data.ShouldBeNull();
@@ -363,7 +364,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(null, v.Object, null, null, null, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null);
             var res = await cSrv.GetAll(pagination);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
         }
@@ -405,7 +406,7 @@ namespace AnyService.Tests.Services
 
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, ff.Object, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, ff.Object, null);
             var p = new Pagination<AuditableTestModel>("id>0");
             var res = await cSrv.GetAll(p);
             res.Result.ShouldBe(ServiceResult.Ok);
@@ -449,7 +450,7 @@ namespace AnyService.Tests.Services
             var ff = new Mock<IFilterFactory>();
             var f = new Func<object, Func<AuditableTestModel, bool>>(p => (x => x.Id != ""));
             ff.Setup(f => f.GetFilter<AuditableTestModel>(It.IsAny<string>())).ReturnsAsync(f);
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, ff.Object, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, ff.Object, null);
             var model = new AuditableTestModel();
 
             var pagination = new Pagination<AuditableTestModel>("id>0");
@@ -499,7 +500,7 @@ namespace AnyService.Tests.Services
             ff.Setup(f => f.GetFilter<AuditableTestModel>(It.IsAny<string>())).ReturnsAsync(f);
 
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, ff.Object, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, ff.Object, null);
             var res = await cSrv.GetAll(paginate);
             res.Result.ShouldBe(ServiceResult.Ok);
             paginate.Data.ShouldBe(dbRes);
@@ -520,7 +521,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(false)
                 .Callback<AuditableTestModel, ServiceResponse>((m, sr) => sr.Result = ServiceResult.BadOrMissingData);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(null, v.Object, null, null, null, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null);
             var res = await cSrv.Update("123", entity);
 
             res.Result.ShouldBe(ServiceResult.Unauthorized);
@@ -548,7 +549,7 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, null, wc, null, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, null, wc, null, null, logger.Object, null, null, null);
             var res = await cSrv.Update(id, entity);
             res.Result.ShouldBe(ServiceResult.NotFound);
         }
@@ -584,7 +585,7 @@ namespace AnyService.Tests.Services
             var gn = new Mock<IIdGenerator>();
             var exId = "ex-id";
             gn.Setup(g => g.GetNext()).Returns(exId);
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
             var res = await cSrv.Update(id, entity);
 
             res.Result.ShouldBe(ServiceResult.Error);
@@ -628,7 +629,7 @@ namespace AnyService.Tests.Services
                 }
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
             var res = await cSrv.Update(id, entity);
 
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
@@ -671,7 +672,7 @@ namespace AnyService.Tests.Services
             var exId = "ex-id";
             gn.Setup(g => g.GetNext()).Returns(exId);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
             var res = await cSrv.Update(id, entity);
 
             res.Result.ShouldBe(ServiceResult.Error);
@@ -717,7 +718,7 @@ namespace AnyService.Tests.Services
                 }
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
             var res = await cSrv.Update(id, entity);
 
             res.Result.ShouldBe(ServiceResult.Ok);
@@ -753,7 +754,7 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, null, wc, null, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, null, wc, null, null, logger.Object, null, null, null);
             var res = await cSrv.Update(id, entity);
 
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
@@ -805,7 +806,7 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<TestFileContainer>(
+            var cSrv = new CrudService<TestFileContainer>(_config, 
                 repo.Object, v.Object,
                 mp.Object, wc,
                 eb.Object,
@@ -828,7 +829,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(false)
                 .Callback<string, ServiceResponse>((ep, sr) => sr.Result = ServiceResult.Unauthorized);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(null, v.Object, null, null, null, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null);
             var epId = "some-id";
             var res = await cSrv.Delete(epId);
             res.Result.ShouldBe(ServiceResult.Unauthorized);
@@ -854,7 +855,7 @@ namespace AnyService.Tests.Services
                 }
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, null, wc, null, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, null, wc, null, null, logger.Object, null, null, null);
             var epId = "some-id";
             var res = await cSrv.Delete(epId);
             res.Result.ShouldBe(ServiceResult.NotFound);
@@ -885,7 +886,7 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, null, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, null, null, logger.Object, null, null, null);
             var id = "some-id";
             var res = await cSrv.Delete(id);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
@@ -924,7 +925,7 @@ namespace AnyService.Tests.Services
             var exId = "ex-id";
             gn.Setup(g => g.GetNext()).Returns(exId);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, gn.Object, null, null);
             var res = await cSrv.Delete(id);
 
             res.Result.ShouldBe(ServiceResult.Error);
@@ -966,7 +967,7 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, null, wc, null, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<TestModel>(_config, repo.Object, v.Object, null, wc, null, null, logger.Object, null, null, null);
             var id = "some-id";
             var res = await cSrv.Delete(id);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
@@ -1001,7 +1002,7 @@ namespace AnyService.Tests.Services
             var exId = "ex-id";
             gn.Setup(g => g.GetNext()).Returns(exId);
 
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, null, wc, eb.Object, null, logger.Object, gn.Object, null, null);
+            var cSrv = new CrudService<TestModel>(_config, repo.Object, v.Object, null, wc, eb.Object, null, logger.Object, gn.Object, null, null);
             var id = "some-id";
             var res = await cSrv.Delete(id);
             res.Result.ShouldBe(ServiceResult.Error);
@@ -1041,7 +1042,7 @@ namespace AnyService.Tests.Services
                 }
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null);
             var id = "some-id";
             var res = await cSrv.Delete(id);
             res.Result.ShouldBe(ServiceResult.Ok);
@@ -1078,7 +1079,7 @@ namespace AnyService.Tests.Services
                 }
             };
             var logger = new Mock<ILogger<CrudService<TestModel>>>();
-            var cSrv = new CrudService<TestModel>(repo.Object, v.Object, null, wc, eb.Object, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<TestModel>(_config, repo.Object, v.Object, null, wc, eb.Object, null, logger.Object, null, null, null);
             var id = "some-id";
             var res = await cSrv.Delete(id);
             res.Result.ShouldBe(ServiceResult.Ok);

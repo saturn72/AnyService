@@ -14,6 +14,7 @@ namespace AnyService.Services
     public class CrudService<TDomainModel> where TDomainModel : IDomainModelBase
     {
         #region fields
+        private readonly AnyServiceConfig _config;
         private readonly IRepository<TDomainModel> _repository;
         private readonly ICrudValidator<TDomainModel> _validator;
         private readonly IModelPreparar<TDomainModel> _modelPreparar;
@@ -28,6 +29,7 @@ namespace AnyService.Services
         #endregion
         #region ctor
         public CrudService(
+            AnyServiceConfig config,
             IRepository<TDomainModel> repository,
             ICrudValidator<TDomainModel> validator,
             IModelPreparar<TDomainModel> modelPreparar,
@@ -50,6 +52,7 @@ namespace AnyService.Services
             _idGenerator = idGenerator;
             _filterFactory = filterFactory;
             _permissionManager = permissionManager;
+            _config = config;
         }
 
         #endregion
@@ -175,10 +178,18 @@ namespace AnyService.Services
                 {
                     var right = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(pagination.QueryAsString)?.Compile();
                     if (right == null) return false;
+
                     var ecr = _workContext.CurrentEntityConfigRecord;
-                    var permittedIds = await _permissionManager.GetPermittedIds(_workContext.CurrentUserId, ecr.EntityKey, ecr.PermissionRecord.ReadKey);
-                    Func<TDomainModel, bool> left = a => permittedIds.Contains(a.Id);
-                    pagination.QueryFunc = x => left(x) && right(x);
+                    if (_config.ManageEntityPermissions)
+                    {
+                        var permittedIds = await _permissionManager.GetPermittedIds(_workContext.CurrentUserId, ecr.EntityKey, ecr.PermissionRecord.ReadKey);
+                        Func<TDomainModel, bool> left = a => permittedIds.Contains(a.Id);
+                        pagination.QueryFunc = x => left(x) && right(x);
+                    }
+                    else
+                    {
+                        pagination.QueryFunc = x => right(x);
+                    }
                 }
             }
 
