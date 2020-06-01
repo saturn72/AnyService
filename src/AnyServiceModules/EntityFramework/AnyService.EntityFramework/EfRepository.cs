@@ -25,7 +25,7 @@ namespace AnyService.EntityFramework
             _dbContext = dbContext;
             _logger = logger;
         }
-        public async Task<IEnumerable<TDomainModel>> GetAll(Pagination<TDomainModel> pagination)
+        public virtual async Task<IEnumerable<TDomainModel>> GetAll(Pagination<TDomainModel> pagination)
         {
             if (pagination == null || pagination.QueryFunc == null)
                 throw new ArgumentNullException(nameof(pagination));
@@ -50,7 +50,7 @@ namespace AnyService.EntityFramework
             _logger.LogDebug("GetAll total entities in page: " + paginateTotal.Count());
             return paginateTotal;
         }
-        public async Task<TDomainModel> GetById(string id)
+        public virtual async Task<TDomainModel> GetById(string id)
         {
             _logger.LogDebug($"{nameof(GetById)} with id = {id}");
             var entity = await GetEntityById_Internal(id);
@@ -60,7 +60,7 @@ namespace AnyService.EntityFramework
             _logger.LogDebug($"{nameof(GetById)} result = {entity.ToJsonString()}");
             return entity;
         }
-        public async Task<TDomainModel> Insert(TDomainModel entity)
+        public virtual async Task<TDomainModel> Insert(TDomainModel entity)
         {
             _logger.LogDebug($"{nameof(Insert)} with entity = {entity.ToJsonString()}");
             await _dbContext.Set<TDomainModel>().AddAsync(entity);
@@ -69,7 +69,7 @@ namespace AnyService.EntityFramework
             _logger.LogDebug($"{nameof(Insert)} result = {entity.ToJsonString()}");
             return entity;
         }
-        public async Task<TDomainModel> Update(TDomainModel entity)
+        public virtual async Task<TDomainModel> Update(TDomainModel entity)
         {
             _logger.LogDebug($"{nameof(Update)} with entity = {entity.ToJsonString()}");
             var dbEntity = await GetEntityById_Internal(entity.Id);
@@ -88,7 +88,7 @@ namespace AnyService.EntityFramework
             _logger.LogDebug($"{nameof(Update)} result = {entity.ToJsonString()}");
             return dbEntity;
         }
-        public async Task<TDomainModel> Delete(TDomainModel entity)
+        public virtual async Task<TDomainModel> Delete(TDomainModel entity)
         {
             _logger.LogDebug($"{nameof(Delete)} with entity = {entity.ToJsonString()}");
             var dbEntity = await GetEntityById_Internal(entity.Id);
