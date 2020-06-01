@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using AnyService.Services;
 using System;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace AnyService.EntityFramework.Tests
 {
@@ -24,6 +26,7 @@ namespace AnyService.EntityFramework.Tests
     public class EfRepositoryTests
     {
         private readonly TestDbContext _dbContext;
+        private readonly Mock<ILogger<EfRepository<TestClass>>> _logger;
         private readonly EfRepository<TestClass> _repository;
         private static readonly DbContextOptions<TestDbContext> DbOptions = new DbContextOptionsBuilder<TestDbContext>()
             .UseInMemoryDatabase(databaseName: "test_ef_db")
@@ -31,7 +34,8 @@ namespace AnyService.EntityFramework.Tests
         public EfRepositoryTests()
         {
             _dbContext = new TestDbContext(DbOptions);
-            _repository = new EfRepository<TestClass>(_dbContext);
+            _logger = new Mock<ILogger<EfRepository<TestClass>>>();
+            _repository = new EfRepository<TestClass>(_dbContext, _logger.Object);
         }
         [Fact]
         public async Task Insert()

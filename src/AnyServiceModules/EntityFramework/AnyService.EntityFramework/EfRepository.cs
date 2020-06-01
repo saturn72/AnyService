@@ -7,6 +7,7 @@ using System.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
 
 namespace AnyService.EntityFramework
 {
@@ -15,17 +16,22 @@ namespace AnyService.EntityFramework
     {
 
         private readonly DbContext _dbContext;
+        private readonly ILogger<EfRepository<TDomainModel>> _logger;
+
         private IQueryable<TDomainModel> DbSet => _dbContext.Set<TDomainModel>().AsNoTracking();
         private static readonly ConcurrentDictionary<Type, IEnumerable<PropertyInfo>> TypeProperties = new ConcurrentDictionary<Type, IEnumerable<PropertyInfo>>();
-        public EfRepository(DbContext dbContext)
+        public EfRepository(DbContext dbContext, ILogger<EfRepository<TDomainModel>> logger)
         {
             _dbContext = dbContext;
+            _logger = logger;
         }
         public async Task<IEnumerable<TDomainModel>> GetAll(Pagination<TDomainModel> pagination)
         {
             if (pagination == null || pagination.QueryFunc == null)
                 throw new ArgumentNullException(nameof(pagination));
+            _logger.LogDebug("Get all with pagination: " + pagination.QueryAsString);
             pagination.Total = (ulong)DbSet.Where(pagination.QueryFunc).Count();
+            _logger.LogDebug("GetAll set total to: " + pagination.Total);
             var q = DbSet;
 
             var pInfo = typeof(TDomainModel).GetPropertyInfo(pagination.OrderBy);
@@ -40,7 +46,9 @@ namespace AnyService.EntityFramework
 
             var dbRes = q.Where(pagination.QueryFunc);
             await DetachEntities(q);
-            return dbRes.ToArray();
+            var paginateTotal = dbRes.ToArray();
+            _logger.LogDebug("GetAll total entities in page: " + paginateTotal.Count());
+            return paginateTotal;
         }
         public async Task<TDomainModel> GetById(string id)
         {
