@@ -52,21 +52,26 @@ namespace AnyService.EntityFramework
         }
         public async Task<TDomainModel> GetById(string id)
         {
+            _logger.LogDebug($"{nameof(GetById)} with id = {id}");
             var entity = await GetEntityById_Internal(id);
             if (entity == null)
                 return null;
             await DetachEntities(new[] { entity });
+            _logger.LogDebug($"{nameof(GetById)} result = {entity.ToJsonString()}");
             return entity;
         }
         public async Task<TDomainModel> Insert(TDomainModel entity)
         {
+            _logger.LogDebug($"{nameof(Insert)} with entity = {entity.ToJsonString()}");
             await _dbContext.Set<TDomainModel>().AddAsync(entity);
             await _dbContext.SaveChangesAsync();
             await DetachEntities(new[] { entity });
+            _logger.LogDebug($"{nameof(Insert)} result = {entity.ToJsonString()}");
             return entity;
         }
         public async Task<TDomainModel> Update(TDomainModel entity)
         {
+            _logger.LogDebug($"{nameof(Update)} with entity = {entity.ToJsonString()}");
             var dbEntity = await GetEntityById_Internal(entity.Id);
 
             if (dbEntity == null)
@@ -80,16 +85,19 @@ namespace AnyService.EntityFramework
             _dbContext.Update(dbEntity);
             await _dbContext.SaveChangesAsync();
             await DetachEntities(new[] { dbEntity });
+            _logger.LogDebug($"{nameof(Update)} result = {entity.ToJsonString()}");
             return dbEntity;
         }
         public async Task<TDomainModel> Delete(TDomainModel entity)
         {
+            _logger.LogDebug($"{nameof(Delete)} with entity = {entity.ToJsonString()}");
             var dbEntity = await GetEntityById_Internal(entity.Id);
             if (dbEntity == null)
                 return null;
             var entry = _dbContext.Remove(dbEntity);
             await _dbContext.SaveChangesAsync();
             entry.State = EntityState.Detached;
+            _logger.LogDebug($"{nameof(Delete)} result = {entity.ToJsonString()}"); 
             return entity;
         }
         private async Task<TDomainModel> GetEntityById_Internal(string id)
