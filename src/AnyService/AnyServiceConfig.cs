@@ -11,7 +11,6 @@ namespace AnyService
         {
             MaxMultipartBoundaryLength = 50;
             MaxValueCount = 25;
-            ManageEntityPermissions = true;
             DefaultPaginationSettings = new PaginationSettings
             {
                 DefaultOrderBy = nameof(IDomainModelBase.Id),
@@ -31,7 +30,7 @@ namespace AnyService
         /// default value = true
         /// </summary>
         /// <value></value>
-        public bool ManageEntityPermissions { get; set; }
+        public bool ManageEntityPermissions { get; set; } = true;
         public int MaxMultipartBoundaryLength { get; set; }
         public int MaxValueCount { get; set; }
         public PaginationSettings DefaultPaginationSettings { get; set; }
