@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using System.Text.Json;
-using System.Xml.Serialization;
 
 namespace System
 {
@@ -44,6 +42,6 @@ namespace System
             return pi != null ? (T)pi.GetValue(obj) : default;
         }
         public static string ToJsonString(this object obj) => JsonSerializer.Serialize(obj, JsonSerializerOptions);
-        public static T DeepClone<T>(this T source) where T : class => source.ToJsonString().ToObject<T>();
+        public static T DeepClone<T>(this T source) => source.ToJsonString().ToObject<T>();
     }
 }
