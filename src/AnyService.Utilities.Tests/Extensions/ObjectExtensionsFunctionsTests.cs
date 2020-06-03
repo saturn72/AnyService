@@ -1,7 +1,6 @@
 using Xunit;
 using System;
 using Shouldly;
-using System.ComponentModel;
 
 namespace AnyService.Utilities.Tests
 {
@@ -23,26 +22,6 @@ namespace AnyService.Utilities.Tests
         {
             typeof(TestClass).GetPropertyInfo("Value").ShouldNotBeNull();
         }
-
-        /*
-         public static PropertyInfo GetPropertyInfo(this object obj, string propertyName)
-        {
-            var type = obj.GetType();
-            if (!PropertyInfos.TryGetValue(type, out IDictionary<string, PropertyInfo> curPropertyInfo))
-            {
-                curPropertyInfo = new Dictionary<string, PropertyInfo>();
-                PropertyInfos[type] = curPropertyInfo;
-            }
-            if (!curPropertyInfo.TryGetValue(propertyName, out PropertyInfo pi))
-            {
-                pi = obj.GetType().GetProperty(propertyName);
-                if (pi != null)
-                    curPropertyInfo[propertyName] = pi;
-                return pi;
-            }
-            return null;
-        }
-        */
         [Fact]
         public void GetPropertyValueByName_ThrowsOnNotExists()
         {
@@ -109,6 +88,24 @@ namespace AnyService.Utilities.Tests
             t.ToJsonString().ShouldBe(exp);
         }
         #endregion
+
+        [Fact]
+        public void DeepClone()
+        {
+            var src = new MyTestClass
+            {
+                StringValue = "some string",
+                TestClass = new MyTestClass
+                {
+                    StringValue = "inneer string",
+                }
+            };
+
+            var dest = src.DeepClone();
+            dest.StringValue.ShouldBe(src.StringValue);
+            dest.TestClass.StringValue.ShouldBe(src.TestClass.StringValue);
+            dest.TestClass.GetHashCode().ShouldNotBe(src.TestClass.GetHashCode());
+        }
     }
     public class MyTestClass
     {
