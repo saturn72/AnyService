@@ -102,7 +102,7 @@ namespace AnyService.EntityFramework
         }
         private async Task<TDomainModel> GetEntityById_Internal(string id)
         {
-            var query = DbSet.Where(x => x.Id.Equals(id, StringComparison.InvariantCultureIgnoreCase));
+            var query = DbSet.Where(x => x.Id.Equals(id));
             return await IncludeNavigations(query).FirstOrDefaultAsync();
         }
         private Task DetachEntities(IEnumerable<TDomainModel> entities)
