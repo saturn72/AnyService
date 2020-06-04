@@ -2,7 +2,7 @@
 <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <PackageId>AnyService.Utilities</PackageId>
-    <Version>1.0.5-Preview</Version>
+    <Version>1.0.6-Preview</Version>
     <Authors>roi@saturn72.com</Authors>
     <Company>saturn technologies</Company>
   </PropertyGroup>
