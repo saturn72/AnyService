@@ -23,21 +23,19 @@ namespace AnyService.Services
         }
         public Task<Func<object, Func<TDomainModel, bool>>> GetFilter<TDomainModel>(string filterKey) where TDomainModel : IDomainModelBase
         {
-            switch (filterKey)
+            return filterKey switch
             {
-                case "__created": return _createdByUser<TDomainModel>();
-                case "__updated": return _updatedByUser<TDomainModel>();
-                case "__deleted": return _deletedByUser<TDomainModel>();
-                case "__canRead": return _canRead<TDomainModel>();
-                case "__canUpdate": return _canUpdate<TDomainModel>();
-                case "__canDelete": return _canDelete<TDomainModel>();
-                case "__public": return _isPublic<TDomainModel>();
-
-                default:
-                    return Task.FromResult(null as Func<object, Func<TDomainModel, bool>>);
-            }
+                "__created" => CreatedByUser<TDomainModel>(),
+                "__updated" => UpdatedByUser<TDomainModel>(),
+                "__deleted" => DeletedByUser<TDomainModel>(),
+                "__canRead" => CanRead<TDomainModel>(),
+                "__canUpdate" => CanUpdate<TDomainModel>(),
+                "__canDelete" => CanDelete<TDomainModel>(),
+                "__public" => IsPublic<TDomainModel>(),
+                _ => Task.FromResult(null as Func<object, Func<TDomainModel, bool>>),
+            };
         }
-        private Task<Func<object, Func<TDomainModel, bool>>> _createdByUser<TDomainModel>() where TDomainModel : IDomainModelBase
+        private Task<Func<object, Func<TDomainModel, bool>>> CreatedByUser<TDomainModel>() where TDomainModel : IDomainModelBase
         {
             var userId = _workContext.CurrentUserId;
 
@@ -53,7 +51,7 @@ namespace AnyService.Services
 
             return Task.FromResult(p);
         }
-        private Task<Func<object, Func<TDomainModel, bool>>> _updatedByUser<TDomainModel>()
+        private Task<Func<object, Func<TDomainModel, bool>>> UpdatedByUser<TDomainModel>()
         {
             var userId = _workContext.CurrentUserId;
             Func<object, Func<TDomainModel, bool>> p = payload =>
@@ -68,7 +66,7 @@ namespace AnyService.Services
             };
             return Task.FromResult(p);
         }
-        private Task<Func<object, Func<TDomainModel, bool>>> _deletedByUser<TDomainModel>()
+        private Task<Func<object, Func<TDomainModel, bool>>> DeletedByUser<TDomainModel>()
         {
             var userId = _workContext.CurrentUserId;
             Func<object, Func<TDomainModel, bool>> p = payload =>
@@ -79,7 +77,7 @@ namespace AnyService.Services
             };
             return Task.FromResult(p);
         }
-        private Task<Func<object, Func<TDomainModel, bool>>> _isPublic<TDomainModel>()
+        private Task<Func<object, Func<TDomainModel, bool>>> IsPublic<TDomainModel>()
         {
             var isDeletable = IsOfType<IDeletableAudit>();
             var isPublishable = IsOfType<IPublishable>();
@@ -94,7 +92,7 @@ namespace AnyService.Services
 
             return Task.FromResult(p);
         }
-        private async Task<Func<object, Func<TDomainModel, bool>>> _canRead<TDomainModel>() where TDomainModel : IDomainModelBase
+        private async Task<Func<object, Func<TDomainModel, bool>>> CanRead<TDomainModel>() where TDomainModel : IDomainModelBase
         {
             var ecr = _workContext.CurrentEntityConfigRecord;
             var permittedIds = await _permissionManager.GetPermittedIds(
@@ -103,7 +101,7 @@ namespace AnyService.Services
                 ecr.PermissionRecord.ReadKey);
             return payload => a => permittedIds.Any(x => x == a.Id);
         }
-        private async Task<Func<object, Func<TDomainModel, bool>>> _canUpdate<TDomainModel>() where TDomainModel : IDomainModelBase
+        private async Task<Func<object, Func<TDomainModel, bool>>> CanUpdate<TDomainModel>() where TDomainModel : IDomainModelBase
         {
             var ecr = _workContext.CurrentEntityConfigRecord;
             var permittedIds = await _permissionManager.GetPermittedIds(
@@ -112,7 +110,7 @@ namespace AnyService.Services
                 ecr.PermissionRecord.UpdateKey);
             return payload => a => permittedIds.Any(x => x == a.Id);
         }
-        private async Task<Func<object, Func<TDomainModel, bool>>> _canDelete<TDomainModel>() where TDomainModel : IDomainModelBase
+        private async Task<Func<object, Func<TDomainModel, bool>>> CanDelete<TDomainModel>() where TDomainModel : IDomainModelBase
         {
             var ecr = _workContext.CurrentEntityConfigRecord;
             var permittedIds = await _permissionManager.GetPermittedIds(
