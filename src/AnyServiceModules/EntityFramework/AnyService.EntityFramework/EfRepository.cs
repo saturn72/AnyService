@@ -8,6 +8,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
+using AnyService.Utilities;
+using Microsoft.AspNetCore.Mvc.TagHelpers.Cache;
 
 namespace AnyService.EntityFramework
 {
@@ -34,17 +37,14 @@ namespace AnyService.EntityFramework
             _logger.LogDebug("GetAll set total to: " + pagination.Total);
             var q = DbSet;
 
-            var pInfo = typeof(TDomainModel).GetPropertyInfo(pagination.OrderBy);
-            if (pagination.SortOrder == PaginationSettings.Asc)
-                q.OrderBy(pi => pInfo.GetValue(pi, null));
-            else q.OrderByDescending(pi => pInfo.GetValue(pi, null));
-
             q.Skip((int)pagination.Offset).Take((int)pagination.PageSize);
 
             if (pagination.IncludeNested)
                 q = IncludeNavigations(q);
 
-            var dbRes = q.Where(pagination.QueryFunc);
+            var dbRes = q
+                .OrderBy(pagination.OrderBy, pagination.SortOrder == PaginationSettings.Desc)
+                .Where(pagination.QueryFunc);
             await DetachEntities(q);
             var paginateTotal = dbRes.ToArray();
             _logger.LogDebug("GetAll total entities in page: " + paginateTotal.Count());
@@ -97,7 +97,7 @@ namespace AnyService.EntityFramework
             var entry = _dbContext.Remove(dbEntity);
             await _dbContext.SaveChangesAsync();
             entry.State = EntityState.Detached;
-            _logger.LogDebug($"{nameof(Delete)} result = {entity.ToJsonString()}"); 
+            _logger.LogDebug($"{nameof(Delete)} result = {entity.ToJsonString()}");
             return entity;
         }
         private async Task<TDomainModel> GetEntityById_Internal(string id)

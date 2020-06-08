@@ -20,6 +20,7 @@ namespace AnyService.EntityFramework.Tests
     public class TestClass : IDomainModelBase
     {
         public string Id { get; set; }
+        public bool Flag { get; set; }
         public string Value { get; set; }
         public IEnumerable<TestNestedClass> NestedClasses { get; set; }
     }
@@ -112,7 +113,7 @@ namespace AnyService.EntityFramework.Tests
             var p = new Pagination<TestClass>(x => q(x))
             {
                 OrderBy = "Id",
-                IncludeNested = true
+                IncludeNested = true,
             };
             var e = await _repository.GetAll(p);
             e.Count().ShouldBe(4);
@@ -125,6 +126,54 @@ namespace AnyService.EntityFramework.Tests
                 c.NestedClasses.Count().ShouldBe(2);
                 c.NestedClasses.ElementAt(0).Value.ShouldBe("v1_0");
                 c.NestedClasses.ElementAt(1).Value.ShouldBe("v2_0");
+            }
+        }
+        [Fact]
+        public async Task GetAll_PaginationWithAllProperties()
+        {
+            var total = 700;
+            var tc = new List<TestClass>();
+            _dbContext.Set<TestClass>().RemoveRange(_dbContext.Set<TestClass>());
+            await _dbContext.SaveChangesAsync();
+            var a = "a";
+            for (int i = 0; i < total; i++)
+                tc.Add(new TestClass
+                {
+                    Id = "id-" + i,
+                    Flag = (i % 100) == 0,
+                    Value = a,
+                    NestedClasses = new[]
+                    {
+                        new TestNestedClass
+                        {
+                            Value = "v1_" + i%2,
+                        },
+                    },
+                }); ;
+
+            await _dbContext.Set<TestClass>().AddRangeAsync(tc);
+            await _dbContext.SaveChangesAsync();
+            Func<TestClass, bool> q = x => x.Value == a;
+            var p = new Pagination<TestClass>(x => q(x))
+            {
+                OrderBy = nameof(TestClass.Flag),
+                SortOrder = PaginationSettings.Asc,
+                PageSize = (ulong)total,
+                IncludeNested = false,
+            };
+            var e = await _repository.GetAll(p);
+            p.Data.ShouldBeNull();
+            p.Total.ShouldBe((ulong)total);
+            var f = e.Take(total - 7);
+            f.All(x => !x.Flag).ShouldBeTrue();
+
+            var t = e.Skip(total - 7);
+            t.All(x => x.Flag).ShouldBeTrue();
+            for (int i = 0; i < e.Count(); i++)
+            {
+                e.Any(x => x.Id != null && x.Value == a).ShouldBeTrue();
+                var c = e.ElementAt(i);
+                c.NestedClasses.ShouldBeNull();
             }
         }
 
