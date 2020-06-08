@@ -147,7 +147,7 @@ namespace AnyService.Controllers
             _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
             var res = await _crudService.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller, "Get all public service response value: " + res);
-            res.Data = pagination?.Map<PaginationApiModel<TDomainModel>>();
+            res.Data = pagination?.Map<PaginationModel<TDomainModel>>();
             return _serviceResponseMapper.Map(res as ServiceResponse);
         }
 

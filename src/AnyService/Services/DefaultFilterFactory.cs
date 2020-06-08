@@ -8,7 +8,6 @@ using System.Collections.Generic;
 
 namespace AnyService.Services
 {
-
     public class DefaultFilterFactory : IFilterFactory
     {
         #region fields
@@ -41,9 +40,6 @@ namespace AnyService.Services
 
             Func<object, Func<TDomainModel, bool>> p = payload =>
             {
-                var s = IsOfType<ICreatableAudit>();
-                var e = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>($"{nameof(ICreatableAudit.CreatedByUserId)} == {userId}")?.Compile();
-
                 return IsOfType<ICreatableAudit>() ?
                     ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>($"{nameof(ICreatableAudit.CreatedByUserId)} == {userId}")?.Compile() :
                     null;

@@ -59,7 +59,7 @@ namespace AnyService.Services
         public Func<TDomainModel, bool> QueryFunc { get; set; }
         public bool IncludeNested { get; set; }
     }
-    public class PaginationApiModel<T>
+    public class PaginationModel<T>
     {
         public ulong Total { get; set; }
         public ulong Offset { get; set; }

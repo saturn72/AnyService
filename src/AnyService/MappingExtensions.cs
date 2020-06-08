@@ -23,8 +23,8 @@ namespace AnyService
 
         private static void AnyServiceMappingConfiguration(IMapperConfigurationExpression cfg)
         {
-            cfg.CreateMap(typeof(Pagination<>), typeof(PaginationApiModel<>))
-                    .ForMember(nameof(PaginationApiModel<object>.Query), opts => opts.MapFrom(nameof(Pagination<IDomainModelBase>.QueryAsString)));
+            cfg.CreateMap(typeof(Pagination<>), typeof(PaginationModel<>))
+                    .ForMember(nameof(PaginationModel<object>.Query), opts => opts.MapFrom(nameof(Pagination<IDomainModelBase>.QueryAsString)));
         }
 
         public static IMapper MapperInstance => _mapper ?? (_mapper = mc.CreateMapper());
