@@ -27,12 +27,16 @@ namespace AnyService
                     .ForMember(nameof(PaginationModel<object>.Query), opts => opts.MapFrom(nameof(Pagination<IDomainModelBase>.QueryAsString)));
         }
 
-        public static IMapper MapperInstance => _mapper ?? (_mapper = mc.CreateMapper());
+        public static IMapper MapperInstance => _mapper ??= mc.CreateMapper();
+        public static object Map(this object source, Type destination)
+        {
+            return MapperInstance.Map(source, source.GetType(), destination);
+        }
 
         public static TDestination Map<TDestination>(this object source)
             where TDestination : class
         {
-            return MapperInstance.Map<TDestination>(source);
+            return (TDestination)Map(source, typeof(TDestination));
         }
         public static TDestination Map<TSource, TDestination>(this TSource source)
             where TSource : class

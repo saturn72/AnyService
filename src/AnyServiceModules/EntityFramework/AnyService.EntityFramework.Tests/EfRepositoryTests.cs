@@ -79,7 +79,7 @@ namespace AnyService.EntityFramework.Tests
             await Should.ThrowAsync<ArgumentNullException>(() => _repository.GetAll(filter));
         }
         public static IEnumerable<object[]> GetAll_NullFilter_DATA => new[]{
-            new object[]{null as Pagination<TestClass> },
+            new object[]{null },
             new object[]{new Pagination<TestClass>() },
         };
 
@@ -129,7 +129,7 @@ namespace AnyService.EntityFramework.Tests
             }
         }
         [Fact]
-        public async Task GetAll_PaginationWithAllProperties()
+        public async Task GetAll_Filter_PaginationWithoutNavProperties()
         {
             var total = 700;
             var tc = new List<TestClass>();
@@ -157,18 +157,18 @@ namespace AnyService.EntityFramework.Tests
             var p = new Pagination<TestClass>(x => q(x))
             {
                 OrderBy = nameof(TestClass.Flag),
-                SortOrder = PaginationSettings.Asc,
+                SortOrder = PaginationSettings.Desc,
                 PageSize = (ulong)total,
                 IncludeNested = false,
             };
             var e = await _repository.GetAll(p);
             p.Data.ShouldBeNull();
             p.Total.ShouldBe((ulong)total);
-            var f = e.Take(total - 7);
-            f.All(x => !x.Flag).ShouldBeTrue();
+            var f = e.Take(7);
+            f.All(x => x.Flag).ShouldBeTrue();
 
-            var t = e.Skip(total - 7);
-            t.All(x => x.Flag).ShouldBeTrue();
+            var t = e.Skip(7);
+            t.All(x => x.Flag).ShouldBeFalse();
             for (int i = 0; i < e.Count(); i++)
             {
                 e.Any(x => x.Id != null && x.Value == a).ShouldBeTrue();
