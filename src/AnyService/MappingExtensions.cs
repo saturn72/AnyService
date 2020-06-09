@@ -34,13 +34,10 @@ namespace AnyService
         }
 
         public static TDestination Map<TDestination>(this object source)
-            where TDestination : class
         {
             return (TDestination)Map(source, typeof(TDestination));
         }
         public static TDestination Map<TSource, TDestination>(this TSource source)
-            where TSource : class
-            where TDestination : class
         {
             return Map<TDestination>(source); ;
         }
