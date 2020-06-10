@@ -1,5 +1,5 @@
-﻿using AnyService.Core.Caching;
-using AnyService.Core.Security;
+﻿using AnyService.Caching;
+using AnyService.Security;
 using AnyService.Services;
 using AnyService.Services.Security;
 using Moq;

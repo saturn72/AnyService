@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AnyService;
-using AnyService.Core.Security;
+using AnyService.Security;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using AnyService.Services;
 using AnyService.Services.ServiceResponseMappers;

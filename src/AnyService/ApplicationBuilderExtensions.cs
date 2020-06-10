@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AnyService.Caching;
 using AnyService.Controllers;
-using AnyService.Core.Caching;
-using AnyService.Core.Security;
 using AnyService.Events;
 using AnyService.Middlewares;
 using AnyService.Services.Security;

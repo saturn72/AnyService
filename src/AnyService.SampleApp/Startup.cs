@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AnyService.Services.FileStorage;
 using AnyService.EasyCaching;
-using AnyService.Core.Caching;
+using AnyService.Caching;
 using Microsoft.AspNetCore.Authentication;
 using AnyService.SampleApp.Identity;
 using AnyService.Services;

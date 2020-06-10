@@ -2,7 +2,6 @@ using Xunit;
 using Shouldly;
 using System;
 using AnyService.Services;
-using AnyService.Core;
 using System.Linq.Expressions;
 
 namespace AnyService.Tests

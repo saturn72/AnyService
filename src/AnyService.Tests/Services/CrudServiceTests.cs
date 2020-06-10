@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AnyService.Core;
 using Moq;
 using AnyService.Audity;
 using AnyService.Events;

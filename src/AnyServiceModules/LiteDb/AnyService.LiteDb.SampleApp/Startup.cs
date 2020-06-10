@@ -1,5 +1,4 @@
-using AnyService.Core;
-using AnyService.Core.Security;
+using AnyService.Security;
 using AnyService.Services;
 using AnyService.Services.FileStorage;
 using LiteDB;

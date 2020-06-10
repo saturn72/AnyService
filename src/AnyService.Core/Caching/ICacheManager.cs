@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace AnyService.Core.Caching
+namespace AnyService.Caching
 {
     public interface ICacheManager
     {

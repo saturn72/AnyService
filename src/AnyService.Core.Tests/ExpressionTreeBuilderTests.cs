@@ -108,8 +108,8 @@ namespace AnyService.Core.Tests
 
         internal class ExpressionBuilderForTest : ExpressionTreeBuilder
         {
-            internal static Func<MemberExpression, object, Expression> GetBinaryExpressionBuilder(string key) => Core.ExpressionTreeBuilder.BinaryExpressionBuilder[key];
-            internal static Func<Expression, Expression, Expression> GetEvaluationExpressionBuilder(string key) => Core.ExpressionTreeBuilder.EvaluationExpressionBuilder[key];
+            internal static Func<MemberExpression, object, Expression> GetBinaryExpressionBuilder(string key) => BinaryExpressionBuilder[key];
+            internal static Func<Expression, Expression, Expression> GetEvaluationExpressionBuilder(string key) => EvaluationExpressionBuilder[key];
             internal const string EvalPatternValue = EvalPattern;
             internal const string BinaryPatternValue = BinaryPattern;
             internal const string EscapedBinaryPatternValue = EscapedBinaryPattern;

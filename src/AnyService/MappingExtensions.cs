@@ -1,5 +1,4 @@
-﻿using AnyService.Core;
-using AnyService.Services;
+﻿using AnyService.Services;
 using AutoMapper;
 using System;
 

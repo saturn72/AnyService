@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using AnyService.Core.Caching;
+using AnyService.Caching;
 using EasyCaching.Core;
 
 namespace AnyService.EasyCaching

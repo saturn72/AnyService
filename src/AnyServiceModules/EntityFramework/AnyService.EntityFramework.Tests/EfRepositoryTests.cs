@@ -2,7 +2,6 @@ using Xunit;
 using Shouldly;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using AnyService.Core;
 using System.Collections.Generic;
 using System.Linq;
 using AnyService.Services;

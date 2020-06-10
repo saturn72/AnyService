@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
-using AnyService.Core;
-using AnyService.Core.Security;
+using AnyService.Security;
 using AnyService.Middlewares;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;

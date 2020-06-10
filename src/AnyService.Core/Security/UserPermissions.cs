@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace AnyService.Core.Security
+namespace AnyService.Security
 {
     public class UserPermissions : IDomainModelBase
     {

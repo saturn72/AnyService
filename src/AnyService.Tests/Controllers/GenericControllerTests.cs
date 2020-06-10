@@ -1,7 +1,6 @@
 using System.Linq;
 using System.Reflection;
 using AnyService.Controllers;
-using AnyService.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Shouldly;

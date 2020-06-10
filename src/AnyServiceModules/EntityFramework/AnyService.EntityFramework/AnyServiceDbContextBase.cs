@@ -1,4 +1,4 @@
-using AnyService.Core.Security;
+using AnyService.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace AnyService.EntityFramework

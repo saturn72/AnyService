@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AnyService.Core.Security
+namespace AnyService.Security
 {
     public static class PermissionManagerExtensions
     {

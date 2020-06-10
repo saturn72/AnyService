@@ -1,5 +1,5 @@
-﻿using AnyService.Core.Caching;
-using AnyService.Core.Security;
+﻿using AnyService.Caching;
+using AnyService.Security;
 using System;
 using System.Linq;
 using System.Threading.Tasks;

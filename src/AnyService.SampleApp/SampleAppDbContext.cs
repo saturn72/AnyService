@@ -1,6 +1,6 @@
 using System;
 using AnyService.Audity;
-using AnyService.Core.Security;
+using AnyService.Security;
 using AnyService.EntityFramework;
 using AnyService.SampleApp.Models;
 using AnyService.Services.FileStorage;

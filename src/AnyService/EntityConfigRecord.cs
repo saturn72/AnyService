@@ -1,5 +1,5 @@
 using System;
-using AnyService.Core.Security;
+using AnyService.Security;
 using AnyService.Services;
 
 namespace AnyService

@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace AnyService.Core.Security
+namespace AnyService.Security
 {
     public interface IPermissionManager
     {

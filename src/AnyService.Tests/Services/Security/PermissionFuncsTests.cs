@@ -1,5 +1,4 @@
-using System.Collections.Generic;
-using AnyService.Core.Security;
+using AnyService.Security;
 using AnyService.Services.Security;
 using Shouldly;
 using Xunit;

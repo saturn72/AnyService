@@ -1,8 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading;
-using AnyService.Core;
-using AnyService.Core.Security;
+using AnyService.Security;
 using AnyService.Events;
 using AnyService.Services.Security;
 using Moq;

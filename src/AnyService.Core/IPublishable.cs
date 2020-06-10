@@ -1,4 +1,4 @@
-﻿namespace AnyService.Core
+﻿namespace AnyService
 {
     public interface IPublishable
     {

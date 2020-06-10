@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using AnyService.Core.Security;
+using AnyService.Security;
 using AnyService.Services;
 using AnyService.Services.Security;
 using Microsoft.AspNetCore.Http;
