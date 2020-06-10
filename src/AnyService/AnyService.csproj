@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>netcoreapp3.0</TargetFramework>
 		<PackageId>anyservice</PackageId>
-		<Version>1.1.29-Preview</Version>
+		<Version>1.1.30-Preview</Version>
 		<Authors>roi@saturn72.com</Authors>
 		<Company>saturn technologies</Company>
 	</PropertyGroup>
