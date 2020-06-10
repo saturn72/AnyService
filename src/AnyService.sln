@@ -15,29 +15,29 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.LiteDb", "AnySer
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.E2E", "AnyService.E2E\AnyService.E2E.csproj", "{27B7A974-F0E0-4732-85FA-1051155A4D5A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.EasyCaching", "AnyServiceModules\EasyCaching\AnyService.EasyCaching\AnyService.EasyCaching.csproj", "{0831F328-5E63-4B9D-8348-BEC0B4A2F5F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.EasyCaching", "AnyServiceModules\EasyCaching\AnyService.EasyCaching\AnyService.EasyCaching.csproj", "{0831F328-5E63-4B9D-8348-BEC0B4A2F5F6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.Core", "AnyService.Core\AnyService.Core.csproj", "{7716CB43-A241-4529-BBB5-455BF1EC1D97}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.Core", "AnyService.Core\AnyService.Core.csproj", "{7716CB43-A241-4529-BBB5-455BF1EC1D97}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.EasyCaching.Tests", "AnyServiceModules\EasyCaching\AnyService.EasyCaching.Tests\AnyService.EasyCaching.Tests.csproj", "{81057530-51E9-40EE-B64B-245A0173E570}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.EasyCaching.Tests", "AnyServiceModules\EasyCaching\AnyService.EasyCaching.Tests\AnyService.EasyCaching.Tests.csproj", "{81057530-51E9-40EE-B64B-245A0173E570}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.Core.Tests", "AnyService.Core.Tests\AnyService.Core.Tests.csproj", "{6755C92A-3A50-4221-9107-F05780851BEF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.Core.Tests", "AnyService.Core.Tests\AnyService.Core.Tests.csproj", "{6755C92A-3A50-4221-9107-F05780851BEF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LiteDb", "LiteDb", "{DEAD1573-581C-46B5-BA3C-D40213E7ADAB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.LiteDb.SampleApp", "AnyServiceModules\LiteDb\AnyService.LiteDb.SampleApp\AnyService.LiteDb.SampleApp.csproj", "{A92B20A5-4E3E-4FE9-B02D-921240253DD0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.LiteDb.SampleApp", "AnyServiceModules\LiteDb\AnyService.LiteDb.SampleApp\AnyService.LiteDb.SampleApp.csproj", "{A92B20A5-4E3E-4FE9-B02D-921240253DD0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EntityFramework", "EntityFramework", "{B7262043-B098-49CD-8CDB-7C56743D4EEA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.EntityFramework", "AnyServiceModules\EntityFramework\AnyService.EntityFramework\AnyService.EntityFramework.csproj", "{A2F4F267-8965-45DF-A8F4-F8CAE3BF861D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.EntityFramework", "AnyServiceModules\EntityFramework\AnyService.EntityFramework\AnyService.EntityFramework.csproj", "{A2F4F267-8965-45DF-A8F4-F8CAE3BF861D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.EntityFramework.Tests", "AnyServiceModules\EntityFramework\AnyService.EntityFramework.Tests\AnyService.EntityFramework.Tests.csproj", "{3DA5958B-041B-47EA-BC66-03DC841060C4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.EntityFramework.Tests", "AnyServiceModules\EntityFramework\AnyService.EntityFramework.Tests\AnyService.EntityFramework.Tests.csproj", "{3DA5958B-041B-47EA-BC66-03DC841060C4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.LiteDb.Tests", "AnyServiceModules\LiteDb\AnyService.LiteDb.Tests\AnyService.LiteDb.Tests.csproj", "{16EF8366-30DC-4284-B229-E96F0C31038A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.LiteDb.Tests", "AnyServiceModules\LiteDb\AnyService.LiteDb.Tests\AnyService.LiteDb.Tests.csproj", "{16EF8366-30DC-4284-B229-E96F0C31038A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.Utilities", "AnyService.Utilities\AnyService.Utilities.csproj", "{7DC42C52-B2CA-4F90-ABF2-5A1D0514E577}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.Utilities", "AnyService.Utilities\AnyService.Utilities.csproj", "{7DC42C52-B2CA-4F90-ABF2-5A1D0514E577}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.Utilities.Tests", "AnyService.Utilities.Tests\AnyService.Utilities.Tests.csproj", "{657393B5-75FB-4088-BD7F-46E01D148F93}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.Utilities.Tests", "AnyService.Utilities.Tests\AnyService.Utilities.Tests.csproj", "{657393B5-75FB-4088-BD7F-46E01D148F93}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -205,18 +205,6 @@ Global
 		{16EF8366-30DC-4284-B229-E96F0C31038A}.Release|x64.Build.0 = Release|Any CPU
 		{16EF8366-30DC-4284-B229-E96F0C31038A}.Release|x86.ActiveCfg = Release|Any CPU
 		{16EF8366-30DC-4284-B229-E96F0C31038A}.Release|x86.Build.0 = Release|Any CPU
-		{657393B5-75FB-4088-BD7F-46E01D148F93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{657393B5-75FB-4088-BD7F-46E01D148F93}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{657393B5-75FB-4088-BD7F-46E01D148F93}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{657393B5-75FB-4088-BD7F-46E01D148F93}.Debug|x64.Build.0 = Debug|Any CPU
-		{657393B5-75FB-4088-BD7F-46E01D148F93}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{657393B5-75FB-4088-BD7F-46E01D148F93}.Debug|x86.Build.0 = Debug|Any CPU
-		{657393B5-75FB-4088-BD7F-46E01D148F93}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{657393B5-75FB-4088-BD7F-46E01D148F93}.Release|Any CPU.Build.0 = Release|Any CPU
-		{657393B5-75FB-4088-BD7F-46E01D148F93}.Release|x64.ActiveCfg = Release|Any CPU
-		{657393B5-75FB-4088-BD7F-46E01D148F93}.Release|x64.Build.0 = Release|Any CPU
-		{657393B5-75FB-4088-BD7F-46E01D148F93}.Release|x86.ActiveCfg = Release|Any CPU
-		{657393B5-75FB-4088-BD7F-46E01D148F93}.Release|x86.Build.0 = Release|Any CPU
 		{7DC42C52-B2CA-4F90-ABF2-5A1D0514E577}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7DC42C52-B2CA-4F90-ABF2-5A1D0514E577}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7DC42C52-B2CA-4F90-ABF2-5A1D0514E577}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -229,12 +217,24 @@ Global
 		{7DC42C52-B2CA-4F90-ABF2-5A1D0514E577}.Release|x64.Build.0 = Release|Any CPU
 		{7DC42C52-B2CA-4F90-ABF2-5A1D0514E577}.Release|x86.ActiveCfg = Release|Any CPU
 		{7DC42C52-B2CA-4F90-ABF2-5A1D0514E577}.Release|x86.Build.0 = Release|Any CPU
+		{657393B5-75FB-4088-BD7F-46E01D148F93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{657393B5-75FB-4088-BD7F-46E01D148F93}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{657393B5-75FB-4088-BD7F-46E01D148F93}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{657393B5-75FB-4088-BD7F-46E01D148F93}.Debug|x64.Build.0 = Debug|Any CPU
+		{657393B5-75FB-4088-BD7F-46E01D148F93}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{657393B5-75FB-4088-BD7F-46E01D148F93}.Debug|x86.Build.0 = Debug|Any CPU
+		{657393B5-75FB-4088-BD7F-46E01D148F93}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{657393B5-75FB-4088-BD7F-46E01D148F93}.Release|Any CPU.Build.0 = Release|Any CPU
+		{657393B5-75FB-4088-BD7F-46E01D148F93}.Release|x64.ActiveCfg = Release|Any CPU
+		{657393B5-75FB-4088-BD7F-46E01D148F93}.Release|x64.Build.0 = Release|Any CPU
+		{657393B5-75FB-4088-BD7F-46E01D148F93}.Release|x86.ActiveCfg = Release|Any CPU
+		{657393B5-75FB-4088-BD7F-46E01D148F93}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{9EFF3BE6-585F-4CD8-9FEA-775E44BB87FA} = {1B2B45B1-9CDC-4D19-84F8-EDCD50B1867A}
+		{9EFF3BE6-585F-4CD8-9FEA-775E44BB87FA} = {DEAD1573-581C-46B5-BA3C-D40213E7ADAB}
 		{0831F328-5E63-4B9D-8348-BEC0B4A2F5F6} = {1B2B45B1-9CDC-4D19-84F8-EDCD50B1867A}
 		{81057530-51E9-40EE-B64B-245A0173E570} = {1B2B45B1-9CDC-4D19-84F8-EDCD50B1867A}
 		{DEAD1573-581C-46B5-BA3C-D40213E7ADAB} = {1B2B45B1-9CDC-4D19-84F8-EDCD50B1867A}
