@@ -7,6 +7,10 @@ namespace AnyService
     public class EntityConfigRecord
     {
         /// <summary>
+        /// Name
+        /// </summary>
+        public string Name { get; set; }
+        /// <summary>
         /// Gets or sets route for entity.
         /// </summary>
         public string Route { get; set; }

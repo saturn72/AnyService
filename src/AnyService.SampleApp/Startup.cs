@@ -15,6 +15,7 @@ using AnyService.Middlewares;
 using AnyService.Utilities;
 using Microsoft.Extensions.Logging;
 using AnyService.Events;
+using AnyService.Endpoints;
 
 namespace AnyService.SampleApp
 {
@@ -84,10 +85,13 @@ namespace AnyService.SampleApp
             app.UseExceptionHandler(app => app.Run(ctx => exHandler.Handle(ctx, LoggingEvents.UnexpectedException.Name)));
             app.UseHsts();
             app.UseHttpsRedirection();
-            app.UseRouting();
             app.UseAuthentication();
             app.UseAnyService();
-            app.UseMvc();
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapAnyService();
+            });
         }
     }
 }

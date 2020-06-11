@@ -10,6 +10,7 @@ using AnyService.Utilities;
 using AnyService.Services.Security;
 using AnyService.Audity;
 using AnyService.Events;
+using AnyService.Endpoints;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -26,8 +27,6 @@ namespace Microsoft.Extensions.DependencyInjection
         }
         public static IServiceCollection AddAnyService(this IServiceCollection services, AnyServiceConfig config)
         {
-            NormalizeConfiguration(config);
-
             services.TryAddSingleton<IdGeneratorFactory>(sp =>
             {
                 var stringGenerator = new StringIdGenerator();
@@ -35,6 +34,8 @@ namespace Microsoft.Extensions.DependencyInjection
                 f.AddOrReplace(typeof(string), stringGenerator);
                 return f;
             });
+            NormalizeConfiguration(config);
+
             services.TryAddSingleton(config);
 
             services.TryAddTransient(typeof(CrudService<>));
@@ -121,6 +122,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 if (!ecr.Route.StartsWith("/") || ecr.Route.StartsWith("//"))
                     throw new InvalidOperationException($"{nameof(EntityConfigRecord.Route)} must start with single'/'. Actual value: {ecr.Route}");
 
+                ecr.Name ??= ecr.Type.Name;
                 ecr.ResponseMapperType ??= config.ServiceResponseMapperType;
                 ValidateInjectedType<IServiceResponseMapper>(ecr.ResponseMapperType);
                 ecr.EventKeys ??= ekr;

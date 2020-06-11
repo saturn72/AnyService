@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using AnyService.Caching;
 using AnyService.Controllers;
+using AnyService.Caching;
 using AnyService.Events;
 using AnyService.Middlewares;
 using AnyService.Services.Security;
@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AnyService
 {
+
     public static class ApplicationBuilderExtensions
     {
         public static IApplicationBuilder UseAnyService(this IApplicationBuilder app,
@@ -23,9 +24,9 @@ namespace AnyService
         {
             var sp = app.ApplicationServices;
 
-            ValidateCoreServicesConfigured(sp);
+            ValidateRequiredServices(sp);
 
-            var apm = sp.GetService<ApplicationPartManager>();
+            var apm = sp.GetRequiredService<ApplicationPartManager>();
             apm.FeatureProviders.Add(new GenericControllerFeatureProvider());
 
             if (useWorkContextMiddleware) app.UseMiddleware<WorkContextMiddleware>();
@@ -33,10 +34,10 @@ namespace AnyService
 
             if (useExceptionLogging)
             {
-                var entityConfigRecords = sp.GetService<IEnumerable<EntityConfigRecord>>();
+                var entityConfigRecords = sp.GetRequiredService<IEnumerable<EntityConfigRecord>>();
                 var eventKeys = entityConfigRecords.Select(e => e.EventKeys).ToArray();
-                var eventBus = sp.GetService<IEventBus>();
-                var exLogger = sp.GetService<ILogger<ExceptionsLoggingEventHandlers>>();
+                var eventBus = sp.GetRequiredService<IEventBus>();
+                var exLogger = sp.GetRequiredService<ILogger<ExceptionsLoggingEventHandlers>>();
                 var handlers = new ExceptionsLoggingEventHandlers(exLogger);
                 foreach (var ek in eventKeys)
                 {
@@ -49,31 +50,25 @@ namespace AnyService
             if (usePermissionMiddleware) AddPermissionComponents(app, sp);
             return app;
         }
-        private static void ValidateCoreServicesConfigured(IServiceProvider serviceProvider)
+        private static void ValidateRequiredServices(IServiceProvider serviceProvider)
         {
-            ThrowIfNotConfigured<ICacheManager>();
+            serviceProvider.GetRequiredService<ICacheManager>();
 
-            void ThrowIfNotConfigured<TService>()
-            {
-                if (serviceProvider.GetService<TService>() == null)
-                    throw new InvalidOperationException($"{nameof(TService)} is not configured");
-            }
-            //Mapping extensions
             if (!MappingExtensions.WasConfigured)
                 MappingExtensions.Configure(cfg => { });
         }
         private static void AddPermissionComponents(IApplicationBuilder app, IServiceProvider serviceProvider)
         {
-            var config = serviceProvider.GetService<AnyServiceConfig>();
+            var config = serviceProvider.GetRequiredService<AnyServiceConfig>();
             if (!config.ManageEntityPermissions)
                 return;
 
             app.UseMiddleware<AnyServicePermissionMiddleware>();
 
             //subscribe to events event listener
-            var eventBus = serviceProvider.GetService<IEventBus>();
+            var eventBus = serviceProvider.GetRequiredService<IEventBus>();
             var ekr = EntityConfigRecordManager.EntityConfigRecords.Select(e => e.EventKeys);
-            var peh = serviceProvider.GetService<IPermissionEventsHandler>();
+            var peh = serviceProvider.GetRequiredService<IPermissionEventsHandler>();
             foreach (var e in ekr)
             {
                 eventBus.Subscribe(e.Create, peh.EntityCreatedHandler);
