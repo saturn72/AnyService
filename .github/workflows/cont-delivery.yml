@@ -28,9 +28,9 @@ jobs:
         working-directory: ./src
         run: dotnet test --verbosity normal --configuration Release --no-build
 
-      - name: Pack AnyService.Utilities nuget package
-        working-directory: ./src
-        run: dotnet pack ./AnyService.Utilities/AnyService.Utilities.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
+      # - name: Pack AnyService.Utilities nuget package
+      #   working-directory: ./src
+      #   run: dotnet pack ./AnyService.Utilities/AnyService.Utilities.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       # - name: Pack anyservice.core nuget package 
       #   working-directory: ./src
       #   run: dotnet pack ./AnyService.Core/AnyService.Core.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
