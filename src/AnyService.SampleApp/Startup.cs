@@ -96,9 +96,8 @@ namespace AnyService.SampleApp
             app.UseAuthentication();
 
             //we need to customize what happens when user is not authenticated in order to enable notifications
-
-            app.UseMiddleware<WorkContextMiddleware>(onMissingUserIdHandler);
-
+            var handler = OnMissingUserIdWorkContextMiddlewareHandlers.PermittedPathsOnMissingUserIdHandler(new[] { new PathString("/chathub"), new PathString("/notify") });
+            app.UseMiddleware<WorkContextMiddleware>(handler);
             app.UseAnyService(useWorkContextMiddleware: false);
 
             app.UseRouting();
@@ -109,18 +108,5 @@ namespace AnyService.SampleApp
             });
 
         }
-        private static readonly IEnumerable<string> NonAuthorizedPaths = new[] { "chathub", "notify" };
-        private static Func<HttpContext, WorkContext, ILogger, Task<bool>> onMissingUserIdHandler => (ctx, wc, l) =>
-            {
-                var path = ctx.Request.Path.Value.Substring(1);
-                if(path.Contains("/"))
-                path = path.Substring(0, path.IndexOf("/"));
-                if (NonAuthorizedPaths.Contains(path.ToLower()))
-                    return Task.FromResult(true);
-
-                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                l.LogDebug($"Missing userId - user is unauthorized!");
-                return Task.FromResult(false);
-            };
     }
 }

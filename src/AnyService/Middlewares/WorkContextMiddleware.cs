@@ -26,14 +26,7 @@ namespace AnyService.Middlewares
             _logger = logger;
             _next = next;
             RouteMaps = LoadRoutes(entityConfigRecords);
-            _onMissingUserIdHandler = onMissingUserIdHandler ??= DefaultOnMissingUserIdHandler;
-        }
-
-        private Task<bool> DefaultOnMissingUserIdHandler(HttpContext hc, WorkContext wc, ILogger logger)
-        {
-            hc.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            _logger.LogDebug($"Missing userId - user is unauthorized!");
-            return Task.FromResult(false);
+            _onMissingUserIdHandler = onMissingUserIdHandler ??= OnMissingUserIdWorkContextMiddlewareHandlers.DefaultOnMissingUserIdHandler;
         }
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
