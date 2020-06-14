@@ -24,7 +24,6 @@ namespace AnyService.E2E
 {
     public class BasicE2ETests : E2EFixture
     {
-        static SampleAppDbContext _ctx;
         private static Action<IWebHostBuilder> configuration = builder =>
           {
               builder.ConfigureTestServices(services =>
@@ -39,7 +38,6 @@ namespace AnyService.E2E
                   services.AddAnyService(entities);
                   var options = new DbContextOptionsBuilder<SampleAppDbContext>()
                     .UseInMemoryDatabase(databaseName: DateTime.Now.ToString("yyyy_mm_hh_ss_ff") + ".db").Options;
-                  _ctx = new SampleAppDbContext(options);
 
                   services.AddTransient<DbContext>(sp => new SampleAppDbContext(options));
                   services.AddLogging(builder =>

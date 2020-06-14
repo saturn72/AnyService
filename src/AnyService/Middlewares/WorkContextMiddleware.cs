@@ -14,24 +14,35 @@ namespace AnyService.Middlewares
         private readonly ILogger<WorkContextMiddleware> _logger;
         private readonly RequestDelegate _next;
         protected readonly IReadOnlyDictionary<string, EntityConfigRecord> RouteMaps;
+        private readonly Func<HttpContext, WorkContext, ILogger, Task<bool>> _onMissingUserIdHandler;
 
-        public WorkContextMiddleware(RequestDelegate next, ILogger<WorkContextMiddleware> logger, IEnumerable<EntityConfigRecord> entityConfigRecords)
+        public WorkContextMiddleware(
+            RequestDelegate next,
+            ILogger<WorkContextMiddleware> logger,
+            IEnumerable<EntityConfigRecord> entityConfigRecords,
+            Func<HttpContext, WorkContext, ILogger, Task<bool>> onMissingUserIdHandler = null
+            )
         {
             _logger = logger;
             _next = next;
             RouteMaps = LoadRoutes(entityConfigRecords);
+            _onMissingUserIdHandler = onMissingUserIdHandler ??= DefaultOnMissingUserIdHandler;
+        }
+
+        private Task<bool> DefaultOnMissingUserIdHandler(HttpContext hc, WorkContext wc, ILogger logger)
+        {
+            hc.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            _logger.LogDebug($"Missing userId - user is unauthorized!");
+            return Task.FromResult(false);
         }
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
         {
             _logger.LogDebug(LoggingEvents.WorkContext, "Start WorkContextMiddleware invokation");
             var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!userId.HasValue())
-            {
-                httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                _logger.LogDebug($"Missing userId - user is unauthorized!");
+            if (!userId.HasValue() && !(await _onMissingUserIdHandler(httpContext, workContext, _logger)))
                 return;
-            }
+
             workContext.CurrentUserId = userId;
 
             var ecr = GetEntityconfigRecordByRoute(httpContext.Request.Path);
@@ -45,7 +56,6 @@ namespace AnyService.Middlewares
         }
         private IReadOnlyDictionary<string, EntityConfigRecord> LoadRoutes(IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
-            var startupLock = new object();
             var res = new Dictionary<string, EntityConfigRecord>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var ecr in entityConfigRecords)
                 res[ecr.Route.Substring(1)] = ecr;

@@ -16,6 +16,13 @@ using AnyService.Utilities;
 using Microsoft.Extensions.Logging;
 using AnyService.Events;
 using AnyService.Endpoints;
+using AnyService.SampleApp.Hubs;
+using System.Threading.Tasks;
+using System.Runtime.InteropServices.ComTypes;
+using System;
+using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace AnyService.SampleApp
 {
@@ -34,6 +41,7 @@ namespace AnyService.SampleApp
                 .AddMvcCore(o => o.EnableEndpointRouting = false)
                 .AddAuthorization();
 
+            services.AddSignalR();
             services.AddAuthentication(ManagedAuthenticationHandler.Schema)
                 .AddScheme<AuthenticationSchemeOptions, ManagedAuthenticationHandler>(ManagedAuthenticationHandler.Schema, options => { });
             services.AddAuthorization();
@@ -86,12 +94,33 @@ namespace AnyService.SampleApp
             app.UseHsts();
             app.UseHttpsRedirection();
             app.UseAuthentication();
-            app.UseAnyService();
+
+            //we need to customize what happens when user is not authenticated in order to enable notifications
+
+            app.UseMiddleware<WorkContextMiddleware>(onMissingUserIdHandler);
+
+            app.UseAnyService(useWorkContextMiddleware: false);
+
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapAnyService();
+                endpoints.MapHub<ChatHub>("/chatHub");
             });
+
         }
+        private static readonly IEnumerable<string> NonAuthorizedPaths = new[] { "chathub", "notify" };
+        private static Func<HttpContext, WorkContext, ILogger, Task<bool>> onMissingUserIdHandler => (ctx, wc, l) =>
+            {
+                var path = ctx.Request.Path.Value.Substring(1);
+                if(path.Contains("/"))
+                path = path.Substring(0, path.IndexOf("/"));
+                if (NonAuthorizedPaths.Contains(path.ToLower()))
+                    return Task.FromResult(true);
+
+                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                l.LogDebug($"Missing userId - user is unauthorized!");
+                return Task.FromResult(false);
+            };
     }
 }
