@@ -97,6 +97,7 @@ namespace AnyService.E2E
 
                 r.EnsureSuccessStatusCode();
             }
+            await Task.Delay(1000);
             #region create
             var res = await HttpClient.GetAsync($"dependentmodel?query=__created");
             res.EnsureSuccessStatusCode();

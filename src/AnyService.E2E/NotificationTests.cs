@@ -4,22 +4,16 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
-namespace AnyService.E2E.Notifications
+namespace AnyService.E2E
 {
-    public class NotificationTests : BasicE2ETests
+    public class NotificationTests
     {
-        public NotificationTests(ITestOutputHelper outputHelper) : base(outputHelper)
-        {
-        }
-
-        [Fact]
+        [Fact(Skip = "Works only with \'real\' server instance")]
         public async Task AnyServiceSupportForSignalR()
         {
             string expPayload = "this is my payload",
                 payload = null;
-            var serverUrl = HttpClient.BaseAddress;
 
             var connection = new HubConnectionBuilder()
                 .WithUrl("https://localhost:5001/ChatHub")
