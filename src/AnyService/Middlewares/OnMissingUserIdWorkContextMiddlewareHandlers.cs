@@ -12,7 +12,7 @@ namespace AnyService.Middlewares
         public static Task<bool> DefaultOnMissingUserIdHandler(HttpContext context, WorkContext workContext, ILogger logger)
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            logger.LogDebug($"Missing userId - user is unauthorized!");
+            logger.LogDebug($"Missing userId and clientId - request could not be authenticated.");
             return Task.FromResult(false);
         }
 

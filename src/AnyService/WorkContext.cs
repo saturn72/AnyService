@@ -8,6 +8,7 @@ namespace AnyService
         public Type CurrentType => CurrentEntityConfigRecord?.Type;
         public EntityConfigRecord CurrentEntityConfigRecord { get; set; }
         public string CurrentUserId { get; set; }
+        public string CurrentClientId { get; set; }
         public RequestInfo RequestInfo { get; set; }
 
         /// <summary>

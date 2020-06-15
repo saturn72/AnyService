@@ -17,12 +17,7 @@ using Microsoft.Extensions.Logging;
 using AnyService.Events;
 using AnyService.Endpoints;
 using AnyService.SampleApp.Hubs;
-using System.Threading.Tasks;
-using System.Runtime.InteropServices.ComTypes;
-using System;
 using Microsoft.AspNetCore.Http;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace AnyService.SampleApp
 {
@@ -106,7 +101,6 @@ namespace AnyService.SampleApp
                 endpoints.MapAnyService();
                 endpoints.MapHub<ChatHub>("/chatHub");
             });
-
         }
     }
 }

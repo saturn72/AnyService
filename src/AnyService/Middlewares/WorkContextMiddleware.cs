@@ -33,10 +33,13 @@ namespace AnyService.Middlewares
         {
             _logger.LogDebug(LoggingEvents.WorkContext, "Start WorkContextMiddleware invokation");
             var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!userId.HasValue() && !(await _onMissingUserIdHandler(httpContext, workContext, _logger)))
+            var clientId = httpContext.User.FindFirst("client_id")?.Value;
+
+            if (!clientId.HasValue() && !userId.HasValue() && !(await _onMissingUserIdHandler(httpContext, workContext, _logger)))
                 return;
 
             workContext.CurrentUserId = userId;
+            workContext.CurrentClientId = clientId;
 
             var ecr = GetEntityconfigRecordByRoute(httpContext.Request.Path);
             if (ecr != null && !ecr.Equals(default))

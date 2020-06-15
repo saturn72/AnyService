@@ -30,7 +30,6 @@ namespace AnyService.Controllers
         private readonly Type _curType;
         private readonly WorkContext _workContext;
         private static readonly IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
-        private static readonly IDictionary<Type, IDictionary<string, string>> GetAllPublicFilterCollection = new Dictionary<Type, IDictionary<string, string>>();
         #endregion
         #region ctor
         public GenericController(
