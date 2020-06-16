@@ -140,9 +140,11 @@ namespace AnyService.Controllers
             [FromQuery] string sortOrder = "desc",
             [FromQuery] string query = "")
         {
+            _logger.LogDebug(LoggingEvents.Controller, $"Start Get all flow. With values: " +
+                $"\'{nameof(orderBy)}\' = \'{orderBy}\', \'{nameof(offset)}\' = \'{offset}\', \'{nameof(pageSize)}\' = \'{pageSize}\', " +
+                $"\'{nameof(withNavProps)}\' = \'{withNavProps}\', \'{nameof(sortOrder)}\' = \'{sortOrder}\', \'{nameof(query)}\' = \'{query}\'");
 
             var pagination = GetPagination(orderBy, offset, pageSize, withNavProps, sortOrder, query);
-            _logger.LogDebug(LoggingEvents.Controller, "Start Get all flow");
             var res = await _crudService.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller, "Get all public service response value: " + res);
             res.Data = pagination?.Map<PaginationModel<TDomainModel>>();
