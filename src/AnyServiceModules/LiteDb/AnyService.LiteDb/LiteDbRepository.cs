@@ -56,7 +56,7 @@ namespace AnyService.LiteDb
                 if (pagination == null)
                     return col.FindAll().ToArray();
 
-                var query = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(pagination.QueryAsString);
+                var query = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(pagination.QueryOrFilter);
                 if (query == null)
                     return null;
                 return col.Find(query).ToArray();

@@ -10,14 +10,14 @@ namespace AnyService.Services
         {
             SortOrder = PaginationSettings.Asc;
         }
-        public Pagination(string queryAsString) : this()
+        public Pagination(string queryOrFilter) : this()
         {
-            QueryAsString = queryAsString;
+            QueryOrFilter = queryOrFilter;
         }
         public Pagination(Expression<Func<TDomainModel, bool>> queryFunc) : this()
         {
             QueryFunc = queryFunc?.Compile();
-            QueryAsString = queryFunc.ToString();
+            QueryOrFilter = queryFunc.ToString();
         }
         /// <summary>
         /// Gets or sets the total number of entities 
@@ -50,7 +50,7 @@ namespace AnyService.Services
         /// gets or sets query string value
         /// </summary>
         /// <value></value>
-        public string QueryAsString { get; set; }
+        public string QueryOrFilter { get; set; }
         /// <summary>
         /// gets or sets query func
         /// </summary>

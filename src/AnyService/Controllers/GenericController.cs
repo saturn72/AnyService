@@ -160,7 +160,7 @@ namespace AnyService.Controllers
                 PageSize = pageSize,
                 IncludeNested = withNavProps,
                 SortOrder = sortOrder,
-                QueryAsString = query
+                QueryOrFilter = query
             };
 
         }

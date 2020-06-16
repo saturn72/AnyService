@@ -28,7 +28,7 @@ namespace AnyService.EntityFramework
         {
             if (pagination == null || pagination.QueryFunc == null)
                 throw new ArgumentNullException(nameof(pagination));
-            _logger.LogDebug("Get all with pagination: " + pagination.QueryAsString);
+            _logger.LogDebug("Get all with pagination: " + pagination.QueryOrFilter);
             pagination.Total = (ulong)DbSet.Where(pagination.QueryFunc).Count();
             _logger.LogDebug("GetAll set total to: " + pagination.Total);
             var q = DbSet;

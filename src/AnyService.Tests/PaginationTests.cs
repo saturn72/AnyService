@@ -22,7 +22,7 @@ namespace AnyService.Tests
         {
             var q = "xxx";
             var p = new Pagination<TestClass>(q);
-            p.QueryAsString.ShouldBe(q);
+            p.QueryOrFilter.ShouldBe(q);
             p.QueryFunc.ShouldBeNull();
         }
 
@@ -30,7 +30,7 @@ namespace AnyService.Tests
         public void ctor1()
         {
             var p = new Pagination<TestClass>();
-            p.QueryAsString.ShouldBeNull();
+            p.QueryOrFilter.ShouldBeNull();
             p.QueryFunc.ShouldBeNull();
             p.SortOrder.ShouldBe("asc");
         }
@@ -39,7 +39,7 @@ namespace AnyService.Tests
         {
             var q = "Id == 123";
             var p = new Pagination<TestClass>(q);
-            p.QueryAsString.ShouldBe(q);
+            p.QueryOrFilter.ShouldBe(q);
             p.QueryFunc.ShouldBeNull();
             p.SortOrder.ShouldBe("asc");
         }
@@ -49,7 +49,7 @@ namespace AnyService.Tests
             var f = new Func<TestClass, bool>(x => x.Id == "123");
             Expression<Func<TestClass, bool>> q = (a => f(a));
             var p = new Pagination<TestClass>(q);
-            p.QueryAsString.ShouldNotBeNull();
+            p.QueryOrFilter.ShouldNotBeNull();
             p.QueryFunc.ShouldBeOfType<Func<TestClass, bool>>();
             p.SortOrder.ShouldBe("asc");
         }
