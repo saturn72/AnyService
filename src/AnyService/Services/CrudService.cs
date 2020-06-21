@@ -156,6 +156,54 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
+
+        private async Task<bool> NormalizePagination(Pagination<TDomainModel> pagination)
+        {
+            if (pagination == null || (!pagination.QueryOrFilter.HasValue() && pagination.QueryFunc == null))
+                return false;
+
+            var filter = await FilterFactory.GetFilter<TDomainModel>(pagination.QueryOrFilter);
+
+            if (filter != null)
+            {
+                var f = filter(new object());
+                if (f == null)
+                    return false;
+                pagination.QueryFunc = c => f(c);
+            }
+            else
+            {
+                if (pagination.QueryFunc == null) //build only if func not exists
+                {
+                    var right = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(pagination.QueryOrFilter)?.Compile();
+                    if (right == null) return false;
+
+                    var ecr = WorkContext.CurrentEntityConfigRecord;
+                    if (Config.ManageEntityPermissions)
+                    {
+                        var permittedIds = await PermissionManager.GetPermittedIds(WorkContext.CurrentUserId, ecr.EntityKey, ecr.PermissionRecord.ReadKey);
+                        Func<TDomainModel, bool> left = a => permittedIds.Contains(a.Id);
+                        pagination.QueryFunc = x => left(x) && right(x);
+                    }
+                    else
+                    {
+                        pagination.QueryFunc = x => right(x);
+                    }
+                }
+            }
+
+            if (pagination.QueryFunc == null) return false;
+
+            var paginationSettings = WorkContext.CurrentEntityConfigRecord.PaginationSettings;
+            pagination.OrderBy ??= paginationSettings.DefaultOrderBy;
+            pagination.Offset ??= paginationSettings.DefaultOffset;
+            pagination.PageSize ??= paginationSettings.DefaultPageSize;
+            pagination.IncludeNested = pagination.IncludeNested;
+            pagination.SortOrder ??= paginationSettings.DefaultSortOrder;
+
+            return true;
+        }
+
         public virtual async Task<ServiceResponse> Update(string id, TDomainModel entity)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start update flow for id: {id}, entity: {entity}");
