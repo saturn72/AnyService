@@ -14,7 +14,7 @@ namespace AnyService.SampleApp.ServicesConfigurars
         public IServiceCollection Configure(IServiceCollection services, IConfiguration configuration, IWebHostEnvironment env)
         {
             var entities = new[]
-              {
+            {
                 typeof(DependentModel),
                 typeof(Dependent2),
                 typeof(MultipartSampleModel),
