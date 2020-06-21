@@ -1,5 +1,4 @@
-﻿using AnyService.SampleApp.Models;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,12 +11,10 @@ using AnyService.Services;
 using Microsoft.EntityFrameworkCore;
 using AnyService.EntityFramework;
 using AnyService.Middlewares;
-using AnyService.Utilities;
-using Microsoft.Extensions.Logging;
-using AnyService.Events;
 using AnyService.Endpoints;
 using AnyService.SampleApp.Hubs;
 using Microsoft.AspNetCore.Http;
+using AnyService.SampleApp.ServicesConfigurars;
 
 namespace AnyService.SampleApp
 {
@@ -41,21 +38,8 @@ namespace AnyService.SampleApp
                 .AddScheme<AuthenticationSchemeOptions, ManagedAuthenticationHandler>(ManagedAuthenticationHandler.Schema, options => { });
             services.AddAuthorization();
 
-            var entities = new[]
-            {
-                typeof(DependentModel),
-                typeof(Dependent2),
-                typeof(MultipartSampleModel),
-            };
-
-            services.AddAnyService(entities);
-            services.AddSingleton<IExceptionHandler>(sp =>
-            {
-                var idg = sp.GetService<IIdGenerator>();
-                var l = sp.GetService<ILogger<DefaultExceptionHandler>>();
-                var eb = sp.GetService<IEventBus>();
-                return new DefaultExceptionHandler(idg, l, eb, sp);
-            });
+            new AnyServiceServicesConfigurar().Configure(services, Configuration, null);
+          
             ConfigureEntityFramework(services);
             ConfigureCaching(services);
         }
