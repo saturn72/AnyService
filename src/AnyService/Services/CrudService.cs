@@ -156,9 +156,6 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
-
-     is
-
         public virtual async Task<ServiceResponse> Update(string id, TDomainModel entity)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start update flow for id: {id}, entity: {entity}");
