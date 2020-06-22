@@ -67,6 +67,5 @@ namespace AnyService.Services
         public string OrderBy { get; set; }
         public IEnumerable<T> Data { get; set; }
         public string Query { get; set; }
-        public bool IncludeNested { get; set; }
     }
 }
