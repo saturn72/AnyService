@@ -38,7 +38,7 @@ namespace AnyService.Tests.Middlewares
             int i = 0,
                 expI = 15;
             string expUserId = "user-id",
-                route = "/some-resource",
+                route = "/some-resource/part2/",
                 expRequesteeId = "123",
                 expPath = $"{route}/__public/{expRequesteeId}",
                 expMethod = "some-method";
