@@ -18,7 +18,7 @@ namespace AnyService.Tests
             var pi = type.GetProperty(nameof(EntityConfigRecordManager.EntityConfigRecords));
 
             var expType = typeof(MyClass);
-            var expRoutePrefix = "some-route-prefix";
+            var expRoutePrefix = "/some-route-prefix";
             var maps = new[]
             {
               new EntityConfigRecord
@@ -34,7 +34,7 @@ namespace AnyService.Tests
             pi.SetValue(null, maps);
             EntityConfigRecordManager.EntityConfigRecords.Count().ShouldBe(1);
             EntityConfigRecordManager.EntityConfigRecords.First(c => c.Route.Equals(expRoutePrefix, StringComparison.InvariantCultureIgnoreCase)).Type.ShouldBe(expType);
-            EntityConfigRecordManager.GetRecord(expType).Route.ShouldBe(expRoutePrefix);
+            EntityConfigRecordManager.GetRecord(expType).Route.Value.ShouldBe(expRoutePrefix);
         }
     }
 }

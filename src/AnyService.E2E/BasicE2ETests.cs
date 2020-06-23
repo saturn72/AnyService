@@ -1,56 +1,25 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AnyService.SampleApp.Models;
-using Microsoft.AspNetCore.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shouldly;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.DependencyInjection;
 using AnyService.SampleApp.Identity;
-using Microsoft.AspNetCore.Mvc.Testing;
-using AnyService.SampleApp;
 using System.Net.Http.Headers;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Xunit;
 using Xunit.Abstractions;
+using System.Threading;
 
 namespace AnyService.E2E
 {
     public class BasicE2ETests : E2EFixture
     {
-        private static Action<IWebHostBuilder> configuration = builder =>
-          {
-              builder.ConfigureTestServices(services =>
-              {
-                  services.AddMvc(o => o.EnableEndpointRouting = false);
-                  var entities = new[]
-                  {
-                        typeof(DependentModel),
-                        typeof(Dependent2),
-                        typeof(MultipartSampleModel)
-                  };
-                  services.AddAnyService(entities);
-                  var options = new DbContextOptionsBuilder<SampleAppDbContext>()
-                    .UseInMemoryDatabase(databaseName: DateTime.Now.ToString("yyyy_mm_hh_ss_ff") + ".db").Options;
-
-                  services.AddTransient<DbContext>(sp => new SampleAppDbContext(options));
-                  services.AddLogging(builder =>
-                  {
-                      builder.AddConsole();
-                      builder.AddDebug();
-                  });
-              });
-          };
-        public BasicE2ETests(ITestOutputHelper outputHelper) : base(outputHelper, configuration)
+        public BasicE2ETests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
-            Factory = new WebApplicationFactory<Startup>();
-            HttpClient = Factory.WithWebHostBuilder(configuration).CreateClient();
+
         }
         [Fact]
         public async Task ReadsOnlyPermittedEntries()
@@ -83,16 +52,16 @@ namespace AnyService.E2E
         [Fact]
         public async Task Use_ReservedQueries()
         {
+            DbContext.Set<DependentModel>().RemoveRange(DbContext.Set<DependentModel>());
             var totalEntities = 6;
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
-            var model = new DependentModel
-            {
-                Value = "init value",
-                Public = false
-            };
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
             for (int i = 0; i < totalEntities; i++)
             {
-                model.Public = i % 2 == 0;
+                var model = new
+                {
+                    Value = "init value_" + i+1,
+                    Public = i % 2 == 0,
+                };
                 var r = await HttpClient.PostAsJsonAsync("dependentmodel", model);
 
                 r.EnsureSuccessStatusCode();
@@ -104,6 +73,7 @@ namespace AnyService.E2E
             var content = await res.Content.ReadAsStringAsync();
             var jObj = JObject.Parse(content);
             var jArr = jObj["data"]["data"] as JArray;
+            _output.WriteLine(jArr.ToString());
             jArr.Count.ShouldBe(totalEntities);
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
             res = await HttpClient.GetAsync($"dependentmodel?query=__created");
@@ -125,7 +95,7 @@ namespace AnyService.E2E
             var id1 = jArr.ElementAt(0).Value<string>("id");
             var id2 = jArr.ElementAt(1).Value<string>("id");
 
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
 
             var updateModel = new DependentModel
             {
@@ -150,7 +120,7 @@ namespace AnyService.E2E
             jArr.Count.ShouldBe(0);
             #endregion
             #region delete
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
 
             res = await HttpClient.DeleteAsync($"dependentmodel/{id1}");
             res.EnsureSuccessStatusCode();
@@ -175,7 +145,7 @@ namespace AnyService.E2E
             jArr.Count.ShouldBe(0);
             #endregion
             #region canRead
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
             res = await HttpClient.GetAsync($"dependentmodel?query=__canRead");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
@@ -191,7 +161,7 @@ namespace AnyService.E2E
             #endregion
 
             #region canUpdate
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
             res = await HttpClient.GetAsync($"dependentmodel?query=__canUpdate");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
@@ -206,7 +176,7 @@ namespace AnyService.E2E
             jArr.Count.ShouldBe(0);
             #endregion
             #region canUpdate
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
             res = await HttpClient.GetAsync($"dependentmodel?query=__canDelete");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
@@ -252,7 +222,8 @@ namespace AnyService.E2E
 
             //no query provided
             res = await HttpClient.GetAsync("dependentmodel/");
-            res.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            res.StatusCode.ShouldBe(HttpStatusCode.OK);
+
             res = await HttpClient.GetAsync($"dependentmodel?query=id==\"{id}\"");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();

@@ -1,25 +1,43 @@
 using System.Net.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using AnyService.SampleApp;
-using NUnit.Framework;
 using System;
-using Microsoft.AspNetCore.Hosting;
 using Xunit;
 using Xunit.Abstractions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace AnyService.E2E
 {
     public abstract class E2EFixture : IClassFixture<WebApplicationFactory<Startup>>
     {
-        private readonly ITestOutputHelper _output;
-        private readonly Action<IWebHostBuilder> _configuration;
+        protected DbContext DbContext;
+        protected readonly ITestOutputHelper _output;
 
-        public E2EFixture(ITestOutputHelper output, Action<IWebHostBuilder> configuration)
+        public E2EFixture(ITestOutputHelper output)
         {
             _output = output;
-            _configuration = configuration;
             Factory = new WebApplicationFactory<Startup>();
-            HttpClient = Factory.WithWebHostBuilder(builder => _configuration(builder))
+
+            HttpClient = Factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureTestServices(services =>
+                {
+                    var options = new DbContextOptionsBuilder<SampleAppDbContext>()
+                          .UseInMemoryDatabase(databaseName: DateTime.Now.ToString("yyyy_mm_hh_ss_ff") + ".db").Options;
+
+                    DbContext = new SampleAppDbContext(options);
+                    services.AddTransient<DbContext>(sp => new SampleAppDbContext(options));
+                    services.AddLogging(builder =>
+                    {
+                        builder.AddConsole();
+                        builder.AddDebug();
+                    });
+
+                });
+            })
             .CreateClient();
         }
 

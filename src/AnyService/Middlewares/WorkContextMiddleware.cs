@@ -54,14 +54,13 @@ namespace AnyService.Middlewares
         {
             var res = new Dictionary<string, EntityConfigRecord>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var ecr in entityConfigRecords)
-                res[ecr.Route.Substring(1)] = ecr;
+                res[ecr.Route] = ecr;
             return res;
         }
         private EntityConfigRecord GetEntityconfigRecordByRoute(PathString path)
         {
-            var segment = path.Value.Split('/', StringSplitOptions.RemoveEmptyEntries)[0];
-            RouteMaps.TryGetValue(segment, out EntityConfigRecord value);
-            return value;
+            var e = RouteMaps.FirstOrDefault(rm => path.StartsWithSegments(rm.Key));
+            return (e.Equals(default))? null : e.Value;
         }
         private static RequestInfo ToRequestInfo(HttpContext httpContext, EntityConfigRecord typeConfigRecord)
         {

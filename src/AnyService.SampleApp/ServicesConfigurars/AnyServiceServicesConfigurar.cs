@@ -13,14 +13,32 @@ namespace AnyService.SampleApp.ServicesConfigurars
     {
         public IServiceCollection Configure(IServiceCollection services, IConfiguration configuration, IWebHostEnvironment env)
         {
-            var entities = new[]
+            var anyServiceConfig = new AnyServiceConfig
             {
-                typeof(DependentModel),
-                typeof(Dependent2),
-                typeof(MultipartSampleModel),
+                EntityConfigRecords = new[]
+                {
+                    new EntityConfigRecord
+                    {
+                        Type =   typeof(DependentModel),
+                        Authorization = new AuthorizationInfo
+                        {
+                            ControllerAuthorizationNode = new AuthorizationNode{Roles = new[]{"some-role"}}
+                        }
+                    },
+                    new EntityConfigRecord
+                    {
+                        Type = typeof(Dependent2),
+                        Route = "/api/d",
+                    },
+                    new EntityConfigRecord
+                    {
+                        Type = typeof(MultipartSampleModel),
+                    },
+                }
             };
 
-            services.AddAnyService(entities);
+            services.AddAnyService(anyServiceConfig);
+
             services.AddSingleton<IExceptionHandler>(sp =>
             {
                 var idg = sp.GetService<IIdGenerator>();

@@ -1,15 +1,8 @@
 using System.Threading.Tasks;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
-using System;
 using Shouldly;
-using AnyService.SampleApp.Models;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.TestHost;
 using System.Net.Http.Headers;
-using Microsoft.AspNetCore.Mvc.Testing;
-using AnyService.SampleApp;
 using System.Net;
 using AnyService.SampleApp.Identity;
 using Xunit;
@@ -19,31 +12,8 @@ namespace AnyService.E2E.Authorization
 {
     public class UserRoleE2ETest : E2EFixture
     {
-        private static Action<IWebHostBuilder> configuration = builder =>
+        public UserRoleE2ETest(ITestOutputHelper outputHelper) : base(outputHelper)
         {
-            builder.ConfigureTestServices(services =>
-            {
-                var cfg = new AnyServiceConfig
-                {
-                    EntityConfigRecords = new[]
-                    {
-                        new EntityConfigRecord
-                        {
-                            Type = typeof(DependentModel),
-                            Authorization = new AuthorizationInfo
-                            {
-                                ControllerAuthorizationNode = new AuthorizationNode{Roles = new[]{"some-role"}}
-                            }
-                        }
-                    }
-                };
-                services.AddAnyService(cfg);
-            });
-        };
-        public UserRoleE2ETest(ITestOutputHelper outputHelper) : base(outputHelper, configuration)
-        {
-            Factory = new WebApplicationFactory<Startup>();
-            HttpClient = Factory.WithWebHostBuilder(configuration).CreateClient();
         }
 
         [Fact]

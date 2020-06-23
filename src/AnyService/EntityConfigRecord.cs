@@ -1,6 +1,7 @@
 using System;
 using AnyService.Security;
 using AnyService.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace AnyService
 {
@@ -13,7 +14,7 @@ namespace AnyService
         /// <summary>
         /// Gets or sets route for entity.
         /// </summary>
-        public string Route { get; set; }
+        public PathString Route { get; set; }
         /// <summary>
         /// Gets or sets entity type 
         /// </summary>

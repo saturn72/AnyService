@@ -118,9 +118,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
 
-                if (!ecr.Route.HasValue()) ecr.Route = "/" + e.Name;
-                if (!ecr.Route.StartsWith("/") || ecr.Route.StartsWith("//"))
-                    throw new InvalidOperationException($"{nameof(EntityConfigRecord.Route)} must start with single'/'. Actual value: {ecr.Route}");
+                if (!ecr.Route.Value.HasValue()) ecr.Route = "/" + e.Name;
 
                 ecr.Name ??= ecr.Type.Name;
                 ecr.ResponseMapperType ??= config.ServiceResponseMapperType;

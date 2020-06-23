@@ -20,6 +20,7 @@ namespace AnyService.SampleApp.Identity
         public const string Schema = "Test";
         public const string AuthorizedJson1 = RolePrefix + "some-role" + Delimiter + UserIdPrefix + "1";
         public const string AuthorizedJson2 = RolePrefix + "some-role" + Delimiter + UserIdPrefix + "2";
+        public const string AuthorizedJson3 = RolePrefix + "some-role" + Delimiter + UserIdPrefix + "3";
         public const string UnauthorizedUser1 = RolePrefix + "unauthz-role" + Delimiter + UserIdPrefix + "3";
 
         public ManagedAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,

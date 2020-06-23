@@ -136,7 +136,7 @@ namespace AnyService.Services
             if (!await Validator.ValidateForGet(serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Request did not pass validation");
 
-            if (!await NormalizePagination(pagination))
+            if ((pagination = await NormalizePagination(pagination)) == null)
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Missing query data");
 
             Logger.LogDebug(LoggingEvents.Repository, "Get all from repository using paginate = " + pagination);
@@ -157,51 +157,54 @@ namespace AnyService.Services
             return serviceResponse;
         }
 
-        private async Task<bool> NormalizePagination(Pagination<TDomainModel> pagination)
+        private async Task<Pagination<TDomainModel>> NormalizePagination(Pagination<TDomainModel> pagination)
         {
-            if (pagination == null || (!pagination.QueryOrFilter.HasValue() && pagination.QueryFunc == null))
-                return false;
+            var p = pagination ??= new Pagination<TDomainModel>();
 
-            var filter = await FilterFactory.GetFilter<TDomainModel>(pagination.QueryOrFilter);
+            if (!p.QueryOrFilter.HasValue() && p.QueryFunc == null)
+                p.QueryFunc = x => x.Id.HasValue();
+
+            var filter = p.QueryOrFilter.HasValue() ?
+                await FilterFactory.GetFilter<TDomainModel>(p.QueryOrFilter) : null;
 
             if (filter != null)
             {
                 var f = filter(new object());
                 if (f == null)
-                    return false;
-                pagination.QueryFunc = c => f(c);
+                    return null;
+                p.QueryFunc = c => f(c);
             }
             else
             {
-                if (pagination.QueryFunc == null) //build only if func not exists
+                if (p.QueryFunc == null) //build only if func not exists
                 {
-                    var right = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(pagination.QueryOrFilter)?.Compile();
-                    if (right == null) return false;
+                    var right = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(p.QueryOrFilter)?.Compile();
+                    if (right == null) return null;
 
                     var ecr = WorkContext.CurrentEntityConfigRecord;
                     if (Config.ManageEntityPermissions)
                     {
                         var permittedIds = await PermissionManager.GetPermittedIds(WorkContext.CurrentUserId, ecr.EntityKey, ecr.PermissionRecord.ReadKey);
                         Func<TDomainModel, bool> left = a => permittedIds.Contains(a.Id);
-                        pagination.QueryFunc = x => left(x) && right(x);
+                        p.QueryFunc = x => left(x) && right(x);
                     }
                     else
                     {
-                        pagination.QueryFunc = x => right(x);
+                        p.QueryFunc = x => right(x);
                     }
                 }
             }
 
-            if (pagination.QueryFunc == null) return false;
+            if (p.QueryFunc == null) return null;
 
             var paginationSettings = WorkContext.CurrentEntityConfigRecord.PaginationSettings;
-            pagination.OrderBy ??= paginationSettings.DefaultOrderBy;
-            pagination.Offset ??= paginationSettings.DefaultOffset;
-            pagination.PageSize ??= paginationSettings.DefaultPageSize;
-            pagination.IncludeNested = pagination.IncludeNested;
-            pagination.SortOrder ??= paginationSettings.DefaultSortOrder;
+            p.OrderBy ??= paginationSettings.DefaultOrderBy;
+            p.Offset ??= paginationSettings.DefaultOffset;
+            p.PageSize ??= paginationSettings.DefaultPageSize;
+            p.IncludeNested = p.IncludeNested;
+            p.SortOrder ??= paginationSettings.DefaultSortOrder;
 
-            return true;
+            return p;
         }
 
         public virtual async Task<ServiceResponse> Update(string id, TDomainModel entity)

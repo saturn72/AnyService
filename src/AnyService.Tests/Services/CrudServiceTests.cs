@@ -332,15 +332,38 @@ namespace AnyService.Tests.Services
         [Fact]
         public async Task GetAll_NullPaginationReturnesBadRequest()
         {
+            var dbRes = new[]{
+                new AuditableTestModel { Id = "1", },
+                new AuditableTestModel { Id = "2", },
+                new AuditableTestModel { Id = "3", },
+                new AuditableTestModel { Id = "4", },
+                };
+            var repo = new Mock<IRepository<AuditableTestModel>>();
+            repo.Setup(r => r.GetAll(It.IsAny<Pagination<AuditableTestModel>>()))
+                .ReturnsAsync(dbRes);
+
             var v = new Mock<ICrudValidator<AuditableTestModel>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
-            var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
+            var eb = new Mock<IEventBus>();
+            var ekr = new EventKeyRecord(null, "read", null, null);
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                }
+            };
 
-            var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null);
+            var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, null, wc, eb.Object, null, logger.Object, null, null, null);
             var res = await cSrv.GetAll(null);
-            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
-            res.Data.ShouldBeNull();
+            
+            res.Result.ShouldBe(ServiceResult.Ok);
+            var p = res.Data.ShouldBeOfType<Pagination<AuditableTestModel>>();
+            p.Data.ShouldBe(dbRes);
         }
         [Fact]
         public async Task GetAll_BadRequest_OnValidatorFailure()
@@ -359,13 +382,37 @@ namespace AnyService.Tests.Services
         [MemberData(nameof(GetAll_EmptyQuery_DATA))]
         public async Task GetAll_EmptyQuery(Pagination<AuditableTestModel> pagination)
         {
+            var dbRes = new[]{
+                new AuditableTestModel { Id = "1", },
+                new AuditableTestModel { Id = "2", },
+                new AuditableTestModel { Id = "3", },
+                new AuditableTestModel { Id = "4", },
+                };
+            var repo = new Mock<IRepository<AuditableTestModel>>();
+            repo.Setup(r => r.GetAll(It.IsAny<Pagination<AuditableTestModel>>()))
+                .ReturnsAsync(dbRes);
+
             var v = new Mock<ICrudValidator<AuditableTestModel>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
                 .ReturnsAsync(true);
+            var eb = new Mock<IEventBus>();
+            var ekr = new EventKeyRecord(null, "read", null, null);
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                }
+            };
+
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null);
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, null, wc, eb.Object, null, logger.Object, null, null, null);
             var res = await cSrv.GetAll(pagination);
-            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
+            res.Result.ShouldBe(ServiceResult.Ok);
+            var p = res.Data.ShouldBeOfType<Pagination<AuditableTestModel>>();
+            p.Data.ShouldBe(dbRes);
         }
         public static IEnumerable<object[]> GetAll_EmptyQuery_DATA => new[]{
             new object[]{ new Pagination<AuditableTestModel>() },
@@ -805,7 +852,7 @@ namespace AnyService.Tests.Services
                     EventKeys = ekr,
                 }
             };
-            var cSrv = new CrudService<TestFileContainer>(_config, 
+            var cSrv = new CrudService<TestFileContainer>(_config,
                 repo.Object, v.Object,
                 mp.Object, wc,
                 eb.Object,
