@@ -23,7 +23,7 @@ namespace AnyService.Controllers
     public class GenericController<TDomainModel> : ControllerBase where TDomainModel : IDomainModelBase
     {
         #region fields
-        private readonly CrudService<TDomainModel> _crudService;
+        private readonly ICrudService<TDomainModel> _crudService;
         private readonly IServiceResponseMapper _serviceResponseMapper;
         private readonly ILogger<GenericController<TDomainModel>> _logger;
         private readonly AnyServiceConfig _config;
@@ -37,7 +37,7 @@ namespace AnyService.Controllers
             IServiceResponseMapper serviceResponseMapper, WorkContext workContext,
             ILogger<GenericController<TDomainModel>> logger)
         {
-            _crudService = serviceProvider.GetService<CrudService<TDomainModel>>();
+            _crudService = serviceProvider.GetService<ICrudService<TDomainModel>>();
             _config = config;
             _serviceResponseMapper = serviceResponseMapper;
             _workContext = workContext;

@@ -38,7 +38,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.TryAddSingleton(config);
 
-            services.TryAddTransient(typeof(CrudService<>));
+            services.TryAddTransient(typeof(ICrudService<>), typeof(CrudService<>));
 
             // services.
             services.AddSingleton(config.EntityConfigRecords);
