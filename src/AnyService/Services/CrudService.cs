@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AnyService.Services
 {
-    public class CrudService<TDomainModel> where TDomainModel : IDomainModelBase
+    public class CrudService<TDomainModel> : ICrudService<TDomainModel> where TDomainModel : IDomainModelBase
     {
         #region fields
         protected readonly AnyServiceConfig Config;
