@@ -135,7 +135,7 @@ namespace Microsoft.Extensions.DependencyInjection
                     var v = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);
                     ecr.Validator = (ICrudValidator)Activator.CreateInstance(v);
                 }
-                SetAuthorization(ecr.Authorization);
+                ecr.Authorization = SetAuthorization(ecr.Authorization);
 
             }
             config.EntityConfigRecords = temp;
@@ -150,10 +150,10 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new InvalidOperationException($"{injectedType.Name} must implement {nameof(TService)}");
         }
 
-        private static void SetAuthorization(AuthorizationInfo authzInfo)
+        private static AuthorizationInfo SetAuthorization(AuthorizationInfo authzInfo)
         {
             if (authzInfo == null)
-                return;
+                return null;
 
             var ctrlAuthzAttribute = authzInfo.ControllerAuthorizationNode;
             if (authzInfo.ControllerAuthorizationNode == null &&
@@ -161,18 +161,17 @@ namespace Microsoft.Extensions.DependencyInjection
                 authzInfo.GetAuthorizationNode == null &&
                 authzInfo.PutAuthorizationNode == null &&
                 authzInfo.DeleteAuthorizationNode == null)
-            {
-                authzInfo = null;
-                return;
-            }
+                return null;
 
-
-            if (ctrlAuthzAttribute == null && !ctrlAuthzAttribute.Roles.Any())
+            //align authorization with controller's if empty or null
+            if (ctrlAuthzAttribute == null && ctrlAuthzAttribute.Roles.IsNullOrEmpty())
                 ctrlAuthzAttribute = null;
-            if (authzInfo.PostAuthorizationNode == null || !authzInfo.PostAuthorizationNode.Roles.Any()) authzInfo.PostAuthorizationNode = ctrlAuthzAttribute;
-            if (authzInfo.GetAuthorizationNode == null || !authzInfo.GetAuthorizationNode.Roles.Any()) authzInfo.GetAuthorizationNode = ctrlAuthzAttribute;
-            if (authzInfo.PutAuthorizationNode == null || !authzInfo.PutAuthorizationNode.Roles.Any()) authzInfo.PutAuthorizationNode = ctrlAuthzAttribute;
-            if (authzInfo.DeleteAuthorizationNode == null || !authzInfo.DeleteAuthorizationNode.Roles.Any()) authzInfo.DeleteAuthorizationNode = ctrlAuthzAttribute;
+            if (authzInfo.PostAuthorizationNode == null || authzInfo.PostAuthorizationNode.Roles.IsNullOrEmpty()) authzInfo.PostAuthorizationNode = ctrlAuthzAttribute;
+            if (authzInfo.GetAuthorizationNode == null || authzInfo.GetAuthorizationNode.Roles.IsNullOrEmpty()) authzInfo.GetAuthorizationNode = ctrlAuthzAttribute;
+            if (authzInfo.PutAuthorizationNode == null || authzInfo.PutAuthorizationNode.Roles.IsNullOrEmpty()) authzInfo.PutAuthorizationNode = ctrlAuthzAttribute;
+            if (authzInfo.DeleteAuthorizationNode == null || authzInfo.DeleteAuthorizationNode.Roles.IsNullOrEmpty()) authzInfo.DeleteAuthorizationNode = ctrlAuthzAttribute;
+
+            return authzInfo;
         }
     }
 }
