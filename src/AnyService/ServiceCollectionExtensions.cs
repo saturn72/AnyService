@@ -164,7 +164,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return null;
 
             //align authorization with controller's if empty or null
-            if (ctrlAuthzAttribute == null && ctrlAuthzAttribute.Roles.IsNullOrEmpty())
+            if (ctrlAuthzAttribute == null || ctrlAuthzAttribute.Roles.IsNullOrEmpty())
                 ctrlAuthzAttribute = null;
             if (authzInfo.PostAuthorizationNode == null || authzInfo.PostAuthorizationNode.Roles.IsNullOrEmpty()) authzInfo.PostAuthorizationNode = ctrlAuthzAttribute;
             if (authzInfo.GetAuthorizationNode == null || authzInfo.GetAuthorizationNode.Roles.IsNullOrEmpty()) authzInfo.GetAuthorizationNode = ctrlAuthzAttribute;
