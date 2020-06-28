@@ -1,4 +1,5 @@
 using AnyService.Services;
+using AnyService.Services.ServiceResponseMappers;
 using Shouldly;
 
 namespace AnyService.Tests
@@ -18,7 +19,7 @@ namespace AnyService.Tests
                 );
             c.FilterFactoryType.ShouldBeOfType<DefaultFilterFactory>();
             c.ModelPrepararType.ShouldBeOfType(typeof(AudityModelPreparar<>));
-            c.ServiceResponseMapperType.ShouldBeOfType<DefaultServiceResponseMapper>();
+            c.ServiceResponseMapperType.ShouldBeOfType<DataOnlyServiceResponseMapper>();
         }
     }
 }

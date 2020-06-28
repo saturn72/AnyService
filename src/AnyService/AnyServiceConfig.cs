@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AnyService.Services;
+using AnyService.Services.ServiceResponseMappers;
 
 namespace AnyService
 {
@@ -19,7 +20,7 @@ namespace AnyService
             };
             FilterFactoryType = typeof(DefaultFilterFactory);
             ModelPrepararType = typeof(AudityModelPreparar<>);
-            ServiceResponseMapperType = typeof(DefaultServiceResponseMapper);
+            ServiceResponseMapperType = typeof(DataOnlyServiceResponseMapper);
         }
 
         public IEnumerable<EntityConfigRecord> EntityConfigRecords { get; set; }

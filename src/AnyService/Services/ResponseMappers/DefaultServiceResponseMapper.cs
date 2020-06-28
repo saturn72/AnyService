@@ -1,7 +1,7 @@
 using AnyService.Services.ServiceResponseMappers;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AnyService.Services
+namespace AnyService.Services.ServiceResponseMappers
 {
     public class DefaultServiceResponseMapper : IServiceResponseMapper
     {

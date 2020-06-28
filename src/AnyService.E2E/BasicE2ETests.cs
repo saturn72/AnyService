@@ -46,7 +46,7 @@ namespace AnyService.E2E
             }
             var c = await HttpClient.GetStringAsync($"dependentmodel?query=value ==\"" + model.Value + "\"");
             var jObj = JObject.Parse(c);
-            var jArr = jObj["data"]["data"] as JArray;
+            var jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(totalEntitiesPerUser);
         }
         [Fact]
@@ -72,7 +72,7 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             var content = await res.Content.ReadAsStringAsync();
             var jObj = JObject.Parse(content);
-            var jArr = jObj["data"]["data"] as JArray;
+            var jArr = jObj["data"] as JArray;
             _output.WriteLine(jArr.ToString());
             jArr.Count.ShouldBe(totalEntities);
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
@@ -80,7 +80,7 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jArr = jObj["data"]["data"] as JArray;
+            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(0);
             #endregion
             #region public
@@ -88,7 +88,7 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jArr = jObj["data"]["data"] as JArray;
+            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(totalEntities / 2);
             #endregion
             #region updated
@@ -108,7 +108,7 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jArr = jObj["data"]["data"] as JArray;
+            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(1);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
@@ -116,7 +116,7 @@ namespace AnyService.E2E
             res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
             content = await HttpClient.GetStringAsync($"dependentmodel?query=__updated");
             jObj = JObject.Parse(content);
-            jArr = jObj["data"]["data"] as JArray;
+            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(0);
             #endregion
             #region delete
@@ -130,7 +130,7 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jArr = jObj["data"]["data"] as JArray;
+            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(2);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
@@ -141,7 +141,7 @@ namespace AnyService.E2E
             res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
             content = await HttpClient.GetStringAsync($"dependentmodel?query=__deleted");
             jObj = JObject.Parse(content);
-            jArr = jObj["data"]["data"] as JArray;
+            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(0);
             #endregion
             #region canRead
@@ -150,13 +150,13 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jArr = jObj["data"]["data"] as JArray;
+            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(totalEntities);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
             content = await HttpClient.GetStringAsync($"dependentmodel?query=__canRead");
             jObj = JObject.Parse(content);
-            jArr = jObj["data"]["data"] as JArray;
+            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(0);
             #endregion
 
@@ -166,13 +166,13 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jArr = jObj["data"]["data"] as JArray;
+            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(totalEntities);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
             content = await HttpClient.GetStringAsync($"dependentmodel?query=__canUpdate");
             jObj = JObject.Parse(content);
-            jArr = jObj["data"]["data"] as JArray;
+            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(0);
             #endregion
             #region canUpdate
@@ -181,13 +181,13 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jArr = jObj["data"]["data"] as JArray;
+            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(totalEntities);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
             content = await HttpClient.GetStringAsync($"dependentmodel?query=__canDelete");
             jObj = JObject.Parse(content);
-            jArr = jObj["data"]["data"] as JArray;
+            jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(0);
             #endregion
         }
@@ -207,9 +207,9 @@ namespace AnyService.E2E
             var content = await res.Content.ReadAsStringAsync();
             res.EnsureSuccessStatusCode();
             var jObj = JObject.Parse(content);
-            var id = jObj["data"]["id"].Value<string>();
+            var id = jObj["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
-            jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
+            jObj["value"].Value<string>().ShouldBe(model.Value);
             #endregion
             #region read
             //read
@@ -217,8 +217,8 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
+            jObj["id"].Value<string>().ShouldBe(id);
+            jObj["value"].Value<string>().ShouldBe(model.Value);
 
             //no query provided
             res = await HttpClient.GetAsync("dependentmodel/");
@@ -228,7 +228,7 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            var jArr = jObj["data"]["data"] as JArray;
+            var jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
             #endregion
@@ -243,16 +243,16 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
+            jObj["id"].Value<string>().ShouldBe(id);
+            jObj["value"].Value<string>().ShouldBe(updateModel.Value);
 
             //delete
             res = await HttpClient.DeleteAsync("dependentmodel/" + id);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
+            jObj["id"].Value<string>().ShouldBe(id);
+            jObj["value"].Value<string>().ShouldBe(updateModel.Value);
 
             //get deleted
             await Task.Delay(250);// wait for background tasks (by simulating network delay)
@@ -289,7 +289,7 @@ namespace AnyService.E2E
             }
             var content = await res.Content.ReadAsStringAsync();
             var jObj = JObject.Parse(content);
-            var id = jObj["data"]["entity"]["id"].Value<string>();
+            var id = jObj["entity"]["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
 
             await Task.Delay(150);// wait for background tasks (by simulating network delay)
@@ -297,9 +297,9 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["firstName"].Value<string>().ShouldBe(model.firstName);
-            (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
+            jObj["id"].Value<string>().ShouldBe(id);
+            jObj["firstName"].Value<string>().ShouldBe(model.firstName);
+            (jObj["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
         }
         [Fact(Skip = "inconsist result")]
         public async Task MultipartFormStreamSampleFlow_Create()
@@ -333,7 +333,7 @@ namespace AnyService.E2E
             }
             var content = await res.Content.ReadAsStringAsync();
             var jObj = JObject.Parse(content);
-            var id = jObj["data"]["entity"]["id"].Value<string>();
+            var id = jObj["entity"]["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
             #endregion
             #region Read
@@ -341,9 +341,9 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["firstName"].Value<string>().ShouldBe(model.firstName);
-            (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
+            jObj["id"].Value<string>().ShouldBe(id);
+            jObj["firstName"].Value<string>().ShouldBe(model.firstName);
+            (jObj["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
             #endregion
         }
         [Fact]
@@ -364,7 +364,7 @@ namespace AnyService.E2E
             var res = await HttpClient.PostAsJsonAsync("multipartSampleModel/", model);
             var content = await res.Content.ReadAsStringAsync();
             var jObj = JObject.Parse(content);
-            var id = jObj["data"]["id"].Value<string>();
+            var id = jObj["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
             #endregion
             #region update
@@ -386,7 +386,7 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            var je = jObj["data"]["entity"];
+            var je = jObj["entity"];
             je["id"].Value<string>().ShouldBe(id);
             je["firstName"].Value<string>().ShouldBe(updateModel.firstName);
             je["lastName"].Value<string>().ShouldBe(updateModel.lastName);
@@ -396,9 +396,9 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["firstName"].Value<string>().ShouldBe(updateModel.firstName);
-            (jObj["data"]["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
+            jObj["id"].Value<string>().ShouldBe(id);
+            jObj["firstName"].Value<string>().ShouldBe(updateModel.firstName);
+            (jObj["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
             #endregion
         }
     }

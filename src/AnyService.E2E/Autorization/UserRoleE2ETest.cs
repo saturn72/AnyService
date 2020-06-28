@@ -33,9 +33,9 @@ namespace AnyService.E2E.Authorization
             var content = await res.Content.ReadAsStringAsync();
             res.EnsureSuccessStatusCode();
             var jObj = JObject.Parse(content);
-            var id = jObj["data"]["id"].Value<string>();
+            var id = jObj["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
-            jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
+            jObj["value"].Value<string>().ShouldBe(model.Value);
 
             //read by creator
             await Task.Delay(150);// wait for background tasks (by simulating network delay)
@@ -43,8 +43,8 @@ namespace AnyService.E2E.Authorization
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
+            jObj["id"].Value<string>().ShouldBe(id);
+            jObj["value"].Value<string>().ShouldBe(model.Value);
 
             //update by cretor
             var updateModel = new
@@ -55,8 +55,8 @@ namespace AnyService.E2E.Authorization
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
+            jObj["id"].Value<string>().ShouldBe(id);
+            jObj["value"].Value<string>().ShouldBe(updateModel.Value);
             #endregion
             //un authorized requests
 

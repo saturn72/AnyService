@@ -32,9 +32,9 @@ namespace AnyService.E2E
             var content = await res.Content.ReadAsStringAsync();
             res.EnsureSuccessStatusCode();
             var jObj = JObject.Parse(content);
-            var id = jObj["data"]["id"].Value<string>();
+            var id = jObj["id"].Value<string>();
             id.ShouldNotBeNullOrEmpty();
-            jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
+            jObj["value"].Value<string>().ShouldBe(model.Value);
             #endregion
             #region read
             //read
@@ -42,8 +42,8 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["value"].Value<string>().ShouldBe(model.Value);
+            jObj["id"].Value<string>().ShouldBe(id);
+            jObj["value"].Value<string>().ShouldBe(model.Value);
 
             //no query provided
             res = await HttpClient.GetAsync("api/d/");
@@ -53,7 +53,7 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            var jArr = jObj["data"]["data"] as JArray;
+            var jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
             #endregion
@@ -68,16 +68,16 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
+            jObj["id"].Value<string>().ShouldBe(id);
+            jObj["value"].Value<string>().ShouldBe(updateModel.Value);
 
             //delete
             res = await HttpClient.DeleteAsync("api/d/" + id);
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
-            jObj["data"]["id"].Value<string>().ShouldBe(id);
-            jObj["data"]["value"].Value<string>().ShouldBe(updateModel.Value);
+            jObj["id"].Value<string>().ShouldBe(id);
+            jObj["value"].Value<string>().ShouldBe(updateModel.Value);
 
             //get deleted
             await Task.Delay(250);// wait for background tasks (by simulating network delay)
