@@ -216,7 +216,10 @@ public void ConfigureServices(IServiceCollection services)
 ## Response Mapping
 
 By Default `ServiceResponse` is returned from business logic layer (`CrudService<>`) to the entity controller(`GenericController`). The controller maps the returned `ServiceResponse` to `IActionResult` object and return to caller.
-2 types of response mappers are exists in `AnyService`: `DefaultServiceResponseMapper` (the default mapper) which returns all the details of the response and `DataOnlyServiceResponseMapper` that returns the data part of the response.
+2 types of response mappers exist in `AnyService`:
+ 1. `DataOnlyServiceResponseMapper` (the default mapper) that returns `ServiceResponse`'s data only (recomended for production)
+ 2. `DefaultServiceResponseMapper` which returns all the `ServiceResponse`'s details (recomended for debugging and response monitoring)
+ 
 
 To modify the `IServiceResponseMapper` used for an entity, set the value of `AnyService.EntityConfigRecord.ResponseMapperType` to the required type.
 
