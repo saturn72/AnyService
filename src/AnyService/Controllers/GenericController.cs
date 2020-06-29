@@ -147,10 +147,11 @@ namespace AnyService.Controllers
                 $"\'{nameof(withNavProps)}\' = \'{withNavProps}\', \'{nameof(sortOrder)}\' = \'{sortOrder}\', \'{nameof(query)}\' = \'{query}\'");
 
             var pagination = GetPagination(orderBy, offset, pageSize, withNavProps, sortOrder, query);
-            var res = await _crudService.GetAll(pagination);
-            _logger.LogDebug(LoggingEvents.Controller, "Get all public service response value: " + res.ToJsonString());
-            res.Data = pagination?.Map<PaginationModel<TDomainModel>>();
-            return _serviceResponseMapper.Map(res as ServiceResponse);
+            var srvRes = await _crudService.GetAll(pagination);
+            _logger.LogDebug(LoggingEvents.Controller, 
+                $"Get all public service result: '{srvRes.Result}', message: '{srvRes.Message}', exceptionId: '{srvRes.ExceptionId}', data: '{pagination.Data.ToJsonString()}'");
+            srvRes.Data = pagination?.Map<PaginationModel<TDomainModel>>();
+            return _serviceResponseMapper.Map(srvRes);
         }
 
         private Pagination<TDomainModel> GetPagination(string orderBy, ulong? offset, ulong? pageSize, bool withNavProps, string sortOrder, string query)
