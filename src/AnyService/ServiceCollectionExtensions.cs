@@ -10,6 +10,7 @@ using AnyService.Utilities;
 using AnyService.Services.Security;
 using AnyService.Audity;
 using AnyService.Events;
+using Microsoft.AspNetCore.Http;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -117,7 +118,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
 
-                if (!ecr.Route.Value.HasValue()) ecr.Route = "/" + e.Name;
+                if (!ecr.Route.HasValue) ecr.Route = new PathString("/" + e.Name);
+                if (ecr.Route.Value.EndsWith("/"))
+                    ecr.Route = new PathString(ecr.Route.Value[0..^1]);
 
                 ecr.Name ??= ecr.Type.Name;
                 ecr.ResponseMapperType ??= config.ServiceResponseMapperType;

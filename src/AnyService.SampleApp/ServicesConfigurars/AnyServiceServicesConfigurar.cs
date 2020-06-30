@@ -28,7 +28,7 @@ namespace AnyService.SampleApp.ServicesConfigurars
                     new EntityConfigRecord
                     {
                         Type = typeof(Dependent2),
-                        Route = "/api/d",
+                        Route = "/api/d/",
                     },
                     new EntityConfigRecord
                     {
