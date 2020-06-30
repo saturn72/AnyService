@@ -63,7 +63,10 @@ namespace AnyService.Middlewares
         {
             var e = RouteMaps.FirstOrDefault(rm => path.StartsWithSegments(rm.Key));
             var res = (e.Equals(default)) ? null : e.Value;
-            _logger.LogDebug(LoggingEvents.WorkContext, res != null ? $"Entity found: {res.Type.Name}" : "Entity was not found in anyservice entities collection");
+            _logger.LogDebug(LoggingEvents.WorkContext, 
+                res != null ? 
+                    $"Entity found: {res.Type.Name}. using path: {path}" : 
+                    $"Entity was not found in anyservice entities collection. using path: {path}");
             return res;
         }
         private RequestInfo ToRequestInfo(HttpContext httpContext, EntityConfigRecord typeConfigRecord)
