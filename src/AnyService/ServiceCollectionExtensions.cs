@@ -10,7 +10,6 @@ using AnyService.Utilities;
 using AnyService.Services.Security;
 using AnyService.Audity;
 using AnyService.Events;
-using AnyService.Endpoints;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

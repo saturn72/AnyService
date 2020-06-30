@@ -33,7 +33,9 @@ namespace AnyService.Middlewares
         {
             _logger.LogDebug(LoggingEvents.WorkContext, "Start WorkContextMiddleware invokation");
             var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            _logger.LogDebug(LoggingEvents.WorkContext, $"UserId = {userId}");
             var clientId = httpContext.User.FindFirst("client_id")?.Value;
+            _logger.LogDebug(LoggingEvents.WorkContext, $"ClientId = { clientId}");
 
             if (!clientId.HasValue() && !userId.HasValue() && !(await _onMissingUserIdHandler(httpContext, workContext, _logger)))
                 return;
@@ -60,21 +62,27 @@ namespace AnyService.Middlewares
         private EntityConfigRecord GetEntityconfigRecordByRoute(PathString path)
         {
             var e = RouteMaps.FirstOrDefault(rm => path.StartsWithSegments(rm.Key));
-            return (e.Equals(default))? null : e.Value;
+            var res = (e.Equals(default)) ? null : e.Value;
+            _logger.LogDebug(LoggingEvents.WorkContext, res != null ? $"Entity found: {res.Type.Name}" : "Entity was not found in anyservice entities collection");
+            return res;
         }
-        private static RequestInfo ToRequestInfo(HttpContext httpContext, EntityConfigRecord typeConfigRecord)
+        private RequestInfo ToRequestInfo(HttpContext httpContext, EntityConfigRecord typeConfigRecord)
         {
             var path = httpContext.Request.Path.ToString();
-            return new RequestInfo
+            _logger.LogDebug(LoggingEvents.WorkContext, $"Parse httpRequestInfo from route: {path}");
+            var reqInfo = new RequestInfo
             {
                 Path = path,
                 Method = httpContext.Request.Method,
                 RequesteeId = GetRequesteeId(typeConfigRecord.Route, path),
                 Parameters = httpContext.Request.Query?.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)).ToArray()
             };
+            _logger.LogDebug(LoggingEvents.WorkContext, $"Parsed requestInfo: {reqInfo.ToJsonString()}");
+            return reqInfo;
         }
-        private static string GetRequesteeId(string route, string path)
+        private string GetRequesteeId(string route, string path)
         {
+            _logger.LogDebug(LoggingEvents.WorkContext, $"Extract {nameof(RequestInfo.RequesteeId)} from path: {path}");
             var idx = path.LastIndexOf(route, 0, StringComparison.InvariantCultureIgnoreCase) + route.Length + 1;
             var requesteeId = path.Substring(idx);
             while (requesteeId.StartsWith("/"))
@@ -90,7 +98,7 @@ namespace AnyService.Middlewares
                 while (requesteeId.StartsWith("/"))
                     requesteeId = requesteeId.Substring(1);
             }
-
+            _logger.LogDebug(LoggingEvents.WorkContext, $"Extracted {nameof(RequestInfo.RequesteeId)} value = {requesteeId}");
             return requesteeId;
         }
     }
