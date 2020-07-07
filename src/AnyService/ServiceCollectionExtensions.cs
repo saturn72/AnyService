@@ -11,6 +11,10 @@ using AnyService.Services.Security;
 using AnyService.Audity;
 using AnyService.Events;
 using Microsoft.AspNetCore.Http;
+using AnyService.Controllers;
+using System.Runtime.InteropServices.ComTypes;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -59,7 +63,7 @@ namespace Microsoft.Extensions.DependencyInjection
             }
             foreach (var ecr in config.EntityConfigRecords)
             {
-                ValidateInjectedType<IFilterFactory>(ecr.FilterFactoryType);
+                ValidateType<IFilterFactory>(ecr.FilterFactoryType);
                 services.TryAddScoped(ecr.FilterFactoryType);
 
                 var srv = typeof(IModelPreparar<>).MakeGenericType(ecr.Type);
@@ -124,13 +128,16 @@ namespace Microsoft.Extensions.DependencyInjection
 
                 ecr.Name ??= ecr.Type.Name;
                 ecr.ResponseMapperType ??= config.ServiceResponseMapperType;
-                ValidateInjectedType<IServiceResponseMapper>(ecr.ResponseMapperType);
+                ValidateType<IServiceResponseMapper>(ecr.ResponseMapperType);
                 ecr.EventKeys ??= ekr;
                 ecr.PermissionRecord ??= pr;
                 ecr.EntityKey ??= fn;
                 ecr.PaginationSettings ??= config.DefaultPaginationSettings;
                 ecr.FilterFactoryType ??= config.FilterFactoryType;
                 ecr.ModelPrepararType ??= config.ModelPrepararType;
+
+                ecr.ControllerType ??= typeof(GenericController<>).MakeGenericType(ecr.Type);
+                ValidateType<ControllerBase>(ecr.ControllerType);
 
                 if (ecr.Validator == null)
                 {
@@ -141,15 +148,12 @@ namespace Microsoft.Extensions.DependencyInjection
 
             }
             config.EntityConfigRecords = temp;
-
-            // if (config.UseAuthorizationMiddleware && config.EntityConfigRecords.All(t => t.Authorization == null))
-            //     config.UseAuthorizationMiddleware = false;
         }
 
-        private static void ValidateInjectedType<TService>(Type injectedType)
+        private static void ValidateType<TService>(Type type)
         {
-            if (injectedType != null && !typeof(TService).IsAssignableFrom(injectedType))
-                throw new InvalidOperationException($"{injectedType.Name} must implement {nameof(TService)}");
+            if (type != null && !typeof(TService).IsAssignableFrom(type))
+                throw new InvalidOperationException($"{type.Name} must implement {nameof(TService)}");
         }
 
         private static AuthorizationInfo SetAuthorization(AuthorizationInfo authzInfo)

@@ -169,7 +169,7 @@ namespace AnyService.Services
 
             if (filter != null)
             {
-                var f = filter(new object());
+                var f = filter(new object());//payload is not supported yet
                 if (f == null)
                     return null;
                 p.QueryFunc = c => f(c);

@@ -19,7 +19,6 @@ namespace AnyService.E2E
     {
         public BasicE2ETests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
-
         }
         [Fact]
         public async Task ReadsOnlyPermittedEntries()
@@ -59,7 +58,7 @@ namespace AnyService.E2E
             {
                 var model = new
                 {
-                    Value = "init value_" + i+1,
+                    Value = "init value_" + i + 1,
                     Public = i % 2 == 0,
                 };
                 var r = await HttpClient.PostAsJsonAsync("dependentmodel", model);

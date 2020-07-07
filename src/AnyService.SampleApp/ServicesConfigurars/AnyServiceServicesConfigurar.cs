@@ -1,5 +1,6 @@
 ﻿using AnyService.Events;
 using AnyService.Middlewares;
+using AnyService.SampleApp.Controllers;
 using AnyService.SampleApp.Models;
 using AnyService.Utilities;
 using Microsoft.AspNetCore.Hosting;
@@ -33,6 +34,12 @@ namespace AnyService.SampleApp.ServicesConfigurars
                     new EntityConfigRecord
                     {
                         Type = typeof(MultipartSampleModel),
+                    },
+                    new EntityConfigRecord
+                    {
+                        Route = "/api/my-great-route",
+                        Type = typeof(CustomModel),
+                        ControllerType = typeof(CustomController),
                     },
                 }
             };

@@ -46,5 +46,6 @@ namespace AnyService
         public PaginationSettings PaginationSettings { get; set; }
         public Type FilterFactoryType { get; set; }
         public Type ModelPrepararType { get; set; }
+        public Type ControllerType { get; set; }
     }
 }
