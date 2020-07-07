@@ -347,7 +347,34 @@ public void ConfigureServices(IServiceCollection services)
 
 ## Combine Custom Controllers with `AnyEntity` Middleware
 
-TBD
+If you want to utilize `AnyService` automatic setup and/or require custom controller, it is required to configure your entity in `AnyServiceConfig` (simply by adding it to the `entityConfigRecords` collection).
+To add custom controller (in case you want to override the configured route, for instance), set the property `ControllerType` with the custom controller type you want to use.
+
+```
+[Route("api/my-great-route")]
+public class MyCustomController : ControllerBase
+{
+  ... all HTTP method handlers
+}
+
+public void ConfigureServices(IServiceCollection services)
+{
+  ...
+  var anyServiceConfig = new AnyServiceConfig
+  {
+    EntityConfigRecords = new[]
+    {
+      new EntityConfigRecord
+      {
+        Type =typeof(Value),
+        Route = "/api/my-great-route",
+        ControllerType = typeof(MyCustomController),
+      }
+    },
+  };
+  ...
+}
+```
 
 ## Reserve Paths
 
