@@ -4,5 +4,6 @@ namespace AnyService.Audity
     {
         string CreatedOnUtc { get; set; }
         string CreatedByUserId { get; set; }
+        string CreatedWorkContextJson { get; set; }
     }
 }

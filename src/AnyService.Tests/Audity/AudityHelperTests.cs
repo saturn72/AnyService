@@ -15,7 +15,11 @@ namespace AnyService.Tests.Audity
         {
             var userId = "some-user-id";
             var a = new MyAudity();
-            var ah = new AuditHelper(null);
+            var wc = new WorkContext();
+            var sp = new Mock<IServiceProvider>();
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+
+            var ah = new AuditHelper(sp.Object);
 
             ah.PrepareForCreate(a, userId);
 
@@ -34,11 +38,11 @@ namespace AnyService.Tests.Audity
             };
 
             var a = new MyAudity();
-            
+
             var wc = new WorkContext();
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
-            
+
             var ah = new AuditHelper(sp.Object);
 
             ah.PrepareForUpdate(dbModel, a, userId);
@@ -72,6 +76,7 @@ namespace AnyService.Tests.Audity
     {
         public string CreatedOnUtc { get; set; }
         public string CreatedByUserId { get; set; }
+        public string CreatedWorkContextJson { get; set; }
         public IEnumerable<UpdateRecord> UpdateRecords { get; set; }
         public bool Deleted { get; set; }
         public string DeletedOnUtc { get; set; }

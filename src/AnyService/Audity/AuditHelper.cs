@@ -18,6 +18,7 @@ namespace AnyService.Audity
             var createdOnUtc = DateTime.UtcNow.ToIso8601();
             creatable.CreatedOnUtc = createdOnUtc;
             creatable.CreatedByUserId = userId;
+            creatable.CreatedWorkContextJson = _serviceProvider.GetService<WorkContext>().Parameters.ToJsonString();
         }
 
         public virtual void PrepareForUpdate(IUpdatableAudit before, IUpdatableAudit after, string userId)
