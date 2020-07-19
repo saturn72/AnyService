@@ -13,7 +13,7 @@ namespace AnyService.Tests.Services
         [Fact]
         public async Task PrepareForCreate_NotVallingAuditHelper()
         {
-            var ah = new Mock<AuditHelper>();
+            var ah = new Mock<AuditHelper>(null);
             var wc = new WorkContext { CurrentUserId = "userId" };
             var l = new Mock<ILogger<AudityModelPreparar<TestModel>>>();
 
@@ -25,7 +25,7 @@ namespace AnyService.Tests.Services
         [Fact]
         public async Task PrepareForCreate_CallAuditHelper()
         {
-            var ah = new Mock<AuditHelper>();
+            var ah = new Mock<AuditHelper>(null);
             var wc = new WorkContext { CurrentUserId = "userId" };
             var l = new Mock<ILogger<AudityModelPreparar<AuditableTestModel>>>();
 
@@ -38,7 +38,7 @@ namespace AnyService.Tests.Services
         [Fact]
         public async Task PrepareForUpdate_NotVallingAuditHelper()
         {
-            var ah = new Mock<AuditHelper>();
+            var ah = new Mock<AuditHelper>(null);
             var wc = new WorkContext { CurrentUserId = "userId" };
             var l = new Mock<ILogger<AudityModelPreparar<TestModel>>>();
 
@@ -52,7 +52,7 @@ namespace AnyService.Tests.Services
         [Fact]
         public async Task PrepareForUpdate_CallAuditHelper()
         {
-            var ah = new Mock<AuditHelper>();
+            var ah = new Mock<AuditHelper>(null);
             var wc = new WorkContext { CurrentUserId = "userId" };
             var l = new Mock<ILogger<AudityModelPreparar<AuditableTestModel>>>();
 
@@ -66,7 +66,7 @@ namespace AnyService.Tests.Services
         [Fact]
         public async Task PrepareForDelete_NotVallingAuditHelper()
         {
-            var ah = new Mock<AuditHelper>();
+            var ah = new Mock<AuditHelper>(null);
             var wc = new WorkContext { CurrentUserId = "userId" };
             var l = new Mock<ILogger<AudityModelPreparar<TestModel>>>();
 
@@ -78,7 +78,7 @@ namespace AnyService.Tests.Services
         [Fact]
         public async Task PrepareForDelete_CallAuditHelper()
         {
-            var ah = new Mock<AuditHelper>();
+            var ah = new Mock<AuditHelper>(null);
             var wc = new WorkContext { CurrentUserId = "userId" };
             var l = new Mock<ILogger<AudityModelPreparar<AuditableTestModel>>>();
 

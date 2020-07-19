@@ -42,6 +42,7 @@ namespace AnyService.Middlewares
 
             workContext.CurrentUserId = userId;
             workContext.CurrentClientId = clientId;
+            workContext.IpAddress = httpContext.Connection?.RemoteIpAddress?.ToString();
 
             var ecr = GetEntityconfigRecordByRoute(httpContext.Request.Path);
             if (ecr != null && !ecr.Equals(default))

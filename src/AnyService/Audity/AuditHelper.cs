@@ -1,11 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AnyService.Audity
 {
     public class AuditHelper
     {
+        private readonly IServiceProvider _serviceProvider;
+
+        public AuditHelper(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
         public virtual void PrepareForCreate(ICreatableAudit creatable, string userId)
         {
             var createdOnUtc = DateTime.UtcNow.ToIso8601();
@@ -24,7 +31,13 @@ namespace AnyService.Audity
             }
 
             var updateRecords = before.UpdateRecords?.ToList() ?? new List<UpdateRecord>();
-            updateRecords.Add(new UpdateRecord { UpdatedOnUtc = DateTime.UtcNow.ToIso8601(), UpdatedByUserId = userId });
+            var uRecord = new UpdateRecord
+            {
+                UpdatedOnUtc = DateTime.UtcNow.ToIso8601(),
+                UpdatedByUserId = userId,
+                WorkContextJson = _serviceProvider.GetService<WorkContext>().Parameters.ToJsonString()
+            };
+            updateRecords.Add(uRecord);
             after.UpdateRecords = updateRecords;
         }
 

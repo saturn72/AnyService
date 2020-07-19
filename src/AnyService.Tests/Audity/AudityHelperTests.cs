@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AnyService.Audity;
+using Moq;
 using Shouldly;
 using Xunit;
 
@@ -14,7 +15,7 @@ namespace AnyService.Tests.Audity
         {
             var userId = "some-user-id";
             var a = new MyAudity();
-            var ah = new AuditHelper();
+            var ah = new AuditHelper(null);
 
             ah.PrepareForCreate(a, userId);
 
@@ -33,7 +34,12 @@ namespace AnyService.Tests.Audity
             };
 
             var a = new MyAudity();
-            var ah = new AuditHelper();
+            
+            var wc = new WorkContext();
+            var sp = new Mock<IServiceProvider>();
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            
+            var ah = new AuditHelper(sp.Object);
 
             ah.PrepareForUpdate(dbModel, a, userId);
 
@@ -41,6 +47,7 @@ namespace AnyService.Tests.Audity
             uRec.UpdatedByUserId.ShouldBe(userId);
             uRec.UpdatedOnUtc.ShouldBeGreaterThan(null);
             uRec.UpdatedOnUtc.ShouldBeLessThanOrEqualTo(DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssK"));
+            uRec.WorkContextJson.ShouldBe(wc.Parameters.ToJsonString());
 
             a.CreatedByUserId.ShouldBe(dbModel.CreatedByUserId);
             a.CreatedOnUtc.ShouldBe(dbModel.CreatedOnUtc);
@@ -50,7 +57,7 @@ namespace AnyService.Tests.Audity
         {
             var userId = "some-user-id";
             var a = new MyAudity();
-            var ah = new AuditHelper();
+            var ah = new AuditHelper(null);
 
             ah.PrepareForDelete(a, userId);
 

@@ -11,5 +11,6 @@ namespace AnyService.Audity
         public string Id { get; set; }
         public string UpdatedOnUtc { get; set; }
         public string UpdatedByUserId { get; set; }
+        public string WorkContextJson { get; set; }
     }
 }

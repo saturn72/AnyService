@@ -12,7 +12,7 @@ namespace AnyService.Tests.Audity
         {
             var userId = "some-user-id";
             var a = new[] { new MyAudity() };
-            var ah = new AuditHelper();
+            var ah = new AuditHelper(null);
 
             AuditHelperExtensions.PrepareForCreate(ah, a, userId);
 
