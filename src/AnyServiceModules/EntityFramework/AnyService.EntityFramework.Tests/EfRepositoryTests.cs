@@ -117,7 +117,7 @@ namespace AnyService.EntityFramework.Tests
             var e = await _repository.GetAll(p);
             e.Count().ShouldBe(4);
             p.Data.ShouldBeNull();
-            p.Total.ShouldBe((ulong)4);
+            p.Total.ShouldBe(4);
             for (int i = 0; i < e.Count(); i++)
             {
                 e.Any(x => x.Id != null && x.Value == a).ShouldBeTrue();
@@ -157,12 +157,12 @@ namespace AnyService.EntityFramework.Tests
             {
                 OrderBy = nameof(TestClass.Flag),
                 SortOrder = PaginationSettings.Desc,
-                PageSize = (ulong)total,
+                PageSize = total,
                 IncludeNested = false,
             };
             var e = await _repository.GetAll(p);
             p.Data.ShouldBeNull();
-            p.Total.ShouldBe((ulong)total);
+            p.Total.ShouldBe(total);
             var f = e.Take(7);
             f.All(x => x.Flag).ShouldBeTrue();
 

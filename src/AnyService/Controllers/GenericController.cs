@@ -135,9 +135,9 @@ namespace AnyService.Controllers
         }
         [HttpGet]
         public async Task<IActionResult> GetAll(
+            [FromQuery] int offset,
+            [FromQuery] int pageSize,
             [FromQuery] string orderBy = null,
-            [FromQuery] ulong? offset = null,
-            [FromQuery] ulong? pageSize = null,
             [FromQuery] bool withNavProps = true,
             [FromQuery] string sortOrder = "desc",
             [FromQuery] string query = "")
@@ -148,13 +148,13 @@ namespace AnyService.Controllers
 
             var pagination = GetPagination(orderBy, offset, pageSize, withNavProps, sortOrder, query);
             var srvRes = await _crudService.GetAll(pagination);
-            _logger.LogDebug(LoggingEvents.Controller, 
+            _logger.LogDebug(LoggingEvents.Controller,
                 $"Get all public service result: '{srvRes.Result}', message: '{srvRes.Message}', exceptionId: '{srvRes.ExceptionId}', data: '{pagination.Data.ToJsonString()}'");
             srvRes.Data = pagination?.Map<PaginationModel<TDomainModel>>();
             return _serviceResponseMapper.Map(srvRes);
         }
 
-        private Pagination<TDomainModel> GetPagination(string orderBy, ulong? offset, ulong? pageSize, bool withNavProps, string sortOrder, string query)
+        private Pagination<TDomainModel> GetPagination(string orderBy, int offset, int pageSize, bool withNavProps, string sortOrder, string query)
         {
             return new Pagination<TDomainModel>
             {

@@ -13,8 +13,8 @@ namespace AnyService.Tests
             c.MaxValueCount.ShouldBe(25);
             c.ManageEntityPermissions.ShouldBeTrue();
             c.DefaultPaginationSettings.ShouldSatisfyAllConditions(
-                () => c.DefaultPaginationSettings.DefaultOffset.ShouldBe((ulong)1),
-                () => c.DefaultPaginationSettings.DefaultPageSize.ShouldBe((ulong)50),
+                () => c.DefaultPaginationSettings.DefaultOffset.ShouldBe(1),
+                () => c.DefaultPaginationSettings.DefaultPageSize.ShouldBe(50),
                 () => c.DefaultPaginationSettings.DefaultSortOrder.ShouldBe("asc")
                 );
             c.FilterFactoryType.ShouldBeOfType<DefaultFilterFactory>();

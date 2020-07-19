@@ -23,17 +23,19 @@ namespace AnyService.Services
         /// Gets or sets the total number of entities 
         /// </summary>
         /// <value>ulong</value>
-        public ulong Total { get; set; }
+        public int Total { get; set; }
         /// <summary>
         /// Gets or sets current page offset
+        /// default vlue is 0
         /// </summary>
         /// <value>ulong</value>
-        public ulong? Offset { get; set; } = (ulong)0;
+        public int Offset { get; set; } = 0;
         /// <summary>
         /// Gets or sets current page size
+        /// default vlue is 50
         /// </summary>
         /// <value>ulong</value>
-        public ulong? PageSize { get; set; } = (long)50;
+        public int PageSize { get; set; } = 50;
         public string SortOrder { get; set; }
         /// <summary>
         /// Gets or sets value indicating sort by property name

@@ -67,7 +67,7 @@ namespace AnyService.Services.Security
                 QueryFunc = new Func<UserPermissions, bool>(up => up.UserId == userId),
                 OrderBy = nameof(UserPermissions.CreatedOnUtc),
                 IncludeNested = true,
-                PageSize = ulong.MaxValue,
+                PageSize = int.MaxValue,
                 SortOrder = PaginationSettings.Desc
             };
         }

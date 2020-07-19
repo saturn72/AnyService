@@ -199,8 +199,8 @@ namespace AnyService.Services
 
             var paginationSettings = WorkContext.CurrentEntityConfigRecord.PaginationSettings;
             p.OrderBy ??= paginationSettings.DefaultOrderBy;
-            p.Offset ??= paginationSettings.DefaultOffset;
-            p.PageSize ??= paginationSettings.DefaultPageSize;
+            p.Offset = p.Offset != 0 ? p.Offset : paginationSettings.DefaultOffset;
+            p.PageSize = p.PageSize != 0 ? p.PageSize : paginationSettings.DefaultPageSize;
             p.IncludeNested = p.IncludeNested;
             p.SortOrder ??= paginationSettings.DefaultSortOrder;
 

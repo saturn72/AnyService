@@ -12,8 +12,8 @@ namespace AnyService.Services
         private string _sortOrder;
         private string _orderBy;
         public const string Asc = "asc", Desc = "desc";
-        public ulong DefaultOffset { get; set; }
-        public ulong DefaultPageSize { get; set; }
+        public int DefaultOffset { get; set; }
+        public int DefaultPageSize { get; set; }
         public string DefaultOrderBy { get => _orderBy; set => _orderBy = value.Trim(); }
         public string DefaultSortOrder
         {

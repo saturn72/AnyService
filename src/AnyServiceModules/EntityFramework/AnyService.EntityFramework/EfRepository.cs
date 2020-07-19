@@ -29,22 +29,24 @@ namespace AnyService.EntityFramework
             if (pagination == null || pagination.QueryFunc == null)
                 throw new ArgumentNullException(nameof(pagination));
             _logger.LogDebug("Get all with pagination: " + pagination.QueryOrFilter);
-            pagination.Total = (ulong)DbSet.Where(pagination.QueryFunc).Count();
+            pagination.Total = DbSet.Where(pagination.QueryFunc).Count();
             _logger.LogDebug("GetAll set total to: " + pagination.Total);
-            var q = DbSet;
 
-            q.Skip((int)pagination.Offset).Take((int)pagination.PageSize);
+            var q = pagination.Offset == 0 ?
+                DbSet.Take(pagination.PageSize) :
+                DbSet.Skip(pagination.Offset).Take(pagination.PageSize);
 
             if (pagination.IncludeNested)
                 q = IncludeNavigations(q);
 
-            var dbRes = q
-                .OrderBy(pagination.OrderBy, pagination.SortOrder == PaginationSettings.Desc)
-                .Where(pagination.QueryFunc);
+            var page = q.OrderBy(pagination.OrderBy, pagination.SortOrder == PaginationSettings.Desc)
+                .Where(pagination.QueryFunc)
+                .ToArray();
+
             await DetachEntities(q);
-            var paginateTotal = dbRes.ToArray();
-            _logger.LogDebug("GetAll total entities in page: " + paginateTotal.Count());
-            return paginateTotal;
+
+            _logger.LogDebug("GetAll total entities in page: " + page.Count());
+            return page;
         }
         public virtual async Task<TDomainModel> GetById(string id)
         {
