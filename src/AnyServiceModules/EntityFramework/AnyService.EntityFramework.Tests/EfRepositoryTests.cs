@@ -138,7 +138,7 @@ namespace AnyService.EntityFramework.Tests
             for (int i = 0; i < count; i++)
                 tc.Add(new TestClass
                 {
-                    Value = i.ToString(),
+                    Number = i,
                 });
 
             await _dbContext.Set<TestClass>().AddRangeAsync(tc);
@@ -154,7 +154,7 @@ namespace AnyService.EntityFramework.Tests
             var e = await _repository.GetAll(p);
             e.Count().ShouldBe(3);
             for (int i = 0; i < p.PageSize; i++)
-                e.ElementAt(i).Value.ShouldBe(i.ToString());
+                e.ElementAt(i).Number.ShouldBe(count - 1 - i);
 
             p.Data.ShouldBeNull();
             p.Total.ShouldBe(count);
@@ -180,12 +180,13 @@ namespace AnyService.EntityFramework.Tests
             {
                 OrderBy = nameof(TestClass.Number),
                 PageSize = 3,
-                Offset = 3
+                Offset = 3,
+                SortOrder = "desc",
             };
             var e = await _repository.GetAll(p);
             e.Count().ShouldBe(3);
             for (int i = 0; i < p.PageSize; i++)
-                e.ElementAt(i).Value.ShouldBe((p.Offset + i).ToString());
+                e.ElementAt(i).Number.ShouldBe(count - (p.Offset + i + 1));
 
             p.Data.ShouldBeNull();
             p.Total.ShouldBe(count);
