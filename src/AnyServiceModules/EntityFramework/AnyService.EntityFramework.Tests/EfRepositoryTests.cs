@@ -22,6 +22,7 @@ namespace AnyService.EntityFramework.Tests
         public bool Flag { get; set; }
         public string Value { get; set; }
         public IEnumerable<TestNestedClass> NestedClasses { get; set; }
+        public int Number { get; set; }
     }
     public class EfRepositoryTests
     {
@@ -126,6 +127,68 @@ namespace AnyService.EntityFramework.Tests
                 c.NestedClasses.ElementAt(0).Value.ShouldBe("v1_0");
                 c.NestedClasses.ElementAt(1).Value.ShouldBe("v2_0");
             }
+        }
+        [Fact]
+        public async Task GetAll_Pagination()
+        {
+            var tc = new List<TestClass>();
+            _dbContext.Set<TestClass>().RemoveRange(_dbContext.Set<TestClass>());
+            await _dbContext.SaveChangesAsync();
+            var count = 10;
+            for (int i = 0; i < count; i++)
+                tc.Add(new TestClass
+                {
+                    Value = i.ToString(),
+                });
+
+            await _dbContext.Set<TestClass>().AddRangeAsync(tc);
+            await _dbContext.SaveChangesAsync();
+            Func<TestClass, bool> q = x => x.Id.HasValue();
+
+            var p = new Pagination<TestClass>(x => q(x))
+            {
+                OrderBy = nameof(TestClass.Value),
+                PageSize = 3,
+                SortOrder = PaginationSettings.Asc
+            };
+            var e = await _repository.GetAll(p);
+            e.Count().ShouldBe(3);
+            for (int i = 0; i < p.PageSize; i++)
+                e.ElementAt(i).Value.ShouldBe(i.ToString());
+
+            p.Data.ShouldBeNull();
+            p.Total.ShouldBe(count);
+        }
+        [Fact]
+        public async Task GetAll_PaginationWithOffset()
+        {
+            var tc = new List<TestClass>();
+            _dbContext.Set<TestClass>().RemoveRange(_dbContext.Set<TestClass>());
+            await _dbContext.SaveChangesAsync();
+            var count = 10;
+            for (int i = 0; i < count; i++)
+                tc.Add(new TestClass
+                {
+                    Number = i,
+                });
+
+            await _dbContext.Set<TestClass>().AddRangeAsync(tc);
+            await _dbContext.SaveChangesAsync();
+            Func<TestClass, bool> q = x => x.Id.HasValue();
+
+            var p = new Pagination<TestClass>(x => q(x))
+            {
+                OrderBy = nameof(TestClass.Number),
+                PageSize = 3,
+                Offset = 3
+            };
+            var e = await _repository.GetAll(p);
+            e.Count().ShouldBe(3);
+            for (int i = 0; i < p.PageSize; i++)
+                e.ElementAt(i).Value.ShouldBe((p.Offset + i).ToString());
+
+            p.Data.ShouldBeNull();
+            p.Total.ShouldBe(count);
         }
         [Fact]
         public async Task GetAll_Filter_PaginationWithoutNavProperties()
