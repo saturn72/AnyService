@@ -32,17 +32,18 @@ namespace AnyService.EntityFramework
             pagination.Total = DbSet.Where(pagination.QueryFunc).Count();
             _logger.LogDebug("GetAll set total to: " + pagination.Total);
 
-            var q = pagination.Offset == 0 ?
-                DbSet.Take(pagination.PageSize) :
-                DbSet.Skip(pagination.Offset).Take(pagination.PageSize);
+            var q = DbSet
+                .OrderBy(pagination.OrderBy, pagination.SortOrder == PaginationSettings.Desc)
+                .Where(pagination.QueryFunc);
+
+            q = pagination.Offset == 0 ?
+               q.Take(pagination.PageSize) :
+               q.Skip(pagination.Offset).Take(pagination.PageSize);
 
             if (pagination.IncludeNested)
                 q = IncludeNavigations(q);
 
-            var page = q.OrderBy(pagination.OrderBy, pagination.SortOrder == PaginationSettings.Desc)
-                .Where(pagination.QueryFunc)
-                .ToArray();
-
+            var page = q.ToArray();
             await DetachEntities(q);
 
             _logger.LogDebug("GetAll total entities in page: " + page.Count());
