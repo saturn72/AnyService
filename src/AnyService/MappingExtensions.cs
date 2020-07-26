@@ -7,11 +7,8 @@ namespace AnyService
     public static class MappingExtensions
     {
         private static IMapper _mapper;
-
         internal static bool WasConfigured;
-
         private static MapperConfiguration mc;
-
         public static void Configure(Action<IMapperConfigurationExpression> configure)
         {
             configure += AnyServiceMappingConfiguration;
@@ -19,7 +16,6 @@ namespace AnyService
             _mapper = null;
             WasConfigured = true;
         }
-
         private static void AnyServiceMappingConfiguration(IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap(typeof(Pagination<>), typeof(PaginationModel<>))
@@ -27,13 +23,11 @@ namespace AnyService
                         nameof(PaginationModel<IDomainModelBase>.Query), 
                         opts => opts.MapFrom(nameof(Pagination<IDomainModelBase>.QueryOrFilter)));
         }
-
         public static IMapper MapperInstance => _mapper ??= mc.CreateMapper();
         public static object Map(this object source, Type destination)
         {
             return MapperInstance.Map(source, source.GetType(), destination);
         }
-
         public static TDestination Map<TDestination>(this object source)
         {
             return (TDestination)Map(source, typeof(TDestination));

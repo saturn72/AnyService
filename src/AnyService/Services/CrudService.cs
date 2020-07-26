@@ -15,7 +15,7 @@ namespace AnyService.Services
         #region fields
         protected readonly AnyServiceConfig Config;
         protected readonly IRepository<TDomainModel> Repository;
-        protected readonly ICrudValidator<TDomainModel> Validator;
+        protected readonly CrudValidatorBase<TDomainModel> Validator;
         protected readonly IModelPreparar<TDomainModel> ModelPreparar;
         protected readonly WorkContext WorkContext;
         protected readonly IEventBus EventBus;
@@ -30,7 +30,7 @@ namespace AnyService.Services
         public CrudService(
             AnyServiceConfig config,
             IRepository<TDomainModel> repository,
-            ICrudValidator<TDomainModel> validator,
+            ICrudValidator validator,
             IModelPreparar<TDomainModel> modelPreparar,
             WorkContext workContext,
             IEventBus eventBus,
@@ -41,7 +41,7 @@ namespace AnyService.Services
             IPermissionManager permissionManager)
         {
             Repository = repository;
-            Validator = validator;
+            Validator = validator as CrudValidatorBase<TDomainModel>;
             ModelPreparar = modelPreparar;
             WorkContext = workContext;
             EventBus = eventBus;

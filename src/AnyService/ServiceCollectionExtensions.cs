@@ -42,6 +42,15 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.TryAddSingleton(config);
 
+            services.TryAddTransient<ICrudValidator>(sp =>
+            {
+                var wc = sp.GetService<WorkContext>();
+                var vf = sp.GetRequiredService<ValidatorFactory>();
+                var curType = wc.CurrentEntityConfigRecord.Type;
+                return vf[curType];
+            });
+
+
             services.TryAddTransient(typeof(ICrudService<>), typeof(CrudService<>));
 
             // services.
@@ -139,11 +148,18 @@ namespace Microsoft.Extensions.DependencyInjection
                 ecr.ControllerType ??= typeof(GenericController<>).MakeGenericType(ecr.Type);
                 ValidateType<ControllerBase>(ecr.ControllerType);
 
-                if (ecr.Validator == null)
+                if (ecr.Validator != null)
+                {
+                    //validate inherits from CrudValidatorBase<>
+                    if (ecr.Validator.GetType().GetGenericTypeDefinition() != typeof(CrudValidatorBase<>))
+                        throw new InvalidOperationException($"{ecr.Validator.GetType().Name} must implement {typeof(CrudValidatorBase<>).Name}");
+                }
+                else
                 {
                     var v = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);
                     ecr.Validator = (ICrudValidator)Activator.CreateInstance(v);
                 }
+
                 ecr.Authorization = SetAuthorization(ecr.Authorization);
 
             }
