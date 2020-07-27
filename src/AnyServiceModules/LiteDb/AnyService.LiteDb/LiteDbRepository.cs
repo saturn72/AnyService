@@ -4,19 +4,23 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AnyService.Services;
 using AnyService.Services.FileStorage;
+using LiteDB;
 
 namespace AnyService.LiteDb
 {
     public class LiteDbRepository<TDomainModel> :
         IRepository<TDomainModel> where TDomainModel : IDomainModelBase
     {
-        private static readonly IDictionary<Type, string> TableNames = new Dictionary<Type, string>();
         private readonly string _dbName;
 
         public LiteDbRepository(string dbName)
         {
             _dbName = dbName;
+
+
         }
+        public IQueryable<TDomainModel> Collection => LiteDbUtility.Collection< TDomainModel>(_dbName);
+
         public async Task<TDomainModel> Insert(TDomainModel entity)
         {
             entity.Id = AssignId();

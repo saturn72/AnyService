@@ -17,22 +17,23 @@ namespace AnyService.EntityFramework
         private readonly DbContext _dbContext;
         private readonly ILogger<EfRepository<TDomainModel>> _logger;
 
-        private IQueryable<TDomainModel> DbSet => _dbContext.Set<TDomainModel>().AsNoTracking();
         private static readonly ConcurrentDictionary<Type, IEnumerable<PropertyInfo>> TypeProperties = new ConcurrentDictionary<Type, IEnumerable<PropertyInfo>>();
         public EfRepository(DbContext dbContext, ILogger<EfRepository<TDomainModel>> logger)
         {
             _dbContext = dbContext;
             _logger = logger;
         }
+
+        public IQueryable<TDomainModel> Collection => _dbContext.Set<TDomainModel>().AsNoTracking();
         public virtual async Task<IEnumerable<TDomainModel>> GetAll(Pagination<TDomainModel> pagination)
         {
             if (pagination == null || pagination.QueryFunc == null)
                 throw new ArgumentNullException(nameof(pagination));
             _logger.LogDebug("Get all with pagination: " + pagination.QueryOrFilter);
-            pagination.Total = DbSet.Where(pagination.QueryFunc).Count();
+            pagination.Total = Collection.Where(pagination.QueryFunc).Count();
             _logger.LogDebug("GetAll set total to: " + pagination.Total);
 
-            var q = pagination.IncludeNested? IncludeNavigations(DbSet):DbSet;
+            var q = pagination.IncludeNested? IncludeNavigations(Collection):Collection;
             q = q.OrderBy(pagination.OrderBy, pagination.SortOrder == PaginationSettings.Desc)
                 .Where(pagination.QueryFunc).AsQueryable();
 
@@ -98,7 +99,7 @@ namespace AnyService.EntityFramework
         }
         private async Task<TDomainModel> GetEntityById_Internal(string id)
         {
-            var query = DbSet.Where(x => x.Id.Equals(id));
+            var query = Collection.Where(x => x.Id.Equals(id));
             return await IncludeNavigations(query).FirstOrDefaultAsync();
         }
         private Task DetachEntities(IEnumerable<TDomainModel> entities)
