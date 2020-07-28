@@ -23,6 +23,7 @@ namespace AnyService
             bool usePermissionMiddleware = true)
         {
             var sp = app.ApplicationServices;
+            AppEngine.Init(sp);
 
             ValidateRequiredServices(sp);
 
