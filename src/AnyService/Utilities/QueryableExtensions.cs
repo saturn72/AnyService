@@ -7,12 +7,20 @@ namespace System.Linq
 {
     public static class QueryableExtensions
     {
-        public static async Task<IEnumerable<T>> ToCachedCollection<T>(this IQueryable<T> query, string cacheKey, TimeSpan expiration = default)
+        private static ICacheManager CacheManagerResolver() => AppEngine.GetService<ICacheManager>();
+        public static async Task<IEnumerable<T>> ToCachedEnumerable<T>(this IQueryable<T> query, string cacheKey, TimeSpan expiration = default)
         {
             if (!cacheKey.HasValue())
                 return query.ToArray();
 
-            return await AppEngine.GetService<ICacheManager>().Get(cacheKey, () => Task.FromResult(query.ToArray().AsEnumerable()), expiration);
+            return await CacheManagerResolver().Get(cacheKey, () => Task.FromResult(query.ToArray().AsEnumerable()), expiration);
+        }
+        public static async Task<ICollection<T>> ToCachedCollection<T>(this IQueryable<T> query, string cacheKey, TimeSpan expiration = default)
+        {
+            if (!cacheKey.HasValue())
+                return query.ToList();
+
+            return await CacheManagerResolver().Get(cacheKey, () => Task.FromResult(query.ToList() as ICollection<T>), expiration);
         }
     }
 }

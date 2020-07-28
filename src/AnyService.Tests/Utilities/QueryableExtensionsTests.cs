@@ -15,7 +15,35 @@ namespace AnyService.Tests.Utilities
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public async Task ToCached_EmptyKeyResolvesQuery(string ck)
+        public async Task ToCachedEnumerable_EmptyKeyResolvesQuery(string ck)
+        {
+            var a = new[] { "a", "b", "c" };
+            var q = a.AsQueryable();
+            var res = await q.ToCachedEnumerable(ck);
+            res.ShouldBe(a);
+        }
+        [Fact]
+        public void ToCachedEnumerable_GetsFromCache()
+        {
+            var a = new[] { "a", "b", "c" };
+            var cm = new Mock<ICacheManager>();
+            cm.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<Func<Task<IEnumerable<string>>>>(), It.IsAny<TimeSpan>()))
+                .ReturnsAsync(a);
+
+            var sp = new Mock<IServiceProvider>();
+            sp.Setup(s => s.GetService(It.Is<Type>(t => t == typeof(ICacheManager)))).Returns(cm.Object);
+            AppEngine.Init(sp.Object);
+
+            var q = a.AsQueryable();
+            var res = q.ToCachedEnumerable("ck");
+            res.Result.ShouldBe(a);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public async Task ToCachedCollection_EmptyKeyResolvesQuery(string ck)
         {
             var a = new[] { "a", "b", "c" };
             var q = a.AsQueryable();
@@ -23,11 +51,11 @@ namespace AnyService.Tests.Utilities
             res.ShouldBe(a);
         }
         [Fact]
-        public void ToCached_GetsFromCache()
+        public void ToCachedCollection_GetsFromCache()
         {
-            var a = new[] { "a", "b", "c" };
+            var a = new List<string>{ "a", "b", "c" };
             var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.Get<IEnumerable<string>>(It.IsAny<string>(), It.IsAny<Func<Task<IEnumerable<string>>>>(), It.IsAny<TimeSpan>()))
+            cm.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<Func<Task<ICollection<string>>>>(), It.IsAny<TimeSpan>()))
                 .ReturnsAsync(a);
 
             var sp = new Mock<IServiceProvider>();
