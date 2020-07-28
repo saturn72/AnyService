@@ -94,5 +94,30 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
             new ServiceResponse { Result = result }.ToHttpStatusCode().ShouldBe(exp);
         }
         #endregion
+        #region ValidateServiceResponse
+        [Theory]
+        [MemberData(nameof(ValidateServiceResponse_ReturnsFalse_DATA))]
+        public void ValidateServiceResponse_ReturnsFalse(ServiceResponse serviceResponse)
+        {
+            serviceResponse.ValidateServiceResponse<int>().ShouldBeFalse();
+        }
+        public static IEnumerable<object[]> ValidateServiceResponse_ReturnsFalse_DATA => new[]
+        {
+            new object[] { null},
+            new object[] { new ServiceResponse{Result = ServiceResult.Error}},
+            new object[] { new ServiceResponse{Result = ServiceResult.Ok, Data = "this is data"}},
+        };
+        [Theory]
+        [MemberData(nameof(ValidateServiceResponse_ReturnsTrue_DATA))]
+        public void ValidateServiceResponse_ReturnsTrue(ServiceResponse serviceResponse)
+        {
+            serviceResponse.ValidateServiceResponse<string>().ShouldBeTrue();
+        }
+        public static IEnumerable<object[]> ValidateServiceResponse_ReturnsTrue_DATA => new[]
+        {
+            new object[] { new ServiceResponse{Result = ServiceResult.Ok, Data = "this is data"}},
+            new object[] { new ServiceResponse{Result = ServiceResult.Accepted}},
+        };
     }
+    #endregion
 }

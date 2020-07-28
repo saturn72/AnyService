@@ -69,10 +69,8 @@ namespace Microsoft.AspNetCore.Mvc
 
             return ToActionResult(serviceResponse);
         }
-        public static IActionResult ToActionResult(this ServiceResponse serviceResponse)
-        {
-            return ConversionFuncs[serviceResponse.Result](serviceResponse);
-        }
+        public static IActionResult ToActionResult(this ServiceResponse serviceResponse) => ConversionFuncs[serviceResponse.Result](serviceResponse);
+
         public static readonly IDictionary<string, int> ToStatusCodes = new Dictionary<string, int>
         {
             {ServiceResult. Accepted , StatusCodes.Status202Accepted },
@@ -88,5 +86,7 @@ namespace Microsoft.AspNetCore.Mvc
             return ToStatusCodes.TryGetValue(serviceResponse.Result, out int value) ?
                 value : StatusCodes.Status500InternalServerError;
         }
+        public static bool ValidateServiceResponse<T>(this ServiceResponse serviceResponse) =>
+           (serviceResponse?.Result == ServiceResult.Ok && serviceResponse.Data is T) || serviceResponse?.Result == ServiceResult.Accepted;
     }
 }

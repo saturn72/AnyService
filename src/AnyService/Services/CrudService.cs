@@ -62,6 +62,8 @@ namespace AnyService.Services
             var serviceResponse = new ServiceResponse();
             if (!await Validator.ValidateForCreate(entity, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Entity did not pass validation");
+
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Prepare entity to be inserted to database");
             await ModelPreparar.PrepareForCreate(entity);
 
             Logger.LogDebug(LoggingEvents.Repository, $"Insert entity to repository");
