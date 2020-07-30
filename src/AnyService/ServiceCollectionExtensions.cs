@@ -12,8 +12,6 @@ using AnyService.Audity;
 using AnyService.Events;
 using Microsoft.AspNetCore.Http;
 using AnyService.Controllers;
-using System.Runtime.InteropServices.ComTypes;
-using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Microsoft.Extensions.DependencyInjection

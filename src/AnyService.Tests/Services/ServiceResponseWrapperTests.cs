@@ -7,7 +7,7 @@ namespace AnyService.Tests.Services
     public sealed class ServiceResponseWrapperTests
     {
         [Fact]
-        public void ctor()
+        public void Ctor()
         {
             var sr = new ServiceResponse();
             var w = new ServiceResponseWrapper(sr);
