@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
 
 namespace AnyService.EntityFramework.Tests.Sql
 {
@@ -39,6 +38,7 @@ namespace AnyService.EntityFramework.Tests.Sql
         }
 
         [Fact]
+        [Trait("category", "sql-server")]
         public async Task InsertBulk_DontTrackId()
         {
             var total = 40000;
@@ -53,6 +53,7 @@ namespace AnyService.EntityFramework.Tests.Sql
                 inserted.ElementAt(i).Value.ShouldBe(i);
         }
         [Fact]
+        [Trait("category", "sql-server")]
         public async Task InsertBulk_TrackId()
         {
             var total = 40000;
