@@ -7,22 +7,28 @@ using System;
 using System.Collections.Concurrent;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
+using EFCore.BulkExtensions;
+using System.Data;
 
 namespace AnyService.EntityFramework
 {
     public class EfRepository<TDomainModel> : IRepository<TDomainModel>
         where TDomainModel : class, IDomainModelBase
     {
-
-        private readonly DbContext _dbContext;
-        private readonly ILogger<EfRepository<TDomainModel>> _logger;
-
+        #region fields
         private static readonly ConcurrentDictionary<Type, IEnumerable<PropertyInfo>> TypeProperties = new ConcurrentDictionary<Type, IEnumerable<PropertyInfo>>();
-        public EfRepository(DbContext dbContext, ILogger<EfRepository<TDomainModel>> logger)
+        private readonly DbContext _dbContext;
+        private readonly BulkConfig _bulkConfig;
+        private readonly ILogger<EfRepository<TDomainModel>> _logger;
+        #endregion
+        #region ctor
+        public EfRepository(DbContext dbContext, BulkConfig bulkConfig, ILogger<EfRepository<TDomainModel>> logger)
         {
             _dbContext = dbContext;
+            _bulkConfig = bulkConfig;
             _logger = logger;
         }
+        #endregion
 
         public IQueryable<TDomainModel> Collection => _dbContext.Set<TDomainModel>().AsNoTracking();
         public virtual async Task<IEnumerable<TDomainModel>> GetAll(Pagination<TDomainModel> pagination)
@@ -33,7 +39,7 @@ namespace AnyService.EntityFramework
             pagination.Total = Collection.Where(pagination.QueryFunc).Count();
             _logger.LogDebug("GetAll set total to: " + pagination.Total);
 
-            var q = pagination.IncludeNested? IncludeNavigations(Collection):Collection;
+            var q = pagination.IncludeNested ? IncludeNavigations(Collection) : Collection;
             q = q.OrderBy(pagination.OrderBy, pagination.SortOrder == PaginationSettings.Desc)
                 .Where(pagination.QueryFunc).AsQueryable();
 
@@ -66,6 +72,20 @@ namespace AnyService.EntityFramework
             _logger.LogDebug($"{nameof(Insert)} result = {entity.ToJsonString()}");
             return entity;
         }
+        public virtual async Task<IEnumerable<TDomainModel>> InsertBulk(IEnumerable<TDomainModel> entities)
+        {
+            _logger.LogDebug($"{nameof(InsertBulk)} with entity = {entities.ToJsonString()}");
+            var entitiesList = entities.ToList();
+
+            _logger.LogDebug($"{nameof(InsertBulk)} bulk operation started");
+
+            await _dbContext.BulkInsertAsync(entitiesList, _bulkConfig);
+
+            _logger.LogDebug($"{nameof(InsertBulk)} Bulk operation ended");
+            _logger.LogDebug($"{nameof(InsertBulk)} result = {entitiesList.ToJsonString()}");
+            return entitiesList;
+        }
+
         public virtual async Task<TDomainModel> Update(TDomainModel entity)
         {
             _logger.LogDebug($"{nameof(Update)} with entity = {entity.ToJsonString()}");

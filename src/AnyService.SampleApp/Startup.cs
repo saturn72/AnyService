@@ -15,6 +15,8 @@ using AnyService.Endpoints;
 using AnyService.SampleApp.Hubs;
 using Microsoft.AspNetCore.Http;
 using AnyService.SampleApp.ServicesConfigurars;
+using EFCore.BulkExtensions;
+using System.Collections.Generic;
 
 namespace AnyService.SampleApp
 {
@@ -60,7 +62,15 @@ namespace AnyService.SampleApp
             var options = new DbContextOptionsBuilder<SampleAppDbContext>()
                 .UseInMemoryDatabase(databaseName: DbName).Options;
 
+            var bc = new BulkConfig
+            {
+                PreserveInsertOrder = true,
+                BatchSize = 4000,
+                PropertiesToExclude = new List<string> { nameof(IDomainModelBase.Id) }
+            };
+            services.AddSingleton<BulkConfig>(bc);
             services.AddTransient<DbContext>(sp => new SampleAppDbContext(options));
+
             services.AddTransient(typeof(IRepository<>), typeof(EfRepository<>));
             services.AddTransient<IFileStoreManager, EfFileStoreManager>();
         }

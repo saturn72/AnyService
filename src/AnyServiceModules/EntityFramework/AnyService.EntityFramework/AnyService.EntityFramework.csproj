@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <PackageId>AnyService.EntityFramework</PackageId>
-    <Version>1.0.17-Preview</Version>
+    <Version>1.0.18-Preview</Version>
     <Authors>roi@saturn72.com</Authors>
     <Company>saturn technologies</Company>
   </PropertyGroup>
@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="EFCore.BulkExtensions" Version="3.1.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.3" />
   </ItemGroup>
 
