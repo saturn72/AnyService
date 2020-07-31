@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Moq;
-using EFCore.BulkExtensions;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
 
 namespace AnyService.EntityFramework.Tests.Sql
 {
@@ -34,28 +34,42 @@ namespace AnyService.EntityFramework.Tests.Sql
 
             _dbContext = new SqlDbContext(_options);
             _logger = new Mock<ILogger<EfRepository<SqlBulkTestClass>>>();
-            var bc = new BulkConfig
-            {
-                PreserveInsertOrder = true,
-                BatchSize = 4000,
-                PropertiesToExclude = new List<string> { nameof(IDomainModelBase.Id) },
-            };
-            _repository = new EfRepository<SqlBulkTestClass>(_dbContext, bc, _logger.Object);
+
+            _repository = new EfRepository<SqlBulkTestClass>(_dbContext, _logger.Object);
         }
 
         [Fact]
-        public async Task InsertBulk()
+        public async Task InsertBulk_DontTrackId()
         {
-            var total = 4;
+            var total = 40000;
             var entities = new List<SqlBulkTestClass>();
             for (int i = 0; i < total; i++)
                 entities.Add(new SqlBulkTestClass { Value = i, });
 
-            var inserted = await _repository.InsertBulk(entities);
-            inserted.GetHashCode().ShouldNotBe(entities.GetHashCode());
+            var inserted = await _repository.BulkInsert(entities);
+            // inserted.GetHashCode().ShouldNotBe(entities.GetHashCode());
             inserted.Count().ShouldBe(total);
             for (int i = 0; i < total; i++)
                 inserted.ElementAt(i).Value.ShouldBe(i);
+        }
+        [Fact]
+        public async Task InsertBulk_TrackId()
+        {
+            var total = 40000;
+            var entities = new List<SqlBulkTestClass>();
+            for (int i = 0; i < total; i++)
+                entities.Add(new SqlBulkTestClass { Value = i, });
+
+            var inserted = await _repository.BulkInsert(entities, true);
+            // inserted.GetHashCode().ShouldNotBe(entities.GetHashCode());
+            inserted.Count().ShouldBe(total);
+            for (int i = 0; i < total; i++)
+            {
+                var cur = inserted.ElementAt(i);
+                cur.Id.ShouldNotBeNullOrEmpty();
+                cur.Id.ShouldNotBeNullOrWhiteSpace();
+                cur.Value.ShouldBe(i);
+            }
         }
     }
 }

@@ -19,7 +19,7 @@ namespace AnyService.LiteDb
 
 
         }
-        public IQueryable<TDomainModel> Collection => LiteDbUtility.Collection< TDomainModel>(_dbName);
+        public Task<IQueryable<TDomainModel>> Collection => Task.FromResult(LiteDbUtility.Collection<TDomainModel>(_dbName));
 
         public async Task<TDomainModel> Insert(TDomainModel entity)
         {
@@ -47,11 +47,19 @@ namespace AnyService.LiteDb
                 }
             }));
             return entity;
-            string AssignId()
-            {
-                return DateTime.UtcNow.ToString("yyyyMMddTHHmmssK") + "-" + Guid.NewGuid().ToString();
-            }
         }
+        private static string AssignId()
+        {
+            return DateTime.UtcNow.ToString("yyyyMMddTHHmmssK") + "-" + Guid.NewGuid().ToString();
+        }
+        public async Task<IEnumerable<TDomainModel>> BulkInsert(IEnumerable<TDomainModel> entities, bool trackIds = false)
+        {
+            foreach (var e in entities)
+                e.Id = AssignId();
+            await Task.Run(() => LiteDbUtility.Command(_dbName, db => db.GetCollection<TDomainModel>().InsertBulk(entities)));
+            return entities;
+        }
+
         public Task<IEnumerable<TDomainModel>> GetAll(Pagination<TDomainModel> pagination)
         {
             var data = LiteDbUtility.Query<IEnumerable<TDomainModel>>(_dbName, db =>

@@ -44,7 +44,7 @@ namespace AnyService.EntityFramework.Tests
             {
                 _dbContext = new TestDbContext(DbOptions);
                 _logger = new Mock<ILogger<EfRepository<TestClass>>>();
-                _repository = new EfRepository<TestClass>(_dbContext, null, _logger.Object);
+                _repository = new EfRepository<TestClass>(_dbContext, _logger.Object);
             }
             [Fact]
             public async Task Insert()
@@ -68,7 +68,7 @@ namespace AnyService.EntityFramework.Tests
                 var ctx = new TestDbContext(options);
 
                 var l = new Mock<ILogger<EfRepository<BulkTestClass>>>();
-                var r = new EfRepository<BulkTestClass>(ctx, null, l.Object);
+                var r = new EfRepository<BulkTestClass>(ctx, l.Object);
                 var total = 4;
                 var entities = new List<BulkTestClass>();
                 for (int i = 0; i < total; i++)
@@ -79,9 +79,9 @@ namespace AnyService.EntityFramework.Tests
                         TestNestedClasses = new[] { new TestNestedClass { Value = i.ToString() } }
                     });
 
-                var inserted = await r.InsertBulk(entities);
+                var inserted = await r.BulkInsert(entities);
 
-                inserted.GetHashCode().ShouldNotBe(entities.GetHashCode());
+                inserted.GetHashCode().ShouldBe(entities.GetHashCode());
                 inserted.Count().ShouldBe(total);
                 for (int i = 0; i < total; i++)
                     inserted.ElementAt(i).Value.ShouldBe(i);
