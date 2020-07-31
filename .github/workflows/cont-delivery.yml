@@ -26,7 +26,7 @@ jobs:
 
       - name: Test
         working-directory: ./src
-        run: dotnet test --verbosity normal --configuration Release --no-build
+        run: dotnet test --verbosity normal --configuration Release --no-build --filter "category=sql-server"
 
       # - name: Pack AnyService.Utilities nuget package
       #   working-directory: ./src
