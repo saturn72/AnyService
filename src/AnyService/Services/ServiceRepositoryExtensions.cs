@@ -8,8 +8,10 @@ namespace AnyService.Services
     {
         public static async Task<TDomainModel> Command<TDomainModel>(
             this IRepository<TDomainModel> repository,
-            Func<IRepository<TDomainModel>, Task<TDomainModel>> command,
-            ServiceResponseWrapper wrapper) where TDomainModel : IDomainModelBase
+            Func<IRepository<TDomainModel>, 
+            Task<TDomainModel>> command,
+            ServiceResponseWrapper wrapper) 
+                where TDomainModel : IDomainModelBase
         {
             var data = default(TDomainModel);
             var serviceResponse = wrapper.ServiceResponse;

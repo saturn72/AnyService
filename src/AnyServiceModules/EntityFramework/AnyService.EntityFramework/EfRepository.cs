@@ -28,7 +28,6 @@ namespace AnyService.EntityFramework
         };
         #endregion
         #region ctor
-
         public EfRepository(DbContext dbContext, ILogger<EfRepository<TDomainModel>> logger)
         {
             _dbContext = dbContext;

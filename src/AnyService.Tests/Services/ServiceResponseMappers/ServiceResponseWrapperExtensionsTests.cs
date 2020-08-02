@@ -12,6 +12,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
 {
     public class ServiceResponseWrapperExtensionsTests : MappingTest
     {
+        #region Validate & Publish Exceptrion
         [Fact]
         public void ValidateServiceResponseAndPublishException_PublishException()
         {
@@ -93,5 +94,17 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
             var w = new ServiceResponseWrapper(srvRes);
             ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<string>(w, "ek", "ddd").ShouldBeTrue();
         }
+
+
+        #endregion
+        #region PublishExceptionIfExists
+        [Fact]
+        public void PublishExceptionIfExists_DoesNotPublish()
+        {
+            var serviceResponse = new ServiceResponse();
+            var w = new ServiceResponseWrapper(serviceResponse);
+            ServiceResponseWrapperExtensions.PublishExceptionIfExists(w, "ek", "ddd").ShouldBeFalse();
+        }
+        #endregion
     }
 }

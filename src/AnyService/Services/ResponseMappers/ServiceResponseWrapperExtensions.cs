@@ -10,11 +10,17 @@ namespace Microsoft.AspNetCore.Mvc
     {
         public static bool ValidateServiceResponseAndPublishException<T>(this ServiceResponseWrapper wrapper, string eventKey, object data)
         {
-            if (wrapper.Exception == null)
+            if (!PublishExceptionIfExists(wrapper, eventKey, data))
                 return wrapper.ServiceResponse.ValidateServiceResponse<T>();
-         
-            PublishException(wrapper.ServiceResponse, eventKey, data, wrapper.Exception);
+
             return false;
+        }
+        public static bool PublishExceptionIfExists(this ServiceResponseWrapper wrapper, string eventKey, object data)
+        {
+            if (wrapper.Exception == null)
+                return false;
+            PublishException(wrapper.ServiceResponse, eventKey, data, wrapper.Exception);
+            return true;
         }
         private static void PublishException(ServiceResponse serviceResponse, string eventKey, object data, Exception exception)
         {

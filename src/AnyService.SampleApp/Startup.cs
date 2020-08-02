@@ -61,16 +61,7 @@ namespace AnyService.SampleApp
             //this is inmemory provider
             var options = new DbContextOptionsBuilder<SampleAppDbContext>()
                 .UseInMemoryDatabase(databaseName: DbName).Options;
-
-            var bc = new BulkConfig
-            {
-                PreserveInsertOrder = true,
-                BatchSize = 4000,
-                PropertiesToExclude = new List<string> { nameof(IDomainModelBase.Id) }
-            };
-            services.AddSingleton<BulkConfig>(bc);
             services.AddTransient<DbContext>(sp => new SampleAppDbContext(options));
-
             services.AddTransient(typeof(IRepository<>), typeof(EfRepository<>));
             services.AddTransient<IFileStoreManager, EfFileStoreManager>();
         }
