@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using AnyService.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace AnyService.Middlewares
@@ -67,7 +68,7 @@ namespace AnyService.Middlewares
             _logger.LogDebug(LoggingEvents.WorkContext, 
                 res != null ? 
                     $"Entity found: {res.Type.Name}. using path: {path}" : 
-                    $"Entity was not found in anyservice entities collection. using path: {path}");
+                    $"Entity is not found in anyservice's configured {nameof(RouteMaps)}. Path used: {path}. If this is not expected, please verify entity was configured when calling {nameof(ServiceCollectionExtensions.AddAnyService)} method.");
             return res;
         }
         private RequestInfo ToRequestInfo(HttpContext httpContext, EntityConfigRecord typeConfigRecord)
