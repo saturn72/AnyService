@@ -18,7 +18,7 @@ namespace AnyService.Tests.Utilities
         public async Task ToCachedEnumerable_EmptyKeyResolvesQuery(string ck)
         {
             var a = new[] { "a", "b", "c" };
-            var q = a.AsQueryable();
+            var q = Task.FromResult(a.AsQueryable());
             var res = await q.ToCachedEnumerable(ck);
             res.ShouldBe(a);
         }
@@ -34,7 +34,7 @@ namespace AnyService.Tests.Utilities
             sp.Setup(s => s.GetService(It.Is<Type>(t => t == typeof(ICacheManager)))).Returns(cm.Object);
             AppEngine.Init(sp.Object);
 
-            var q = a.AsQueryable();
+            var q = Task.FromResult(a.AsQueryable());
             var res = q.ToCachedEnumerable("ck");
             res.Result.ShouldBe(a);
         }
@@ -46,7 +46,7 @@ namespace AnyService.Tests.Utilities
         public async Task ToCachedCollection_EmptyKeyResolvesQuery(string ck)
         {
             var a = new[] { "a", "b", "c" };
-            var q = a.AsQueryable();
+            var q = Task.FromResult(a.AsQueryable());
             var res = await q.ToCachedCollection(ck);
             res.ShouldBe(a);
         }
@@ -62,7 +62,7 @@ namespace AnyService.Tests.Utilities
             sp.Setup(s => s.GetService(It.Is<Type>(t => t == typeof(ICacheManager)))).Returns(cm.Object);
             AppEngine.Init(sp.Object);
 
-            var q = a.AsQueryable();
+            var q = Task.FromResult(a.AsQueryable());
             var res = q.ToCachedCollection("ck");
             res.Result.ShouldBe(a);
         }
