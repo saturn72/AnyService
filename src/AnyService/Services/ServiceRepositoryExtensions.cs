@@ -6,14 +6,14 @@ namespace AnyService.Services
 {
     public static class ServiceRepositoryExtensions
     {
-        public static async Task<TDomainModel> Command<TDomainModel>(
+        public static async Task<TResult> Command<TDomainModel, TResult>(
             this IRepository<TDomainModel> repository,
             Func<IRepository<TDomainModel>, 
-            Task<TDomainModel>> command,
+            Task<TResult>> command,
             ServiceResponseWrapper wrapper) 
                 where TDomainModel : IDomainModelBase
         {
-            var data = default(TDomainModel);
+            var data = default(TResult);
             var serviceResponse = wrapper.ServiceResponse;
             try
             {
