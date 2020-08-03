@@ -1,6 +1,7 @@
 using Xunit;
 using System;
 using Shouldly;
+using System.Linq;
 
 namespace AnyService.Utilities.Tests
 {
@@ -8,8 +9,30 @@ namespace AnyService.Utilities.Tests
     {
         public int Value { get; set; }
     }
+    public class T1 { }
+    public class T2:T1 { }
+    public class T3:T2 { }
     public class ObjectExtensionsTests
     {
+        #region GetAllBaseTypes
+        [Fact]
+        public void GetAllBaseTypes_GetEntireTree()
+        {
+            var bts = typeof(T3).GetAllBaseTypes();
+            bts.Count().ShouldBe(3);
+            bts.ShouldContain(typeof(T2));
+            bts.ShouldContain(typeof(T1));
+            bts.ShouldContain(typeof(object));
+        }
+        [Fact]
+        public void GetAllBaseTypes_ExcludeFromT1()
+        {
+            var bts = typeof(T3).GetAllBaseTypes(typeof(T1));
+            bts.Count().ShouldBe(1);
+            bts.ShouldContain(typeof(T2));
+        }
+        #endregion
+
         [Fact]
         public void GetPropertyInfo_ReturnsNull()
         {

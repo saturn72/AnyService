@@ -3,11 +3,7 @@ using System.Threading.Tasks;
 
 namespace AnyService.Services
 {
-    public interface ICrudValidator
-    {
-        Type Type { get; }
-    }
-    public abstract class CrudValidatorBase<TDomainModel> : ICrudValidator
+    public abstract class CrudValidatorBase<TDomainModel>
     {
         private Type _type;
         public Type Type => _type ??= typeof(TDomainModel);

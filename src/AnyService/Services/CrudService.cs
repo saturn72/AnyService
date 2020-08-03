@@ -30,7 +30,7 @@ namespace AnyService.Services
         public CrudService(
             AnyServiceConfig config,
             IRepository<TDomainModel> repository,
-            ICrudValidator validator,
+            CrudValidatorBase<TDomainModel> validator,
             IModelPreparar<TDomainModel> modelPreparar,
             WorkContext workContext,
             IEventBus eventBus,
@@ -41,7 +41,7 @@ namespace AnyService.Services
             IPermissionManager permissionManager)
         {
             Repository = repository;
-            Validator = validator as CrudValidatorBase<TDomainModel>;
+            Validator = validator;
             ModelPreparar = modelPreparar;
             WorkContext = workContext;
             EventBus = eventBus;

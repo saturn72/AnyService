@@ -6,6 +6,17 @@ namespace System
 {
     public static class ObjectExtensionsFunctions
     {
+        public static IEnumerable<Type> GetAllBaseTypes(this Type type, Type excludeFromType = null)
+        {
+            var baseTypes = new List<Type>();
+            var bt = type.BaseType;
+            while (bt != excludeFromType)
+            {
+                baseTypes.Add(bt);
+                bt = bt.BaseType;
+            }
+            return baseTypes;
+        }
         private static readonly IDictionary<Type, IDictionary<string, PropertyInfo>> PropertyInfos = new Dictionary<Type, IDictionary<string, PropertyInfo>>();
         public static PropertyInfo GetPropertyInfo(this Type type, string propertyName)
         {

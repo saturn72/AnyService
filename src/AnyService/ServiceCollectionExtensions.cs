@@ -13,6 +13,7 @@ using AnyService.Events;
 using Microsoft.AspNetCore.Http;
 using AnyService.Controllers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -40,15 +41,6 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.TryAddSingleton(config);
 
-            services.TryAddTransient<ICrudValidator>(sp =>
-            {
-                var wc = sp.GetService<WorkContext>();
-                var vf = sp.GetRequiredService<ValidatorFactory>();
-                var curType = wc.CurrentEntityConfigRecord.Type;
-                return vf[curType];
-            });
-
-
             services.TryAddTransient(typeof(ICrudService<>), typeof(CrudService<>));
 
             // services.
@@ -59,13 +51,10 @@ namespace Microsoft.Extensions.DependencyInjection
                 services.TryAddSingleton(m);
 
             //validator factory
-            var validators = config.EntityConfigRecords.Select(t => t.Validator).ToArray();
-            var validatorFactory = new ValidatorFactory(validators);
-            services.TryAddSingleton(validatorFactory);
-            foreach (var v in validators)
+            var validatorTypes = config.EntityConfigRecords.Select(t => t.ValidatorType).ToArray();
+            foreach (var vType in validatorTypes)
             {
-                var vType = v.GetType();
-                foreach (var vt in vType.GetInterfaces())
+                foreach (var vt in vType.GetAllBaseTypes(typeof(object)))
                     services.TryAddTransient(vt, vType);
             }
             foreach (var ecr in config.EntityConfigRecords)
@@ -146,16 +135,15 @@ namespace Microsoft.Extensions.DependencyInjection
                 ecr.ControllerType ??= typeof(GenericController<>).MakeGenericType(ecr.Type);
                 ValidateType<ControllerBase>(ecr.ControllerType);
 
-                if (ecr.Validator != null)
+                if (ecr.ValidatorType != null)
                 {
                     //validate inherits from CrudValidatorBase<>
-                    if (ecr.Validator.GetType().GetGenericTypeDefinition() != typeof(CrudValidatorBase<>))
-                        throw new InvalidOperationException($"{ecr.Validator.GetType().Name} must implement {typeof(CrudValidatorBase<>).Name}");
+                    if (ecr.ValidatorType.GetGenericTypeDefinition() != typeof(CrudValidatorBase<>))
+                        throw new InvalidOperationException($"{ecr.ValidatorType.Name} must implement {typeof(CrudValidatorBase<>).Name}");
                 }
                 else
                 {
-                    var v = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);
-                    ecr.Validator = (ICrudValidator)Activator.CreateInstance(v);
+                    ecr.ValidatorType = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);
                 }
 
                 ecr.Authorization = SetAuthorization(ecr.Authorization);
