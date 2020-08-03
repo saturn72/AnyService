@@ -46,7 +46,7 @@ namespace AnyService.EntityFramework
             _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll set total to: " + pagination.Total);
 
             var q = pagination.IncludeNested ? IncludeNavigations(_collection) : _collection;
-            q = q.OrderBy(pagination.OrderBy, pagination.SortOrder == PaginationSettings.Desc)
+            q = q.OrderBy(pagination.OrderBy ?? nameof(IDomainModelBase.Id), pagination.SortOrder == PaginationSettings.Desc)
                 .Where(pagination.QueryFunc).AsQueryable();
 
             q = pagination.Offset == 0 ?

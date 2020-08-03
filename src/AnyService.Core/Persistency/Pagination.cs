@@ -38,10 +38,11 @@ namespace AnyService.Services
         public int PageSize { get; set; } = 50;
         public string SortOrder { get; set; }
         /// <summary>
-        /// Gets or sets value indicating sort by property name
+        /// Gets or sets value indicating sort by property name.
+        /// Default value is 'Id'
         /// </summary>
         /// <value></value>
-        public string OrderBy { get; set; }
+        public string OrderBy { get; set; } = nameof(IDomainModelBase.Id);
         /// <summary>
         /// Gets or sets current page data
         /// </summary>
