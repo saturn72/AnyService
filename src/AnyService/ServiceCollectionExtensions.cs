@@ -51,7 +51,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 services.TryAddSingleton(m);
 
             //validator factory
-            var validatorTypes = config.EntityConfigRecords.Select(t => t.ValidatorType).ToArray();
+            var validatorTypes = config.EntityConfigRecords.Select(t => t.CrudValidatorType).ToArray();
             foreach (var vType in validatorTypes)
             {
                 foreach (var vt in vType.GetAllBaseTypes(typeof(object)))
@@ -135,15 +135,15 @@ namespace Microsoft.Extensions.DependencyInjection
                 ecr.ControllerType ??= typeof(GenericController<>).MakeGenericType(ecr.Type);
                 ValidateType<ControllerBase>(ecr.ControllerType);
 
-                if (ecr.ValidatorType != null)
+                if (ecr.CrudValidatorType != null)
                 {
                     //validate inherits from CrudValidatorBase<>
-                    if (ecr.ValidatorType.GetGenericTypeDefinition() != typeof(CrudValidatorBase<>))
-                        throw new InvalidOperationException($"{ecr.ValidatorType.Name} must implement {typeof(CrudValidatorBase<>).Name}");
+                    if (ecr.CrudValidatorType.GetGenericTypeDefinition() != typeof(CrudValidatorBase<>))
+                        throw new InvalidOperationException($"{ecr.CrudValidatorType.Name} must implement {typeof(CrudValidatorBase<>).Name}");
                 }
                 else
                 {
-                    ecr.ValidatorType = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);
+                    ecr.CrudValidatorType = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);
                 }
 
                 ecr.Authorization = SetAuthorization(ecr.Authorization);

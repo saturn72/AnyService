@@ -37,7 +37,7 @@ namespace AnyService
         /// Gets or sets value indicating whether the get operation is public to all users or just to the creator
         /// </summary>
         public bool PublicGet { get; set; }
-        public Type ValidatorType { get; set; }
+        public Type CrudValidatorType { get; set; }
         public Type ResponseMapperType { get; set; }
         public AuthorizationInfo Authorization { get; set; }
         /// <summary>
