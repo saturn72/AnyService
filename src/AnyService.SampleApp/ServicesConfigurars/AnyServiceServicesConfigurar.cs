@@ -2,6 +2,8 @@
 using AnyService.Middlewares;
 using AnyService.SampleApp.Controllers;
 using AnyService.SampleApp.Models;
+using AnyService.SampleApp.Services;
+using AnyService.Services;
 using AnyService.Utilities;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -30,6 +32,7 @@ namespace AnyService.SampleApp.ServicesConfigurars
                     {
                         Type = typeof(Dependent2),
                         Route = "/api/d/",
+                        CrudValidatorType = typeof(Dependent2AlwaysTrueCrudValidator)
                     },
                     new EntityConfigRecord
                     {

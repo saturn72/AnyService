@@ -137,8 +137,9 @@ namespace Microsoft.Extensions.DependencyInjection
 
                 if (ecr.CrudValidatorType != null)
                 {
-                    //validate inherits from CrudValidatorBase<>
-                    if (ecr.CrudValidatorType.GetGenericTypeDefinition() != typeof(CrudValidatorBase<>))
+                    var cvType = typeof(CrudValidatorBase<>);
+                    //validate inheritance from CrudValidatorBase<>
+                    if (!ecr.CrudValidatorType.GetAllBaseTypes().All(t => t != cvType))
                         throw new InvalidOperationException($"{ecr.CrudValidatorType.Name} must implement {typeof(CrudValidatorBase<>).Name}");
                 }
                 else
