@@ -24,9 +24,29 @@ jobs:
         working-directory: ./src
         run: dotnet build --configuration Release
 
-      - name: Test
-        working-directory: ./src
-        run: dotnet test --verbosity normal --configuration Release --no-build --filter "category!=sql-server"
+      - name: Test AnyService.Utilities
+        working-directory: ./src/AnyService.Utilities.Tests
+        run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true
+      
+      - name: Test AnyService.Core.Tests
+        working-directory: ./src/AnyService.Core.Tests
+        run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*""
+        
+      - name: Test AnyService.Tests
+        working-directory: ./src/AnyService.Tests
+        run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
+
+      - name: Test AnyService.AnyServiceModules.EntityFrameworkTests
+        working-directory: ./src/AnyService.AnyServiceModules.EntityFramework.Tests
+        run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*"" --filter "category!=sql-server"
+
+      - name: Test AnyService.EasyCaching.Tests
+        working-directory: ./src/AnyServiceModules/EasyCaching/AnyService.EasyCaching.Tests
+        run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
+
+      - name: Test AnyService.LiteDb.Tests
+        working-directory: ./src/AnyServiceModules/EasyCaching/AnyService.LiteDb.Tests
+        run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
 
       # - name: Pack AnyService.Utilities nuget package
       #   working-directory: ./src
@@ -34,9 +54,9 @@ jobs:
       # - name: Pack anyservice.core nuget package
       #   working-directory: ./src
       #   run: dotnet pack ./AnyService.Core/AnyService.Core.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
-      - name: Pack anyservice nuget package
-        working-directory: ./src
-        run: dotnet pack ./AnyService/AnyService.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
+      # - name: Pack anyservice nuget package
+      #   working-directory: ./src
+      #   run: dotnet pack ./AnyService/AnyService.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       # - name: Pack anyservice.easycaching nuget package
       #   working-directory: ./src
       #   run: dotnet pack ./AnyServiceModules/EasyCaching/AnyService.EasyCaching/AnyService.EasyCaching.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg

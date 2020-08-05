@@ -23,6 +23,7 @@ Thumbs.db
 [Dd]ebug*/
 *.lib
 *.sbr
+coverage.json
 obj/
 [Rr]elease*/
 _ReSharper*/
