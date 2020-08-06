@@ -38,7 +38,7 @@ jobs:
 
       - name: Test AnyService.AnyServiceModules.EntityFrameworkTests
         working-directory: ./src/AnyService.AnyServiceModules.EntityFramework.Tests
-        run: dotnet test --verbosity normal --configuration Release --no-build --filter "category!=sql-server" /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
+        run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*"" 
 
       - name: Test AnyService.EasyCaching.Tests
         working-directory: ./src/AnyServiceModules/EasyCaching/AnyService.EasyCaching.Tests
