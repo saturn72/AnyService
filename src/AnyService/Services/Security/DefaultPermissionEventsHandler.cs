@@ -25,7 +25,7 @@ namespace AnyService.Services.Security
               var manager = _serviceProvider.GetService<IPermissionManager>();
               var userId = eventData.PerformedByUserId;
 
-              var ecr = EntityConfigRecordManager.GetRecord(createdEntity.GetType());
+              var ecr = _serviceProvider.GetService<EntityConfigRecordManager>().GetRecord(createdEntity.GetType());
 
               var entityPermission = new EntityPermission
               {
@@ -68,7 +68,7 @@ namespace AnyService.Services.Security
 
           var manager = _serviceProvider.GetService<IPermissionManager>();
           var userId = eventData.PerformedByUserId;
-          var tcr = EntityConfigRecordManager.GetRecord(deletedEntity.GetType());
+          var tcr = _serviceProvider.GetService<EntityConfigRecordManager>().GetRecord(deletedEntity.GetType());
 
           var userPermissions = await manager.GetUserPermissions(userId);
           var permissionToDelete = userPermissions?.EntityPermissions?.FirstOrDefault(p => p.EntityId == deletedEntity.Id && p.EntityKey == tcr.EntityKey);

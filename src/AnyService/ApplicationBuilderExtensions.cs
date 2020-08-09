@@ -68,7 +68,8 @@ namespace AnyService
 
             //subscribe to events event listener
             var eventBus = serviceProvider.GetRequiredService<IEventBus>();
-            var ekr = EntityConfigRecordManager.EntityConfigRecords.Select(e => e.EventKeys);
+            var ecrm = serviceProvider.GetRequiredService<EntityConfigRecordManager>();
+            var ekr = ecrm.EntityConfigRecords.Select(e => e.EventKeys);
             var peh = serviceProvider.GetRequiredService<IPermissionEventsHandler>();
             foreach (var e in ekr)
             {

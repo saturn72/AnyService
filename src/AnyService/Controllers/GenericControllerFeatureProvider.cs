@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 
 namespace AnyService.Controllers
 {
@@ -12,7 +11,9 @@ namespace AnyService.Controllers
         public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
         {
             var existsControllers = feature.Controllers.Select(c => c.AsType());
-            var controllersToAdd = EntityConfigRecordManager.EntityConfigRecords
+            var ecrm = AppEngine.GetService<EntityConfigRecordManager>();
+            
+            var controllersToAdd = ecrm.EntityConfigRecords
                 .Select(e => e.ControllerType)
                 .Where(ct => existsControllers.All(c => c != ct));
 

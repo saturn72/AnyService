@@ -32,17 +32,22 @@ namespace AnyService.Tests.Services.Security
         public void EntityCreatedHandler_CreatesNewUserPermissions_WhenNotExistsInDatabase()
         {
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            EntityConfigRecordManager.EntityConfigRecords = new[] {
+            var ecrm = new EntityConfigRecordManager
+            {
+                EntityConfigRecords = new[] {
              new EntityConfigRecord {
                  Type = typeof(TestClass),
                  PermissionRecord = expPr
                  }
                  }
+            }
                  ;
             var pm = new Mock<IPermissionManager>();
             pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(IPermissionManager))).Returns(pm.Object);
+            sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
+            AppEngine.Init(sp.Object);
             var userId = "uId";
             var data = new TestClass
             {
@@ -71,13 +76,19 @@ namespace AnyService.Tests.Services.Security
         public void EntityCreatedHandler_AddsNewUserPermissions()
         {
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            EntityConfigRecordManager.EntityConfigRecords = new[] {
-             new EntityConfigRecord {
-                 Type = typeof(TestClass),
-                 PermissionRecord = expPr
-                 }
-                 }
-                 ;
+            var ecrm = new EntityConfigRecordManager
+            {
+                EntityConfigRecords = new[] {
+                    new EntityConfigRecord {
+                        Type = typeof(TestClass),
+                        PermissionRecord = expPr
+                    }
+                }
+            };
+
+            var sp = new Mock<IServiceProvider>();
+            sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
+            AppEngine.Init(sp.Object);
             var userId = "uId";
             var dbUp = new UserPermissions
             {
@@ -85,7 +96,6 @@ namespace AnyService.Tests.Services.Security
             };
             var pm = new Mock<IPermissionManager>();
             pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(dbUp);
-            var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(IPermissionManager))).Returns(pm.Object);
             var data = new TestClass
             {
@@ -114,14 +124,21 @@ namespace AnyService.Tests.Services.Security
         public void EntityCreatedHandler_UpdatesExistsUserPermissions()
         {
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            EntityConfigRecordManager.EntityConfigRecords = new[]
+            var ecrm = new EntityConfigRecordManager
+            {
+                EntityConfigRecords = new[]
             {
              new EntityConfigRecord {
                  Type = typeof(TestClass),
                  PermissionRecord = expPr
                  }
                  }
+            }
                  ;
+            var sp = new Mock<IServiceProvider>();
+            sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
+            AppEngine.Init(sp.Object);
+
             var userId = "uId";
             var dbUp = new UserPermissions
             {
@@ -137,7 +154,6 @@ namespace AnyService.Tests.Services.Security
             };
             var pm = new Mock<IPermissionManager>();
             pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(dbUp);
-            var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(IPermissionManager))).Returns(pm.Object);
             var data = new TestClass
             {
@@ -210,13 +226,15 @@ namespace AnyService.Tests.Services.Security
         public void EntityDeletedHandler_HasNoEntityPermissions()
         {
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            EntityConfigRecordManager.EntityConfigRecords = new[] {
+            var ecrm = new EntityConfigRecordManager
+            {
+                EntityConfigRecords = new[] {
              new EntityConfigRecord {
                  Type = typeof(TestClass),
                  PermissionRecord = expPr
                  }
                  }
-                 ;
+            };
             var userId = "uId";
             var dbUp = new UserPermissions
             {
@@ -250,13 +268,19 @@ namespace AnyService.Tests.Services.Security
             var ek = "ek";
 
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            EntityConfigRecordManager.EntityConfigRecords = new[] {
+            var ecrm = new EntityConfigRecordManager
+            {
+                EntityConfigRecords = new[] {
              new EntityConfigRecord {
                  Type = typeof(TestClass),
                  PermissionRecord = expPr,
                  }
                  }
-                            ;
+            };
+
+            var sp = new Mock<IServiceProvider>();
+            sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
+            AppEngine.Init(sp.Object);
 
             var expEntityPermissions = new EntityPermission
             {
@@ -264,7 +288,7 @@ namespace AnyService.Tests.Services.Security
                 EntityKey = "ek1",
                 PermissionKeys = new[] { "r1", "u1", "d1", },
             };
-            EntityConfigRecordManager.EntityConfigRecords = new[] {
+            ecrm.EntityConfigRecords = new[] {
              new EntityConfigRecord {
                  EntityKey = ek,
                  Type = typeof(TestClass),
@@ -288,7 +312,6 @@ namespace AnyService.Tests.Services.Security
             };
             var pm = new Mock<IPermissionManager>();
             pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(dbUp);
-            var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(IPermissionManager))).Returns(pm.Object);
             var data = new TestClass
             {

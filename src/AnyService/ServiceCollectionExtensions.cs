@@ -75,7 +75,13 @@ namespace Microsoft.Extensions.DependencyInjection
                 return sp.GetService(ffType) as IFilterFactory;
             });
 
-            EntityConfigRecordManager.EntityConfigRecords = config.EntityConfigRecords;
+
+            var ecrm = new EntityConfigRecordManager
+            {
+                EntityConfigRecords = config.EntityConfigRecords
+            };
+            services.AddSingleton(ecrm);
+
             services.TryAddScoped<WorkContext>();
             services.TryAddSingleton<IIdGenerator, StringIdGenerator>();
             services.TryAddTransient<IPermissionManager, PermissionManager>();
@@ -84,13 +90,15 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 var wc = sp.GetService<WorkContext>();
                 var ct = wc.CurrentType;
-                return EntityConfigRecordManager.GetRecord(ct).EventKeys;
+                var ecrm = sp.GetService<EntityConfigRecordManager>();
+                return ecrm.GetRecord(ct).EventKeys;
             });
             services.AddScoped(sp =>
             {
                 var wc = sp.GetService<WorkContext>();
                 var ct = wc.CurrentType;
-                return EntityConfigRecordManager.GetRecord(ct).PermissionRecord;
+                var ecrm = sp.GetService<EntityConfigRecordManager>();
+                return ecrm.GetRecord(ct).PermissionRecord;
             });
 
             services.AddTransient(sp =>

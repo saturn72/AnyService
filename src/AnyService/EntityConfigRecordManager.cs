@@ -6,12 +6,12 @@ namespace AnyService
 {
     public class EntityConfigRecordManager
     {
-        private static IEnumerable<EntityConfigRecord> _records;
-        private static IDictionary<Type, EntityConfigRecord> _recordDictionary;
+        private IEnumerable<EntityConfigRecord> _records;
+        private IDictionary<Type, EntityConfigRecord> _recordDictionary;
 
-        public static EntityConfigRecord GetRecord(Type type) => _recordDictionary[type];
+        public EntityConfigRecord GetRecord(Type type) => _recordDictionary[type];
 
-        public static IEnumerable<EntityConfigRecord> EntityConfigRecords
+        public IEnumerable<EntityConfigRecord> EntityConfigRecords
         {
             get => _records;
             set
