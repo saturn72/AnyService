@@ -54,9 +54,9 @@ jobs:
       # - name: Pack anyservice.core nuget package
       #   working-directory: ./src
       #   run: dotnet pack ./AnyService.Core/AnyService.Core.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
-      # - name: Pack anyservice nuget package
-      #   working-directory: ./src
-      #   run: dotnet pack ./AnyService/AnyService.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
+      - name: Pack anyservice nuget package
+        working-directory: ./src
+        run: dotnet pack ./AnyService/AnyService.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       # - name: Pack anyservice.easycaching nuget package
       #   working-directory: ./src
       #   run: dotnet pack ./AnyServiceModules/EasyCaching/AnyService.EasyCaching/AnyService.EasyCaching.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
