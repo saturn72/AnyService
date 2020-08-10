@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using AnyService.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.DataProtection;
+using AnyService.Infrastructure;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -30,6 +31,7 @@ namespace Microsoft.Extensions.DependencyInjection
         }
         public static IServiceCollection AddAnyService(this IServiceCollection services, AnyServiceConfig config)
         {
+            services.TryAddSingleton<IAppEngine, DefaultAppEngine>();
             services.TryAddSingleton<IdGeneratorFactory>(sp =>
             {
                 var stringGenerator = new StringIdGenerator();

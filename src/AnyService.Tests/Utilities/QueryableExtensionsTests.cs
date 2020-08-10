@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AnyService.Caching;
+using AnyService.Infrastructure;
 using Moq;
 using Shouldly;
 using Xunit;
@@ -30,9 +31,9 @@ namespace AnyService.Tests.Utilities
             cm.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<Func<Task<IEnumerable<string>>>>(), It.IsAny<TimeSpan>()))
                 .ReturnsAsync(a);
 
-            var sp = new Mock<IServiceProvider>();
-            sp.Setup(s => s.GetService(It.Is<Type>(t => t == typeof(ICacheManager)))).Returns(cm.Object);
-            AppEngine.Init(sp.Object);
+            var eCtx = new Mock<IAppEngine>();
+            eCtx.Setup(e => e.GetService<ICacheManager>()).Returns(cm.Object);
+            AnyServiceAppContext.Init(eCtx.Object);
 
             var q = Task.FromResult(a.AsQueryable());
             var res = q.ToCachedEnumerable("ck");
@@ -57,9 +58,9 @@ namespace AnyService.Tests.Utilities
             cm.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<Func<Task<IEnumerable<string>>>>(), It.IsAny<TimeSpan>()))
                 .ReturnsAsync(a);
 
-            var sp = new Mock<IServiceProvider>();
-            sp.Setup(s => s.GetService(It.Is<Type>(t => t == typeof(ICacheManager)))).Returns(cm.Object);
-            AppEngine.Init(sp.Object);
+            var eCtx = new Mock<IAppEngine>();
+            eCtx.Setup(e => e.GetService<ICacheManager>()).Returns(cm.Object);
+            AnyServiceAppContext.Init(eCtx.Object);
 
             var q = a.AsQueryable();
             var res = q.ToCachedEnumerable("ck");
@@ -85,9 +86,9 @@ namespace AnyService.Tests.Utilities
             cm.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<Func<Task<ICollection<string>>>>(), It.IsAny<TimeSpan>()))
                 .ReturnsAsync(a);
 
-            var sp = new Mock<IServiceProvider>();
-            sp.Setup(s => s.GetService(It.Is<Type>(t => t == typeof(ICacheManager)))).Returns(cm.Object);
-            AppEngine.Init(sp.Object);
+            var eCtx = new Mock<IAppEngine>();
+            eCtx.Setup(e => e.GetService<ICacheManager>()).Returns(cm.Object);
+            AnyServiceAppContext.Init(eCtx.Object);
 
             var q = Task.FromResult(a.AsQueryable());
             var res = q.ToCachedCollection("ck");
@@ -112,9 +113,9 @@ namespace AnyService.Tests.Utilities
             cm.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<Func<Task<ICollection<string>>>>(), It.IsAny<TimeSpan>()))
                 .ReturnsAsync(a);
 
-            var sp = new Mock<IServiceProvider>();
-            sp.Setup(s => s.GetService(It.Is<Type>(t => t == typeof(ICacheManager)))).Returns(cm.Object);
-            AppEngine.Init(sp.Object);
+            var eCtx = new Mock<IAppEngine>();
+            eCtx.Setup(e => e.GetService<ICacheManager>()).Returns(cm.Object);
+            AnyServiceAppContext.Init(eCtx.Object);
 
             var q = a.AsQueryable();
             var res = q.ToCachedCollection("ck");

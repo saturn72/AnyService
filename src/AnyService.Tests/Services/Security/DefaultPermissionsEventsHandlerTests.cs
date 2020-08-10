@@ -6,6 +6,7 @@ using AnyService.Events;
 using AnyService.Services.Security;
 using Moq;
 using Xunit;
+using AnyService.Infrastructure;
 
 namespace AnyService.Tests.Services.Security
 {
@@ -47,7 +48,12 @@ namespace AnyService.Tests.Services.Security
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(IPermissionManager))).Returns(pm.Object);
             sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
-            AppEngine.Init(sp.Object);
+
+            var eCtx = new Mock<IAppEngine>();
+            eCtx.Setup(e => e.GetService<IPermissionManager>()).Returns(pm.Object);
+            eCtx.Setup(e => e.GetService<EntityConfigRecordManager>()).Returns(ecrm);
+
+            AnyServiceAppContext.Init(eCtx.Object);
             var userId = "uId";
             var data = new TestClass
             {
@@ -88,7 +94,10 @@ namespace AnyService.Tests.Services.Security
 
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
-            AppEngine.Init(sp.Object);
+            var eCtx = new Mock<IAppEngine>();
+            eCtx.Setup(e => e.GetService<EntityConfigRecordManager>()).Returns(ecrm);
+
+            AnyServiceAppContext.Init(eCtx.Object);
             var userId = "uId";
             var dbUp = new UserPermissions
             {
@@ -137,7 +146,10 @@ namespace AnyService.Tests.Services.Security
                  ;
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
-            AppEngine.Init(sp.Object);
+            var eCtx = new Mock<IAppEngine>();
+            eCtx.Setup(e => e.GetService<EntityConfigRecordManager>()).Returns(ecrm);
+
+            AnyServiceAppContext.Init(eCtx.Object);
 
             var userId = "uId";
             var dbUp = new UserPermissions
@@ -280,7 +292,10 @@ namespace AnyService.Tests.Services.Security
 
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
-            AppEngine.Init(sp.Object);
+            var eCtx = new Mock<IAppEngine>();
+            eCtx.Setup(e => e.GetService<EntityConfigRecordManager>()).Returns(ecrm);
+
+            AnyServiceAppContext.Init(eCtx.Object);
 
             var expEntityPermissions = new EntityPermission
             {

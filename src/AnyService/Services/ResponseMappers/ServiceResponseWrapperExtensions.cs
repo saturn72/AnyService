@@ -1,6 +1,7 @@
 ﻿using System;
 using AnyService;
 using AnyService.Events;
+using AnyService.Infrastructure;
 using AnyService.Services;
 using AnyService.Utilities;
 
@@ -24,9 +25,9 @@ namespace Microsoft.AspNetCore.Mvc
         }
         private static void PublishException(ServiceResponse serviceResponse, string eventKey, object data, Exception exception)
         {
-            serviceResponse.ExceptionId = AppEngine.GetService<IIdGenerator>().GetNext();
+            serviceResponse.ExceptionId = AnyServiceAppContext.GetService<IIdGenerator>().GetNext();
 
-            AppEngine.GetService<IEventBus>().Publish(eventKey, new DomainEventData
+            AnyServiceAppContext.GetService<IEventBus>().Publish(eventKey, new DomainEventData
             {
                 Data = new
                 {
@@ -34,7 +35,7 @@ namespace Microsoft.AspNetCore.Mvc
                     exceptionId = serviceResponse.ExceptionId,
                     exception = exception
                 },
-                PerformedByUserId = AppEngine.GetService<WorkContext>().CurrentUserId
+                PerformedByUserId = AnyServiceAppContext.GetService<WorkContext>().CurrentUserId
             });
         }
     }

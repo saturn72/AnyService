@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AnyService;
 using AnyService.Caching;
+using AnyService.Infrastructure;
 
 namespace System.Linq
 {
     public static class QueryableExtensions
     {
-        private static ICacheManager CacheManagerResolver() => AppEngine.GetService<ICacheManager>();
+        private static ICacheManager CacheManagerResolver() => AnyServiceAppContext.GetService<ICacheManager>();
         public static async Task<IEnumerable<T>> ToCachedEnumerable<T>(this Task<IQueryable<T>> query, string cacheKey, TimeSpan expiration = default)
         {
             if (!cacheKey.HasValue())
