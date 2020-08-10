@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using AnyService.Infrastructure;
 
 namespace AnyService
 {
@@ -24,7 +23,7 @@ namespace AnyService
             bool usePermissionMiddleware = true)
         {
             var sp = app.ApplicationServices;
-            AnyServiceAppContext.Init(sp.GetRequiredService<IAppEngine>());
+            AppEngine.Init(sp);
 
             ValidateRequiredServices(sp);
 

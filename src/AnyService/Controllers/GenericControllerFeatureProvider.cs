@@ -1,5 +1,4 @@
-﻿using AnyService.Infrastructure;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
+﻿using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +11,7 @@ namespace AnyService.Controllers
         public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
         {
             var existsControllers = feature.Controllers.Select(c => c.AsType());
-            var ecrm = AnyServiceAppContext.GetService<EntityConfigRecordManager>();
+            var ecrm = AppEngine.GetService<EntityConfigRecordManager>();
             
             var controllersToAdd = ecrm.EntityConfigRecords
                 .Select(e => e.ControllerType)

@@ -1,5 +1,4 @@
 ﻿using AnyService.Events;
-using AnyService.Infrastructure;
 using AnyService.Services;
 using AnyService.Utilities;
 using Microsoft.AspNetCore.Mvc;
@@ -37,12 +36,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
             sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
             sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
 
-            var eCtx = new Mock<IAppEngine>();
-            eCtx.Setup(e => e.GetService<IIdGenerator>()).Returns(ig.Object);
-            eCtx.Setup(e => e.GetService<IEventBus>()).Returns(eb.Object);
-            eCtx.Setup(e => e.GetService<WorkContext>()).Returns(wc);
-
-            AnyServiceAppContext.Init(eCtx.Object);
+            AppEngine.Init(sp.Object);
 
             var serviceResponse = new ServiceResponse();
             var w = new ServiceResponseWrapper(serviceResponse);
