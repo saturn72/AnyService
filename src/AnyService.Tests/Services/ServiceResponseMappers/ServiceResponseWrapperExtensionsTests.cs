@@ -36,7 +36,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
             sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
             sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
 
-            AppEngine.Init(sp.Object);
+            ServiceResponseWrapperExtensions.Init(sp.Object);
 
             var serviceResponse = new ServiceResponse();
             var w = new ServiceResponseWrapper(serviceResponse);

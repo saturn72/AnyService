@@ -48,7 +48,6 @@ namespace AnyService.Tests.Services.Security
             sp.Setup(s => s.GetService(typeof(IPermissionManager))).Returns(pm.Object);
             sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
 
-            AppEngine.Init(sp.Object);
             var userId = "uId";
             var data = new TestClass
             {
@@ -90,7 +89,6 @@ namespace AnyService.Tests.Services.Security
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
             
-            AppEngine.Init(sp.Object);
             var userId = "uId";
             var dbUp = new UserPermissions
             {
@@ -139,7 +137,6 @@ namespace AnyService.Tests.Services.Security
                  ;
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
-            AppEngine.Init(sp.Object);
 
             var userId = "uId";
             var dbUp = new UserPermissions
@@ -282,7 +279,6 @@ namespace AnyService.Tests.Services.Security
 
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
-            AppEngine.Init(sp.Object);
 
             var expEntityPermissions = new EntityPermission
             {

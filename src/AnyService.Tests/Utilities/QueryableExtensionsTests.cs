@@ -6,6 +6,7 @@ using AnyService.Caching;
 using Moq;
 using Shouldly;
 using Xunit;
+using QueryableExtensions = AnyService.Caching.QueryableExtensions;
 
 namespace AnyService.Tests.Utilities
 {
@@ -32,7 +33,7 @@ namespace AnyService.Tests.Utilities
 
             var sp = new Mock<IServiceProvider>();
             sp.Setup(e => e.GetService(typeof(ICacheManager))).Returns(cm.Object);
-            AppEngine.Init(sp.Object);
+            QueryableExtensions.Init(sp.Object);
 
             var q = Task.FromResult(a.AsQueryable());
             var res = q.ToCachedEnumerable("ck");
@@ -59,7 +60,7 @@ namespace AnyService.Tests.Utilities
 
             var sp = new Mock<IServiceProvider>();
             sp.Setup(e => e.GetService(typeof(ICacheManager))).Returns(cm.Object);
-            AppEngine.Init(sp.Object);
+            QueryableExtensions.Init(sp.Object);
 
             var q = a.AsQueryable();
             var res = q.ToCachedEnumerable("ck");
@@ -87,7 +88,7 @@ namespace AnyService.Tests.Utilities
 
             var sp = new Mock<IServiceProvider>();
             sp.Setup(e => e.GetService(typeof(ICacheManager))).Returns(cm.Object);
-            AppEngine.Init(sp.Object);
+            QueryableExtensions.Init(sp.Object);
 
             var q = Task.FromResult(a.AsQueryable());
             var res = q.ToCachedCollection("ck");
@@ -114,7 +115,7 @@ namespace AnyService.Tests.Utilities
 
             var sp = new Mock<IServiceProvider>();
             sp.Setup(e => e.GetService(typeof(ICacheManager))).Returns(cm.Object);
-            AppEngine.Init(sp.Object);
+            QueryableExtensions.Init(sp.Object);
 
             var q = a.AsQueryable();
             var res = q.ToCachedCollection("ck");

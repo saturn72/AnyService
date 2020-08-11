@@ -29,7 +29,6 @@ namespace Microsoft.Extensions.DependencyInjection
         }
         public static IServiceCollection AddAnyService(this IServiceCollection services, AnyServiceConfig config)
         {
-            services.TryAddSingleton<AppEngine>();
             services.TryAddSingleton<IdGeneratorFactory>(sp =>
             {
                 var stringGenerator = new StringIdGenerator();

@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -8,10 +10,16 @@ namespace AnyService.Controllers
 {
     public class GenericControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
     {
+        private readonly IServiceProvider _serviceProvider;
+
+        public GenericControllerFeatureProvider(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
         public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
         {
             var existsControllers = feature.Controllers.Select(c => c.AsType());
-            var ecrm = AppEngine.GetService<EntityConfigRecordManager>();
+            var ecrm = _serviceProvider.GetService<EntityConfigRecordManager>();
             
             var controllersToAdd = ecrm.EntityConfigRecords
                 .Select(e => e.ControllerType)

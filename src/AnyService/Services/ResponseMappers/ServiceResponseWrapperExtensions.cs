@@ -3,11 +3,14 @@ using AnyService;
 using AnyService.Events;
 using AnyService.Services;
 using AnyService.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.AspNetCore.Mvc
 {
     public static class ServiceResponseWrapperExtensions
     {
+        private static IServiceProvider _serviceProvider;
+        public static void Init(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
         public static bool ValidateServiceResponseAndPublishException<T>(this ServiceResponseWrapper wrapper, string eventKey, object data)
         {
             if (!PublishExceptionIfExists(wrapper, eventKey, data))
@@ -24,9 +27,9 @@ namespace Microsoft.AspNetCore.Mvc
         }
         private static void PublishException(ServiceResponse serviceResponse, string eventKey, object data, Exception exception)
         {
-            serviceResponse.ExceptionId = AppEngine.GetService<IIdGenerator>().GetNext();
+            serviceResponse.ExceptionId = _serviceProvider.GetService<IIdGenerator>().GetNext();
 
-            AppEngine.GetService<IEventBus>().Publish(eventKey, new DomainEventData
+            _serviceProvider.GetService<IEventBus>().Publish(eventKey, new DomainEventData
             {
                 Data = new
                 {
@@ -34,7 +37,7 @@ namespace Microsoft.AspNetCore.Mvc
                     exceptionId = serviceResponse.ExceptionId,
                     exception = exception
                 },
-                PerformedByUserId = AppEngine.GetService<WorkContext>().CurrentUserId
+                PerformedByUserId = _serviceProvider.GetService<WorkContext>().CurrentUserId
             });
         }
     }

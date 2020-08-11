@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using AnyService.Controllers;
 using AnyService.Caching;
 using AnyService.Events;
@@ -10,6 +9,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using QueryableExtensions = AnyService.Caching.QueryableExtensions;
 
 namespace AnyService
 {
@@ -23,12 +25,10 @@ namespace AnyService
             bool usePermissionMiddleware = true)
         {
             var sp = app.ApplicationServices;
-            AppEngine.Init(sp);
-
-            ValidateRequiredServices(sp);
+            InitializeAndValidateRequiredServices(sp);
 
             var apm = sp.GetRequiredService<ApplicationPartManager>();
-            apm.FeatureProviders.Add(new GenericControllerFeatureProvider());
+            apm.FeatureProviders.Add(new GenericControllerFeatureProvider(sp));
 
             if (useWorkContextMiddleware) app.UseMiddleware<WorkContextMiddleware>();
             if (useAuthorizationMiddleware) app.UseMiddleware<DefaultAuthorizationMiddleware>();
@@ -51,8 +51,11 @@ namespace AnyService
             if (usePermissionMiddleware) AddPermissionComponents(app, sp);
             return app;
         }
-        private static void ValidateRequiredServices(IServiceProvider serviceProvider)
+        private static void InitializeAndValidateRequiredServices(IServiceProvider serviceProvider)
         {
+            ServiceResponseWrapperExtensions.Init(serviceProvider);
+            QueryableExtensions.Init(serviceProvider);
+            GenericControllerNameConvention.Init(serviceProvider);
             serviceProvider.GetRequiredService<ICacheManager>();
 
             if (!MappingExtensions.WasConfigured)
