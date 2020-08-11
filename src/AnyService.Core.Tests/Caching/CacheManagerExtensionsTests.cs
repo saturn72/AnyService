@@ -6,11 +6,10 @@ using AnyService.Caching;
 using Moq;
 using Shouldly;
 using Xunit;
-using QueryableExtensions = AnyService.Caching.QueryableExtensions;
 
-namespace AnyService.Tests.Utilities
+namespace AnyService.Core.Tests.Caching
 {
-    public class QueryableExtensionsTests
+    public class CacheManagerExtensionsTests
     {
         [Theory]
         [InlineData(null)]
@@ -20,24 +19,22 @@ namespace AnyService.Tests.Utilities
         {
             var a = new[] { "a", "b", "c" };
             var q = Task.FromResult(a.AsQueryable());
-            var res = await q.ToCachedEnumerable(ck);
+            var cm = new Mock<ICacheManager>();
+            var res = await CacheManagerExtensions.ToCachedCollection(cm.Object, q,ck, TimeSpan.FromDays(1));
             res.ShouldBe(a);
         }
         [Fact]
-        public void ToCachedEnumerable_Async_GetsFromCache()
+        public async Task ToCachedEnumerable_Async_GetsFromCache()
         {
             var a = new[] { "a", "b", "c" };
+            var ck = "cKey";
             var cm = new Mock<ICacheManager>();
             cm.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<Func<Task<IEnumerable<string>>>>(), It.IsAny<TimeSpan>()))
                 .ReturnsAsync(a);
 
-            var sp = new Mock<IServiceProvider>();
-            sp.Setup(e => e.GetService(typeof(ICacheManager))).Returns(cm.Object);
-            QueryableExtensions.Init(sp.Object);
-
             var q = Task.FromResult(a.AsQueryable());
-            var res = q.ToCachedEnumerable("ck");
-            res.Result.ShouldBe(a);
+            var res = await CacheManagerExtensions.ToCachedEnumerable(cm.Object, q, ck, TimeSpan.FromDays(1));
+            res.ShouldBe(a);
         }
         [Theory]
         [InlineData(null)]
@@ -47,24 +44,22 @@ namespace AnyService.Tests.Utilities
         {
             var a = new[] { "a", "b", "c" };
             var q = a.AsQueryable();
-            var res = await q.ToCachedEnumerable(ck);
+            var cm = new Mock<ICacheManager>();
+            var res = await CacheManagerExtensions.ToCachedEnumerable(cm.Object, q, ck, TimeSpan.FromDays(1));
             res.ShouldBe(a);
         }
         [Fact]
-        public void ToCachedEnumerable_Synced_GetsFromCache()
+        public async Task ToCachedEnumerable_Synced_GetsFromCache()
         {
+            var ck = "cKey";
             var a = new[] { "a", "b", "c" };
             var cm = new Mock<ICacheManager>();
             cm.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<Func<Task<IEnumerable<string>>>>(), It.IsAny<TimeSpan>()))
                 .ReturnsAsync(a);
 
-            var sp = new Mock<IServiceProvider>();
-            sp.Setup(e => e.GetService(typeof(ICacheManager))).Returns(cm.Object);
-            QueryableExtensions.Init(sp.Object);
-
             var q = a.AsQueryable();
-            var res = q.ToCachedEnumerable("ck");
-            res.Result.ShouldBe(a);
+            var res = await CacheManagerExtensions.ToCachedEnumerable(cm.Object, q, ck, TimeSpan.FromDays(1));
+            res.ShouldBe(a);
         }
 
         [Theory]
@@ -75,24 +70,23 @@ namespace AnyService.Tests.Utilities
         {
             var a = new[] { "a", "b", "c" };
             var q = Task.FromResult(a.AsQueryable());
-            var res = await q.ToCachedCollection(ck);
+            var cm = new Mock<ICacheManager>();
+            var res = await CacheManagerExtensions.ToCachedCollection(cm.Object, q, ck, TimeSpan.FromDays(1));
             res.ShouldBe(a);
         }
         [Fact]
-        public void ToCachedCollection_Async_GetsFromCache()
+        public async Task ToCachedCollection_Async_GetsFromCache()
         {
+            var ck = "cKey";
             var a = new List<string>{ "a", "b", "c" };
             var cm = new Mock<ICacheManager>();
             cm.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<Func<Task<ICollection<string>>>>(), It.IsAny<TimeSpan>()))
                 .ReturnsAsync(a);
 
-            var sp = new Mock<IServiceProvider>();
-            sp.Setup(e => e.GetService(typeof(ICacheManager))).Returns(cm.Object);
-            QueryableExtensions.Init(sp.Object);
-
             var q = Task.FromResult(a.AsQueryable());
-            var res = q.ToCachedCollection("ck");
-            res.Result.ShouldBe(a);
+            var res = await CacheManagerExtensions.ToCachedCollection(cm.Object, q, ck, TimeSpan.FromDays(1));
+
+            res.ShouldBe(a);
         }
         [Theory]
         [InlineData(null)]
@@ -100,26 +94,24 @@ namespace AnyService.Tests.Utilities
         [InlineData(" ")]
         public async Task ToCachedCollection_Synced_EmptyKeyResolvesQuery(string ck)
         {
+            var cm = new Mock<ICacheManager>();
             var a = new[] { "a", "b", "c" };
             var q = a.AsQueryable();
-            var res = await q.ToCachedCollection(ck);
+            var res = await CacheManagerExtensions.ToCachedCollection(cm.Object, q, ck, TimeSpan.FromDays(1));
             res.ShouldBe(a);
         }
         [Fact]
-        public void ToCachedCollection_Synced_GetsFromCache()
+        public async Task ToCachedCollection_Synced_GetsFromCache()
         {
+            var ck = "cKey";
             var a = new List<string> { "a", "b", "c" };
             var cm = new Mock<ICacheManager>();
             cm.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<Func<Task<ICollection<string>>>>(), It.IsAny<TimeSpan>()))
                 .ReturnsAsync(a);
 
-            var sp = new Mock<IServiceProvider>();
-            sp.Setup(e => e.GetService(typeof(ICacheManager))).Returns(cm.Object);
-            QueryableExtensions.Init(sp.Object);
-
             var q = a.AsQueryable();
-            var res = q.ToCachedCollection("ck");
-            res.Result.ShouldBe(a);
+            var res = await CacheManagerExtensions.ToCachedCollection(cm.Object, q, ck, TimeSpan.FromDays(1));
+            res.ShouldBe(a);
         }
     }
 }

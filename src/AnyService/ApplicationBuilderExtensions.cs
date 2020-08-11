@@ -11,7 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
-using QueryableExtensions = AnyService.Caching.QueryableExtensions;
 
 namespace AnyService
 {
@@ -54,7 +53,6 @@ namespace AnyService
         private static void InitializeAndValidateRequiredServices(IServiceProvider serviceProvider)
         {
             ServiceResponseWrapperExtensions.Init(serviceProvider);
-            QueryableExtensions.Init(serviceProvider);
             GenericControllerNameConvention.Init(serviceProvider);
             serviceProvider.GetRequiredService<ICacheManager>();
 
