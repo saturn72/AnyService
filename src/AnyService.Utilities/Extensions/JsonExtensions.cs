@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 
 namespace System.Text.Json
@@ -13,7 +12,12 @@ namespace System.Text.Json
         {
             return StringExtensions.ToObject(jsonElement.ToString(), toType);
         }
-
+        public static JsonElement FirstElementOrDefault(this JsonElement jElem, Func<JsonElement, bool> exp)
+        {
+            foreach (var je in jElem.EnumerateArray())
+                if (exp(je)) return je;
+            return default;
+        }
         private static readonly IDictionary<Type, Func<JsonElement, object>> JsonValueConvert = new Dictionary<Type, Func<JsonElement, object>>
         {
             {typeof(bool), je => je.GetBoolean()},

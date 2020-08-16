@@ -86,6 +86,23 @@ namespace AnyService.Utilities.Tests.Extensions
             root.GetValue(type, propertyName).ShouldBe(expValue);
         }
 
+        #region FirstElementOrDefault
+        [Fact]
+        public void FirstElementOrDefault_ReturnsDefault()
+        {
+            var json = "{\"values\":[]}";
+            var o = JsonSerializer.Deserialize<JsonElement>(json);
+            o.GetProperty("values").FirstElementOrDefault(x => x.TryGetProperty("data", out JsonElement je)).ShouldBe(default);
+        }
+        [Fact]
+        public void FirstElementOrDefault_ReturnsJsonelement()
+        {
+            var json = "{\"values\":[{\"key\":\"key1\", \"value\":\"val1\"}]}";
+            var o = JsonSerializer.Deserialize<JsonElement>(json);
+            var je = o.GetProperty("values").FirstElementOrDefault(x => x.GetProperty("key").GetString() == "key1");
+            je.GetProperty("value").GetString().ShouldBe("val1");
+        }
+        #endregion
         public class TestClass
         {
             public int Value { get; set; }
