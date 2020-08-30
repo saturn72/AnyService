@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using Xunit;
 using Xunit.Abstractions;
 using Shouldly;
+using AnyService.SampleApp.Models;
 
 namespace AnyService.E2E
 {
@@ -15,7 +16,7 @@ namespace AnyService.E2E
         }
 
         [Fact]
-        public async Task PostNewValue()
+        public async Task PostNewValue_ToCustomController()
         {
             var model = new
             {
@@ -23,10 +24,23 @@ namespace AnyService.E2E
             };
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
-            var res = await HttpClient.PostAsJsonAsync("api/my-great-route", model);
+            var res = await HttpClient.PostAsJsonAsync("v1/my-great-route", model);
             res.EnsureSuccessStatusCode();
             var c = await res.Content.ReadAsStringAsync();
             c.ShouldBe("pong");
+        }
+
+        [Fact]
+        public async Task PostNewValue_ToOverridenController()
+        {
+            var model = new CustomModel
+            {
+                Value = "ping"
+            };
+
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
+            var res = await HttpClient.PostAsJsonAsync("CustomModel", model);
+            res.EnsureSuccessStatusCode();
         }
     }
 }

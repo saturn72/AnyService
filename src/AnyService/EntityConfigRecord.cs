@@ -47,5 +47,6 @@ namespace AnyService
         public Type FilterFactoryType { get; set; }
         public Type ModelPrepararType { get; set; }
         public Type ControllerType { get; set; }
+        public string Area { get; set; }
     }
 }

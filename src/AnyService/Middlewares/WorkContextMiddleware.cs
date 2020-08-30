@@ -45,7 +45,7 @@ namespace AnyService.Middlewares
             workContext.CurrentClientId = clientId;
             workContext.IpAddress = httpContext.Connection?.RemoteIpAddress?.ToString();
 
-            var ecr = GetEntityconfigRecordByRoute(httpContext.Request.Path);
+            var ecr = GetEntityConfigRecordByRoute(httpContext.Request.Path);
             if (ecr != null && !ecr.Equals(default))
             {
                 workContext.CurrentEntityConfigRecord = ecr;
@@ -61,10 +61,11 @@ namespace AnyService.Middlewares
                 res[ecr.Route] = ecr;
             return res;
         }
-        private EntityConfigRecord GetEntityconfigRecordByRoute(PathString path)
+        private EntityConfigRecord GetEntityConfigRecordByRoute(PathString path)
         {
-            var e = RouteMaps.FirstOrDefault(rm => path.StartsWithSegments(rm.Key));
-            var res = (e.Equals(default)) ? null : e.Value;
+            var ecrRoute = RouteMaps.FirstOrDefault(rm => path.StartsWithSegments(rm.Key));
+
+            var res = (ecrRoute.Equals(default)) ? null : ecrRoute.Value;
             _logger.LogDebug(LoggingEvents.WorkContext, 
                 res != null ? 
                     $"Entity found: {res.Type.Name}. using path: {path}" : 

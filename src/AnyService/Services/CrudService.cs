@@ -323,7 +323,8 @@ namespace AnyService.Services
             EventBus.Publish(eventKey, new DomainEventData
             {
                 Data = data,
-                PerformedByUserId = WorkContext.CurrentUserId
+                PerformedByUserId = WorkContext.CurrentUserId,
+                WorkContext = WorkContext
             });
         }
         private void PublishException(ServiceResponse serviceResponse, string eventKey, object data, Exception exception)

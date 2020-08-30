@@ -6,6 +6,7 @@ using AnyService.Events;
 using AnyService.Services.Security;
 using Moq;
 using Xunit;
+using System.Collections.Generic;
 
 namespace AnyService.Tests.Services.Security
 {
@@ -23,7 +24,7 @@ namespace AnyService.Tests.Services.Security
             var ed = new DomainEventData
             {
                 Data = "some=string",
-                PerformedByUserId = "uId"
+                PerformedByUserId = "uId",
             };
             var ph = new DefaultPermissionsEventsHandler(null);
             ph.EntityCreatedHandler(ed);
@@ -32,21 +33,12 @@ namespace AnyService.Tests.Services.Security
         public void EntityCreatedHandler_CreatesNewUserPermissions_WhenNotExistsInDatabase()
         {
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            var ecrm = new EntityConfigRecordManager
-            {
-                EntityConfigRecords = new[] {
-             new EntityConfigRecord {
-                 Type = typeof(TestClass),
-                 PermissionRecord = expPr
-                 }
-                 }
-            }
-                 ;
+            var ecr = new EntityConfigRecord { Type = typeof(TestClass), PermissionRecord = expPr };
             var pm = new Mock<IPermissionManager>();
             pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(IPermissionManager))).Returns(pm.Object);
-            sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(new[] { ecr });
 
             var userId = "uId";
             var data = new TestClass
@@ -57,7 +49,8 @@ namespace AnyService.Tests.Services.Security
             var ed = new DomainEventData
             {
                 Data = data,
-                PerformedByUserId = userId
+                PerformedByUserId = userId,
+                WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
             ph.EntityCreatedHandler(ed);
@@ -76,19 +69,11 @@ namespace AnyService.Tests.Services.Security
         public void EntityCreatedHandler_AddsNewUserPermissions()
         {
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            var ecrm = new EntityConfigRecordManager
-            {
-                EntityConfigRecords = new[] {
-                    new EntityConfigRecord {
-                        Type = typeof(TestClass),
-                        PermissionRecord = expPr
-                    }
-                }
-            };
+            var ecr = new EntityConfigRecord { Type = typeof(TestClass), PermissionRecord = expPr };
 
             var sp = new Mock<IServiceProvider>();
-            sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
-            
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(new[] { ecr });
+
             var userId = "uId";
             var dbUp = new UserPermissions
             {
@@ -105,7 +90,8 @@ namespace AnyService.Tests.Services.Security
             var ed = new DomainEventData
             {
                 Data = data,
-                PerformedByUserId = userId
+                PerformedByUserId = userId,
+                WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
             ph.EntityCreatedHandler(ed);
@@ -124,19 +110,9 @@ namespace AnyService.Tests.Services.Security
         public void EntityCreatedHandler_UpdatesExistsUserPermissions()
         {
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            var ecrm = new EntityConfigRecordManager
-            {
-                EntityConfigRecords = new[]
-            {
-             new EntityConfigRecord {
-                 Type = typeof(TestClass),
-                 PermissionRecord = expPr
-                 }
-                 }
-            }
-                 ;
+            var ecr = new EntityConfigRecord { Type = typeof(TestClass), PermissionRecord = expPr };
             var sp = new Mock<IServiceProvider>();
-            sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(new[] { ecr });
 
             var userId = "uId";
             var dbUp = new UserPermissions
@@ -162,7 +138,8 @@ namespace AnyService.Tests.Services.Security
             var ed = new DomainEventData
             {
                 Data = data,
-                PerformedByUserId = userId
+                PerformedByUserId = userId,
+                WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
             ph.EntityCreatedHandler(ed);
@@ -225,15 +202,6 @@ namespace AnyService.Tests.Services.Security
         public void EntityDeletedHandler_HasNoEntityPermissions()
         {
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            var ecrm = new EntityConfigRecordManager
-            {
-                EntityConfigRecords = new[] {
-             new EntityConfigRecord {
-                 Type = typeof(TestClass),
-                 PermissionRecord = expPr
-                 }
-                 }
-            };
             var userId = "uId";
             var dbUp = new UserPermissions
             {
@@ -267,18 +235,10 @@ namespace AnyService.Tests.Services.Security
             var ek = "ek";
 
             var expPr = new PermissionRecord("c", "r", "u", "d");
-            var ecrm = new EntityConfigRecordManager
-            {
-                EntityConfigRecords = new[] {
-             new EntityConfigRecord {
-                 Type = typeof(TestClass),
-                 PermissionRecord = expPr,
-                 }
-                 }
-            };
+            var ecr = new EntityConfigRecord { Type = typeof(TestClass), PermissionRecord = expPr, };
 
             var sp = new Mock<IServiceProvider>();
-            sp.Setup(s => s.GetService(typeof(EntityConfigRecordManager))).Returns(ecrm);
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(new[] { ecr });
 
             var expEntityPermissions = new EntityPermission
             {
@@ -286,14 +246,7 @@ namespace AnyService.Tests.Services.Security
                 EntityKey = "ek1",
                 PermissionKeys = new[] { "r1", "u1", "d1", },
             };
-            ecrm.EntityConfigRecords = new[] {
-             new EntityConfigRecord {
-                 EntityKey = ek,
-                 Type = typeof(TestClass),
-                 PermissionRecord = expPr
-                 }
-                 }
-                 ;
+            ecr = new EntityConfigRecord { EntityKey = ek, Type = typeof(TestClass), PermissionRecord = expPr };
             var userId = "uId";
             var dbUp = new UserPermissions
             {
@@ -320,7 +273,8 @@ namespace AnyService.Tests.Services.Security
             var ed = new DomainEventData
             {
                 Data = data,
-                PerformedByUserId = userId
+                PerformedByUserId = userId,
+                WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
             ph.EntityDeletedHandler(ed);

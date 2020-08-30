@@ -36,6 +36,7 @@ namespace AnyService.SampleApp
             modelBuilder.Entity<MultipartSampleModel>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
             modelBuilder.Entity<FileModel>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
             modelBuilder.Entity<UpdateRecord>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+            modelBuilder.Entity<CustomModel>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
         }
     }
 }

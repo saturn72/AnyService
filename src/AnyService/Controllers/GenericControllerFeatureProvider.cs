@@ -19,9 +19,9 @@ namespace AnyService.Controllers
         public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
         {
             var existsControllers = feature.Controllers.Select(c => c.AsType());
-            var ecrm = _serviceProvider.GetService<EntityConfigRecordManager>();
+            var ecrm = _serviceProvider.GetService<IEnumerable<EntityConfigRecord>>();
             
-            var controllersToAdd = ecrm.EntityConfigRecords
+            var controllersToAdd = ecrm
                 .Select(e => e.ControllerType)
                 .Where(ct => existsControllers.All(c => c != ct));
 

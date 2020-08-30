@@ -74,13 +74,6 @@ namespace Microsoft.Extensions.DependencyInjection
                 return sp.GetService(ffType) as IFilterFactory;
             });
 
-
-            var ecrm = new EntityConfigRecordManager
-            {
-                EntityConfigRecords = config.EntityConfigRecords
-            };
-            services.AddSingleton(ecrm);
-
             services.TryAddScoped<WorkContext>();
             services.TryAddSingleton<IIdGenerator, StringIdGenerator>();
             services.TryAddTransient<IPermissionManager, PermissionManager>();
@@ -89,15 +82,14 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 var wc = sp.GetService<WorkContext>();
                 var ct = wc.CurrentType;
-                var ecrm = sp.GetService<EntityConfigRecordManager>();
-                return ecrm.GetRecord(ct).EventKeys;
+                //var ecrm = sp.GetService<EntityConfigRecordManager>();
+                return wc.CurrentEntityConfigRecord.EventKeys;
             });
             services.AddScoped(sp =>
             {
                 var wc = sp.GetService<WorkContext>();
                 var ct = wc.CurrentType;
-                var ecrm = sp.GetService<EntityConfigRecordManager>();
-                return ecrm.GetRecord(ct).PermissionRecord;
+                return wc.CurrentEntityConfigRecord.PermissionRecord;
             });
 
             services.AddTransient(sp =>
@@ -130,6 +122,10 @@ namespace Microsoft.Extensions.DependencyInjection
                     ecr.Route = new PathString(ecr.Route.Value[0..^1]);
 
                 ecr.Name ??= ecr.Type.Name;
+                var hasDuplication = temp.Where(e => e.Name == ecr.Name);
+                if (hasDuplication.Count() > 1)
+                    throw new InvalidOperationException($"Duplication in {nameof(EntityConfigRecord.Name)} field : {ecr.Name}. Please provide unique name for the controller. See configured entities where Routes equals {hasDuplication.First().Route} and {hasDuplication.Last().Route}");
+
                 ecr.ResponseMapperType ??= config.ServiceResponseMapperType;
                 ValidateType<IServiceResponseMapper>(ecr.ResponseMapperType);
                 ecr.EventKeys ??= ekr;

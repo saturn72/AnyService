@@ -34,15 +34,21 @@ namespace AnyService.SampleApp.ServicesConfigurars
                         Route = "/api/d/",
                         CrudValidatorType = typeof(Dependent2AlwaysTrueCrudValidator)
                     },
+
                     new EntityConfigRecord
                     {
                         Type = typeof(MultipartSampleModel),
                     },
                     new EntityConfigRecord
                     {
-                        Route = "/api/my-great-route",
+                        Route = "/v1/my-great-route",
                         Type = typeof(CustomModel),
                         ControllerType = typeof(CustomController),
+                    },
+                      new EntityConfigRecord
+                    {
+                        Type = typeof(CustomModel),
+                        Name = "area2_cutomModel"
                     },
                 }
             };

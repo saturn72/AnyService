@@ -53,7 +53,8 @@ namespace AnyService.Middlewares
             _eventBus.Publish(eventKey, new DomainEventData
             {
                 Data = exceptionData,
-                PerformedByUserId = workContext.CurrentUserId
+                PerformedByUserId = workContext.CurrentUserId,
+                WorkContext = workContext,
             });
         }
 

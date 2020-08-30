@@ -21,7 +21,7 @@ namespace AnyService.Tests.Events
             var eb = new DefaultEventsBus();
 
             eb.Publish(ek, ed);
-            ed.PublishedOnUtc.ShouldBe(default(DateTime));
+            ed.PublishedOnUtc.ShouldBe(default);
         }
         [Fact]
         public void PublishWithSubscription_ThenUnsubscribe()

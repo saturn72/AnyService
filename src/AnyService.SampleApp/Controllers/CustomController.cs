@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AnyService.SampleApp.Controllers
 {
-    [Route("api/my-great-route")]
+    [Route("v1/my-great-route")]
     [ApiController]
     public class CustomController : ControllerBase
     {
