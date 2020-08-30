@@ -41,6 +41,8 @@ namespace AnyService.E2E
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var res = await HttpClient.PostAsJsonAsync("CustomModel", model);
             res.EnsureSuccessStatusCode();
+            var c = await res.Content.ReadAsStringAsync();
+            c.ShouldNotBe("pong");
         }
     }
 }
