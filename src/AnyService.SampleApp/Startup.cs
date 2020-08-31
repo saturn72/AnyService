@@ -15,8 +15,6 @@ using AnyService.Endpoints;
 using AnyService.SampleApp.Hubs;
 using Microsoft.AspNetCore.Http;
 using AnyService.SampleApp.ServicesConfigurars;
-using EFCore.BulkExtensions;
-using System.Collections.Generic;
 
 namespace AnyService.SampleApp
 {

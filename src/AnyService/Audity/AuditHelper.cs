@@ -25,10 +25,11 @@ namespace AnyService.Audity
         {
             if (after is ICreatableAudit)
             {
-                var c = after as ICreatableAudit;
-                var dc = before as ICreatableAudit;
-                c.CreatedByUserId = dc.CreatedByUserId;
-                c.CreatedOnUtc = dc.CreatedOnUtc;
+                var a = after as ICreatableAudit;
+                var b = before as ICreatableAudit;
+                a.CreatedByUserId = b.CreatedByUserId;
+                a.CreatedOnUtc = b.CreatedOnUtc;
+                a.CreatedWorkContextJson = b.CreatedWorkContextJson;
             }
 
             var updateRecords = before.UpdateRecords?.ToList() ?? new List<UpdateRecord>();

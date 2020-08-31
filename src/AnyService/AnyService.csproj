@@ -3,7 +3,7 @@
 		<TargetFramework>netcoreapp3.0</TargetFramework>
 		<IsPackable>true</IsPackable>
 		<PackageId>anyservice</PackageId>
-		<Version>1.1.73-Preview</Version>
+		<Version>1.1.74-Preview</Version>
 		<Authors>roi@saturn72.com</Authors>
 		<Company>saturn technologies</Company>
 	</PropertyGroup>
