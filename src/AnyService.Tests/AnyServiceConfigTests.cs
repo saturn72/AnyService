@@ -1,4 +1,5 @@
 using AnyService.Services;
+using AnyService.Services.Preparars;
 using AnyService.Services.ServiceResponseMappers;
 using Shouldly;
 
@@ -18,7 +19,7 @@ namespace AnyService.Tests
                 () => c.DefaultPaginationSettings.DefaultSortOrder.ShouldBe("asc")
                 );
             c.FilterFactoryType.ShouldBeOfType<DefaultFilterFactory>();
-            c.ModelPrepararType.ShouldBeOfType(typeof(AudityModelPreparar<>));
+            c.ModelPrepararType.ShouldBeOfType(typeof(DummyModelPreparar<>));
             c.ServiceResponseMapperType.ShouldBeOfType<DataOnlyServiceResponseMapper>();
         }
     }

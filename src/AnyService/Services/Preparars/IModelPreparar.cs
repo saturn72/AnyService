@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace AnyService.Services
+namespace AnyService.Services.Preparars
 {
     public interface IModelPreparar<TDomainModel> where TDomainModel : IDomainModelBase
     {

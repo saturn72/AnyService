@@ -8,11 +8,12 @@ using AnyService.Services;
 using AnyService.Services.ServiceResponseMappers;
 using AnyService.Utilities;
 using AnyService.Services.Security;
-using AnyService.Audity;
 using AnyService.Events;
 using Microsoft.AspNetCore.Http;
 using AnyService.Controllers;
 using Microsoft.AspNetCore.Mvc;
+using AnyService.Services.Audit;
+using AnyService.Services.Preparars;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -99,7 +100,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return sp.GetService(mt) as IServiceResponseMapper;
             });
 
-            services.TryAddScoped<AuditHelper>();
+            services.TryAddScoped<IAuditHelper, AuditHelper>();
             services.TryAddSingleton<IEventBus, DefaultEventsBus>();
 
             if (config.ManageEntityPermissions)

@@ -7,6 +7,8 @@ using AnyService.Events;
 using AnyService.Services.FileStorage;
 using AnyService.Utilities;
 using Microsoft.Extensions.Logging;
+using AnyService.Services.Audit;
+using AnyService.Services.Preparars;
 
 namespace AnyService.Services
 {
@@ -25,6 +27,7 @@ namespace AnyService.Services
         protected readonly IIdGenerator IdGenerator;
         protected readonly IFilterFactory FilterFactory;
         protected readonly IPermissionManager PermissionManager;
+        protected readonly IAuditHelper AuditHelper;
         #endregion
         #region ctor
         public CrudService(
@@ -38,8 +41,11 @@ namespace AnyService.Services
             ILogger<CrudService<TDomainModel>> logger,
             IIdGenerator idGenerator,
             IFilterFactory filterFactory,
-            IPermissionManager permissionManager)
+            IPermissionManager permissionManager,
+            IAuditHelper auditHelper
+            )
         {
+            Config = config;
             Repository = repository;
             Validator = validator;
             ModelPreparar = modelPreparar;
@@ -51,7 +57,7 @@ namespace AnyService.Services
             IdGenerator = idGenerator;
             FilterFactory = filterFactory;
             PermissionManager = permissionManager;
-            Config = config;
+            AuditHelper = auditHelper;
         }
 
         #endregion
@@ -74,6 +80,8 @@ namespace AnyService.Services
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Create, entity))
                 return serviceResponse;
+            if (entity is ICreatableAudit)
+                await AuditHelper.InsertCreateRecord(entity);
 
             Publish(EventKeys.Create, serviceResponse.Data);
             serviceResponse.Result = ServiceResult.Ok;
@@ -221,18 +229,18 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
             var wrapper = new ServiceResponseWrapper(serviceResponse);
 
-            var dbModel = await Repository.Query(async r => await r.GetById(id), wrapper);
+            var dbEntry = await Repository.Query(async r => await r.GetById(id), wrapper);
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Update, id))
                 return serviceResponse;
 
-            var deletable = dbModel as IDeletableAudit;
+            var deletable = dbEntry as ISoftDelete;
             if (deletable != null && deletable.Deleted)
             {
                 Logger.LogDebug(LoggingEvents.Audity, "entity already deleted");
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
                 return serviceResponse;
             }
-            await ModelPreparar.PrepareForUpdate(dbModel, entity);
+            await ModelPreparar.PrepareForUpdate(dbEntry, entity);
 
             Logger.LogDebug(LoggingEvents.Repository, $"Update entity in repository");
             var updateResponse = await Repository.Command(r => r.Update(entity), wrapper);
@@ -243,11 +251,14 @@ namespace AnyService.Services
             if (entity is IFileContainer)
             {
                 var fileContainer = (entity as IFileContainer);
-                await FileStorageManager.Delete((dbModel as IFileContainer).Files);
+                await FileStorageManager.Delete((dbEntry as IFileContainer).Files);
                 (updateResponse as IFileContainer).Files = fileContainer.Files;
                 Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start file uploads");
                 await UploadFiles(fileContainer, serviceResponse);
             }
+
+            if (entity is IUpdatableAudit)
+                await AuditHelper.InsertUpdatedRecord(dbEntry, entity);
 
             Publish(EventKeys.Update, serviceResponse.Data);
             serviceResponse.Result = ServiceResult.Ok;
@@ -264,28 +275,35 @@ namespace AnyService.Services
 
             Logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
             var wrapper = new ServiceResponseWrapper(serviceResponse);
-            var dbModel = await Repository.Query(r => r.GetById(id), wrapper);
+            var dbEntry = await Repository.Query(r => r.GetById(id), wrapper);
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Delete, id))
                 return serviceResponse;
+            var softDelete = dbEntry as ISoftDelete;
+            if (softDelete!=null && softDelete.Deleted)
+                return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Entity already deleted");
 
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Prepare for deletion");
+            await ModelPreparar.PrepareForDelete(dbEntry);
 
             TDomainModel deletedModel;
-            if (dbModel is IDeletableAudit)
+            if (softDelete != null)
             {
-                Logger.LogDebug(LoggingEvents.Audity, "Audity - prepare for deletion");
-
-                await ModelPreparar.PrepareForDelete(dbModel);
-                Logger.LogDebug(LoggingEvents.Repository, $"Repository - update {nameof(IDeletableAudit)} entity");
-                deletedModel = await Repository.Command(r => r.Update(dbModel), wrapper);
+                (dbEntry as ISoftDelete).Deleted = true;
+                Logger.LogDebug(LoggingEvents.Repository, $"Repository - soft deletion (update) {nameof(IDeletableAudit)} entity");
+                deletedModel = await Repository.Command(r => r.Update(dbEntry), wrapper);
             }
             else
             {
                 Logger.LogDebug(LoggingEvents.Repository, "Repository - delete entity with id " + id);
-                deletedModel = await Repository.Command(r => r.Delete(dbModel), wrapper);
+                deletedModel = await Repository.Command(r => r.Delete(dbEntry), wrapper);
             }
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Delete, id))
                 return serviceResponse;
+
+
+            if (dbEntry is IDeletableAudit)
+                await AuditHelper.InsertDeletedRecord(dbEntry);
 
             Publish(EventKeys.Delete, serviceResponse.Data);
             serviceResponse.Result = ServiceResult.Ok;

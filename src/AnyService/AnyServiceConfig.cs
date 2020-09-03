@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AnyService.Services;
+using AnyService.Services.Preparars;
 using AnyService.Services.ServiceResponseMappers;
 
 namespace AnyService
@@ -19,7 +20,7 @@ namespace AnyService
                 DefaultSortOrder = PaginationSettings.Asc,
             };
             FilterFactoryType = typeof(DefaultFilterFactory);
-            ModelPrepararType = typeof(AudityModelPreparar<>);
+            ModelPrepararType = typeof(DummyModelPreparar<>);
             ServiceResponseMapperType = typeof(DataOnlyServiceResponseMapper);
         }
 

@@ -79,7 +79,7 @@ namespace AnyService.Services
             Func<object, Func<TDomainModel, bool>> p = payload =>
             {
                 if (isPublishable && isDeletable)
-                    return x => (x as IPublishable).Public && !(x as IDeletableAudit).Deleted;
+                    return x => (x as IPublishable).Public && !(x as ISoftDelete).Deleted;
                 return isPublishable ?
                     ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>($"{nameof(IPublishable.Public)} == {true}")?.Compile() :
                     null;

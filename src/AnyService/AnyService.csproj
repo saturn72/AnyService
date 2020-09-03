@@ -6,11 +6,11 @@
 		<Version>1.1.75-Preview</Version>
 		<Authors>roi@saturn72.com</Authors>
 		<Company>saturn technologies</Company>
-	</PropertyGroup>
-
-	<PropertyGroup>
+		<PackageProjectUrl>https://github.com/saturn72/anyservice</PackageProjectUrl>
 		<LangVersion>8.0</LangVersion>
 		<OutputType>Library</OutputType>
+		<RepositoryUrl>https://github.com/saturn72/anyservice</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
 
 	<ItemGroup>
