@@ -8,11 +8,11 @@ namespace AnyService
     {
         private static IMapper _mapper;
         internal static bool WasConfigured;
-        private static MapperConfiguration mc;
+        private static MapperConfiguration MapperConfiguration;
         public static void Configure(Action<IMapperConfigurationExpression> configure)
         {
             configure += AnyServiceMappingConfiguration;
-            mc = new MapperConfiguration(configure);
+            MapperConfiguration = new MapperConfiguration(configure);
             _mapper = null;
             WasConfigured = true;
         }
@@ -23,7 +23,7 @@ namespace AnyService
                         nameof(PaginationModel<IDomainModelBase>.Query), 
                         opts => opts.MapFrom(nameof(Pagination<IDomainModelBase>.QueryOrFilter)));
         }
-        public static IMapper MapperInstance => _mapper ??= mc.CreateMapper();
+        public static IMapper MapperInstance => _mapper ??= MapperConfiguration.CreateMapper();
         public static object Map(this object source, Type destination)
         {
             return MapperInstance.Map(source, source.GetType(), destination);

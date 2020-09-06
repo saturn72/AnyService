@@ -6,6 +6,7 @@ using AnyService.Controllers;
 using AnyService.Services;
 using AnyService.Services.Audit;
 using AnyService.Services.ServiceResponseMappers;
+using AnyService.Tests.Services.ServiceResponseMappers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Logging;
@@ -15,14 +16,14 @@ using Xunit;
 
 namespace AnyService.Tests.Controllers
 {
-    public class AuditControllerTests : ControllerTestBase
+    public class AuditControllerTests : MappingTest
     {
         [Fact]
         public void ValidateRoute()
         {
             var type = typeof(AuditController);
             var route = type.GetCustomAttributes(typeof(RouteAttribute)).First() as RouteAttribute;
-            route.Template.ShouldBe("audit");
+            route.Template.ShouldBe("__audit");
         }
         [Theory]
         [InlineData(nameof(AuditController.GetAll), "GET", null)]

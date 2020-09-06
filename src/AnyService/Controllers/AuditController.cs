@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace AnyService.Controllers
 {
     [ApiController]
-    [Route("audit")]
+    [Route("__audit")]
     public class AuditController : ControllerBase
     {
         #region fields
