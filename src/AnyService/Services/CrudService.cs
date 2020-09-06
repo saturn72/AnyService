@@ -27,7 +27,7 @@ namespace AnyService.Services
         protected readonly IIdGenerator IdGenerator;
         protected readonly IFilterFactory FilterFactory;
         protected readonly IPermissionManager PermissionManager;
-        protected readonly IAuditService AuditService;
+        protected readonly IAuditManager AuditManager;
         #endregion
         #region ctor
         public CrudService(
@@ -42,7 +42,7 @@ namespace AnyService.Services
             IIdGenerator idGenerator,
             IFilterFactory filterFactory,
             IPermissionManager permissionManager,
-            IAuditService auditService
+            IAuditManager auditManager
             )
         {
             Config = config;
@@ -57,7 +57,7 @@ namespace AnyService.Services
             IdGenerator = idGenerator;
             FilterFactory = filterFactory;
             PermissionManager = permissionManager;
-            AuditService = auditService;
+            AuditManager = auditManager;
         }
 
         #endregion
@@ -81,7 +81,7 @@ namespace AnyService.Services
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Create, entity))
                 return serviceResponse;
             if (entity is ICreatableAudit)
-                await AuditService.InsertCreateRecord(entity);
+                await AuditManager.InsertCreateRecord(entity);
 
             Publish(EventKeys.Create, serviceResponse.Data);
             serviceResponse.Result = ServiceResult.Ok;
@@ -135,7 +135,7 @@ namespace AnyService.Services
                 serviceResponse.Result = ServiceResult.Ok;
 
                 if (typeof(TDomainModel) is IReadableAudit)
-                    await AuditService.InsertReadRecord(data);
+                    await AuditManager.InsertReadRecord(data);
 
                 Publish(EventKeys.Read, serviceResponse.Data);
             }
@@ -167,7 +167,7 @@ namespace AnyService.Services
                 serviceResponse.Result = ServiceResult.Ok;
 
                 if (typeof(TDomainModel) is IReadableAudit)
-                    await AuditService.InsertReadRecord(pagination);
+                    await AuditManager.InsertReadRecord(pagination);
 
                 Publish(EventKeys.Read, serviceResponse.Data);
             }
@@ -266,7 +266,7 @@ namespace AnyService.Services
             }
 
             if (entity is IUpdatableAudit)
-                await AuditService.InsertUpdatedRecord(dbEntry, entity);
+                await AuditManager.InsertUpdatedRecord(dbEntry, entity);
 
             Publish(EventKeys.Update, serviceResponse.Data);
             serviceResponse.Result = ServiceResult.Ok;
@@ -285,6 +285,9 @@ namespace AnyService.Services
             var wrapper = new ServiceResponseWrapper(serviceResponse);
 
             var dbEntry = await Repository.Query(r => r.GetById(id), wrapper);
+            if(dbEntry == null)
+                return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Entity not exists");
+
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Delete, id))
                 return serviceResponse;
             var softDelete = dbEntry as ISoftDelete;
@@ -310,9 +313,8 @@ namespace AnyService.Services
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Delete, id))
                 return serviceResponse;
 
-
             if (dbEntry is IDeletableAudit)
-                await AuditService.InsertDeletedRecord(dbEntry);
+                await AuditManager.InsertDeletedRecord(dbEntry);
 
             Publish(EventKeys.Delete, serviceResponse.Data);
             serviceResponse.Result = ServiceResult.Ok;
@@ -327,7 +329,7 @@ namespace AnyService.Services
             serviceResponse.Result = serviceResponseResult;
             return serviceResponse;
         }
-        private bool IsNotFoundOrBadOrMissingDataOrError(ServiceResponseWrapper wrapper, string eventKey, object data)
+        private bool IsNotFoundOrBadOrMissingDataOrError(ServiceResponseWrapper wrapper, string eventKey, object requestData)
         {
             var serviceResponse = wrapper.ServiceResponse;
             Logger.LogDebug(LoggingEvents.Repository, $"Has {serviceResponse.Result} response");
@@ -338,7 +340,7 @@ namespace AnyService.Services
             if (wrapper.Exception != null || serviceResponse.Result == ServiceResult.Error)
             {
                 Logger.LogDebug(LoggingEvents.Repository, "Repository response is null");
-                PublishException(serviceResponse, eventKey, data, wrapper.Exception);
+                PublishException(serviceResponse, eventKey, requestData, wrapper.Exception);
                 return true;
             }
             return false;

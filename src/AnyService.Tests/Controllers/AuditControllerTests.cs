@@ -92,7 +92,7 @@ namespace AnyService.Tests.Controllers
                     new AuditRecord{Id = "d"},
                 }
             };
-            var aSrv = new Mock<IAuditService>();
+            var aSrv = new Mock<IAuditManager>();
             aSrv.Setup(c => c.GetAll(It.IsAny<AuditPagination>())).ReturnsAsync(new ServiceResponse { Data = page, Result = ServiceResult.Ok });
 
             var l = new Mock<ILogger<AuditController<MyClass>>>();

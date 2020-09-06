@@ -7,22 +7,22 @@ using System.Threading.Tasks;
 
 namespace AnyService.Services.Audit
 {
-    public class AuditService : IAuditService
+    public class AuditManager : IAuditManager
     {
         #region Fields
         private static readonly IDictionary<Type, string> EntityTypesNames = new Dictionary<Type, string>();
         private readonly WorkContext _workContext;
         private readonly IRepository<AuditRecord> _repository;
         private readonly AuditConfig _auditConfig;
-        private readonly ILogger<AuditService> _logger;
+        private readonly ILogger<AuditManager> _logger;
         #endregion
 
         #region ctor
-        public AuditService(
+        public AuditManager(
             WorkContext workContext,
             IRepository<AuditRecord> repository,
             AuditConfig auditConfig,
-            ILogger<AuditService> logger
+            ILogger<AuditManager> logger
             )
         {
             _workContext = workContext;

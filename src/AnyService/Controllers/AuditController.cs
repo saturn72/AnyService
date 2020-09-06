@@ -2,13 +2,10 @@
 using AnyService.Services;
 using AnyService.Services.Audit;
 using AnyService.Services.ServiceResponseMappers;
-using AutoMapper.Configuration.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace AnyService.Controllers
@@ -18,7 +15,7 @@ namespace AnyService.Controllers
     public class AuditController<TDomainModel> : ControllerBase where TDomainModel : IDomainModelBase
     {
         #region fields
-        private readonly IAuditService _auditService;
+        private readonly IAuditManager _auditManager;
         private readonly ILogger<AuditController<TDomainModel>> _logger;
         private readonly IServiceResponseMapper _serviceResponseMapper;
         private readonly Type _curType;
@@ -27,14 +24,14 @@ namespace AnyService.Controllers
 
         #region ctor
         public AuditController(
-            IAuditService auditService,
+            IAuditManager auditService,
             ILogger<AuditController<TDomainModel>> logger,
             IServiceResponseMapper serviceResponseMapper
             )
         {
             _logger = logger;
             _serviceResponseMapper = serviceResponseMapper;
-            _auditService = auditService;
+            _auditManager = auditService;
             _curType = typeof(TDomainModel);
             _curTypeName = _curType.Name;
         }
@@ -76,7 +73,7 @@ namespace AnyService.Controllers
                 return BadRequest();
 
 
-            var srvRes = await _auditService.GetAll(pagination);
+            var srvRes = await _auditManager.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller,
                 $"Get all audit service result: '{srvRes.Result}', message: '{srvRes.Message}', exceptionId: '{srvRes.ExceptionId}', data: '{pagination.Data.ToJsonString()}'");
             srvRes.Data = pagination?.Map<PaginationModel<AuditRecord>>();

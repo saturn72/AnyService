@@ -12,7 +12,7 @@ using Xunit;
 
 namespace AnyService.Tests.Services.Audit
 {
-    public class AuditServiceTests
+    public class AuditManagetTests
     {
         [Fact]
         public async Task GetAll_ReturnsErrorOn_RepositoryException()
@@ -30,8 +30,8 @@ namespace AnyService.Tests.Services.Audit
                 EntityNameResolver = t => t.FullName,
             };
 
-            var logger = new Mock<ILogger<AuditService>>();
-            var aSrv = new AuditService(wc, repo.Object, aConfig, logger.Object);
+            var logger = new Mock<ILogger<AuditManager>>();
+            var aSrv = new AuditManager(wc, repo.Object, aConfig, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Error);
         }
@@ -52,8 +52,8 @@ namespace AnyService.Tests.Services.Audit
                 EntityNameResolver = t => t.FullName,
             };
 
-            var logger = new Mock<ILogger<AuditService>>();
-            var aSrv = new AuditService(wc, repo.Object, aConfig, logger.Object);
+            var logger = new Mock<ILogger<AuditManager>>();
+            var aSrv = new AuditManager(wc, repo.Object, aConfig, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Ok);
             (srvRes.Data as Pagination<AuditRecord>).Data.ShouldBe(repoData);
@@ -80,8 +80,8 @@ namespace AnyService.Tests.Services.Audit
                 EntityNameResolver = t => t.FullName,
             };
 
-            var logger = new Mock<ILogger<AuditService>>();
-            var aSrv = new AuditService(wc, repo.Object, aConfig, logger.Object);
+            var logger = new Mock<ILogger<AuditManager>>();
+            var aSrv = new AuditManager(wc, repo.Object, aConfig, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Ok);
             (srvRes.Data as Pagination<AuditRecord>).Data.ShouldBe(repoData);
@@ -101,7 +101,7 @@ namespace AnyService.Tests.Services.Audit
         [MemberData(nameof(BuildAuditPaginationQuery_DATA))]
         public void BuildAuditPaginationQuery(AuditPagination p, IEnumerable<int> selectedIndexes)
         {
-            var a = new TestAuditService();
+            var a = new TestAuditManager();
             var q = a.QueryBuilder(p);
 
             var res = _records.Where(q);
@@ -202,9 +202,9 @@ namespace AnyService.Tests.Services.Audit
             new AuditRecord {Id = "i",  AuditRecordType = Delete,  EntityName = Name3, OnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromDays(1)).ToIso8601()},
         };
 
-        public class TestAuditService : AuditService
+        public class TestAuditManager : AuditManager
         {
-            public TestAuditService() : base(null, null, null, null)
+            public TestAuditManager() : base(null, null, null, null)
             {
             }
             public Func<AuditRecord, bool> QueryBuilder(AuditPagination pagination) => BuildAuditPaginationQuery(pagination);

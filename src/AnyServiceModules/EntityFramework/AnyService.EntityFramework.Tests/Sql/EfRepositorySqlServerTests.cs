@@ -9,10 +9,9 @@ using Moq;
 
 namespace AnyService.EntityFramework.Tests.Sql
 {
-
     public class EfRepositorySqlServerTests
     {
-        #region nnested classes
+        #region nested classes
         public class SqlBulkTestClass : IDomainModelBase
         {
             public string Id { get; set; }
@@ -28,7 +27,7 @@ namespace AnyService.EntityFramework.Tests.Sql
         public EfRepositorySqlServerTests()
         {
             _options = new DbContextOptionsBuilder<SqlDbContext>()
-                   .UseSqlServer(@"Data Source=.\SqlExpress;Initial Catalog=Test_DB;Integrated Security=True")
+                   .UseSqlServer(@"Data Source=.\SqlExpress;Initial Catalog=AnyService_Test_DB;Integrated Security=True")
                    .Options;
 
             _dbContext = new SqlDbContext(_options);

@@ -40,6 +40,7 @@ namespace Microsoft.Extensions.DependencyInjection
             NormalizeConfiguration(config);
 
             services.TryAddSingleton(config);
+            services.TryAddTransient(sp => sp.GetService<WorkContext>().CurrentEntityConfigRecord.AuditConfig);
 
             services.TryAddTransient(typeof(ICrudService<>), typeof(CrudService<>));
 
@@ -99,8 +100,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 var mt = wc.CurrentEntityConfigRecord.ResponseMapperType;
                 return sp.GetService(mt) as IServiceResponseMapper;
             });
-
-            services.TryAddScoped<IAuditService, AuditService>();
+            services.TryAddScoped<IAuditManager, AuditManager>();
             services.TryAddSingleton<IEventBus, DefaultEventsBus>();
 
             if (config.ManageEntityPermissions)

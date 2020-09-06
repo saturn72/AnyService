@@ -7,7 +7,7 @@ using Xunit;
 
 namespace AnyService.Tests.Services.Audit
 {
-    public class AuditServiceExtensionsTests
+    public class AuditManagerExtensionsTests
     {
         public class TestClass : IDomainModelBase
         {
@@ -16,9 +16,9 @@ namespace AnyService.Tests.Services.Audit
         [Fact]
         public async Task InsertCreateRecord()
         {
-            var ah = new Mock<IAuditService>();
+            var ah = new Mock<IAuditManager>();
             var t = new TestClass { Id = "a" };
-            await AuditServiceExtensions.InsertCreateRecord(ah.Object, t);
+            await AuditManagerExtensions.InsertCreateRecord(ah.Object, t);
             ah.Verify(a => a.InsertAuditRecord(
                 It.Is<Type>(x => x == typeof(TestClass)),
                 It.Is<string>(i => i == t.Id),
@@ -31,9 +31,9 @@ namespace AnyService.Tests.Services.Audit
         [Fact]
         public async Task InsertReadRecord_SingleEntity()
         {
-            var ah = new Mock<IAuditService>();
+            var ah = new Mock<IAuditManager>();
             var read = new TestClass { Id = "b" };
-            await AuditServiceExtensions.InsertReadRecord(ah.Object, read);
+            await AuditManagerExtensions.InsertReadRecord(ah.Object, read);
             ah.Verify(a => a.InsertAuditRecord(
                 It.Is<Type>(x => x == typeof(TestClass)),
                 It.Is<string>(i => i == read.Id),
@@ -44,12 +44,12 @@ namespace AnyService.Tests.Services.Audit
         [Fact]
         public async Task InsertReadRecord_Pagination()
         {
-            var ah = new Mock<IAuditService>();
+            var ah = new Mock<IAuditManager>();
             var page = new Pagination<TestClass>
             {
                 Data = new[] { new TestClass { Id = "b" } }
             };
-            await AuditServiceExtensions.InsertReadRecord(ah.Object, page);
+            await AuditManagerExtensions.InsertReadRecord(ah.Object, page);
             ah.Verify(a => a.InsertAuditRecord(
                 It.Is<Type>(x => x == typeof(TestClass)),
                 It.Is<string>(i => i == null),
@@ -61,10 +61,10 @@ namespace AnyService.Tests.Services.Audit
         [Fact]
         public async Task InsertUpdatedRecord()
         {
-            var ah = new Mock<IAuditService>();
+            var ah = new Mock<IAuditManager>();
             var after = new TestClass { Id = "a" };
             var before = new TestClass { Id = "b" };
-            await AuditServiceExtensions.InsertUpdatedRecord(ah.Object, after, before);
+            await AuditManagerExtensions.InsertUpdatedRecord(ah.Object, after, before);
             ah.Verify(a => a.InsertAuditRecord(
                 It.Is<Type>(x => x == typeof(TestClass)),
                 It.Is<string>(i => i == after.Id),
@@ -78,9 +78,9 @@ namespace AnyService.Tests.Services.Audit
         [Fact]
         public async Task InsertDeletedRecord()
         {
-            var ah = new Mock<IAuditService>();
+            var ah = new Mock<IAuditManager>();
             var t = new TestClass { Id = "a" };
-            await AuditServiceExtensions.InsertDeletedRecord(ah.Object, t);
+            await AuditManagerExtensions.InsertDeletedRecord(ah.Object, t);
             ah.Verify(a => a.InsertAuditRecord(
                 It.Is<Type>(x => x == typeof(TestClass)),
                 It.Is<string>(i => i == t.Id),
