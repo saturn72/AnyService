@@ -40,16 +40,14 @@ namespace AnyService.Tests.Controllers
             public string Id { get; set; }
         }
         [Theory]
-        [InlineData("")]
-        [InlineData(" ")]
-        [InlineData(null)]
         [InlineData("ttt")]
-        public async Task GetAll_UnknownAuditRecordType_ReturnsBadRequest(string auditRecordType)
+        [InlineData("ttt, " + AuditRecordTypes.CREATE)]
+        public async Task GetAll_UnknownAuditRecordType_ReturnsBadRequest(string auditRecordTypes)
         {
             var l = new Mock<ILogger<AuditController<MyClass>>>();
             var ctrl = new AuditController<MyClass>(null, l.Object, null);
 
-            var res = await ctrl.GetAll(auditRecordType: auditRecordType);
+            var res = await ctrl.GetAll(auditRecordTypes: auditRecordTypes);
             res.ShouldBeOfType<BadRequestResult>();
         }
         [Theory]
@@ -57,12 +55,24 @@ namespace AnyService.Tests.Controllers
         [InlineData(AuditRecordTypes.READ)]
         [InlineData(AuditRecordTypes.UPDATE)]
         [InlineData(AuditRecordTypes.DELETE)]
-        public async Task GetAll_TypeIdNotAuditable__ReturnsBadRequest(string auditRecordType)
+        public async Task GetAll_AuditRecordType_NotAuditable_ReturnsBadRequest(string auditRecordTypes)
         {
             var l = new Mock<ILogger<AuditController<MyClass>>>();
             var ctrl = new AuditController<MyClass>(null, l.Object, null);
 
-            var res = await ctrl.GetAll(auditRecordType: auditRecordType);
+            var res = await ctrl.GetAll(auditRecordTypes: auditRecordTypes);
+            res.ShouldBeOfType<BadRequestResult>();
+        }
+        [Theory]
+        [InlineData("ttt", null)]
+        [InlineData(null, "ttt")]
+        [InlineData("ttt", "rrr")]
+        public async Task GetAll_InvalidFrom_Todates_ReturnsBadRequest(string fromUtc, string toUtc)
+        {
+            var l = new Mock<ILogger<AuditController<MyClass>>>();
+            var ctrl = new AuditController<MyClass>(null, l.Object, null);
+
+            var res = await ctrl.GetAll(fromUtc: fromUtc, toUtc: toUtc);
             res.ShouldBeOfType<BadRequestResult>();
         }
         public class MyAuditableClass : IDomainModelBase, ICreatableAudit
@@ -72,23 +82,23 @@ namespace AnyService.Tests.Controllers
         [Fact]
         public async Task GetAll_ReturnsPage()
         {
-            var page = new Pagination<MyAuditableClass>
+            var page = new AuditPagination
             {
                 Data = new[]
                 {
-                    new MyAuditableClass{Id = "a"},
-                    new MyAuditableClass{Id = "b"},
-                    new MyAuditableClass{Id = "c"},
-                    new MyAuditableClass{Id = "d"},
+                    new AuditRecord{Id = "a"},
+                    new AuditRecord{Id = "b"},
+                    new AuditRecord{Id = "c"},
+                    new AuditRecord{Id = "d"},
                 }
             };
             var aSrv = new Mock<IAuditService>();
-            aSrv.Setup(c => c.GetAll(It.IsAny<string>(), It.IsAny<Pagination<MyAuditableClass>>())).ReturnsAsync(new ServiceResponse { Data = page, Result = ServiceResult.Ok });
+            aSrv.Setup(c => c.GetAll(It.IsAny<AuditPagination>())).ReturnsAsync(new ServiceResponse { Data = page, Result = ServiceResult.Ok });
 
             var l = new Mock<ILogger<AuditController<MyClass>>>();
             var ctrl = new AuditController<MyClass>(aSrv.Object, l.Object, null);
 
-            var res = await ctrl.GetAll(auditRecordType: AuditRecordTypes.CREATE);
+            var res = await ctrl.GetAll(auditRecordTypes: AuditRecordTypes.CREATE);
 
             var ok = res.ShouldBeOfType<OkObjectResult>();
             var v = ok.Value as PaginationModel<MyAuditableClass>;

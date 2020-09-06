@@ -17,38 +17,26 @@ namespace AnyService.Tests.Services
             public string Id { get; set; }
             public bool Public { get; set; }
             public bool Deleted { get; set; }
-            public string DeletedOnUtc { get; set; }
-            public string DeletedByUserId { get; set; }
         }
         static readonly IEnumerable<MyClass> Table = new[]
         {
             new MyClass
             {
-                CreatedByUserId = "123",
-                DeletedByUserId = "123",
             },
             new MyClass
             {
                 Id = "id-1",
                 Public = true,
                 Deleted = true,
-                CreatedByUserId = "123",
-                UpdateRecords = new []{
-                    new UpdateRecord{
-                        UpdatedByUserId = "123"
-                    }
-                }
             },
             new MyClass
             {
                 Id = "id-2",
-                CreatedByUserId = "234",
                 Public = true,
             },
             new MyClass
             {
                 Id = "id-3",
-                CreatedByUserId = "44",
                 Public = true,
             },
         };

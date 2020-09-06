@@ -15,7 +15,7 @@ using AnyService.Services.Audit;
 
 namespace AnyService.Tests.Services
 {
-    public class TestFileContainer : AuditableTestModel, IFileContainer
+    public class TestFileContainer : AuditableTestModel, IFileContainer, ISoftDelete
     {
         public string Value { get; set; }
         public IEnumerable<FileModel> Files { get; set; }
@@ -156,7 +156,7 @@ namespace AnyService.Tests.Services
 
             mp.Verify(a => a.PrepareForCreate(It.Is<AuditableTestModel>(e => e == model)), Times.Once);
             ah.Verify(a => a.InsertAuditRecord(
-                    It.IsAny<string>(),
+                    It.IsAny<Type>(),
                     It.IsAny<string>(),
                     It.Is<string>(s => s == AuditRecordTypes.CREATE),
                     It.IsAny<object>())); eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<DomainEventData>()), Times.Once);
@@ -205,7 +205,7 @@ namespace AnyService.Tests.Services
 
             mp.Verify(a => a.PrepareForCreate(It.Is<TestFileContainer>(e => e == model)), Times.Once);
             ah.Verify(a => a.InsertAuditRecord(
-                It.IsAny<string>(),
+                It.IsAny<Type>(),
                 It.IsAny<string>(),
                 It.Is<string>(s => s == AuditRecordTypes.CREATE),
                 It.IsAny<object>()));
@@ -1105,7 +1105,7 @@ namespace AnyService.Tests.Services
             res.Result.ShouldBe(ServiceResult.Ok);
             mp.Verify(a => a.PrepareForDelete(It.Is<AuditableTestModel>(e => e == dbModel)), Times.Once);
             ah.Verify(a => a.InsertAuditRecord(
-                   It.IsAny<string>(),
+                   It.IsAny<Type>(),
                    It.IsAny<string>(),
                    It.Is<string>(s => s == AuditRecordTypes.DELETE),
                    It.IsAny<object>())); eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<DomainEventData>()), Times.Once);
@@ -1149,7 +1149,7 @@ namespace AnyService.Tests.Services
             res.Result.ShouldBe(ServiceResult.Ok);
             mp.Verify(a => a.PrepareForDelete(It.Is<AuditableTestModel>(e => e == dbModel)), Times.Once);
             ah.Verify(a => a.InsertAuditRecord(
-                   It.IsAny<string>(),
+                   It.IsAny<Type>(),
                    It.IsAny<string>(),
                    It.Is<string>(s => s == AuditRecordTypes.DELETE),
                    It.IsAny<object>())); eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<DomainEventData>()), Times.Once);

@@ -3,8 +3,6 @@ using System.Linq;
 using AnyService.Audity;
 using AnyService.Security;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using AnyService.Services.Audit;
 
 namespace AnyService.Services
 {
@@ -13,74 +11,25 @@ namespace AnyService.Services
         #region fields
         private readonly WorkContext _workContext;
         private readonly IPermissionManager _permissionManager;
-        private readonly IRepository<AuditRecord> _auditRepository;
         #endregion
 
         public DefaultFilterFactory(
             WorkContext workContext, 
-            IPermissionManager permissionManager,
-            IRepository<AuditRecord> auditRepository)
+            IPermissionManager permissionManager)
         {
             _workContext = workContext;
             _permissionManager = permissionManager;
-            _auditRepository = auditRepository;
         }
         public virtual Task<Func<object, Func<TDomainModel, bool>>> GetFilter<TDomainModel>(string filterKey) where TDomainModel : IDomainModelBase
         {
             return filterKey switch
             {
-                "__created" => CreatedByUser<TDomainModel>(),
-                "__updated" => UpdatedByUser<TDomainModel>(),
-                "__deleted" => DeletedByUser<TDomainModel>(),
                 "__canRead" => CanRead<TDomainModel>(),
                 "__canUpdate" => CanUpdate<TDomainModel>(),
                 "__canDelete" => CanDelete<TDomainModel>(),
                 "__public" => IsPublic<TDomainModel>(),
                 _ => Task.FromResult(null as Func<object, Func<TDomainModel, bool>>),
             };
-        }
-        protected virtual Task<Func<object, Func<TDomainModel, bool>>> CreatedByUser<TDomainModel>() where TDomainModel : IDomainModelBase
-        {
-            Func<object, Func<TDomainModel, bool>> p = payload =>
-            {
-            if (!IsOfType<ICreatableAudit>()) return null;
-            var q =   new Func<TDomainModel, bool>(x =>
-                (x.UserId == _workContext.CurrentUserId || x.ClientId == _workContext.CurrentClientId)
-                && x.EntityName == auditEntityName(typeof(TDomainModel)
-                && x.AuditRecordType == AuditRecordTypes.CREATE)
-
-
-                    ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>($"{nameof(ICreatableAudit.CreatedByUserId)} == {userId}")?.Compile() :
-                    null;
-            };
-
-            return Task.FromResult(p);
-        }
-        protected virtual Task<Func<object, Func<TDomainModel, bool>>> UpdatedByUser<TDomainModel>()
-        {
-            var userId = _workContext.CurrentUserId;
-            Func<object, Func<TDomainModel, bool>> p = payload =>
-            {
-                return IsOfType<IUpdatableAudit>() ?
-                    new Func<TDomainModel, bool>(x =>
-                    {
-                        var updaterecords = (x as IUpdatableAudit).UpdateRecords;
-                        return !updaterecords.IsNullOrEmpty() && updaterecords.Any(x => x.UpdatedByUserId == userId);
-                    }) :
-                    null;
-            };
-            return Task.FromResult(p);
-        }
-        protected virtual Task<Func<object, Func<TDomainModel, bool>>> DeletedByUser<TDomainModel>()
-        {
-            var userId = _workContext.CurrentUserId;
-            Func<object, Func<TDomainModel, bool>> p = payload =>
-            {
-                return IsOfType<IDeletableAudit>() ?
-                    ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>($"{nameof(IDeletableAudit.DeletedByUserId)} == {userId}")?.Compile() :
-                    null;
-            };
-            return Task.FromResult(p);
         }
         protected virtual Task<Func<object, Func<TDomainModel, bool>>> IsPublic<TDomainModel>()
         {
