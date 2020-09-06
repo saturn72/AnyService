@@ -42,6 +42,11 @@ namespace AnyService.Services.Audit
             var wrapper = new ServiceResponseWrapper(serviceResponse);
             var data = await _repository.Query(r => r.GetAll(pagination), wrapper);
             _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data.ToJsonString()}");
+            if(data == null)
+            {
+                serviceResponse.Result = ServiceResult.Ok;
+                serviceResponse.Data = new AuditRecord[] { };
+            }    
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse.ToJsonString()}");
             return serviceResponse;
         }

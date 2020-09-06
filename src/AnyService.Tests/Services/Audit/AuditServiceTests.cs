@@ -1,14 +1,12 @@
 ﻿using AnyService.Audity;
 using AnyService.Services;
 using AnyService.Services.Audit;
-using AutoMapper.Configuration.Annotations;
 using Microsoft.Extensions.Logging;
+using Moq;
 using Shouldly;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.Xml;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -16,6 +14,79 @@ namespace AnyService.Tests.Services.Audit
 {
     public class AuditServiceTests
     {
+        [Fact]
+        public async Task GetAll_ReturnsErrorOn_RepositoryException()
+        {
+            var wc = new WorkContext
+            {
+                CurrentClientId = "cId",
+                CurrentUserId = "uId",
+            };
+
+            var repo = new Mock<IRepository<AuditRecord>>();
+            Should.Throw<Exception>(() => repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>())));
+            var aConfig = new AuditConfig
+            {
+                EntityNameResolver = t => t.FullName,
+            };
+
+            var logger = new Mock<ILogger<AuditService>>();
+            var aSrv = new AuditService(wc, repo.Object, aConfig, logger.Object);
+            var srvRes = await aSrv.GetAll(new AuditPagination());
+            srvRes.Result.ShouldBe(ServiceResult.Error);
+        }
+        [Fact]
+        public async Task GetAll_ReturnsEmptyArray_OnRepositoryNull()
+        {
+            var wc = new WorkContext
+            {
+                CurrentClientId = "cId",
+                CurrentUserId = "uId",
+            };
+
+            var repo = new Mock<IRepository<AuditRecord>>();
+            var repoData = null as IEnumerable<AuditRecord>;
+            repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>())).ReturnsAsync(repoData);
+            var aConfig = new AuditConfig
+            {
+                EntityNameResolver = t => t.FullName,
+            };
+
+            var logger = new Mock<ILogger<AuditService>>();
+            var aSrv = new AuditService(wc, repo.Object, aConfig, logger.Object);
+            var srvRes = await aSrv.GetAll(new AuditPagination());
+            srvRes.Result.ShouldBe(ServiceResult.Ok);
+            (srvRes.Data as Pagination<AuditRecord>).Data.ShouldBe(repoData);
+        }
+        [Fact]
+        public async Task GetAll_ReturnsRepositoryData()
+        {
+            var wc = new WorkContext
+            {
+                CurrentClientId = "cId",
+                CurrentUserId = "uId",
+            };
+
+            var repo = new Mock<IRepository<AuditRecord>>();
+            var repoData = new[]
+            {
+                new AuditRecord { Id = "a" },
+                new AuditRecord { Id = "b" },
+                new AuditRecord { Id = "c" },
+            };
+            repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>())).ReturnsAsync(repoData);
+            var aConfig = new AuditConfig
+            {
+                EntityNameResolver = t => t.FullName,
+            };
+
+            var logger = new Mock<ILogger<AuditService>>();
+            var aSrv = new AuditService(wc, repo.Object, aConfig, logger.Object);
+            var srvRes = await aSrv.GetAll(new AuditPagination());
+            srvRes.Result.ShouldBe(ServiceResult.Ok);
+            (srvRes.Data as Pagination<AuditRecord>).Data.ShouldBe(repoData);
+        }
+        #region Query builder
         private const string Create = "c",
             Read = "r",
             Update = "u",
@@ -26,8 +97,8 @@ namespace AnyService.Tests.Services.Audit
             Client1 = "c1",
             User1 = "u1";
 
+        [Theory]
         [MemberData(nameof(BuildAuditPaginationQuery_DATA))]
-
         public void BuildAuditPaginationQuery(AuditPagination p, IEnumerable<int> selectedIndexes)
         {
             var a = new TestAuditService();
@@ -138,5 +209,6 @@ namespace AnyService.Tests.Services.Audit
             }
             public Func<AuditRecord, bool> QueryBuilder(AuditPagination pagination) => BuildAuditPaginationQuery(pagination);
         }
+        #endregion
     }
 }
