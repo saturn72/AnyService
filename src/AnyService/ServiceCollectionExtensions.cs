@@ -100,7 +100,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return sp.GetService(mt) as IServiceResponseMapper;
             });
 
-            services.TryAddScoped<IAuditHelper, AuditHelper>();
+            services.TryAddScoped<IAuditService, AuditService>();
             services.TryAddSingleton<IEventBus, DefaultEventsBus>();
 
             if (config.ManageEntityPermissions)

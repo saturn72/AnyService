@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AnyService.Audity;
 using AnyService.Services;
 using AnyService.Services.Preparars;
 using AnyService.Services.ServiceResponseMappers;
@@ -22,6 +23,10 @@ namespace AnyService
             FilterFactoryType = typeof(DefaultFilterFactory);
             ModelPrepararType = typeof(DummyModelPreparar<>);
             ServiceResponseMapperType = typeof(DataOnlyServiceResponseMapper);
+            AuditConfig = new AuditConfig
+            {
+                EntityNameResolver = new Func<Type, string>(t => t.FullName),
+            };
         }
 
         public IEnumerable<EntityConfigRecord> EntityConfigRecords { get; set; }
@@ -43,5 +48,6 @@ namespace AnyService
         public Type FilterFactoryType { get; set; }
         public Type ModelPrepararType { get; set; }
         public Type ServiceResponseMapperType { get; set; }
+        public AuditConfig AuditConfig { get; set; }
     }
 }

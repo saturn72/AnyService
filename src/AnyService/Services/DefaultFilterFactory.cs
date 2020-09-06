@@ -4,6 +4,7 @@ using AnyService.Audity;
 using AnyService.Security;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using AnyService.Services.Audit;
 
 namespace AnyService.Services
 {
@@ -12,12 +13,17 @@ namespace AnyService.Services
         #region fields
         private readonly WorkContext _workContext;
         private readonly IPermissionManager _permissionManager;
+        private readonly IRepository<AuditRecord> _auditRepository;
         #endregion
 
-        public DefaultFilterFactory(WorkContext workContext, IPermissionManager permissionManager)
+        public DefaultFilterFactory(
+            WorkContext workContext, 
+            IPermissionManager permissionManager,
+            IRepository<AuditRecord> auditRepository)
         {
             _workContext = workContext;
             _permissionManager = permissionManager;
+            _auditRepository = auditRepository;
         }
         public virtual Task<Func<object, Func<TDomainModel, bool>>> GetFilter<TDomainModel>(string filterKey) where TDomainModel : IDomainModelBase
         {
@@ -35,11 +41,15 @@ namespace AnyService.Services
         }
         protected virtual Task<Func<object, Func<TDomainModel, bool>>> CreatedByUser<TDomainModel>() where TDomainModel : IDomainModelBase
         {
-            var userId = _workContext.CurrentUserId;
-
             Func<object, Func<TDomainModel, bool>> p = payload =>
             {
-                return IsOfType<ICreatableAudit>() ?
+            if (!IsOfType<ICreatableAudit>()) return null;
+            var q =   new Func<TDomainModel, bool>(x =>
+                (x.UserId == _workContext.CurrentUserId || x.ClientId == _workContext.CurrentClientId)
+                && x.EntityName == auditEntityName(typeof(TDomainModel)
+                && x.AuditRecordType == AuditRecordTypes.CREATE)
+
+
                     ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>($"{nameof(ICreatableAudit.CreatedByUserId)} == {userId}")?.Compile() :
                     null;
             };

@@ -27,7 +27,7 @@ namespace AnyService.Services
         protected readonly IIdGenerator IdGenerator;
         protected readonly IFilterFactory FilterFactory;
         protected readonly IPermissionManager PermissionManager;
-        protected readonly IAuditHelper AuditHelper;
+        protected readonly IAuditService AuditService;
         #endregion
         #region ctor
         public CrudService(
@@ -42,7 +42,7 @@ namespace AnyService.Services
             IIdGenerator idGenerator,
             IFilterFactory filterFactory,
             IPermissionManager permissionManager,
-            IAuditHelper auditHelper
+            IAuditService auditService
             )
         {
             Config = config;
@@ -57,7 +57,7 @@ namespace AnyService.Services
             IdGenerator = idGenerator;
             FilterFactory = filterFactory;
             PermissionManager = permissionManager;
-            AuditHelper = auditHelper;
+            AuditService = auditService;
         }
 
         #endregion
@@ -81,7 +81,7 @@ namespace AnyService.Services
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Create, entity))
                 return serviceResponse;
             if (entity is ICreatableAudit)
-                await AuditHelper.InsertCreateRecord(entity);
+                await AuditService.InsertCreateRecord(entity);
 
             Publish(EventKeys.Create, serviceResponse.Data);
             serviceResponse.Result = ServiceResult.Ok;
@@ -133,6 +133,10 @@ namespace AnyService.Services
             {
                 serviceResponse.Data = data;
                 serviceResponse.Result = ServiceResult.Ok;
+
+                if (typeof(TDomainModel) is IReadableAudit)
+                    await AuditService.InsertReadRecord(data);
+
                 Publish(EventKeys.Read, serviceResponse.Data);
             }
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
@@ -161,6 +165,10 @@ namespace AnyService.Services
             {
                 serviceResponse.Data = pagination;
                 serviceResponse.Result = ServiceResult.Ok;
+
+                if (typeof(TDomainModel) is IReadableAudit)
+                    await AuditService.InsertReadRecord(pagination);
+
                 Publish(EventKeys.Read, serviceResponse.Data);
             }
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
@@ -258,7 +266,7 @@ namespace AnyService.Services
             }
 
             if (entity is IUpdatableAudit)
-                await AuditHelper.InsertUpdatedRecord(dbEntry, entity);
+                await AuditService.InsertUpdatedRecord(dbEntry, entity);
 
             Publish(EventKeys.Update, serviceResponse.Data);
             serviceResponse.Result = ServiceResult.Ok;
@@ -275,11 +283,12 @@ namespace AnyService.Services
 
             Logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
             var wrapper = new ServiceResponseWrapper(serviceResponse);
+
             var dbEntry = await Repository.Query(r => r.GetById(id), wrapper);
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Delete, id))
                 return serviceResponse;
             var softDelete = dbEntry as ISoftDelete;
-            if (softDelete!=null && softDelete.Deleted)
+            if (softDelete != null && softDelete.Deleted)
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Entity already deleted");
 
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Prepare for deletion");
@@ -303,7 +312,7 @@ namespace AnyService.Services
 
 
             if (dbEntry is IDeletableAudit)
-                await AuditHelper.InsertDeletedRecord(dbEntry);
+                await AuditService.InsertDeletedRecord(dbEntry);
 
             Publish(EventKeys.Delete, serviceResponse.Data);
             serviceResponse.Result = ServiceResult.Ok;

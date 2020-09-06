@@ -20,16 +20,11 @@ namespace AnyService.Tests.Services
         public string Value { get; set; }
         public IEnumerable<FileModel> Files { get; set; }
     }
-    public class AuditableTestModel : IDomainModelBase, IFullAudit
+    public class AuditableTestModel : IDomainModelBase, IFullAudit, ISoftDelete
     {
         public string Id { get; set; }
-        public string CreatedOnUtc { get; set; }
-        public string CreatedByUserId { get; set; }
-        public string CreatedWorkContextJson { get; set; }
+       
         public bool Deleted { get; set; }
-        public string DeletedOnUtc { get; set; }
-        public string DeletedByUserId { get; set; }
-        public IEnumerable<UpdateRecord> UpdateRecords { get; set; }
     }
     public class TestModel : IDomainModelBase
     {
@@ -140,7 +135,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(true);
 
             var mp = new Mock<IModelPreparar<AuditableTestModel>>();
-            var ah = new Mock<IAuditHelper>();
+            var ah = new Mock<IAuditService>();
             var eb = new Mock<IEventBus>();
             var ekr = new EventKeyRecord("create", null, null, null);
             var wc = new WorkContext
@@ -183,7 +178,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(true);
 
             var mp = new Mock<IModelPreparar<TestFileContainer>>();
-            var ah = new Mock<IAuditHelper>();
+            var ah = new Mock<IAuditService>();
             var eb = new Mock<IEventBus>();
             var ekr = new EventKeyRecord("create", null, null, null);
             var wc = new WorkContext
@@ -1076,6 +1071,50 @@ namespace AnyService.Tests.Services
                Times.Once);
         }
         [Fact]
+        public async Task Delete_IDeletableAudit_SoftDelete_AlreadyDeleted_ReturnsBadRequest()
+        {
+            var mp = new Mock<IModelPreparar<AuditableTestModel>>();
+            var eb = new Mock<IEventBus>();
+
+            var dbModel = new AuditableTestModel();
+
+            var repo = new Mock<IRepository<AuditableTestModel>>();
+            repo.Setup(r => r.GetById(It.IsAny<string>()))
+                .ReturnsAsync(dbModel);
+
+            repo.Setup(r => r.Update(It.IsAny<AuditableTestModel>()))
+                .ReturnsAsync(dbModel);
+
+            var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
+            v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse>()))
+                .ReturnsAsync(true);
+            var ekr = new EventKeyRecord(null, null, null, "delete");
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    EventKeys = ekr,
+                }
+            };
+            var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
+            var ah = new Mock<IAuditService>();
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null, ah.Object);
+            var id = "some-id";
+            var res = await cSrv.Delete(id);
+            res.Result.ShouldBe(ServiceResult.Ok);
+            mp.Verify(a => a.PrepareForDelete(It.Is<AuditableTestModel>(e => e == dbModel)), Times.Once);
+            ah.Verify(a => a.InsertAuditRecord(
+                   It.IsAny<string>(),
+                   It.IsAny<string>(),
+                   It.Is<string>(s => s == AuditRecordTypes.DELETE),
+                   It.IsAny<object>())); eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<DomainEventData>()), Times.Once);
+            eb.Verify(e => e.Publish(
+                It.Is<string>(ek => ek == ekr.Delete),
+                It.Is<DomainEventData>(
+                    ed => ed.Data == dbModel && ed.PerformedByUserId == wc.CurrentUserId)), Times.Once());
+        }
+        [Fact]
         public async Task Delete_IDeletableAudit_Success()
         {
             var mp = new Mock<IModelPreparar<AuditableTestModel>>();
@@ -1103,11 +1142,17 @@ namespace AnyService.Tests.Services
                 }
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null, null);
+            var ah = new Mock<IAuditService>();
+            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null, ah.Object);
             var id = "some-id";
             var res = await cSrv.Delete(id);
             res.Result.ShouldBe(ServiceResult.Ok);
             mp.Verify(a => a.PrepareForDelete(It.Is<AuditableTestModel>(e => e == dbModel)), Times.Once);
+            ah.Verify(a => a.InsertAuditRecord(
+                   It.IsAny<string>(),
+                   It.IsAny<string>(),
+                   It.Is<string>(s => s == AuditRecordTypes.DELETE),
+                   It.IsAny<object>())); eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<DomainEventData>()), Times.Once);
             eb.Verify(e => e.Publish(
                 It.Is<string>(ek => ek == ekr.Delete),
                 It.Is<DomainEventData>(

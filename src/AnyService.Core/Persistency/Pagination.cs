@@ -32,7 +32,7 @@ namespace AnyService.Services
         public int Offset { get; set; } = 0;
         /// <summary>
         /// Gets or sets current page size
-        /// default vlue is 50
+        /// default vluee is 50
         /// </summary>
         /// <value>ulong</value>
         public int PageSize { get; set; } = 50;

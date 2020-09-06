@@ -15,10 +15,6 @@ namespace AnyService.Tests.Services
         public class MyClass : IDomainModelBase, IFullAudit, IPublishable
         {
             public string Id { get; set; }
-            public string CreatedOnUtc { get; set; }
-            public string CreatedByUserId { get; set; }
-            public string CreatedWorkContextJson { get; set; }
-            public IEnumerable<UpdateRecord> UpdateRecords { get; set; }
             public bool Public { get; set; }
             public bool Deleted { get; set; }
             public string DeletedOnUtc { get; set; }

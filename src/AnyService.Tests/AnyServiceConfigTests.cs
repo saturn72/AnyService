@@ -21,6 +21,8 @@ namespace AnyService.Tests
             c.FilterFactoryType.ShouldBeOfType<DefaultFilterFactory>();
             c.ModelPrepararType.ShouldBeOfType(typeof(DummyModelPreparar<>));
             c.ServiceResponseMapperType.ShouldBeOfType<DataOnlyServiceResponseMapper>();
+
+            c.AuditConfig.EntityNameResolver(typeof(string)).ShouldBe(typeof(string).FullName);
         }
     }
 }
