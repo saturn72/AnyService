@@ -24,7 +24,8 @@ namespace AnyService.Tests.Services.Audit
             };
 
             var repo = new Mock<IRepository<AuditRecord>>();
-            Should.Throw<Exception>(() => repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>())));
+            repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>()))
+                .ThrowsAsync(new Exception());
             var aConfig = new AuditConfig
             {
                 EntityNameResolver = t => t.FullName,
@@ -45,8 +46,8 @@ namespace AnyService.Tests.Services.Audit
             };
 
             var repo = new Mock<IRepository<AuditRecord>>();
-            var repoData = null as IEnumerable<AuditRecord>;
-            repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>())).ReturnsAsync(repoData);
+            repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>()))
+                .ReturnsAsync(null as IEnumerable<AuditRecord>);
             var aConfig = new AuditConfig
             {
                 EntityNameResolver = t => t.FullName,
@@ -56,7 +57,7 @@ namespace AnyService.Tests.Services.Audit
             var aSrv = new AuditManager(wc, repo.Object, aConfig, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Ok);
-            (srvRes.Data as Pagination<AuditRecord>).Data.ShouldBe(repoData);
+            (srvRes.Data as Pagination<AuditRecord>).Data.ShouldBeEmpty();
         }
         [Fact]
         public async Task GetAll_ReturnsRepositoryData()
@@ -195,7 +196,7 @@ namespace AnyService.Tests.Services.Audit
             new AuditRecord {Id = "a", EntityId = Entity1,  AuditRecordType = Create, EntityName = Name1, ClientId = Client1,
                 OnUtc = DateTime.MinValue.ToIso8601()},
 
-            new AuditRecord {Id = "b", EntityId = Entity2,  AuditRecordType = Create, EntityName = Name3, 
+            new AuditRecord {Id = "b", EntityId = Entity2,  AuditRecordType = Create, EntityName = Name3,
                 OnUtc = DateTime.UtcNow.Subtract(TimeSpan.FromDays(5)).ToIso8601()},
 
             new AuditRecord {Id = "c", EntityId = Entity1,  AuditRecordType = Read,  EntityName = Name1, ClientId = Client1,

@@ -36,18 +36,19 @@ namespace AnyService.Services.Audit
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all audit records flow");
             pagination.QueryFunc = BuildAuditPaginationQuery(pagination);
 
-            var serviceResponse = new ServiceResponse { Data = pagination };
+            _logger.LogDebug(LoggingEvents.Repository, "Get all audit-records from repository using paginate = " + pagination);
 
-            _logger.LogDebug(LoggingEvents.Repository, "Get all audit-records from repository using paginate = " + pagination.ToJsonString());
+            var serviceResponse = new ServiceResponse { Data = pagination };
             var wrapper = new ServiceResponseWrapper(serviceResponse);
             var data = await _repository.Query(r => r.GetAll(pagination), wrapper);
             _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data.ToJsonString()}");
-            if (data == null)
-            {
-                serviceResponse.Result = ServiceResult.Ok;
-                serviceResponse.Data = new AuditRecord[] { };
-            }
-            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse.ToJsonString()}");
+            if (serviceResponse.Result != ServiceResult.NotSet)
+                return serviceResponse;
+            
+            pagination.Data = data ?? new AuditRecord[] { };
+            serviceResponse.Data = pagination;
+            serviceResponse.Result = ServiceResult.Ok;
+            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
 
