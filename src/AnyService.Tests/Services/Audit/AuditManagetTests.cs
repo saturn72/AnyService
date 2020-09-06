@@ -87,7 +87,11 @@ namespace AnyService.Tests.Services.Audit
             (srvRes.Data as Pagination<AuditRecord>).Data.ShouldBe(repoData);
         }
         #region Query builder
-        private const string Create = "c",
+        private const string
+            Entity1 = "e1",
+            Entity2 = "e2",
+            Entity3 = "e3",
+            Create = "c",
             Read = "r",
             Update = "u",
             Delete = "d",
@@ -99,21 +103,21 @@ namespace AnyService.Tests.Services.Audit
 
         [Theory]
         [MemberData(nameof(BuildAuditPaginationQuery_DATA))]
-        public void BuildAuditPaginationQuery(AuditPagination p, IEnumerable<int> selectedIndexes)
+        public void BuildAuditPaginationQuery(AuditPagination p, int[] selectedIndexes)
         {
             var a = new TestAuditManager();
             var q = a.QueryBuilder(p);
 
-            var res = _records.Where(q);
+            var res = _records.Where(q).ToArray();
             res.Count().ShouldBe(selectedIndexes.Count());
 
-            for (int i = 0; i < selectedIndexes.Count(); i++)
-                res.ShouldContain(x => x == _records.ElementAt(i));
+            for (int i = 0; i < selectedIndexes.Length; i++)
+                res.ShouldContain(x => x == _records.ElementAt(selectedIndexes[i]));
         }
         public static IEnumerable<object[]> BuildAuditPaginationQuery_DATA = new[]
         {
             //Ids
-            new object[]{ new AuditPagination{EntityIds = new []{Create, "a" },}, new[]{0,2 }},
+            new object[]{ new AuditPagination{EntityIds = new []{ Entity1 },}, new[]{0, 2, 4, 7 }},
 
             //record types
             new object[]{ new AuditPagination{AuditRecordTypes = new[]{Create },}, new[]{0,1,6 }},
@@ -124,7 +128,7 @@ namespace AnyService.Tests.Services.Audit
             new object[]
             {
                 new AuditPagination{
-                    EntityIds = new[] { Create, "a" },
+                    EntityIds = new[] { Entity1},
                     AuditRecordTypes = new[]{ Read },
                 },
                 new[]{ 2 }},
@@ -151,7 +155,7 @@ namespace AnyService.Tests.Services.Audit
              {
                  UserIds= new[] { User1},
                  AuditRecordTypes = new[]{Delete}
-             },new[]{ 3,}},
+             },new[]{ 5,}},
 
               //client Ids
              new object[]{new AuditPagination{ ClientIds = new[] { Client1} },new[]{0, 2, 6 }},
@@ -174,7 +178,6 @@ namespace AnyService.Tests.Services.Audit
                      AuditRecordTypes = new[]{Delete }
                  },new[]{8 }},
 
-
              //to
              new object[]{new AuditPagination{ ToUtc = DateTime.UtcNow.Subtract(TimeSpan.FromDays(3))}
              ,new[]{0, 1, 2, 3, 4, 5, 6,}},
@@ -186,20 +189,32 @@ namespace AnyService.Tests.Services.Audit
                      ToUtc = DateTime.UtcNow.Subtract(TimeSpan.FromDays(3)),
                      FromUtc = DateTime.UtcNow.Subtract(TimeSpan.FromDays(10)),
                  },new[]{1 }},
-
-
         };
         private readonly IEnumerable<AuditRecord> _records = new[]
         {
-            new AuditRecord {Id = "a",  AuditRecordType = Create, EntityName = Name1, ClientId = Client1},
-            new AuditRecord {Id = "b",  AuditRecordType = Create, EntityName = Name3, OnUtc = DateTime.UtcNow.Subtract(TimeSpan.FromDays(5)).ToIso8601()},
-            new AuditRecord {Id = "c",  AuditRecordType = Read,  EntityName = Name1, ClientId = Client1},
-            new AuditRecord {Id = "d",  AuditRecordType = Update,  EntityName = Name3, UserId = User1},
-            new AuditRecord {Id = "e",  AuditRecordType = Delete,  EntityName = Name2},
-            new AuditRecord {Id = "f",  AuditRecordType = Delete,  EntityName = Name1, UserId = User1},
-            new AuditRecord {Id = "g",  AuditRecordType = Create,  EntityName = Name2, ClientId = Client1},
-            new AuditRecord {Id = "h",  AuditRecordType = Update,  EntityName = Name3, UserId = User1, OnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(10)).ToIso8601()},
-            new AuditRecord {Id = "i",  AuditRecordType = Delete,  EntityName = Name3, OnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromDays(1)).ToIso8601()},
+            new AuditRecord {Id = "a", EntityId = Entity1,  AuditRecordType = Create, EntityName = Name1, ClientId = Client1,
+                OnUtc = DateTime.MinValue.ToIso8601()},
+
+            new AuditRecord {Id = "b", EntityId = Entity2,  AuditRecordType = Create, EntityName = Name3, 
+                OnUtc = DateTime.UtcNow.Subtract(TimeSpan.FromDays(5)).ToIso8601()},
+
+            new AuditRecord {Id = "c", EntityId = Entity1,  AuditRecordType = Read,  EntityName = Name1, ClientId = Client1,
+                OnUtc = DateTime.MinValue.ToIso8601()},
+
+            new AuditRecord {Id = "d", EntityId = Entity3,  AuditRecordType = Update,  EntityName = Name3, UserId = User1,
+                OnUtc = DateTime.MinValue.ToIso8601()},
+
+            new AuditRecord {Id = "e", EntityId = Entity1,  AuditRecordType = Delete,  EntityName = Name2,
+                OnUtc = DateTime.MinValue.ToIso8601()},
+
+            new AuditRecord {Id = "f", EntityId = Entity2,  AuditRecordType = Delete,  EntityName = Name1, UserId = User1,
+                OnUtc = DateTime.MinValue.ToIso8601()},
+
+            new AuditRecord {Id = "g", EntityId = Entity3,  AuditRecordType = Create,  EntityName = Name2, ClientId = Client1,
+                OnUtc = DateTime.MinValue.ToIso8601()},
+
+            new AuditRecord {Id = "h", EntityId = Entity1,  AuditRecordType = Update,  EntityName = Name3, UserId = User1, OnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(10)).ToIso8601()},
+            new AuditRecord {Id = "i", EntityId = Entity3,  AuditRecordType = Delete,  EntityName = Name3, OnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromDays(1)).ToIso8601()},
         };
 
         public class TestAuditManager : AuditManager

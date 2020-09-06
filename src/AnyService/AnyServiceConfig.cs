@@ -48,6 +48,9 @@ namespace AnyService
         public Type FilterFactoryType { get; set; }
         public Type ModelPrepararType { get; set; }
         public Type ServiceResponseMapperType { get; set; }
+        /// <summary>
+        /// Gets or sets the sudit config for the entity
+        /// </summary>
         public AuditConfig AuditConfig { get; set; }
     }
 }

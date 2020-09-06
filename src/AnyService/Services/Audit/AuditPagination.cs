@@ -6,6 +6,7 @@ namespace AnyService.Services.Audit
 {
     public class AuditPagination : Pagination<AuditRecord>
     {
+        public IEnumerable<string> AuditRecordIds{ get; set; }
         public IEnumerable<string> AuditRecordTypes { get; set; }
         public IEnumerable<string> EntityNames { get; set; }
         public IEnumerable<string> EntityIds{ get; set; }

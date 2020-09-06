@@ -42,17 +42,18 @@ namespace AnyService.Services.Audit
             var wrapper = new ServiceResponseWrapper(serviceResponse);
             var data = await _repository.Query(r => r.GetAll(pagination), wrapper);
             _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data.ToJsonString()}");
-            if(data == null)
+            if (data == null)
             {
                 serviceResponse.Result = ServiceResult.Ok;
                 serviceResponse.Data = new AuditRecord[] { };
-            }    
+            }
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse.ToJsonString()}");
             return serviceResponse;
         }
 
         protected Func<AuditRecord, bool> BuildAuditPaginationQuery(AuditPagination pagination)
         {
+            var auditRecordIds = getCollectionQuery(pagination.AuditRecordIds, a => a.Id);
             var entityIdsQuery = getCollectionQuery(pagination.EntityIds, a => a.EntityId);
             var auditRecordsQuery = getCollectionQuery(pagination.AuditRecordTypes, a => a.AuditRecordType);
             var entityNamesQuery = getCollectionQuery(pagination.EntityNames, a => a.EntityName);
@@ -66,6 +67,7 @@ namespace AnyService.Services.Audit
                 c => true;
 
             return x =>
+                auditRecordIds(x) &&
                 entityIdsQuery(x) &&
                 auditRecordsQuery(x) &&
                 entityNamesQuery(x) &&

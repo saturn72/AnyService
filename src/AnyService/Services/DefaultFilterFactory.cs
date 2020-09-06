@@ -33,14 +33,14 @@ namespace AnyService.Services
         }
         protected virtual Task<Func<object, Func<TDomainModel, bool>>> IsPublic<TDomainModel>()
         {
-            var isDeletable = IsOfType<IDeletableAudit>();
+            var isSoftDelete = IsOfType<ISoftDelete>();
             var isPublishable = IsOfType<IPublishable>();
             Func<object, Func<TDomainModel, bool>> p = payload =>
             {
-                if (isPublishable && isDeletable)
+                if (isPublishable && isSoftDelete)
                     return x => (x as IPublishable).Public && !(x as ISoftDelete).Deleted;
                 return isPublishable ?
-                    ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>($"{nameof(IPublishable.Public)} == {true}")?.Compile() :
+                    new Func<TDomainModel, bool>(x => (x as IPublishable).Public) :
                     null;
             };
 

@@ -6,34 +6,39 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AnyService.Controllers
 {
     [ApiController]
     [Route("audit")]
-    public class AuditController<TDomainModel> : ControllerBase where TDomainModel : IDomainModelBase
+    public class AuditController : ControllerBase
     {
         #region fields
+        private static readonly IEnumerable<string> ValidAuditRecordTypes = new[]
+        {
+            AuditRecordTypes.CREATE,
+            AuditRecordTypes.READ,
+            AuditRecordTypes.UPDATE,
+            AuditRecordTypes.DELETE,
+        };
+
         private readonly IAuditManager _auditManager;
-        private readonly ILogger<AuditController<TDomainModel>> _logger;
+        private readonly ILogger<AuditController> _logger;
         private readonly IServiceResponseMapper _serviceResponseMapper;
-        private readonly Type _curType;
-        private readonly string _curTypeName;
         #endregion
 
         #region ctor
         public AuditController(
-            IAuditManager auditService,
-            ILogger<AuditController<TDomainModel>> logger,
+            IAuditManager auditManager,
+            ILogger<AuditController> logger,
             IServiceResponseMapper serviceResponseMapper
             )
         {
+            _auditManager = auditManager;
             _logger = logger;
             _serviceResponseMapper = serviceResponseMapper;
-            _auditManager = auditService;
-            _curType = typeof(TDomainModel);
-            _curTypeName = _curType.Name;
         }
         #endregion
 
@@ -52,7 +57,7 @@ namespace AnyService.Controllers
             [FromQuery] string sortOrder = "desc"
             )
         {
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Start Get all audit flow. With values: " +
+            _logger.LogDebug(LoggingEvents.Controller, $"Start Get all audit flow. With values: " +
                 $"\'{nameof(auditRecordTypes)}\' = \'{auditRecordTypes}\'," +
                 $"\'{nameof(entityNames)}\' = \'{entityNames}\'," +
                 $"\'{nameof(entityIds)}\' = \'{entityIds}\'," +
@@ -72,11 +77,11 @@ namespace AnyService.Controllers
             if (!IsValidRequest(pagination))
                 return BadRequest();
 
-
             var srvRes = await _auditManager.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller,
                 $"Get all audit service result: '{srvRes.Result}', message: '{srvRes.Message}', exceptionId: '{srvRes.ExceptionId}', data: '{pagination.Data.ToJsonString()}'");
-            srvRes.Data = pagination?.Map<PaginationModel<AuditRecord>>();
+            if (srvRes.ValidateServiceResponse<AuditPagination>())
+                srvRes.Data = srvRes.Data.Map<PaginationModel<AuditRecord>>();
             return _serviceResponseMapper.Map(srvRes);
         }
 
@@ -134,44 +139,10 @@ namespace AnyService.Controllers
             if (pagination == null) return false;
 
             if (!pagination.AuditRecordTypes.IsNullOrEmpty())
-            {
                 foreach (var art in pagination.AuditRecordTypes)
-                    switch (art)
-                    {
-                        case AuditRecordTypes.CREATE:
-                            if (_curType is ICreatableAudit) break;
-                            return false;
-                        case AuditRecordTypes.READ:
-                            if (_curType is IReadableAudit) break;
-                            return false;
-                        case AuditRecordTypes.UPDATE:
-                            if (_curType is IUpdatableAudit) break;
-                            return false;
-                        case AuditRecordTypes.DELETE:
-                            if (_curType is IDeletableAudit) break;
-                            return false;
-
-                        default: return false;
-                    }
-            }
-
+                    if (!ValidAuditRecordTypes.Contains(art))
+                        return false;
             return true;
-        }
-
-        private AuditPagination GetAuditRecordPagination(
-            int offset,
-            int pageSize,
-            string orderBy,
-            string sortOrder
-            )
-        {
-            return new AuditPagination
-            {
-                Offset = offset,
-                OrderBy = orderBy,
-                PageSize = pageSize,
-                SortOrder = sortOrder
-            };
         }
     }
 }

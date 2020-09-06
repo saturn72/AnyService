@@ -1,4 +1,5 @@
 using System;
+using AnyService.Audity;
 using AnyService.Security;
 using AnyService.Services;
 using Microsoft.AspNetCore.Http;
@@ -48,5 +49,9 @@ namespace AnyService
         public Type ModelPrepararType { get; set; }
         public Type ControllerType { get; set; }
         public string Area { get; set; }
+        /// <summary>
+        /// Gets or sets the sudit config for the entity
+        /// </summary>
+        public AuditConfig AuditConfig { get; set; }
     }
 }

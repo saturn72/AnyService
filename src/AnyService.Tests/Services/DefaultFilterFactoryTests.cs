@@ -12,7 +12,7 @@ namespace AnyService.Tests.Services
 {
     public class DefaultFilterFactoryTests
     {
-        public class MyClass : IDomainModelBase, IFullAudit, IPublishable
+        public class MyClass : IDomainModelBase, ISoftDelete, IPublishable
         {
             public string Id { get; set; }
             public bool Public { get; set; }
@@ -40,62 +40,6 @@ namespace AnyService.Tests.Services
                 Public = true,
             },
         };
-
-        [Fact]
-        public async Task GetAllKeys_Created()
-        {
-            var key = "__created";
-            var wc = new WorkContext
-            {
-                CurrentUserId = "123",
-                CurrentEntityConfigRecord = new EntityConfigRecord
-                {
-                    Type = typeof(MyClass),
-                }
-            };
-            var dff = new DefaultFilterFactory(wc, null);
-            var d = await dff.GetFilter<MyClass>(key);
-            var f = d("dd");
-            var res = Table.Where(f);
-            res.Count().ShouldBe(2);
-        }
-        [Fact]
-        public async Task GetAllKeys_Updated()
-        {
-            var key = "__updated";
-            var wc = new WorkContext
-            {
-                CurrentUserId = "123",
-                CurrentEntityConfigRecord = new EntityConfigRecord
-                {
-                    Type = typeof(MyClass),
-                }
-            };
-            var dff = new DefaultFilterFactory(wc, null);
-            var d = await dff.GetFilter<MyClass>(key);
-            var f = d("dd");
-            var res = Table.Where(f);
-            res.Count().ShouldBe(1);
-        }
-        [Fact]
-        public async Task GetAllKeys_Deleted()
-        {
-            var key = "__deleted";
-            var wc = new WorkContext
-            {
-                CurrentUserId = "123",
-                CurrentEntityConfigRecord = new EntityConfigRecord
-                {
-                    Type = typeof(MyClass),
-                }
-            };
-            var dff = new DefaultFilterFactory(wc, null);
-            var d = await dff.GetFilter<MyClass>(key);
-            var f = d("dd");
-            var res = Table.Where(f);
-            res.Count().ShouldBe(1);
-        }
-
         [Fact]
         public async Task GetAllKeys_CanRead()
         {

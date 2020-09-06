@@ -70,9 +70,8 @@ namespace AnyService.Tests.Services.Audit
                 It.Is<string>(i => i == after.Id),
                 It.Is<string>(i => i == AuditRecordTypes.UPDATE),
                 It.Is<object>(x =>
-                    x.GetPropertyValueByName<TestClass>("before") == before &&
-                    x.GetPropertyValueByName<TestClass>("after") == after)),
-
+                    x.GetPropertyValueByName<TestClass>("before") != null &&
+                    x.GetPropertyValueByName<TestClass>("after") != null)),
                 Times.Once);
         }
         [Fact]

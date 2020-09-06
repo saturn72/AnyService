@@ -135,6 +135,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 ecr.PaginationSettings ??= config.DefaultPaginationSettings;
                 ecr.FilterFactoryType ??= config.FilterFactoryType;
                 ecr.ModelPrepararType ??= config.ModelPrepararType;
+                ecr.AuditConfig ??= config.AuditConfig;
 
                 ecr.ControllerType ??= typeof(GenericController<>).MakeGenericType(ecr.Type);
                 ValidateType<ControllerBase>(ecr.ControllerType);
