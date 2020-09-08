@@ -22,11 +22,11 @@ namespace AnyService.Tests
             c.ModelPrepararType.ShouldBeOfType(typeof(DummyModelPreparar<>));
             c.ServiceResponseMapperType.ShouldBeOfType<DataOnlyServiceResponseMapper>();
 
-            c.AuditConfig.EntityNameResolver(typeof(string)).ShouldBe(typeof(string).FullName);
-            c.AuditConfig.AuditRules.AuditCreate.ShouldBeTrue();
-            c.AuditConfig.AuditRules.AuditRead.ShouldBeTrue();
-            c.AuditConfig.AuditRules.AuditUpdate.ShouldBeTrue();
-            c.AuditConfig.AuditRules.AuditDelete.ShouldBeTrue();
+            c.AuditSettings.EntityNameResolver(typeof(string)).ShouldBe(typeof(string).FullName);
+            c.AuditSettings.AuditRules.AuditCreate.ShouldBeTrue();
+            c.AuditSettings.AuditRules.AuditRead.ShouldBeTrue();
+            c.AuditSettings.AuditRules.AuditUpdate.ShouldBeTrue();
+            c.AuditSettings.AuditRules.AuditDelete.ShouldBeTrue();
         }
     }
 }

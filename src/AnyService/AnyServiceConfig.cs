@@ -23,7 +23,7 @@ namespace AnyService
             FilterFactoryType = typeof(DefaultFilterFactory);
             ModelPrepararType = typeof(DummyModelPreparar<>);
             ServiceResponseMapperType = typeof(DataOnlyServiceResponseMapper);
-            AuditConfig = new AuditSettings
+            AuditSettings = new AuditSettings
             {
                 EntityNameResolver = new Func<Type, string>(t => t.FullName),
                 AuditRules = new AuditRules
@@ -58,6 +58,6 @@ namespace AnyService
         /// <summary>
         /// Gets or sets the sudit config for the entity
         /// </summary>
-        public AuditSettings AuditConfig { get; set; }
+        public AuditSettings AuditSettings { get; set; }
     }
 }

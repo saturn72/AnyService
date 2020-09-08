@@ -53,6 +53,6 @@ namespace AnyService
         /// Gets or sets the audit rules for the entity
         /// </summary>
         public AuditRules AuditRules { get; set; }
-        internal AuditSettings AuditConfig { get; set; }
+        internal AuditSettings AuditSettings { get; set; }
     }
 }

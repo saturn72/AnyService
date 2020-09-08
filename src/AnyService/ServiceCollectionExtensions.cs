@@ -14,6 +14,7 @@ using AnyService.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using AnyService.Services.Audit;
 using AnyService.Services.Preparars;
+using AnyService.Audity;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -40,7 +41,7 @@ namespace Microsoft.Extensions.DependencyInjection
             NormalizeConfiguration(config);
 
             services.TryAddSingleton(config);
-            services.TryAddTransient(sp => sp.GetService<WorkContext>().CurrentEntityConfigRecord?.AuditConfig ?? config.AuditConfig);
+            services.TryAddTransient(sp => sp.GetService<WorkContext>().CurrentEntityConfigRecord?.AuditSettings ?? config.AuditSettings);
 
             services.TryAddTransient(typeof(ICrudService<>), typeof(CrudService<>));
 
@@ -136,10 +137,16 @@ namespace Microsoft.Extensions.DependencyInjection
                 ecr.FilterFactoryType ??= config.FilterFactoryType;
                 ecr.ModelPrepararType ??= config.ModelPrepararType;
 
-                var auditConfig = config.AuditConfig.DeepClone();
-                if (ecr.AuditRules != null)
-                    auditConfig.AuditRules = ecr.AuditRules;
-                ecr.AuditConfig = auditConfig;
+                if (ecr.AuditRules == null)
+                    ecr.AuditSettings = config.AuditSettings;
+                else
+                {
+                    ecr.AuditSettings = new AuditSettings
+                    {
+                        EntityNameResolver = config.AuditSettings.EntityNameResolver,
+                        AuditRules = ecr.AuditRules,
+                    };
+                }
 
                 ecr.ControllerType ??= typeof(GenericController<>).MakeGenericType(ecr.Type);
                 ValidateType<ControllerBase>(ecr.ControllerType);
