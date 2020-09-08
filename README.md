@@ -92,7 +92,7 @@ public void ConfigureServices(IServiceCollection services)
   ...
   var dbName = "anyservice-testsapp-db";
     
-  var options = new DbContextOptionsBuilder<AvosetDbContext>()
+  var options = new DbContextOptionsBuilder<SampleAppDbContext>()
       .UseInMemoryDatabase(databaseName: dbName).Options;
   services.AddTransient<DbContext>(sp  => new SampleAppDbContext>(options)); //inject dbContext instance
   services.AddTransient(typeof(IRepository<Model>), typeof(EfRepository<>); //inject Generic repository
