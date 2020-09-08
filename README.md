@@ -69,14 +69,10 @@ public void ConfigureServices(IServiceCollection services)
 3. Create `DbContext` (it must have `public DbSet<UserPermissions> UserPermissions { get; set; }` in order to manage user permissions on an entity)
 
 ```
-public class SampleAppDbContext : DbContext, IAnyServiceDbContext
+public class SampleAppDbContext : DbContext
     {
         public SampleAppDbContext(DbContextOptions<SampleAppDbContext> options) : base(options)
         { }
-        public DbSet<UserPermissions> UserPermissions { get; set; }
-        public DbSet<DependentModel> DependentModel { get; set; }
-        public DbSet<Dependent2> Dependent2s { get; set; }
-        public DbSet<MultipartSampleModel> MultipartSampleModels { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
