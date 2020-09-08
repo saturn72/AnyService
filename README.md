@@ -121,16 +121,88 @@ public void ConfigureServices(IServiceCollection services)
 
 #### 5. Add Authentication
 
-`AnyService` must have authentication configured (otherwise 401 Unauthorized response is always returned). `AnyService` provides mocked `AuthenticationHandler` that injects claims to Request's User. This done by using `AddAlwaysPassAuthentication` extension method.
+`AnyService` must have authentication configured (otherwise 401 Unauthorized response is always returned). The easiest way to develop with authentication is to inject mocked instance of `AuthenticationHandler<AuthenticationSchemeOptions>`. Please copy the code below and configure (feel free to add  your own required claims).
+```
+public class IntegrationAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+    {
+        public const string Schema = "int-auth-schema";
 
+        public const string SystemAdmin = "system-admin-user-id";
+        public const string User1 = "user-id-1";
+        public const string User2 = "user-id-2";
+        
+        public IntegrationAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock) : base(options, logger, encoder, clock)
+        {
+        }
+        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+        {
+            Request.Headers.TryGetValue("Authorization", out StringValues authHeader);
+            var token = authHeader[0].Split(' ', StringSplitOptions.RemoveEmptyEntries)[1];
+            var identity = new ClaimsIdentity(Tokens[token], Schema);
+            var principal = new ClaimsPrincipal(identity);
+            var ticket = new AuthenticationTicket(principal, Schema);
+
+            var result = AuthenticateResult.Success(ticket);
+
+            return Task.FromResult(result);
+        }
+        private static readonly IReadOnlyDictionary<string, IEnumerable<Claim>> Tokens = new Dictionary<string, IEnumerable<Claim>>
+        {
+            {
+                SystemAdmin,
+                new[]
+                {
+                     //list all you claims here
+                    new Claim(ClaimTypes.NameIdentifier, SystemAdmin), 
+                    new Claim("role", "system-manager"),
+                    new Claim(ClaimTypes.Role, "system-user")
+                }
+            },
+             {
+               User1,
+                new[]
+                {
+                     //list all you claims here
+                    new Claim(ClaimTypes.NameIdentifier, User1), 
+                    new Claim("role", "catalog-manager"),
+                    new Claim(ClaimTypes.Role, "system-user"),
+                    new Claim(ClaimTypes.Role, "product-create"),
+                    new Claim(ClaimTypes.Role, "product-read"),
+                    new Claim(ClaimTypes.Role, "product-update"),
+                    new Claim(ClaimTypes.Role, "product-delete"),
+                }
+            },
+            {
+                User2,
+                new[]
+                {
+                    //list all you claims here
+                    new Claim(ClaimTypes.NameIdentifier, User2), 
+                    new Claim("role", "registered-user"),
+                    new Claim(ClaimTypes.Role, "system-user"),
+                    new Claim(ClaimTypes.Role, "product-read"),
+                }
+            },
+        };
+    }
+```
+Now configure the handler in your `Startup.cs`
 ```
 public void ConfigureServices(IServiceCollection services)
 {
   ...
-  services.AddAlwaysPassAuthentication("abcd-1234", null); //
+  services.AddAuthentication(o =>
+    {
+        o.DefaultScheme = IntegrationAuthenticationHandler.Schema;
+        o.DefaultAuthenticateScheme = IntegrationAuthenticationHandler.Schema;
+    }).AddScheme<AuthenticationSchemeOptions, IntegrationAuthenticationHandler>(IntegrationAuthenticationHandler.Schema, options => { });
   ...
 }
 ```
+This method helps you to focus on developing without the need to setup full authentication mechanism. 
+To direct your server to the schema you just added, imcoming `HTTP` request should contain the header `Authorization` with the value `int-auth-schema <user_name>`.
+So the `authorization` header with the value `int-auth-schema user-id-1` injects all the claims assosicate with `User1`, and basically authenticate it.
+Another example of this method can be found in the class `ManagedAuthenticationHandler` of `AnyService`'s `SampleApp` project
 
 #### 6. The final step is to add `AnyService` middlewares to pipeline
 
