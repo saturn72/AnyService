@@ -10,6 +10,7 @@ using System.Net.Http.Headers;
 using Xunit;
 using Xunit.Abstractions;
 using AnyService.Services.Audit;
+using System.Collections.Generic;
 
 namespace AnyService.E2E
 {
@@ -22,9 +23,11 @@ namespace AnyService.E2E
         [Fact]
         public async Task Use_ReservedQueries()
         {
-            DbContext.Set<DependentModel>().RemoveRange(DbContext.Set<DependentModel>());
+            var url = "Stock/";
+            var ids = new List<string>();
+            DbContext.Set<Stock>().RemoveRange(DbContext.Set<Stock>());
             var totalEntities = 6;
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             for (int i = 0; i < totalEntities; i++)
             {
                 var model = new
@@ -32,49 +35,44 @@ namespace AnyService.E2E
                     Value = "init value_" + i + 1,
                     Public = i % 2 == 0,
                 };
-                var r = await HttpClient.PostAsJsonAsync("dependentmodel", model);
-
+                var r = await HttpClient.PostAsJsonAsync(url, model);
                 r.EnsureSuccessStatusCode();
+                var c = await r.Content.ReadAsStringAsync();
+                var j = JObject.Parse(c);
+                ids.Add(j["id"].Value<string>());
             }
             await Task.Delay(1000);
             #region create
-            var res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.CREATE}&entityNames=dependentmodel");
+            var res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.CREATE}&entityNames={typeof(Stock).FullName}");
             res.EnsureSuccessStatusCode();
             var content = await res.Content.ReadAsStringAsync();
             var jObj = JObject.Parse(content);
             var jArr = jObj["data"] as JArray;
             _output.WriteLine(jArr.ToString());
             jArr.Count.ShouldBe(totalEntities);
+
+            //for later...
+
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-            res = await HttpClient.GetAsync($"dependentmodel?query=__created");
+            res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.CREATE}&entityNames={typeof(Stock).FullName}");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
             jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(0);
             #endregion
-            #region public
-            res = await HttpClient.GetAsync($"dependentmodel?query=__public");
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(totalEntities / 2);
-            #endregion
             #region updated
-            var id1 = jArr.ElementAt(0).Value<string>("id");
-            var id2 = jArr.ElementAt(1).Value<string>("id");
 
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
 
-            var updateModel = new DependentModel
+            var updateModel = new Stock
             {
                 Value = "updated-value",
                 Public = false
             };
-            res = await HttpClient.PutAsJsonAsync($"dependentmodel/{id1}", updateModel);
+            res = await HttpClient.PutAsJsonAsync($"{url}{ids.ElementAt(0)}", updateModel);
             res.EnsureSuccessStatusCode();
-            res = await HttpClient.GetAsync($"dependentmodel?query=__updated");
+            res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.UPDATE}&entityNames={typeof(Stock).FullName}");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
@@ -82,21 +80,21 @@ namespace AnyService.E2E
             jArr.Count.ShouldBe(1);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-            res = await HttpClient.PutAsJsonAsync($"dependentmodel/{id1}", updateModel);
-            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-            content = await HttpClient.GetStringAsync($"dependentmodel?query=__updated");
+            res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.UPDATE}&entityNames={typeof(Stock).FullName}");
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
             jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(0);
             #endregion
             #region delete
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
 
-            res = await HttpClient.DeleteAsync($"dependentmodel/{id1}");
+            res = await HttpClient.DeleteAsync($"{url}{ids.ElementAt(0)}");
             res.EnsureSuccessStatusCode();
-            res = await HttpClient.DeleteAsync($"dependentmodel/{id2}");
+            res = await HttpClient.DeleteAsync($"{url}{ids.ElementAt(1)}");
             res.EnsureSuccessStatusCode();
-            res = await HttpClient.GetAsync($"dependentmodel?query=__deleted");
+            res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.DELETE}&entityNames={typeof(Stock).FullName}");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
             jObj = JObject.Parse(content);
@@ -104,58 +102,9 @@ namespace AnyService.E2E
             jArr.Count.ShouldBe(2);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-
-            res = await HttpClient.DeleteAsync($"dependentmodel/{id1}");
-            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-            res = await HttpClient.DeleteAsync($"dependentmodel/{id2}");
-            res.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-            content = await HttpClient.GetStringAsync($"dependentmodel?query=__deleted");
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(0);
-            #endregion
-            #region canRead
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
-            res = await HttpClient.GetAsync($"dependentmodel?query=__canRead");
+            res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.DELETE}&entityNames={typeof(Stock).FullName}");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(totalEntities);
-
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-            content = await HttpClient.GetStringAsync($"dependentmodel?query=__canRead");
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(0);
-            #endregion
-
-            #region canUpdate
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
-            res = await HttpClient.GetAsync($"dependentmodel?query=__canUpdate");
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(totalEntities);
-
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-            content = await HttpClient.GetStringAsync($"dependentmodel?query=__canUpdate");
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(0);
-            #endregion
-            #region canUpdate
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
-            res = await HttpClient.GetAsync($"dependentmodel?query=__canDelete");
-            res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(totalEntities);
-
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-            content = await HttpClient.GetStringAsync($"dependentmodel?query=__canDelete");
             jObj = JObject.Parse(content);
             jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(0);

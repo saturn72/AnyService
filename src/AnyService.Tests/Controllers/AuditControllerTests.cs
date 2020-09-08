@@ -45,7 +45,8 @@ namespace AnyService.Tests.Controllers
         public async Task GetAll_UnknownAuditRecordType_ReturnsBadRequest(string auditRecordTypes)
         {
             var l = new Mock<ILogger<AuditController>>();
-            var ctrl = new AuditController(null, l.Object, null);
+            var wc = new WorkContext { CurrentClientId = "1232" };
+            var ctrl = new AuditController(null, l.Object, wc, null);
 
             var res = await ctrl.GetAll(auditRecordTypes: auditRecordTypes);
             res.ShouldBeOfType<BadRequestResult>();
@@ -57,7 +58,7 @@ namespace AnyService.Tests.Controllers
         public async Task GetAll_InvalidFrom_Todates_ReturnsBadRequest(string fromUtc, string toUtc)
         {
             var l = new Mock<ILogger<AuditController>>();
-            var ctrl = new AuditController(null, l.Object, null);
+            var ctrl = new AuditController(null, l.Object, null, null);
 
             var res = await ctrl.GetAll(fromUtc: fromUtc, toUtc: toUtc);
             res.ShouldBeOfType<BadRequestResult>();
@@ -89,8 +90,8 @@ namespace AnyService.Tests.Controllers
             rm.Setup(r => r.Map(It.IsAny<ServiceResponse>()))
                 .Returns(new OkResult())
                 .Callback<ServiceResponse>(s => srvRes = s);
-
-            var ctrl = new AuditController(aSrv.Object, l.Object, rm.Object);
+            var wc = new WorkContext { CurrentClientId = "1232" };
+            var ctrl = new AuditController(aSrv.Object, l.Object, wc, rm.Object);
 
             var res = await ctrl.GetAll(auditRecordTypes: AuditRecordTypes.CREATE);
 

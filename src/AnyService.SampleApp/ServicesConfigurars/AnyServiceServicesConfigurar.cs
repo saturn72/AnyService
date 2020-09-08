@@ -3,7 +3,6 @@ using AnyService.Middlewares;
 using AnyService.SampleApp.Controllers;
 using AnyService.SampleApp.Models;
 using AnyService.SampleApp.Services;
-using AnyService.Services;
 using AnyService.Utilities;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -20,9 +19,13 @@ namespace AnyService.SampleApp.ServicesConfigurars
             {
                 EntityConfigRecords = new[]
                 {
-                    new EntityConfigRecord
+                      new EntityConfigRecord
                     {
                         Type =   typeof(DependentModel),
+                    },
+                    new EntityConfigRecord
+                    {
+                        Type =   typeof(Stock),
                         Authorization = new AuthorizationInfo
                         {
                             ControllerAuthorizationNode = new AuthorizationNode{Roles = new[]{"some-role"}}

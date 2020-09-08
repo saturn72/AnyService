@@ -40,7 +40,7 @@ namespace Microsoft.Extensions.DependencyInjection
             NormalizeConfiguration(config);
 
             services.TryAddSingleton(config);
-            services.TryAddTransient(sp => sp.GetService<WorkContext>().CurrentEntityConfigRecord.AuditConfig);
+            services.TryAddTransient(sp => sp.GetService<WorkContext>().CurrentEntityConfigRecord?.AuditConfig ?? config.AuditConfig);
 
             services.TryAddTransient(typeof(ICrudService<>), typeof(CrudService<>));
 
@@ -97,7 +97,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddTransient(sp =>
             {
                 var wc = sp.GetService<WorkContext>();
-                var mt = wc.CurrentEntityConfigRecord.ResponseMapperType;
+                var mt = wc.CurrentEntityConfigRecord?.ResponseMapperType ?? config.ServiceResponseMapperType;
                 return sp.GetService(mt) as IServiceResponseMapper;
             });
             services.TryAddScoped<IAuditManager, AuditManager>();

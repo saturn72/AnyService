@@ -26,6 +26,7 @@ namespace AnyService.Controllers
 
         private readonly IAuditManager _auditManager;
         private readonly ILogger<AuditController> _logger;
+        private readonly WorkContext _workContext;
         private readonly IServiceResponseMapper _serviceResponseMapper;
         #endregion
 
@@ -33,11 +34,13 @@ namespace AnyService.Controllers
         public AuditController(
             IAuditManager auditManager,
             ILogger<AuditController> logger,
+            WorkContext workContext,
             IServiceResponseMapper serviceResponseMapper
             )
         {
             _auditManager = auditManager;
             _logger = logger;
+            _workContext = workContext;
             _serviceResponseMapper = serviceResponseMapper;
         }
         #endregion
@@ -110,8 +113,8 @@ namespace AnyService.Controllers
                 AuditRecordTypes = splitOrNull(auditRecordTypes),
                 EntityNames = splitOrNull(entityNames),
                 EntityIds = splitOrNull(entityIds),
-                UserIds = splitOrNull(userIds),
-                ClientIds = splitOrNull(clientIds),
+                UserIds = getUserIdsOrNull(userIds),
+                ClientIds = getClientIdsOrNull(clientIds),
                 FromUtc = fromDate,
                 ToUtc = toDate,
                 Offset = offset,
@@ -120,13 +123,24 @@ namespace AnyService.Controllers
                 SortOrder = sortOrder
             };
 
-            IEnumerable<string> splitOrNull(string source)
+            static IEnumerable<string> splitOrNull(string source)
             {
                 return source.HasValue() ?
                     source.Split(",", StringSplitOptions.RemoveEmptyEntries)
                     : null;
             }
-            DateTime? getDateTimeOrNull(string iso8601)
+
+            IEnumerable<string> getUserIdsOrNull(string userIds)
+            {
+                //if (_workContext.IsInRole(_auditConfig.Role) )return splitOrNull(userIds);==> this is for admins
+                return _workContext.CurrentUserId.HasValue() ? new[] { _workContext.CurrentUserId } : null;
+            }
+            IEnumerable<string> getClientIdsOrNull(string clientIds)
+            {
+                //if (_workContext.IsInRole(_auditConfig.Role) )return splitOrNull(clientIds);==> this is for admins
+                return _workContext.CurrentClientId.HasValue() ? new[] { _workContext.CurrentClientId } : null;
+            }
+            static DateTime? getDateTimeOrNull(string iso8601)
             {
                 if (DateTime.TryParse(iso8601, out DateTime value))
                     return value;
