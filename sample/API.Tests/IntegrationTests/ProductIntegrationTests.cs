@@ -1,10 +1,8 @@
 using API.Domain;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Shouldly;
 using System.Net;
 using System.Net.Http;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -55,7 +53,7 @@ namespace API.Tests.IntegrationTests
 
             //get deleted - returns bad request
             res = await Client.GetAsync($"{URI}{pId}");
-            res.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            res.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         }
     }
 }

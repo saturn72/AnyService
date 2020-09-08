@@ -37,10 +37,10 @@ namespace API.Tests
                 new[]
                 {
                     new Claim(ClaimTypes.NameIdentifier, SimpleUser1),
-                    //new Claim(ClaimTypes.Role, "communit-create"),
-                    //new Claim(ClaimTypes.Role, "communit-read"),
-                    //new Claim(ClaimTypes.Role, "communit-update"),
-                    //new Claim(ClaimTypes.Role, "communit-delete"),
+                    new Claim(ClaimTypes.Role, "product-create"),
+                    new Claim(ClaimTypes.Role, "product-read"),
+                    new Claim(ClaimTypes.Role, "product-update"),
+                    new Claim(ClaimTypes.Role, "product-delete"),
                 }
             },
         };

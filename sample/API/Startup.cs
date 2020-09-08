@@ -1,19 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AnyService;
 using AnyService.Endpoints;
 using API.ServiceConfigurars;
 using API.ServicesConfigurars;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace API
 {
@@ -30,6 +23,9 @@ namespace API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            //configure authentication
+            services.AddAuthentication();
+
             new AnyServiceServicesConfigurar().Configure(services, Configuration, null);
             new CachingServicesConfigurar().Configure(services, Configuration, null);
             new EfServicesConfigurar().Configure(services, Configuration, null);

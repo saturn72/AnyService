@@ -2,7 +2,7 @@
 
 namespace API.Domain
 {
-    public class Product : IDomainModelBase
+    public class Category : IDomainModelBase
     {
         public string Id {get;set;}
         public string Name { get; set; }

@@ -67,14 +67,17 @@ namespace AnyService.Services
 
             var serviceResponse = new ServiceResponse();
             if (!await Validator.ValidateForCreate(entity, serviceResponse))
-                return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Entity did not pass validation");
+                return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
 
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Prepare entity to be inserted to database");
             await ModelPreparar.PrepareForCreate(entity);
 
             Logger.LogDebug(LoggingEvents.Repository, $"Insert entity to repository");
+            
+            if (entity is ISoftDelete)
+                (entity as ISoftDelete).Deleted = false;
 
-            var wrapper = new ServiceResponseWrapper(serviceResponse);
+                var wrapper = new ServiceResponseWrapper(serviceResponse);
             var dbData = await Repository.Command(r => r.Insert(entity), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository insert response: {dbData}");
 
@@ -118,7 +121,7 @@ namespace AnyService.Services
                 Data = id
             };
             if (!await Validator.ValidateForGet(serviceResponse))
-                return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Entity did not pass validation");
+                return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
 
             Logger.LogDebug(LoggingEvents.Repository, "Get by Id from repository");
 
@@ -148,7 +151,7 @@ namespace AnyService.Services
             var serviceResponse = new ServiceResponse { Data = pagination };
 
             if (!await Validator.ValidateForGet(serviceResponse))
-                return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Request did not pass validation");
+                return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Request did not pass validation");
 
             if ((pagination = await NormalizePagination(pagination)) == null)
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Missing query data");
@@ -232,7 +235,7 @@ namespace AnyService.Services
             var serviceResponse = new ServiceResponse();
 
             if (!await Validator.ValidateForUpdate(entity, serviceResponse))
-                return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Entity did not pass validation");
+                return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
 
             Logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
             var wrapper = new ServiceResponseWrapper(serviceResponse);
@@ -279,7 +282,7 @@ namespace AnyService.Services
             var serviceResponse = new ServiceResponse();
 
             if (!await Validator.ValidateForDelete(id, serviceResponse))
-                return SetServiceResponse(serviceResponse, ServiceResult.Unauthorized, LoggingEvents.Validation, "Entity did not pass validation");
+                return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
 
             Logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
             var wrapper = new ServiceResponseWrapper(serviceResponse);

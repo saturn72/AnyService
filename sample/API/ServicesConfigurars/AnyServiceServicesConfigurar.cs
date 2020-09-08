@@ -17,6 +17,13 @@ namespace API.ServiceConfigurars
                     new EntityConfigRecord
                     {
                         Type = typeof(Product),
+                        Authorization = new AuthorizationInfo
+                        {
+                            PostAuthorizationNode = new AuthorizationNode{Roles = new[]{"product-create" } },
+                            GetAuthorizationNode = new AuthorizationNode{Roles = new[]{"product-read" } },
+                            PutAuthorizationNode = new AuthorizationNode{Roles = new[]{"product-update" } },
+                            DeleteAuthorizationNode = new AuthorizationNode{Roles = new[]{"product-delete" } },
+                        }
                     }
                 }
             };
