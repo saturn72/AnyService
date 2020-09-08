@@ -26,7 +26,7 @@ namespace AnyService.Tests.Services.Audit
             var repo = new Mock<IRepository<AuditRecord>>();
             repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>()))
                 .ThrowsAsync(new Exception());
-            var aConfig = new AuditConfig
+            var aConfig = new AuditSettings
             {
                 EntityNameResolver = t => t.FullName,
             };
@@ -48,7 +48,7 @@ namespace AnyService.Tests.Services.Audit
             var repo = new Mock<IRepository<AuditRecord>>();
             repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>()))
                 .ReturnsAsync(null as IEnumerable<AuditRecord>);
-            var aConfig = new AuditConfig
+            var aConfig = new AuditSettings
             {
                 EntityNameResolver = t => t.FullName,
             };
@@ -76,7 +76,7 @@ namespace AnyService.Tests.Services.Audit
                 new AuditRecord { Id = "c" },
             };
             repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>())).ReturnsAsync(repoData);
-            var aConfig = new AuditConfig
+            var aConfig = new AuditSettings
             {
                 EntityNameResolver = t => t.FullName,
             };

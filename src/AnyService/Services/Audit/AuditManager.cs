@@ -13,7 +13,7 @@ namespace AnyService.Services.Audit
         private static readonly IDictionary<Type, string> EntityTypesNames = new Dictionary<Type, string>();
         private readonly WorkContext _workContext;
         private readonly IRepository<AuditRecord> _repository;
-        private readonly AuditConfig _auditConfig;
+        private readonly AuditSettings _auditConfig;
         private readonly ILogger<AuditManager> _logger;
         #endregion
 
@@ -21,7 +21,7 @@ namespace AnyService.Services.Audit
         public AuditManager(
             WorkContext workContext,
             IRepository<AuditRecord> repository,
-            AuditConfig auditConfig,
+            AuditSettings auditConfig,
             ILogger<AuditManager> logger
             )
         {

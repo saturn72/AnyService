@@ -50,8 +50,9 @@ namespace AnyService
         public Type ControllerType { get; set; }
         public string Area { get; set; }
         /// <summary>
-        /// Gets or sets the sudit config for the entity
+        /// Gets or sets the audit rules for the entity
         /// </summary>
-        public AuditConfig AuditConfig { get; set; }
+        public AuditRules AuditRules { get; set; }
+        internal AuditSettings AuditConfig { get; set; }
     }
 }

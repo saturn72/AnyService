@@ -24,4 +24,8 @@
     <ProjectReference Include="..\AnyService\AnyService.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Audity\" />
+  </ItemGroup>
+
 </Project>
