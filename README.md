@@ -154,7 +154,7 @@ public class IntegrationAuthenticationHandler : AuthenticationHandler<Authentica
                 {
                      //list all you claims here
                     new Claim(ClaimTypes.NameIdentifier, SystemAdmin), 
-                    new Claim("role", "system-manager"),
+                    new Claim(ClaimTypes.Role, "system-manager"),
                     new Claim(ClaimTypes.Role, "system-user")
                 }
             },
@@ -164,7 +164,7 @@ public class IntegrationAuthenticationHandler : AuthenticationHandler<Authentica
                 {
                      //list all you claims here
                     new Claim(ClaimTypes.NameIdentifier, User1), 
-                    new Claim("role", "catalog-manager"),
+                    new Claim(ClaimTypes.Role, "catalog-manager"),
                     new Claim(ClaimTypes.Role, "system-user"),
                     new Claim(ClaimTypes.Role, "product-create"),
                     new Claim(ClaimTypes.Role, "product-read"),
@@ -178,7 +178,7 @@ public class IntegrationAuthenticationHandler : AuthenticationHandler<Authentica
                 {
                     //list all you claims here
                     new Claim(ClaimTypes.NameIdentifier, User2), 
-                    new Claim("role", "registered-user"),
+                    new Claim(ClaimTypes.Role, "registered-user"),
                     new Claim(ClaimTypes.Role, "system-user"),
                     new Claim(ClaimTypes.Role, "product-read"),
                 }
