@@ -9,10 +9,11 @@ using AnyService.SampleApp.Identity;
 using System.Net.Http.Headers;
 using Xunit;
 using Xunit.Abstractions;
+using AnyService.Services.Audit;
 
 namespace AnyService.E2E
 {
-    public class AuditTests:E2EFixture
+    public class AuditTests : E2EFixture
     {
         public AuditTests(ITestOutputHelper output) : base(output)
         {
@@ -37,7 +38,7 @@ namespace AnyService.E2E
             }
             await Task.Delay(1000);
             #region create
-            var res = await HttpClient.GetAsync($"dependentmodel?query=__created");
+            var res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.CREATE}&entityNames=dependentmodel");
             res.EnsureSuccessStatusCode();
             var content = await res.Content.ReadAsStringAsync();
             var jObj = JObject.Parse(content);

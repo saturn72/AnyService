@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using AnyService.Audity;
 
 namespace AnyService.SampleApp.Models

@@ -46,7 +46,7 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null, null);
             var res = await cSrv.Create(new AuditableTestModel());
-            res.Result.ShouldBe(ServiceResult.Unauthorized);
+            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
         }
         [Fact]
         public async Task Create_BadRequestFromRepository()
@@ -226,7 +226,7 @@ namespace AnyService.Tests.Services
             var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null, null);
             var id = "some-id";
             var res = await cSrv.GetById(id);
-            res.Result.ShouldBe(ServiceResult.Unauthorized);
+            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
             res.Data.ShouldBe(id);
         }
         [Fact]
@@ -384,7 +384,7 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null, null);
             var res = await cSrv.GetAll(null);
-            res.Result.ShouldBe(ServiceResult.Unauthorized);
+            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
             res.Data.ShouldBeNull();
         }
         [Theory]
@@ -579,7 +579,7 @@ namespace AnyService.Tests.Services
             var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null, null);
             var res = await cSrv.Update("123", entity);
 
-            res.Result.ShouldBe(ServiceResult.Unauthorized);
+            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
             res.Data.ShouldBeNull();
         }
         [Fact]
@@ -892,7 +892,7 @@ namespace AnyService.Tests.Services
         #endregion
         #region Delete
         [Fact]
-        public async Task Delete_Unauthorized_OnValidatorFailure()
+        public async Task Delete_BadRequest_OnValidatorFailure()
         {
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
             v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse>()))
@@ -902,7 +902,7 @@ namespace AnyService.Tests.Services
             var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null, null);
             var epId = "some-id";
             var res = await cSrv.Delete(epId);
-            res.Result.ShouldBe(ServiceResult.Unauthorized);
+            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
             v.Verify(x => x.ValidateForDelete(It.Is<string>(s => s == epId), It.IsAny<ServiceResponse>()));
         }
         [Fact]
