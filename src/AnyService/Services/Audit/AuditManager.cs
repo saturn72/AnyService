@@ -13,7 +13,7 @@ namespace AnyService.Services.Audit
         private static readonly IDictionary<Type, string> EntityTypesNames = new Dictionary<Type, string>();
         private readonly WorkContext _workContext;
         private readonly IRepository<AuditRecord> _repository;
-        private readonly AuditSettings _auditConfig;
+        private readonly AuditSettings _auditSettings;
         private readonly ILogger<AuditManager> _logger;
         #endregion
 
@@ -27,7 +27,7 @@ namespace AnyService.Services.Audit
         {
             _workContext = workContext;
             _repository = repository;
-            _auditConfig = auditConfig;
+            _auditSettings = auditConfig;
             _logger = logger;
         }
         #endregion
@@ -44,7 +44,7 @@ namespace AnyService.Services.Audit
             _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data.ToJsonString()}");
             if (serviceResponse.Result != ServiceResult.NotSet)
                 return serviceResponse;
-            
+
             pagination.Data = data ?? new AuditRecord[] { };
             serviceResponse.Data = pagination;
             serviceResponse.Result = ServiceResult.Ok;
@@ -87,6 +87,8 @@ namespace AnyService.Services.Audit
 
         public async Task<AuditRecord> InsertAuditRecord(Type entityType, string entityId, string auditRecordType, object data)
         {
+            if (!ShouldAudit(auditRecordType))
+                return null;
             var record = new AuditRecord
             {
                 EntityName = GetEntityName(entityType),
@@ -101,12 +103,22 @@ namespace AnyService.Services.Audit
 
         }
 
+        private bool ShouldAudit(string auditRecordType)
+        {
+            return
+                (auditRecordType == AuditRecordTypes.CREATE && _auditSettings.AuditRules.AuditCreate) ||
+                (auditRecordType == AuditRecordTypes.READ && _auditSettings.AuditRules.AuditRead) ||
+                (auditRecordType == AuditRecordTypes.UPDATE && _auditSettings.AuditRules.AuditUpdate) ||
+                (auditRecordType == AuditRecordTypes.DELETE && _auditSettings.AuditRules.AuditDelete) ||
+                false;
+        }
+
         private string GetEntityName(Type entityType)
         {
             if (EntityTypesNames.TryGetValue(entityType, out string value))
                 return value;
 
-            EntityTypesNames[entityType] = _auditConfig.EntityNameResolver(entityType);
+            EntityTypesNames[entityType] = _auditSettings.EntityNameResolver(entityType);
             return EntityTypesNames[entityType];
         }
     }

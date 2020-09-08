@@ -73,11 +73,11 @@ namespace AnyService.Services
             await ModelPreparar.PrepareForCreate(entity);
 
             Logger.LogDebug(LoggingEvents.Repository, $"Insert entity to repository");
-            
+
             if (entity is ISoftDelete)
                 (entity as ISoftDelete).Deleted = false;
 
-                var wrapper = new ServiceResponseWrapper(serviceResponse);
+            var wrapper = new ServiceResponseWrapper(serviceResponse);
             var dbData = await Repository.Command(r => r.Insert(entity), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository insert response: {dbData}");
 
@@ -288,7 +288,7 @@ namespace AnyService.Services
             var wrapper = new ServiceResponseWrapper(serviceResponse);
 
             var dbEntry = await Repository.Query(r => r.GetById(id), wrapper);
-            if(dbEntry == null)
+            if (dbEntry == null)
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Entity not exists");
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Delete, id))

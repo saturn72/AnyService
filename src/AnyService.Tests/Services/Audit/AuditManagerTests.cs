@@ -1,6 +1,7 @@
 ﻿using AnyService.Audity;
 using AnyService.Services;
 using AnyService.Services.Audit;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
@@ -12,8 +13,23 @@ using Xunit;
 
 namespace AnyService.Tests.Services.Audit
 {
-    public class AuditManagetTests
+    public class AuditManagerTests
     {
+        [Theory]
+        [InlineData(AuditRecordTypes.CREATE)]
+        [InlineData(AuditRecordTypes.READ)]
+        [InlineData(AuditRecordTypes.UPDATE)]
+        [InlineData(AuditRecordTypes.DELETE)]
+        public async Task DoesnotCrreateRecord(string art)
+        {
+            var aSettings = new AuditSettings
+            {
+                AuditRules = new AuditRules()
+            };
+            var am = new AuditManager(null, null, aSettings, null);
+            var res = await am.InsertAuditRecord(null, null, art, null);
+            res.ShouldBeNull();
+        }
         [Fact]
         public async Task GetAll_ReturnsErrorOn_RepositoryException()
         {
