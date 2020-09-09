@@ -23,6 +23,8 @@ The boilerplate code is already in place. All you have to do now is to configure
 - Full test coverage - code is fully tested so you can rely infrastructure was tested and verified!
 - Caching - to minimize database calls and increase performance\*
 
+## Samples
+Working examples of main framework features may be found in [`samples`](https://github.com/saturn72/AnyService/tree/master/samples) directory of this repository
 ## Getting Started
 
 \*Note: fully configured example may be found in `AnyService.SampleApp` project.
