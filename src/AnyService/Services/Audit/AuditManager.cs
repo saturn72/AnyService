@@ -31,7 +31,7 @@ namespace AnyService.Services.Audit
             _logger = logger;
         }
         #endregion
-        public async Task<ServiceResponse> GetAll(AuditPagination pagination)
+        public async virtual Task<ServiceResponse> GetAll(AuditPagination pagination)
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all audit records flow");
             pagination.QueryFunc = BuildAuditPaginationQuery(pagination);
@@ -85,7 +85,7 @@ namespace AnyService.Services.Audit
             }
         }
 
-        public async Task<AuditRecord> InsertAuditRecord(Type entityType, string entityId, string auditRecordType, object data)
+        public async virtual Task<AuditRecord> InsertAuditRecord(Type entityType, string entityId, string auditRecordType, object data)
         {
             if (!ShouldAudit(auditRecordType))
                 return null;
@@ -112,7 +112,6 @@ namespace AnyService.Services.Audit
                 (auditRecordType == AuditRecordTypes.DELETE && _auditSettings.AuditRules.AuditDelete) ||
                 false;
         }
-
         private string GetEntityName(Type entityType)
         {
             if (EntityTypesNames.TryGetValue(entityType, out string value))

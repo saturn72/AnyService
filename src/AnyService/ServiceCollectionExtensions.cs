@@ -101,7 +101,12 @@ namespace Microsoft.Extensions.DependencyInjection
                 var mt = wc.CurrentEntityConfigRecord?.ResponseMapperType ?? config.ServiceResponseMapperType;
                 return sp.GetService(mt) as IServiceResponseMapper;
             });
-            services.TryAddScoped<IAuditManager, AuditManager>();
+
+            var auditManagerType = config.AuditSettings.Active ?
+                typeof(AuditManager) :
+                typeof(DummyAuditManager);
+
+            services.TryAddScoped(typeof(IAuditManager), auditManagerType);
             services.TryAddSingleton<IEventBus, DefaultEventsBus>();
 
             if (config.ManageEntityPermissions)
@@ -137,16 +142,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 ecr.FilterFactoryType ??= config.FilterFactoryType;
                 ecr.ModelPrepararType ??= config.ModelPrepararType;
 
-                if (ecr.AuditRules == null)
-                    ecr.AuditSettings = config.AuditSettings;
-                else
-                {
-                    ecr.AuditSettings = new AuditSettings
-                    {
-                        EntityNameResolver = config.AuditSettings.EntityNameResolver,
-                        AuditRules = ecr.AuditRules,
-                    };
-                }
+                ecr.AuditSettings = NormalizeAudity(ecr, config.AuditSettings);
 
                 ecr.ControllerType ??= typeof(GenericController<>).MakeGenericType(ecr.Type);
                 ValidateType<ControllerBase>(ecr.ControllerType);
@@ -167,6 +163,24 @@ namespace Microsoft.Extensions.DependencyInjection
 
             }
             config.EntityConfigRecords = temp;
+        }
+
+        private static AuditSettings NormalizeAudity(EntityConfigRecord ecr, AuditSettings serverAuditSettings)
+        {
+            if (!serverAuditSettings.Active)
+                return new AuditSettings
+                {
+                    AuditRules = new AuditRules()
+                };
+
+            return ecr.AuditRules == null ?
+                serverAuditSettings :
+                new AuditSettings
+                {
+                    Active = serverAuditSettings.Active,
+                    EntityNameResolver = serverAuditSettings.EntityNameResolver,
+                    AuditRules = ecr.AuditRules,
+                };
         }
 
         private static void ValidateType<TService>(Type type)

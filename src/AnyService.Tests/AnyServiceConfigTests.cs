@@ -22,6 +22,7 @@ namespace AnyService.Tests
             c.ModelPrepararType.ShouldBeOfType(typeof(DummyModelPreparar<>));
             c.ServiceResponseMapperType.ShouldBeOfType<DataOnlyServiceResponseMapper>();
 
+            c.AuditSettings.Active.ShouldBeTrue();
             c.AuditSettings.EntityNameResolver(typeof(string)).ShouldBe(typeof(string).FullName);
             c.AuditSettings.AuditRules.AuditCreate.ShouldBeTrue();
             c.AuditSettings.AuditRules.AuditRead.ShouldBeTrue();

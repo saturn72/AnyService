@@ -25,6 +25,7 @@ namespace AnyService
             ServiceResponseMapperType = typeof(DataOnlyServiceResponseMapper);
             AuditSettings = new AuditSettings
             {
+                Active = true,
                 EntityNameResolver = new Func<Type, string>(t => t.FullName),
                 AuditRules = new AuditRules
                 {
