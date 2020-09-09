@@ -15,11 +15,10 @@ The boilerplate code is already in place. All you have to do now is to configure
 
 ## Main Features
 
-- Fully comaptible with `asp.net core` - `AnyService` is framework on top of `asp.net core`
-- Audity management - auto manage for creation, update and deletion of an entity
+- Fully comaptible with `asp.net core` - `AnyService` is framework built on top of `asp.net core`
+- [Audity management](https://github.com/saturn72/AnyService/wiki/Advanced-Topics---Audity) - auto manage for creation, update and deletion of an domain's entities
 - Permission management - entity can be restricted as private or public over simple configuration
-- Event sourcing - Main `CRUD` events over an entity are publish
-- Modularity - build in modules system
+- Event sourcing - All `CRUD` events for an entity are publish automatically
 - Full test coverage - code is fully tested so you can rely infrastructure was tested and verified!
 - Caching - to minimize database calls and increase performance\*
 
