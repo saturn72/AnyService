@@ -15,7 +15,7 @@ namespace API.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task CRUD_Community()
+        public async Task CRUD_Test()
         {
             const string URI = "product/";
 
