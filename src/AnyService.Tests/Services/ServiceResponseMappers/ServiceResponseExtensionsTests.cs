@@ -1,6 +1,8 @@
 ﻿using AnyService.Services;
+using AnyService.Services.ServiceResponseMappers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -11,6 +13,25 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
 {
     public class ServiceResponseExtensionsTests : MappingTest
     {
+
+
+        [Fact]
+        public void ToActionResult_DelegatesCallToOverload()
+        {
+            var serRes = new ServiceResponse
+            {
+                Result = ServiceResult.Ok,
+                Data = new object(),
+            };
+            var srm = new Mock<IServiceResponseMapper>();
+            ServiceResponseMapperExtensions.Map<TestClass1, object>(srm.Object, serRes);
+            srm.Verify(s => s.Map(
+                It.Is<Type>(t => t == typeof(TestClass1)),
+                It.Is<Type>(t => t == typeof(object)),
+                It.Is<ServiceResponse>(sr => serRes == sr)),
+                Times.Once);
+        }
+
         [Fact]
         public void ToActionResult_ValidateConvertableItemCount()
         {
@@ -29,7 +50,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Result = ServiceResult.Ok,
                 Data = new object(),
             };
-            Should.Throw(() => ServiceResponseExtensions.ToActionResult<TestClass1, object>(serRes), typeof(InvalidOperationException));
+            Should.Throw(() => ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(object)), typeof(InvalidOperationException));
         }
 
         [Theory]
@@ -42,7 +63,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Data = data,
                 Message = message
             };
-            ServiceResponseExtensions.ToActionResult<TestClass1, TestClass2>(serRes).ShouldBeOfType(expectedActionResultType);
+            ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(TestClass2)).ShouldBeOfType(expectedActionResultType);
 
             if (result == ServiceResult.Ok && data != null)
                 (serRes.Data as TestClass2).Id.ShouldBe(data.Id.ToString());

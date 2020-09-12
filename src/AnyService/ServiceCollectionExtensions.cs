@@ -48,7 +48,7 @@ namespace Microsoft.Extensions.DependencyInjection
             // services.
             services.AddSingleton(config.EntityConfigRecords);
             //mappers
-            var mappers = config.EntityConfigRecords.Select(t => t.ResponseMapperType).ToArray();
+            var mappers = config.EntityConfigRecords.Select(t => t.ControllerSettings.ResponseMapperType).ToArray();
             foreach (var m in mappers)
                 services.TryAddSingleton(m);
 
@@ -98,7 +98,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddTransient(sp =>
             {
                 var wc = sp.GetService<WorkContext>();
-                var mt = wc.CurrentEntityConfigRecord?.ResponseMapperType ?? config.ServiceResponseMapperType;
+                var mt = wc.CurrentEntityConfigRecord?.ControllerSettings.ResponseMapperType ?? config.ServiceResponseMapperType;
                 return sp.GetService(mt) as IServiceResponseMapper;
             });
 
@@ -124,17 +124,12 @@ namespace Microsoft.Extensions.DependencyInjection
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
 
-                if (!ecr.Route.HasValue) ecr.Route = new PathString("/" + e.Name);
-                if (ecr.Route.Value.EndsWith("/"))
-                    ecr.Route = new PathString(ecr.Route.Value[0..^1]);
-
                 ecr.Name ??= ecr.Type.Name;
+
                 var hasDuplication = temp.Where(e => e.Name == ecr.Name);
                 if (hasDuplication.Count() > 1)
-                    throw new InvalidOperationException($"Duplication in {nameof(EntityConfigRecord.Name)} field : {ecr.Name}. Please provide unique name for the controller. See configured entities where Routes equals {hasDuplication.First().Route} and {hasDuplication.Last().Route}");
+                    throw new InvalidOperationException($"Duplication in {nameof(EntityConfigRecord.Name)} field : {ecr.Name}. Please provide unique name for the controller. See configured entities where Routes equals {hasDuplication.First().ControllerSettings.Route} and {hasDuplication.Last().ControllerSettings.Route}");
 
-                ecr.ResponseMapperType ??= config.ServiceResponseMapperType;
-                ValidateType<IServiceResponseMapper>(ecr.ResponseMapperType);
                 ecr.EventKeys ??= ekr;
                 ecr.PermissionRecord ??= pr;
                 ecr.EntityKey ??= fn;
@@ -143,9 +138,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 ecr.ModelPrepararType ??= config.ModelPrepararType;
 
                 ecr.AuditSettings = NormalizeAudity(ecr, config.AuditSettings);
-
-                ecr.ControllerType ??= typeof(GenericController<>).MakeGenericType(ecr.Type);
-                ValidateType<ControllerBase>(ecr.ControllerType);
+                ecr.ControllerSettings = NormalizeControllerSettings(ecr, config);
 
                 if (ecr.CrudValidatorType != null)
                 {
@@ -158,13 +151,31 @@ namespace Microsoft.Extensions.DependencyInjection
                 {
                     ecr.CrudValidatorType = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);
                 }
-
-                ecr.Authorization = SetAuthorization(ecr.Authorization);
-
             }
             config.EntityConfigRecords = temp;
         }
 
+        private static ControllerSettings NormalizeControllerSettings(EntityConfigRecord ecr, AnyServiceConfig config)
+        {
+            var settings = ecr.ControllerSettings;
+            if (settings == null)
+                settings = new ControllerSettings();
+            if (!settings.Route.HasValue) settings.Route = new PathString("/" + ecr.Type.Name);
+
+            var route = settings.Route;
+            if (route.Value.EndsWith("/"))
+                settings.Route = new PathString(route.Value[0..^1]);
+
+            settings.ResponseMapperType ??= config.ServiceResponseMapperType;
+            ValidateType<IServiceResponseMapper>(settings.ResponseMapperType);
+
+            settings.ControllerType ??= typeof(GenericController<>).MakeGenericType(ecr.Type);
+            ValidateType<ControllerBase>(settings.ControllerType);
+
+            settings.Authorization = SetAuthorization(settings.Authorization);
+
+            return settings;
+        }
         private static AuditSettings NormalizeAudity(EntityConfigRecord ecr, AuditSettings serverAuditSettings)
         {
             if (!serverAuditSettings.Active)
@@ -178,7 +189,6 @@ namespace Microsoft.Extensions.DependencyInjection
                 new AuditSettings
                 {
                     Active = serverAuditSettings.Active,
-                    EntityNameResolver = serverAuditSettings.EntityNameResolver,
                     AuditRules = ecr.AuditRules,
                 };
         }

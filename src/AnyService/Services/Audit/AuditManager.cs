@@ -14,6 +14,7 @@ namespace AnyService.Services.Audit
         private readonly WorkContext _workContext;
         private readonly IRepository<AuditRecord> _repository;
         private readonly AuditSettings _auditSettings;
+        private readonly IEnumerable<EntityConfigRecord> _entityConfigRecords;
         private readonly ILogger<AuditManager> _logger;
         #endregion
 
@@ -22,12 +23,14 @@ namespace AnyService.Services.Audit
             WorkContext workContext,
             IRepository<AuditRecord> repository,
             AuditSettings auditConfig,
+            IEnumerable<EntityConfigRecord> entityConfigRecords,
             ILogger<AuditManager> logger
             )
         {
             _workContext = workContext;
             _repository = repository;
             _auditSettings = auditConfig;
+            _entityConfigRecords = entityConfigRecords;
             _logger = logger;
         }
         #endregion
@@ -117,7 +120,7 @@ namespace AnyService.Services.Audit
             if (EntityTypesNames.TryGetValue(entityType, out string value))
                 return value;
 
-            EntityTypesNames[entityType] = _auditSettings.EntityNameResolver(entityType);
+            EntityTypesNames[entityType] = _entityConfigRecords.First(entityType).Name ;
             return EntityTypesNames[entityType];
         }
     }

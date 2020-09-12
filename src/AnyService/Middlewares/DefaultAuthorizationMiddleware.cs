@@ -32,16 +32,16 @@ namespace AnyService.Middlewares
         {
             _logger.LogDebug(LoggingEvents.Authorization, "Start middleware invokation");
             var entityConfig = workContext?.CurrentEntityConfigRecord;
-            if (entityConfig?.Authorization == null)
+            if (entityConfig?.ControllerSettings?.Authorization == null)
             {
                 await _next(httpContext);
                 return;
             }
             var currentHttpMethod = httpContext.Request.Method;
-            var key = $"{entityConfig.Route}_{currentHttpMethod}";
+            var key = $"{entityConfig.ControllerSettings.Route}_{currentHttpMethod}";
             if (!AuthorizationWorkers.TryGetValue(key, out Func<ClaimsPrincipal, bool> worker))
             {
-                var an = HttpMethodToAuthorizationNode[currentHttpMethod](entityConfig.Authorization);
+                var an = HttpMethodToAuthorizationNode[currentHttpMethod](entityConfig.ControllerSettings.Authorization);
                 worker = cp => an.Roles.Any(r => cp.IsInRole(r));
                 lock (lockObj)
                 {

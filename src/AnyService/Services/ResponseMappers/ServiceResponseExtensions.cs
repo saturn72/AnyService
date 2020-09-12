@@ -58,13 +58,15 @@ namespace Microsoft.AspNetCore.Mvc
             };
         public static IActionResult ToActionResult<TSource, TDestination>(this ServiceResponse serviceResponse)
           where TSource : class
-          where TDestination : class
+          where TDestination : class => ToActionResult(serviceResponse, typeof(TSource), typeof(TDestination));
+
+        public static IActionResult ToActionResult(this ServiceResponse serviceResponse, Type source, Type destination)
         {
             if (serviceResponse.Data != null)
             {
-                if (!typeof(TSource).IsAssignableFrom(serviceResponse.Data.GetType()))
-                    throw new InvalidOperationException($"Cannot map from {serviceResponse.Data.GetType()} to {typeof(TSource)}");
-                serviceResponse.Data = serviceResponse.Data.Map<TDestination>();
+                if (!source.IsAssignableFrom(serviceResponse.Data.GetType()))
+                    throw new InvalidOperationException($"Cannot map from {serviceResponse.Data.GetType()} to {source}");
+                serviceResponse.Data = serviceResponse.Data.Map(destination);
             }
 
             return ToActionResult(serviceResponse);

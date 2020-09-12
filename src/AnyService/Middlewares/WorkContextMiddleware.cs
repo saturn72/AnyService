@@ -58,7 +58,7 @@ namespace AnyService.Middlewares
         {
             var res = new Dictionary<string, EntityConfigRecord>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var ecr in entityConfigRecords)
-                res[ecr.Route] = ecr;
+                res[ecr.ControllerSettings.Route] = ecr;
             return res;
         }
         private EntityConfigRecord GetEntityConfigRecordByRoute(PathString path)
@@ -72,7 +72,7 @@ namespace AnyService.Middlewares
                     $"Entity is not found in anyservice's configured {nameof(RouteMaps)}. Path used: {path}. If this is not expected, please verify entity was configured when calling {nameof(ServiceCollectionExtensions.AddAnyService)} method.");
             return res;
         }
-        private RequestInfo ToRequestInfo(HttpContext httpContext, EntityConfigRecord typeConfigRecord)
+        private RequestInfo ToRequestInfo(HttpContext httpContext, EntityConfigRecord ecr)
         {
             var path = httpContext.Request.Path.ToString();
             _logger.LogDebug(LoggingEvents.WorkContext, $"Parse httpRequestInfo from route: {path}");
@@ -80,7 +80,7 @@ namespace AnyService.Middlewares
             {
                 Path = path,
                 Method = httpContext.Request.Method,
-                RequesteeId = GetRequesteeId(typeConfigRecord.Route, path),
+                RequesteeId = GetRequesteeId(ecr.ControllerSettings.Route, path),
                 Parameters = httpContext.Request.Query?.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)).ToArray()
             };
             _logger.LogDebug(LoggingEvents.WorkContext, $"Parsed requestInfo: {reqInfo.ToJsonString()}");

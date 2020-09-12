@@ -1,5 +1,6 @@
 using AnyService.Services.ServiceResponseMappers;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace AnyService.Services.ServiceResponseMappers
 {
@@ -7,8 +8,6 @@ namespace AnyService.Services.ServiceResponseMappers
     {
         public IActionResult Map(ServiceResponse serviceResponse) => serviceResponse.ToActionResult();
 
-        public IActionResult Map<TSource, TDestination>(ServiceResponse serviceResponse)
-            where TSource : class
-            where TDestination : class => serviceResponse.ToActionResult<TSource, TDestination>();
+        public IActionResult Map(Type source, Type destination, ServiceResponse serviceResponse) => serviceResponse.ToActionResult(source, destination);
     }
 }

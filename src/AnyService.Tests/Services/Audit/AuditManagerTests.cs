@@ -26,7 +26,7 @@ namespace AnyService.Tests.Services.Audit
             {
                 AuditRules = new AuditRules()
             };
-            var am = new AuditManager(null, null, aSettings, null);
+            var am = new AuditManager(null, null, aSettings, null, null);
             var res = await am.InsertAuditRecord(null, null, art, null);
             res.ShouldBeNull();
         }
@@ -42,13 +42,10 @@ namespace AnyService.Tests.Services.Audit
             var repo = new Mock<IRepository<AuditRecord>>();
             repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>()))
                 .ThrowsAsync(new Exception());
-            var aConfig = new AuditSettings
-            {
-                EntityNameResolver = t => t.FullName,
-            };
+            var aConfig = new AuditSettings();
 
             var logger = new Mock<ILogger<AuditManager>>();
-            var aSrv = new AuditManager(wc, repo.Object, aConfig, logger.Object);
+            var aSrv = new AuditManager(wc, repo.Object, aConfig, null, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Error);
         }
@@ -64,13 +61,10 @@ namespace AnyService.Tests.Services.Audit
             var repo = new Mock<IRepository<AuditRecord>>();
             repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>()))
                 .ReturnsAsync(null as IEnumerable<AuditRecord>);
-            var aConfig = new AuditSettings
-            {
-                EntityNameResolver = t => t.FullName,
-            };
+            var aConfig = new AuditSettings();
 
             var logger = new Mock<ILogger<AuditManager>>();
-            var aSrv = new AuditManager(wc, repo.Object, aConfig, logger.Object);
+            var aSrv = new AuditManager(wc, repo.Object, aConfig, null, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Ok);
             (srvRes.Data as Pagination<AuditRecord>).Data.ShouldBeEmpty();
@@ -92,13 +86,10 @@ namespace AnyService.Tests.Services.Audit
                 new AuditRecord { Id = "c" },
             };
             repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>())).ReturnsAsync(repoData);
-            var aConfig = new AuditSettings
-            {
-                EntityNameResolver = t => t.FullName,
-            };
+            var aConfig = new AuditSettings();
 
             var logger = new Mock<ILogger<AuditManager>>();
-            var aSrv = new AuditManager(wc, repo.Object, aConfig, logger.Object);
+            var aSrv = new AuditManager(wc, repo.Object, aConfig, null, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Ok);
             (srvRes.Data as Pagination<AuditRecord>).Data.ShouldBe(repoData);
@@ -236,7 +227,7 @@ namespace AnyService.Tests.Services.Audit
 
         public class TestAuditManager : AuditManager
         {
-            public TestAuditManager() : base(null, null, null, null)
+            public TestAuditManager() : base(null, null, null, null, null)
             {
             }
             public Func<AuditRecord, bool> QueryBuilder(AuditPagination pagination) => BuildAuditPaginationQuery(pagination);

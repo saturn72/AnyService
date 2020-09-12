@@ -14,13 +14,14 @@ namespace AnyService.Endpoints
 
             foreach (var cr in configRecords)
             {
-                if (cr.Area.HasValue())
+                var cs = cr.ControllerSettings;
+                if (cs.Area.HasValue())
                 {
-                    builder.MapAreaControllerRoute(cr.Name, cr.Area, cr.Route);
+                    builder.MapAreaControllerRoute(cr.Name, cs.Area, cs.Route);
                 }
                 else
                 {
-                    builder.MapControllerRoute(cr.Name, cr.Route);
+                    builder.MapControllerRoute(cr.Name, cs.Route);
                 }
             }
             return builder;

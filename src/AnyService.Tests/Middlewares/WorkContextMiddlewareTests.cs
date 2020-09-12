@@ -17,7 +17,10 @@ namespace AnyService.Tests.Middlewares
             var logger = new Mock<ILogger<WorkContextMiddleware>>();
             var ecr = new EntityConfigRecord
             {
-                Route = "/some-resource",
+                ControllerSettings = new ControllerSettings
+                {
+                    Route = "/some-resource",
+                },
                 Type = typeof(string),
             };
             var entityConfigRecords = new[] { ecr };
@@ -45,7 +48,10 @@ namespace AnyService.Tests.Middlewares
 
             var ecr = new EntityConfigRecord
             {
-                Route = route,
+                ControllerSettings = new ControllerSettings
+                {
+                    Route = route,
+                },
                 Type = typeof(string),
             };
             var entityConfigRecords = new[] { ecr };

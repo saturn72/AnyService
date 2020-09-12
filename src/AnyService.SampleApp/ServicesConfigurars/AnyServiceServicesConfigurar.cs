@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AnyService.SampleApp.ServicesConfigurars
 {
+
     public class AnyServiceServicesConfigurar : IServicesConfigurar
     {
         public IServiceCollection Configure(IServiceCollection services, IConfiguration configuration, IWebHostEnvironment env)
@@ -26,15 +27,19 @@ namespace AnyService.SampleApp.ServicesConfigurars
                     new EntityConfigRecord
                     {
                         Type =   typeof(Stock),
-                        Authorization = new AuthorizationInfo
+                        ControllerSettings = new ControllerSettings
+                        {Authorization = new AuthorizationInfo
                         {
                             ControllerAuthorizationNode = new AuthorizationNode{Roles = new[]{"some-role"}}
-                        }
+                        } }
                     },
                     new EntityConfigRecord
                     {
                         Type = typeof(Dependent2),
-                        Route = "/api/d/",
+                        ControllerSettings = new ControllerSettings
+                        {
+                            Route = "/api/d/",
+                        },
                         CrudValidatorType = typeof(Dependent2AlwaysTrueCrudValidator)
                     },
 
@@ -44,9 +49,12 @@ namespace AnyService.SampleApp.ServicesConfigurars
                     },
                     new EntityConfigRecord
                     {
-                        Route = "/v1/my-great-route",
+                        ControllerSettings = new ControllerSettings
+                        {
+                            Route = "/v1/my-great-route",
+                            ControllerType = typeof(CustomController),
+                        },
                         Type = typeof(CustomModel),
-                        ControllerType = typeof(CustomController),
                     },
                       new EntityConfigRecord
                     {

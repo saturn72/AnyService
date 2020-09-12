@@ -26,7 +26,6 @@ namespace AnyService
             AuditSettings = new AuditSettings
             {
                 Active = true,
-                EntityNameResolver = new Func<Type, string>(t => t.FullName),
                 AuditRules = new AuditRules
                 {
                     AuditCreate = true,

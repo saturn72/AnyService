@@ -27,7 +27,10 @@ namespace AnyService.Tests.Middlewares
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
                     Type = typeof(TestModel),
-                    PublicGet = true,
+                    ControllerSettings = new ControllerSettings
+                    {
+                        PublicGet = true,
+                    }
                 },
                 RequestInfo = new RequestInfo
                 {
@@ -156,7 +159,10 @@ namespace AnyService.Tests.Middlewares
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
-                    PublicGet = true,
+                    ControllerSettings = new ControllerSettings
+                    {
+                        PublicGet = true,
+                    }
                 },
                 RequestInfo = new RequestInfo
                 {
@@ -187,7 +193,10 @@ namespace AnyService.Tests.Middlewares
                 EntityKey = nameof(TestModel),
                 Type = typeof(TestModel),
                 PermissionRecord = new PermissionRecord("create", "read", "update", "delete"),
-                PublicGet = true,
+                ControllerSettings = new ControllerSettings
+                {
+                    PublicGet = true,
+                },
             };
             var userPermissions = new UserPermissions
             {

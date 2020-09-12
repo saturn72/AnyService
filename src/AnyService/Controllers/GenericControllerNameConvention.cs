@@ -23,9 +23,9 @@ namespace AnyService.Controllers
             }
             var entityType = controller.ControllerType.GenericTypeArguments[0];
             var ecrm = _entityConfigRecordsResolver();
-            var tcr = ecrm.FirstOrDefault(t => t.Type == entityType && t.ControllerType == controller.ControllerType);
+            var tcr = ecrm.FirstOrDefault(t => t.Type == entityType && t.ControllerSettings.ControllerType == controller.ControllerType);
 
-            controller.ControllerName = tcr?.Route ?? entityType.Name;
+            controller.ControllerName = tcr.ControllerSettings.Route.Value ?? entityType.Name;
         }
     }
 }

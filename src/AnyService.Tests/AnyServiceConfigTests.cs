@@ -23,7 +23,6 @@ namespace AnyService.Tests
             c.ServiceResponseMapperType.ShouldBeOfType<DataOnlyServiceResponseMapper>();
 
             c.AuditSettings.Active.ShouldBeTrue();
-            c.AuditSettings.EntityNameResolver(typeof(string)).ShouldBe(typeof(string).FullName);
             c.AuditSettings.AuditRules.AuditCreate.ShouldBeTrue();
             c.AuditSettings.AuditRules.AuditRead.ShouldBeTrue();
             c.AuditSettings.AuditRules.AuditUpdate.ShouldBeTrue();

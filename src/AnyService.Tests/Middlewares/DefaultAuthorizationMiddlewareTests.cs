@@ -30,7 +30,7 @@ namespace AnyService.Tests.Middlewares
         public static IEnumerable<object[]> InvokeAsync_HasNullAuthorization_DATA =>
         new[]
         {
-            new object[]{null as WorkContext},
+            new object[]{null},
             new object[]{new  WorkContext()},
         };
 
@@ -48,10 +48,13 @@ namespace AnyService.Tests.Middlewares
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
-                    Route = "/test",
-                    Authorization = new AuthorizationInfo
+                    ControllerSettings = new ControllerSettings
                     {
-                        GetAuthorizationNode = an
+                        Route = "/test",
+                        Authorization = new AuthorizationInfo
+                        {
+                            GetAuthorizationNode = an
+                        }
                     }
                 }
             };
@@ -93,10 +96,13 @@ namespace AnyService.Tests.Middlewares
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
-                    Route = "/test",
-                    Authorization = new AuthorizationInfo
+                    ControllerSettings = new ControllerSettings
                     {
-                        GetAuthorizationNode = an
+                        Route = "/test",
+                        Authorization = new AuthorizationInfo
+                        {
+                            GetAuthorizationNode = an
+                        }
                     }
                 }
             };

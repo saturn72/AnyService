@@ -57,15 +57,13 @@ namespace AnyService.Services.ServiceResponseMappers
                 },
             };
         public IActionResult Map(ServiceResponse serviceResponse) => ConversionFuncs[serviceResponse.Result](serviceResponse);
-        public IActionResult Map<TSource, TDestination>(ServiceResponse serviceResponse)
-            where TSource : class
-            where TDestination : class
+        public IActionResult Map(Type source, Type destination, ServiceResponse serviceResponse)
         {
             if (serviceResponse.Data != null)
             {
-                if (!typeof(TSource).IsAssignableFrom(serviceResponse.Data.GetType()))
-                    throw new InvalidOperationException($"Cannot map from {serviceResponse.Data.GetType()} to {typeof(TSource)}");
-                serviceResponse.Data = serviceResponse.Data.Map<TDestination>();
+                if (!source.IsAssignableFrom(serviceResponse.Data.GetType()))
+                    throw new InvalidOperationException($"Cannot map from {serviceResponse.Data.GetType()} to {source}");
+                serviceResponse.Data = serviceResponse.Data.Map(destination);
             }
             return Map(serviceResponse);
         }
