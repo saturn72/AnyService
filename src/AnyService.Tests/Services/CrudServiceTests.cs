@@ -40,7 +40,7 @@ namespace AnyService.Tests.Services
         public async Task Create_BadRequest_OnValidatorFailure()
         {
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse<AuditableTestModel>>()))
                 .ReturnsAsync(false)
                 .Callback<AuditableTestModel, ServiceResponse>((ep, sr) => sr.Result = ServiceResult.BadOrMissingData);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
@@ -55,7 +55,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Insert(It.IsAny<AuditableTestModel>())).ReturnsAsync(null as AuditableTestModel);
 
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse<AuditableTestModel>>()))
                 .ReturnsAsync(true);
 
             var mp = new Mock<IModelPreparar<AuditableTestModel>>();
@@ -87,7 +87,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Insert(It.IsAny<AuditableTestModel>())).ThrowsAsync(ex);
 
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse<AuditableTestModel>>()))
                 .ReturnsAsync(true);
 
             var mp = new Mock<IModelPreparar<AuditableTestModel>>();
@@ -131,7 +131,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Insert(It.IsAny<AuditableTestModel>())).ReturnsAsync(model);
 
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse<AuditableTestModel>>()))
                 .ReturnsAsync(true);
 
             var mp = new Mock<IModelPreparar<AuditableTestModel>>();
@@ -174,7 +174,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Insert(It.IsAny<TestFileContainer>())).ReturnsAsync(model);
 
             var v = new Mock<CrudValidatorBase<TestFileContainer>>();
-            v.Setup(i => i.ValidateForCreate(It.IsAny<TestFileContainer>(), It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForCreate(It.IsAny<TestFileContainer>(), It.IsAny<ServiceResponse<TestFileContainer>>()))
                 .ReturnsAsync(true);
 
             var mp = new Mock<IModelPreparar<TestFileContainer>>();
@@ -218,7 +218,7 @@ namespace AnyService.Tests.Services
         public async Task GetById_BadRequest_OnValidatorFailure()
         {
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForGet(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestModel>>()))
                 .ReturnsAsync(false)
                 .Callback<ServiceResponse>(sr => sr.Result = ServiceResult.BadOrMissingData);
 
@@ -238,7 +238,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(null as AuditableTestModel);
 
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForGet(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestModel>>()))
                 .ReturnsAsync(true);
 
             var mp = new Mock<IModelPreparar<AuditableTestModel>>();
@@ -267,7 +267,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetById(It.IsAny<string>())).ThrowsAsync(ex);
 
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForGet(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestModel>>()))
                 .ReturnsAsync(true);
 
             var mp = new Mock<IModelPreparar<AuditableTestModel>>();
@@ -312,7 +312,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(model);
 
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForGet(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestModel>>()))
                 .ReturnsAsync(true);
 
             var mp = new Mock<IModelPreparar<AuditableTestModel>>();
@@ -352,7 +352,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(dbRes);
 
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestModel>>(),  It.IsAny<ServiceResponse<Pagination<AuditableTestModel>>>()))
                 .ReturnsAsync(true);
             var eb = new Mock<IEventBus>();
             var ekr = new EventKeyRecord(null, "read", null, null);
@@ -378,7 +378,7 @@ namespace AnyService.Tests.Services
         public async Task GetAll_BadRequest_OnValidatorFailure()
         {
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestModel>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestModel>>>()))
                 .ReturnsAsync(false)
                 .Callback<ServiceResponse>(sr => sr.Result = ServiceResult.BadOrMissingData);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
@@ -402,7 +402,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(dbRes);
 
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestModel>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestModel>>>()))
                 .ReturnsAsync(true);
             var eb = new Mock<IEventBus>();
             var ekr = new EventKeyRecord(null, "read", null, null);
@@ -438,7 +438,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(dbRes);
 
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestModel>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestModel>>>()))
                 .ReturnsAsync(true);
 
             var mp = new Mock<IModelPreparar<AuditableTestModel>>();
@@ -480,7 +480,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetAll(It.IsAny<Pagination<AuditableTestModel>>())).ThrowsAsync(ex);
 
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestModel>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestModel>>>()))
                 .ReturnsAsync(true);
 
             var mp = new Mock<IModelPreparar<AuditableTestModel>>();
@@ -532,7 +532,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(dbRes);
 
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForGet(It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestModel>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestModel>>>()))
                 .ReturnsAsync(true);
 
             var mp = new Mock<IModelPreparar<AuditableTestModel>>();
@@ -588,7 +588,7 @@ namespace AnyService.Tests.Services
             var id = "some-id";
             var entity = new AuditableTestModel();
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForUpdate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForUpdate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse<AuditableTestModel>>()))
                 .ReturnsAsync(true);
             var repo = new Mock<IRepository<AuditableTestModel>>();
             repo.Setup(r => r.GetById(It.IsAny<string>()))
@@ -618,7 +618,7 @@ namespace AnyService.Tests.Services
                 Id = id,
             };
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForUpdate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForUpdate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse<AuditableTestModel>>()))
                 .ReturnsAsync(true);
             var repo = new Mock<IRepository<AuditableTestModel>>();
             var ex = new Exception();
@@ -664,7 +664,7 @@ namespace AnyService.Tests.Services
                 Id = id,
             };
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForUpdate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForUpdate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse<AuditableTestModel>>()))
                 .ReturnsAsync(true);
             var repo = new Mock<IRepository<AuditableTestModel>>();
             repo.Setup(r => r.GetById(It.IsAny<string>()))
@@ -703,7 +703,7 @@ namespace AnyService.Tests.Services
                 Id = id,
             };
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForUpdate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForUpdate(It.IsAny<AuditableTestModel>(), It.IsAny<ServiceResponse<AuditableTestModel>>()))
                 .ReturnsAsync(true);
             var repo = new Mock<IRepository<AuditableTestModel>>();
             repo.Setup(r => r.GetById(It.IsAny<string>()))
@@ -1145,7 +1145,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(dbModel);
 
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestModel>>()))
                 .ReturnsAsync(true);
             var ekr = new EventKeyRecord(null, null, null, "delete");
             var wc = new WorkContext
@@ -1189,7 +1189,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(dbModel);
 
             var v = new Mock<CrudValidatorBase<TestModel>>();
-            v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse>()))
+            v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse<TestModel>>()))
                 .ReturnsAsync(true);
             var ekr = new EventKeyRecord(null, null, null, "delete");
             var wc = new WorkContext

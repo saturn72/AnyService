@@ -9,6 +9,8 @@ using AnyService.Utilities;
 using Microsoft.Extensions.Logging;
 using AnyService.Services.Audit;
 using AnyService.Services.Preparars;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace AnyService.Services
 {
@@ -145,16 +147,16 @@ namespace AnyService.Services
         public virtual async Task<ServiceResponse<Pagination<TDomainModel>>> GetAll(Pagination<TDomainModel> pagination)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all flow");
-            var serviceResponse = new ServiceResponse<Pagination<TDomainModel>> { Data = pagination };
+            var serviceResponse = new ServiceResponse<Pagination<TDomainModel>>();
 
-            if (!await Validator.ValidateForGet(serviceResponse))
+            if (!await Validator.ValidateForGet(pagination, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Request did not pass validation");
 
             if ((pagination = await NormalizePagination(pagination)) == null)
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Missing query data");
 
             Logger.LogDebug(LoggingEvents.Repository, "Get all from repository using paginate = " + pagination);
-            var wrapper = new ServiceResponseWrapper<Pagination<TDomainModel>>(serviceResponse);
+            var wrapper = new ServiceResponseWrapper<IEnumerable<TDomainModel>>(new ServiceResponse<IEnumerable<TDomainModel>>());
             var data = await Repository.Query(r => r.GetAll(pagination), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
 
