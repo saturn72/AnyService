@@ -30,7 +30,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Data = new object(),
             };
             var mapper = new DataOnlyServiceResponseMapper();
-            Should.Throw(() => mapper.Map<TestClass1, object>(serRes), typeof(InvalidOperationException));
+            Should.Throw(() => mapper.MapServiceResponse<TestClass1, object>(serRes), typeof(InvalidOperationException));
         }
 
         [Theory]
@@ -44,7 +44,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Message = message
             };
             var mapper = new DataOnlyServiceResponseMapper();
-            mapper.Map<TestClass1, TestClass2>(serRes).ShouldBeOfType(expectedActionResultType);
+            mapper.MapServiceResponse<TestClass1, TestClass2>(serRes).ShouldBeOfType(expectedActionResultType);
 
             if (result == ServiceResult.Ok && data != null)
                 (serRes.Data as TestClass2).Id.ShouldBe(data.Id.ToString());

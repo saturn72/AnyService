@@ -56,8 +56,8 @@ namespace AnyService.Services.ServiceResponseMappers
                         new UnauthorizedResult() as IActionResult
                 },
             };
-        public IActionResult Map(ServiceResponse serviceResponse) => ConversionFuncs[serviceResponse.Result](serviceResponse);
-        public IActionResult Map(Type source, Type destination, ServiceResponse serviceResponse)
+        public IActionResult MapServiceResponse(ServiceResponse serviceResponse) => ConversionFuncs[serviceResponse.Result](serviceResponse);
+        public IActionResult MapServiceResponse(Type source, Type destination, ServiceResponse serviceResponse)
         {
             if (serviceResponse.Data != null)
             {
@@ -65,7 +65,7 @@ namespace AnyService.Services.ServiceResponseMappers
                     throw new InvalidOperationException($"Cannot map from {serviceResponse.Data.GetType()} to {source}");
                 serviceResponse.Data = serviceResponse.Data.Map(destination);
             }
-            return Map(serviceResponse);
+            return MapServiceResponse(serviceResponse);
         }
     }
 }

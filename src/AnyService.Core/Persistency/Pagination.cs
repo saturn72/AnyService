@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace AnyService.Services
 {
-    public class Pagination<TDomainModel> where TDomainModel : IDomainModelBase
+    public class Pagination<TDomainModel>
     {
         public Pagination()
         {
@@ -60,15 +60,5 @@ namespace AnyService.Services
         /// <value></value>
         public Func<TDomainModel, bool> QueryFunc { get; set; }
         public bool IncludeNested { get; set; }
-    }
-    public class PaginationModel<T>
-    {
-        public ulong Total { get; set; }
-        public ulong Offset { get; set; }
-        public ulong PageSize { get; set; }
-        public string SortOrder { get; set; }
-        public string OrderBy { get; set; }
-        public IEnumerable<T> Data { get; set; }
-        public string Query { get; set; }
     }
 }

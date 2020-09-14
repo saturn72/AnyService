@@ -1,4 +1,5 @@
 ﻿using AnyService.Audity;
+using AnyService.Models;
 using AnyService.Services;
 using AnyService.Services.Audit;
 using AnyService.Services.ServiceResponseMappers;
@@ -83,9 +84,7 @@ namespace AnyService.Controllers
             var srvRes = await _auditManager.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller,
                 $"Get all audit service result: '{srvRes.Result}', message: '{srvRes.Message}', exceptionId: '{srvRes.ExceptionId}', data: '{pagination.Data.ToJsonString()}'");
-            if (srvRes.ValidateServiceResponse<AuditPagination>())
-                srvRes.Data = srvRes.Data.Map<PaginationModel<AuditRecord>>();
-            return _serviceResponseMapper.Map(srvRes);
+            return _serviceResponseMapper.MapServiceResponse<AuditPagination, AuditPaginationModel>(srvRes);
         }
 
         private AuditPagination QueryParamsToPagination(

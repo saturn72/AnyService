@@ -34,15 +34,15 @@ namespace AnyService.Services.Audit
             _logger = logger;
         }
         #endregion
-        public async virtual Task<ServiceResponse> GetAll(AuditPagination pagination)
+        public async virtual Task<ServiceResponse<AuditPagination>> GetAll(AuditPagination pagination)
         {
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all audit records flow");
             pagination.QueryFunc = BuildAuditPaginationQuery(pagination);
 
             _logger.LogDebug(LoggingEvents.Repository, "Get all audit-records from repository using paginate = " + pagination);
 
-            var serviceResponse = new ServiceResponse { Data = pagination };
-            var wrapper = new ServiceResponseWrapper(serviceResponse);
+            var serviceResponse = new ServiceResponse<AuditPagination> { Data = pagination };
+            var wrapper = new ServiceResponseWrapper<AuditPagination>(serviceResponse);
             var data = await _repository.Query(r => r.GetAll(pagination), wrapper);
             _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data.ToJsonString()}");
             if (serviceResponse.Result != ServiceResult.NotSet)

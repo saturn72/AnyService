@@ -1,4 +1,6 @@
-﻿using AnyService.Services;
+﻿using AnyService.Audity;
+using AnyService.Models;
+using AnyService.Services;
 using AutoMapper;
 using System;
 
@@ -22,6 +24,9 @@ namespace AnyService
                     .ForMember(
                         nameof(PaginationModel<IDomainModelBase>.Query), 
                         opts => opts.MapFrom(nameof(Pagination<IDomainModelBase>.QueryOrFilter)));
+
+            cfg.CreateMap<AuditRecord, AuditRecordModel>();
+            cfg.CreateMap<AuditRecordModel, AuditRecord>();
         }
         public static IMapper MapperInstance => _mapper ??= MapperConfiguration.CreateMapper();
         public static object Map(this object source, Type destination)

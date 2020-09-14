@@ -1,5 +1,9 @@
 namespace AnyService.Services
 {
+    public class ServiceResponse<T> : ServiceResponse
+    {
+        public new T Data { get; set; }
+    }
     public class ServiceResponse
     {
         public ServiceResponse()

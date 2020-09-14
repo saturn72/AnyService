@@ -87,7 +87,7 @@ namespace AnyService.Tests.Controllers
             var l = new Mock<ILogger<AuditController>>();
             var rm = new Mock<IServiceResponseMapper>();
             ServiceResponse srvRes = null;
-            rm.Setup(r => r.Map(It.IsAny<ServiceResponse>()))
+            rm.Setup(r => r.MapServiceResponse(It.IsAny<ServiceResponse>()))
                 .Returns(new OkResult())
                 .Callback<ServiceResponse>(s => srvRes = s);
             var wc = new WorkContext { CurrentClientId = "1232" };

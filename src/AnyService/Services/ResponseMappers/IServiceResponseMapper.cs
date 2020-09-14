@@ -5,7 +5,7 @@ namespace AnyService.Services.ServiceResponseMappers
 {
     public interface IServiceResponseMapper
     {
-        IActionResult Map(ServiceResponse serviceResponse);
-        IActionResult Map(Type source, Type destination, ServiceResponse serviceResponse);
+        IActionResult MapServiceResponse(ServiceResponse serviceResponse);
+        IActionResult MapServiceResponse(Type source, Type destination, ServiceResponse serviceResponse);
     }
 }

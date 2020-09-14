@@ -24,8 +24,8 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Data = new object(),
             };
             var srm = new Mock<IServiceResponseMapper>();
-            ServiceResponseMapperExtensions.Map<TestClass1, object>(srm.Object, serRes);
-            srm.Verify(s => s.Map(
+            ServiceResponseMapperExtensions.MapServiceResponse<TestClass1, object>(srm.Object, serRes);
+            srm.Verify(s => s.MapServiceResponse(
                 It.Is<Type>(t => t == typeof(TestClass1)),
                 It.Is<Type>(t => t == typeof(object)),
                 It.Is<ServiceResponse>(sr => serRes == sr)),

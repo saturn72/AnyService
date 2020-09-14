@@ -14,6 +14,7 @@ using System.Net;
 using AnyService.Services;
 using AnyService.Services.ServiceResponseMappers;
 using Microsoft.Extensions.Logging;
+using AnyService.Models;
 
 namespace AnyService.Controllers
 {
@@ -62,7 +63,7 @@ namespace AnyService.Controllers
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Call service with value: " + model);
             var res = await _crudService.Create(model);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Post service response value: " + res);
-            return _serviceResponseMapper.Map(res);
+            return _serviceResponseMapper.MapServiceResponse(res);
         }
 
         [HttpPost(Consts.MultipartSuffix)]
@@ -98,7 +99,7 @@ namespace AnyService.Controllers
             var res = await _crudService.Create(model);
 
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Post service response value: " + res);
-            return _serviceResponseMapper.Map(res);
+            return _serviceResponseMapper.MapServiceResponse(res);
         }
 
         [DisableFormValueModelBinding]
@@ -111,7 +112,7 @@ namespace AnyService.Controllers
             var res = await _crudService.Create(model);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Post service response value: " + res);
 
-            return _serviceResponseMapper.Map(res);
+            return _serviceResponseMapper.MapServiceResponse(res);
         }
         [DisableFormValueModelBinding]
         [HttpPut(Consts.StreamSuffix + "/{id}")]
@@ -123,7 +124,7 @@ namespace AnyService.Controllers
             var res = await _crudService.Update(_workContext.RequestInfo.RequesteeId, model);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Put service response value: " + res);
 
-            return _serviceResponseMapper.Map(res);
+            return _serviceResponseMapper.MapServiceResponse(res);
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
@@ -131,7 +132,7 @@ namespace AnyService.Controllers
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Start Get by id flow with id " + id);
             var res = await _crudService.GetById(id);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Get all service response value: " + res);
-            return _serviceResponseMapper.Map(res as ServiceResponse);
+            return _serviceResponseMapper.MapServiceResponse(res as ServiceResponse);
         }
         [HttpGet]
         public async Task<IActionResult> GetAll(
@@ -151,7 +152,7 @@ namespace AnyService.Controllers
             _logger.LogDebug(LoggingEvents.Controller,
                 $"Get all public service result: '{srvRes.Result}', message: '{srvRes.Message}', exceptionId: '{srvRes.ExceptionId}', data: '{pagination.Data.ToJsonString()}'");
             srvRes.Data = pagination?.Map<PaginationModel<TDomainModel>>();
-            return _serviceResponseMapper.Map(srvRes);
+            return _serviceResponseMapper.MapServiceResponse(srvRes);
         }
 
         private Pagination<TDomainModel> GetPagination(string orderBy, int offset, int pageSize, bool withNavProps, string sortOrder, string query)
@@ -183,7 +184,7 @@ namespace AnyService.Controllers
             _logger.LogDebug($"{_curTypeName}: Start update flow with id {id} and model {model}");
             var res = await _crudService.Update(id, model);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Update service response value: " + res);
-            return _serviceResponseMapper.Map(res as ServiceResponse);
+            return _serviceResponseMapper.MapServiceResponse(res as ServiceResponse);
         }
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
@@ -191,7 +192,7 @@ namespace AnyService.Controllers
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Start Delete flow with id " + id);
             var res = await _crudService.Delete(id);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Delete service response value: " + res);
-            return _serviceResponseMapper.Map(res as ServiceResponse);
+            return _serviceResponseMapper.MapServiceResponse(res as ServiceResponse);
         }
         #region Utilities
         private async Task<TDomainModel> ExctractModelFromStream()

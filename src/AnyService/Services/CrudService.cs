@@ -61,11 +61,11 @@ namespace AnyService.Services
         }
 
         #endregion
-        public virtual async Task<ServiceResponse> Create(TDomainModel entity)
+        public virtual async Task<ServiceResponse<TDomainModel>> Create(TDomainModel entity)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start create flow for entity: {entity}");
 
-            var serviceResponse = new ServiceResponse();
+            var serviceResponse = new ServiceResponse<TDomainModel>();
             if (!await Validator.ValidateForCreate(entity, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
 
@@ -77,7 +77,7 @@ namespace AnyService.Services
             if (entity is ISoftDelete)
                 (entity as ISoftDelete).Deleted = false;
 
-            var wrapper = new ServiceResponseWrapper(serviceResponse);
+            var wrapper = new ServiceResponseWrapper<TDomainModel>(serviceResponse);
             var dbData = await Repository.Command(r => r.Insert(entity), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository insert response: {dbData}");
 
@@ -89,43 +89,40 @@ namespace AnyService.Services
             Publish(EventKeys.Create, serviceResponse.Data);
             serviceResponse.Result = ServiceResult.Ok;
 
-            if (entity is IFileContainer)
-            {
-                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start file uploads");
-                await UploadFiles(dbData as IFileContainer, serviceResponse);
-            }
+            //if (entity is IFileContainer)
+            //{
+            //    Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start file uploads");
+            //    await UploadFiles(dbData as IFileContainer, serviceResponse);
+            //}
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
 
-        public virtual async Task UploadFiles(IFileContainer fileContainer, ServiceResponse serviceResponse)
-        {
-            var files = fileContainer?.Files;
-            if (files == null || !files.Any())
-                return;
+        //public virtual async Task UploadFiles(IFileContainer fileContainer, ServiceResponse serviceResponse)
+        //{
+        //    var files = fileContainer?.Files;
+        //    if (files == null || !files.Any())
+        //        return;
 
-            foreach (var f in files)
-            {
-                f.ParentId = fileContainer.Id;
-                f.ParentKey = WorkContext.CurrentEntityConfigRecord.EntityKey;
-            }
-            var uploadResponses = await FileStorageManager.Upload(files);
-            serviceResponse.Data = new { entity = serviceResponse.Data, filesUploadStatus = uploadResponses };
-        }
-        public virtual async Task<ServiceResponse> GetById(string id)
+        //    foreach (var f in files)
+        //    {
+        //        f.ParentId = fileContainer.Id;
+        //        f.ParentKey = WorkContext.CurrentEntityConfigRecord.EntityKey;
+        //    }
+        //    var uploadResponses = await FileStorageManager.Upload(files);
+        //    serviceResponse.Data = new { entity = serviceResponse.Data, filesUploadStatus = uploadResponses };
+        //}
+        public virtual async Task<ServiceResponse<TDomainModel>> GetById(string id)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start get by id with id = {id}");
 
-            var serviceResponse = new ServiceResponse
-            {
-                Data = id
-            };
-            if (!await Validator.ValidateForGet(serviceResponse))
+            var serviceResponse = new ServiceResponse<TDomainModel>();
+            if (!await Validator.ValidateForGet(id, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
 
             Logger.LogDebug(LoggingEvents.Repository, "Get by Id from repository");
 
-            var wrapper = new ServiceResponseWrapper(serviceResponse);
+            var wrapper = new ServiceResponseWrapper<TDomainModel>(serviceResponse);
             var data = await Repository.Query(r => r.GetById(id), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
 
@@ -145,10 +142,10 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
-        public virtual async Task<ServiceResponse> GetAll(Pagination<TDomainModel> pagination)
+        public virtual async Task<ServiceResponse<Pagination<TDomainModel>>> GetAll(Pagination<TDomainModel> pagination)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all flow");
-            var serviceResponse = new ServiceResponse { Data = pagination };
+            var serviceResponse = new ServiceResponse<Pagination<TDomainModel>> { Data = pagination };
 
             if (!await Validator.ValidateForGet(serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Request did not pass validation");
@@ -157,7 +154,7 @@ namespace AnyService.Services
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Missing query data");
 
             Logger.LogDebug(LoggingEvents.Repository, "Get all from repository using paginate = " + pagination);
-            var wrapper = new ServiceResponseWrapper(serviceResponse);
+            var wrapper = new ServiceResponseWrapper<Pagination<TDomainModel>>(serviceResponse);
             var data = await Repository.Query(r => r.GetAll(pagination), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
 
@@ -228,17 +225,17 @@ namespace AnyService.Services
             return p;
         }
 
-        public virtual async Task<ServiceResponse> Update(string id, TDomainModel entity)
+        public virtual async Task<ServiceResponse<TDomainModel>> Update(string id, TDomainModel entity)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start update flow for id: {id}, entity: {entity}");
             entity.Id = id;
-            var serviceResponse = new ServiceResponse();
+            var serviceResponse = new ServiceResponse<TDomainModel>();
 
             if (!await Validator.ValidateForUpdate(entity, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
 
             Logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
-            var wrapper = new ServiceResponseWrapper(serviceResponse);
+            var wrapper = new ServiceResponseWrapper<TDomainModel>(serviceResponse);
 
             var dbEntry = await Repository.Query(async r => await r.GetById(id), wrapper);
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Update, id))
@@ -259,14 +256,14 @@ namespace AnyService.Services
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Update, entity))
                 return serviceResponse;
 
-            if (entity is IFileContainer)
-            {
-                var fileContainer = (entity as IFileContainer);
-                await FileStorageManager.Delete((dbEntry as IFileContainer).Files);
-                (updateResponse as IFileContainer).Files = fileContainer.Files;
-                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start file uploads");
-                await UploadFiles(fileContainer, serviceResponse);
-            }
+            //if (entity is IFileContainer)
+            //{
+            //    var fileContainer = (entity as IFileContainer);
+            //    await FileStorageManager.Delete((dbEntry as IFileContainer).Files);
+            //    (updateResponse as IFileContainer).Files = fileContainer.Files;
+            //    Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start file uploads");
+            //    await UploadFiles(fileContainer, serviceResponse);
+            //}
 
             if (entity is IUpdatableAudit)
                 await AuditManager.InsertUpdatedRecord(dbEntry, entity);
@@ -276,16 +273,16 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
-        public virtual async Task<ServiceResponse> Delete(string id)
+        public virtual async Task<ServiceResponse<TDomainModel>> Delete(string id)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start delete flow for id: {id}");
-            var serviceResponse = new ServiceResponse();
+            var serviceResponse = new ServiceResponse<TDomainModel>();
 
             if (!await Validator.ValidateForDelete(id, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
 
             Logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
-            var wrapper = new ServiceResponseWrapper(serviceResponse);
+            var wrapper = new ServiceResponseWrapper<TDomainModel>(serviceResponse);
 
             var dbEntry = await Repository.Query(r => r.GetById(id), wrapper);
             if (dbEntry == null)
@@ -326,13 +323,13 @@ namespace AnyService.Services
         }
 
         #region Utilities
-        private ServiceResponse SetServiceResponse(ServiceResponse serviceResponse, string serviceResponseResult, EventId eventId, string logMessage)
+        private ServiceResponse<T> SetServiceResponse<T>(ServiceResponse<T> serviceResponse, string serviceResponseResult, EventId eventId, string logMessage)
         {
             Logger.LogDebug(eventId, logMessage);
             serviceResponse.Result = serviceResponseResult;
             return serviceResponse;
         }
-        private bool IsNotFoundOrBadOrMissingDataOrError(ServiceResponseWrapper wrapper, string eventKey, object requestData)
+        private bool IsNotFoundOrBadOrMissingDataOrError<T>(ServiceResponseWrapper<T> wrapper, string eventKey, object requestData)
         {
             var serviceResponse = wrapper.ServiceResponse;
             Logger.LogDebug(LoggingEvents.Repository, $"Has {serviceResponse.Result} response");
@@ -359,7 +356,7 @@ namespace AnyService.Services
                 WorkContext = WorkContext
             });
         }
-        private void PublishException(ServiceResponse serviceResponse, string eventKey, object data, Exception exception)
+        private void PublishException<T>(ServiceResponse<T> serviceResponse, string eventKey, object data, Exception exception)
         {
             serviceResponse.ExceptionId = IdGenerator.GetNext();
             Logger.LogDebug(LoggingEvents.Repository, $"Repository returned with exception. exceptionId: {serviceResponse.ExceptionId}");

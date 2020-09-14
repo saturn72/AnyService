@@ -10,7 +10,7 @@ namespace AnyService.Services
             this IRepository<TDomainModel> repository,
             Func<IRepository<TDomainModel>, 
             Task<TResult>> command,
-            ServiceResponseWrapper wrapper) 
+            ServiceResponseWrapper<TDomainModel> wrapper) 
                 where TDomainModel : IDomainModelBase
         {
             var data = default(TResult);
@@ -40,7 +40,7 @@ namespace AnyService.Services
         public static async Task<TResult> Query<TDomainModel, TResult>(
             this IRepository<TDomainModel> repository,
             Func<IRepository<TDomainModel>, Task<TResult>> command,
-            ServiceResponseWrapper wrapper)
+            ServiceResponseWrapper<TDomainModel> wrapper)
             where TDomainModel : IDomainModelBase
         {
             var data = default(TResult);
