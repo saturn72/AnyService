@@ -28,9 +28,11 @@ namespace AnyService.Controllers
         private readonly IServiceResponseMapper _serviceResponseMapper;
         private readonly ILogger<GenericController<TDomainModel>> _logger;
         private readonly AnyServiceConfig _config;
-        private readonly Type _curType;
-        private readonly string _curTypeName;
         private readonly WorkContext _workContext;
+        private readonly Type _curType;
+        private readonly Type _mappedType;
+        private readonly bool _shouldMap;
+        private readonly string _curTypeName;
         private static readonly IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
         #endregion
         #region ctor
@@ -44,8 +46,11 @@ namespace AnyService.Controllers
             _serviceResponseMapper = serviceResponseMapper;
             _workContext = workContext;
             _logger = logger;
-            _curType = typeof(TDomainModel);
-            _curTypeName = _curType.Name;
+
+            _curTypeName = _workContext.CurrentEntityConfigRecord.Name;
+            _curType = _workContext.CurrentEntityConfigRecord.Type;
+            _mappedType = _workContext.CurrentEntityConfigRecord.ControllerSettings.MapToType;
+            _shouldMap = _curType == _mappedType;
         }
         #endregion
         [HttpPost]
@@ -63,7 +68,8 @@ namespace AnyService.Controllers
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Call service with value: " + model);
             var res = await _crudService.Create(model);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Post service response value: " + res);
-            return _serviceResponseMapper.MapServiceResponse(res);
+
+            return MapServiceResponseIfRequired(res);
         }
 
         [HttpPost(Consts.MultipartSuffix)]
@@ -99,7 +105,7 @@ namespace AnyService.Controllers
             var res = await _crudService.Create(model);
 
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Post service response value: " + res);
-            return _serviceResponseMapper.MapServiceResponse(res);
+            return MapServiceResponseIfRequired(res);
         }
 
         [DisableFormValueModelBinding]
@@ -112,7 +118,7 @@ namespace AnyService.Controllers
             var res = await _crudService.Create(model);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Post service response value: " + res);
 
-            return _serviceResponseMapper.MapServiceResponse(res);
+            return MapServiceResponseIfRequired(res);
         }
         [DisableFormValueModelBinding]
         [HttpPut(Consts.StreamSuffix + "/{id}")]
@@ -124,7 +130,7 @@ namespace AnyService.Controllers
             var res = await _crudService.Update(_workContext.RequestInfo.RequesteeId, model);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Put service response value: " + res);
 
-            return _serviceResponseMapper.MapServiceResponse(res);
+            return MapServiceResponseIfRequired(res);
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
@@ -132,8 +138,9 @@ namespace AnyService.Controllers
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Start Get by id flow with id " + id);
             var res = await _crudService.GetById(id);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Get all service response value: " + res);
-            return _serviceResponseMapper.MapServiceResponse(res as ServiceResponse);
+            return MapServiceResponseIfRequired(res);
         }
+
         [HttpGet]
         public async Task<IActionResult> GetAll(
             [FromQuery] int offset,
@@ -151,8 +158,10 @@ namespace AnyService.Controllers
             var srvRes = await _crudService.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller,
                 $"Get all public service result: '{srvRes.Result}', message: '{srvRes.Message}', exceptionId: '{srvRes.ExceptionId}', data: '{pagination.Data.ToJsonString()}'");
-            srvRes.Data = pagination?.Map<PaginationModel<TDomainModel>>();
-            return _serviceResponseMapper.MapServiceResponse(srvRes);
+
+            return _shouldMap ?
+                _serviceResponseMapper.MapServiceResponse(typeof(Pagination<TDomainModel>), _workContext.CurrentEntityConfigRecord.ControllerSettings.MapToPaginationType, srvRes) :
+                _serviceResponseMapper.MapServiceResponse(srvRes);
         }
 
         private Pagination<TDomainModel> GetPagination(string orderBy, int offset, int pageSize, bool withNavProps, string sortOrder, string query)
@@ -184,7 +193,8 @@ namespace AnyService.Controllers
             _logger.LogDebug($"{_curTypeName}: Start update flow with id {id} and model {model}");
             var res = await _crudService.Update(id, model);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Update service response value: " + res);
-            return _serviceResponseMapper.MapServiceResponse(res as ServiceResponse);
+
+            return MapServiceResponseIfRequired(res);
         }
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
@@ -192,9 +202,14 @@ namespace AnyService.Controllers
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Start Delete flow with id " + id);
             var res = await _crudService.Delete(id);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Delete service response value: " + res);
-            return _serviceResponseMapper.MapServiceResponse(res as ServiceResponse);
+
+            return MapServiceResponseIfRequired(res);
         }
         #region Utilities
+        private IActionResult MapServiceResponseIfRequired(ServiceResponse<TDomainModel> res) =>
+           _shouldMap ?
+                  _serviceResponseMapper.MapServiceResponse(res) :
+                  _serviceResponseMapper.MapServiceResponse(_curType, _mappedType, res);
         private async Task<TDomainModel> ExctractModelFromStream()
         {
             // Used to accumulate all the form url encoded key value pairs in the 

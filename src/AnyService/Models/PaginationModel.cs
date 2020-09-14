@@ -3,6 +3,8 @@
 namespace AnyService.Models
 {
 
+    public class PaginationModel : PaginationModel<object>
+    { }
     public class PaginationModel<T>
     {
         public ulong Total { get; set; }
