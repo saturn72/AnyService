@@ -21,8 +21,8 @@ namespace AnyService.Tests.Services
             var repo = new Mock<IRepository<TestClass>>();
             var ex = new Exception();
             repo.Setup(r => r.GetById(It.IsAny<string>())).Throws(ex);
-            var sr = new ServiceResponse();
-            var w = new ServiceResponseWrapper(sr);
+            var sr = new ServiceResponse<TestClass>();
+            var w = new ServiceResponseWrapper<TestClass>(sr);
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetById("some-id"), w);
             res.ShouldBeNull();
             sr.Data.ShouldBeNull();
@@ -35,9 +35,9 @@ namespace AnyService.Tests.Services
         {
             var repo = new Mock<IRepository<TestClass>>();
             repo.Setup(r => r.GetById(It.IsAny<string>())).ReturnsAsync(null as TestClass);
-            var sr = new ServiceResponse();
+            var sr = new ServiceResponse<TestClass>();
 
-            var w = new ServiceResponseWrapper(sr);
+            var w = new ServiceResponseWrapper<TestClass>(sr);
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetById("some-id"), w);
             res.ShouldBeNull();
             sr.Data.ShouldBeNull();
@@ -56,9 +56,9 @@ namespace AnyService.Tests.Services
         {
             var repo = new Mock<IRepository<TestClass>>();
             repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
-            var sr = new ServiceResponse();
+            var sr = new ServiceResponse<IEnumerable<TestClass>>();
 
-            var w = new ServiceResponseWrapper(sr);
+            var w = new ServiceResponseWrapper<IEnumerable<TestClass>>(sr);
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), w);
             res.ShouldBe(dbData);
             sr.Data.ShouldBe(dbData);
@@ -70,9 +70,9 @@ namespace AnyService.Tests.Services
         {
             var repo = new Mock<IRepository<TestClass>>();
             repo.Setup(r => r.GetAll(It.IsAny<Pagination<TestClass>>())).ReturnsAsync(null as IEnumerable<TestClass>);
-            var sr = new ServiceResponse();
+            var sr = new ServiceResponse<IEnumerable<TestClass>>();
 
-            var w = new ServiceResponseWrapper(sr);
+            var w = new ServiceResponseWrapper<IEnumerable<TestClass>>(sr);
             var p = new Pagination<TestClass>();
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(p), w);
             res.ShouldBeNull();
@@ -83,9 +83,9 @@ namespace AnyService.Tests.Services
             var dbData = new[] { new TestClass() };
             var repo = new Mock<IRepository<TestClass>>();
             repo.Setup(r => r.GetAll(null)).ReturnsAsync(dbData);
-            var sr = new ServiceResponse();
+            var sr = new ServiceResponse<IEnumerable<TestClass>>();
 
-            var w = new ServiceResponseWrapper(sr);
+            var w = new ServiceResponseWrapper<IEnumerable<TestClass>>(sr);
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), w);
             res.ShouldBe(dbData);
             sr.Data.ShouldBe(dbData);
@@ -100,10 +100,10 @@ namespace AnyService.Tests.Services
             var repo = new Mock<IRepository<TestClass>>();
             var ex = new Exception();
             repo.Setup(r => r.Insert(It.IsAny<TestClass>())).Throws(ex);
-            var sr = new ServiceResponse();
+            var sr = new ServiceResponse<TestClass>();
 
             var tc = new TestClass();
-            var w = new ServiceResponseWrapper(sr);
+            var w = new ServiceResponseWrapper<TestClass>(sr);
 
             var res = await ServiceRepositoryExtensions.Command(repo.Object, r => r.Insert(tc), w);
             res.ShouldBeNull();
@@ -117,10 +117,10 @@ namespace AnyService.Tests.Services
         {
             var repo = new Mock<IRepository<TestClass>>();
             repo.Setup(r => r.Insert(It.IsAny<TestClass>())).ReturnsAsync(null as TestClass);
-            var sr = new ServiceResponse();
+            var sr = new ServiceResponse<TestClass>();
 
             var tc = new TestClass();
-            var w = new ServiceResponseWrapper(sr);
+            var w = new ServiceResponseWrapper<TestClass>(sr);
             var res = await ServiceRepositoryExtensions.Command(repo.Object, r => r.Insert(tc), w);
             res.ShouldBeNull();
             sr.Data.ShouldBeNull();
@@ -133,9 +133,9 @@ namespace AnyService.Tests.Services
             var tc = new TestClass();
             var repo = new Mock<IRepository<TestClass>>();
             repo.Setup(r => r.Insert(It.IsAny<TestClass>())).ReturnsAsync(tc);
-            var sr = new ServiceResponse();
+            var sr = new ServiceResponse<TestClass>();
 
-            var w = new ServiceResponseWrapper(sr);
+            var w = new ServiceResponseWrapper<TestClass>(sr);
             var res = await ServiceRepositoryExtensions.Command(repo.Object, r => r.Insert(tc), w);
             res.ShouldBe(tc);
             sr.Data.ShouldBe(tc);

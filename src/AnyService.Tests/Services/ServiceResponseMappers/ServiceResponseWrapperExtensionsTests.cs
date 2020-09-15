@@ -38,12 +38,12 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
 
             ServiceResponseWrapperExtensions.Init(sp.Object);
 
-            var serviceResponse = new ServiceResponse();
-            var w = new ServiceResponseWrapper(serviceResponse);
-            var pi = typeof(ServiceResponseWrapper).GetProperty("Exception");
+            var serviceResponse = new ServiceResponse<object>();
+            var w = new ServiceResponseWrapper<object>(serviceResponse);
+            var pi = typeof(ServiceResponseWrapper<object>).GetProperty("Exception");
             pi.SetValue(w, new Exception());
 
-            ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<int>(w, eventKey, "ddd");
+            ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<object>(w, eventKey, "ddd");
             eventPublished.ShouldBeTrue();
             serviceResponse.ExceptionId.ShouldBe(exId);
         }
@@ -54,46 +54,46 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
 
             foreach (var fr in allFaultedResults)
             {
-                var srvRes = new ServiceResponse()
+                var srvRes = new ServiceResponse<object>()
                 {
                     Result = fr
                 };
-                var w = new ServiceResponseWrapper(srvRes);
-                ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<int>(w, "ek", "ddd").ShouldBeFalse();
+                var w = new ServiceResponseWrapper<object>(srvRes);
+                ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<object>(w, "ek", "ddd").ShouldBeFalse();
             }
         }
         [Fact]
         public void ValidateServiceResponseAndPublishException_ReturnServiceResponse_False_InvalidDataObject()
         {
-            var srvRes = new ServiceResponse()
+            var srvRes = new ServiceResponse<object>()
             {
                 Data = "name",
                 Result = ServiceResult.Ok
             };
-            var w = new ServiceResponseWrapper(srvRes);
-            ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<int>(w, "ek", "ddd").ShouldBeFalse();
+            var w = new ServiceResponseWrapper<object>(srvRes);
+            ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<object>(w, "ek", "ddd").ShouldBeFalse();
         }
         [Fact]
         public void ValidateServiceResponseAndPublishException_ReturnServiceResponse_True_Accepted()
         {
-            var srvRes = new ServiceResponse()
+            var srvRes = new ServiceResponse<object>()
             {
                 Data = "name",
                 Result = ServiceResult.Accepted
             };
-            var w = new ServiceResponseWrapper(srvRes);
-            ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<int>(w, "ek", "ddd").ShouldBeTrue();
+            var w = new ServiceResponseWrapper<object>(srvRes);
+            ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<object>(w, "ek", "ddd").ShouldBeTrue();
         }
         [Fact]
         public void ValidateServiceResponseAndPublishException_ReturnServiceResponse_True_Ok()
         {
-            var srvRes = new ServiceResponse()
+            var srvRes = new ServiceResponse<object>()
             {
                 Data = "name",
                 Result = ServiceResult.Ok
             };
-            var w = new ServiceResponseWrapper(srvRes);
-            ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<string>(w, "ek", "ddd").ShouldBeTrue();
+            var w = new ServiceResponseWrapper<object>(srvRes);
+            ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<object>(w, "ek", "ddd").ShouldBeTrue();
         }
 
 
@@ -102,8 +102,8 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         [Fact]
         public void PublishExceptionIfExists_DoesNotPublish()
         {
-            var serviceResponse = new ServiceResponse();
-            var w = new ServiceResponseWrapper(serviceResponse);
+            var serviceResponse = new ServiceResponse<object>();
+            var w = new ServiceResponseWrapper<object>(serviceResponse);
             ServiceResponseWrapperExtensions.PublishExceptionIfExists(w, "ek", "ddd").ShouldBeFalse();
         }
         #endregion

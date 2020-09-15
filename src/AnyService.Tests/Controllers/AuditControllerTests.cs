@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using AnyService.Audity;
 using AnyService.Controllers;
+using AnyService.Models;
 using AnyService.Services;
 using AnyService.Services.Audit;
 using AnyService.Services.ServiceResponseMappers;
@@ -82,7 +83,7 @@ namespace AnyService.Tests.Controllers
             };
             var aSrv = new Mock<IAuditManager>();
             aSrv.Setup(c => c.GetAll(It.IsAny<AuditPagination>()))
-                .ReturnsAsync(new ServiceResponse { Data = page, Result = ServiceResult.Ok });
+                .ReturnsAsync(new ServiceResponse<AuditPagination> { Data = page, Result = ServiceResult.Ok });
 
             var l = new Mock<ILogger<AuditController>>();
             var rm = new Mock<IServiceResponseMapper>();
@@ -95,7 +96,7 @@ namespace AnyService.Tests.Controllers
 
             var res = await ctrl.GetAll(auditRecordTypes: AuditRecordTypes.CREATE);
 
-            var v = srvRes.Data as PaginationModel<AuditRecord>;
+            var v = srvRes.Data as AuditPaginationModel;
             v.Data.Count().ShouldBe(page.Data.Count());
             for (int i = 0; i < v.Data.Count(); i++)
                 page.Data.ShouldContain(x => x.Id == v.Data.ElementAt(i).Id);
