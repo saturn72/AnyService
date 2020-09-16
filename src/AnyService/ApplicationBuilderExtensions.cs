@@ -11,16 +11,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
+using AnyService.Services.Logging;
 
 namespace AnyService
 {
 
     public static class ApplicationBuilderExtensions
     {
-        public static IApplicationBuilder UseAnyService(this IApplicationBuilder app,
+        public static IApplicationBuilder UseAnyService(
+            this IApplicationBuilder app,
             bool useWorkContextMiddleware = true,
             bool useAuthorizationMiddleware = true,
-            bool useExceptionLogging = true,
+            bool logExceptions = true,
             bool usePermissionMiddleware = true)
         {
             var sp = app.ApplicationServices;
@@ -32,7 +34,7 @@ namespace AnyService
             if (useWorkContextMiddleware) app.UseMiddleware<WorkContextMiddleware>();
             if (useAuthorizationMiddleware) app.UseMiddleware<DefaultAuthorizationMiddleware>();
 
-            if (useExceptionLogging)
+            if (logExceptions)
             {
                 var entityConfigRecords = sp.GetRequiredService<IEnumerable<EntityConfigRecord>>();
                 var eventKeys = entityConfigRecords.Select(e => e.EventKeys).ToArray();
