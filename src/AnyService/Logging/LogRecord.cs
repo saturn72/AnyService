@@ -18,6 +18,6 @@ namespace AnyService.Logging
         public string HttpMethod { get; set; }
         public string Request { get; set; }
         public string WorkContext { get; set; }
-        public DateTime CreatedOnUtc { get; set; }
+        public string CreatedOnUtc { get; set; }
     }
 }
