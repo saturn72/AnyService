@@ -64,10 +64,10 @@ namespace AnyService.Services.Audit
             var userIdsQuery = getCollectionQuery(pagination.UserIds, a => a.UserId);
             var clientIdsQuery = getCollectionQuery(pagination.ClientIds, a => a.ClientId);
             var fromUtcQuery = pagination.FromUtc != null ?
-                new Func<AuditRecord, bool>(c => DateTime.Parse(c.OnUtc) >= pagination.FromUtc) :
+                new Func<AuditRecord, bool>(c => DateTime.Parse(c.CreatedOnUtc) >= pagination.FromUtc) :
                 c => true;
             var toUtcQuery = pagination.ToUtc != null ?
-                new Func<AuditRecord, bool>(c => DateTime.Parse(c.OnUtc) <= pagination.ToUtc) :
+                new Func<AuditRecord, bool>(c => DateTime.Parse(c.CreatedOnUtc) <= pagination.ToUtc) :
                 c => true;
 
             return x =>
@@ -98,9 +98,10 @@ namespace AnyService.Services.Audit
                 EntityId = entityId,
                 AuditRecordType = auditRecordType,
                 Data = data.ToJsonString(),
+                WorkContext = _workContext.Parameters.ToJsonString(),
                 UserId = _workContext.CurrentUserId,
                 ClientId = _workContext.CurrentClientId,
-                OnUtc = DateTime.UtcNow.ToIso8601(),
+                CreatedOnUtc = DateTime.UtcNow.ToIso8601(),
             };
             return await _repository.Insert(record);
 
@@ -120,7 +121,7 @@ namespace AnyService.Services.Audit
             if (EntityTypesNames.TryGetValue(entityType, out string value))
                 return value;
 
-            EntityTypesNames[entityType] = _entityConfigRecords.First(entityType).Name ;
+            EntityTypesNames[entityType] = _entityConfigRecords.First(entityType).Name;
             return EntityTypesNames[entityType];
         }
     }

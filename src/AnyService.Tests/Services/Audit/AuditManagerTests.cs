@@ -1,7 +1,6 @@
 ﻿using AnyService.Audity;
 using AnyService.Services;
 using AnyService.Services.Audit;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
@@ -20,7 +19,7 @@ namespace AnyService.Tests.Services.Audit
         [InlineData(AuditRecordTypes.READ)]
         [InlineData(AuditRecordTypes.UPDATE)]
         [InlineData(AuditRecordTypes.DELETE)]
-        public async Task DoesnotCrreateRecord(string art)
+        public async Task DoesnotCreateRecord(string art)
         {
             var aSettings = new AuditSettings
             {
@@ -201,28 +200,28 @@ namespace AnyService.Tests.Services.Audit
         private readonly IEnumerable<AuditRecord> _records = new[]
         {
             new AuditRecord {Id = "a", EntityId = Entity1,  AuditRecordType = Create, EntityName = Name1, ClientId = Client1,
-                OnUtc = DateTime.MinValue.ToIso8601()},
+                CreatedOnUtc = DateTime.MinValue.ToIso8601()},
 
             new AuditRecord {Id = "b", EntityId = Entity2,  AuditRecordType = Create, EntityName = Name3,
-                OnUtc = DateTime.UtcNow.Subtract(TimeSpan.FromDays(5)).ToIso8601()},
+                CreatedOnUtc = DateTime.UtcNow.Subtract(TimeSpan.FromDays(5)).ToIso8601()},
 
             new AuditRecord {Id = "c", EntityId = Entity1,  AuditRecordType = Read,  EntityName = Name1, ClientId = Client1,
-                OnUtc = DateTime.MinValue.ToIso8601()},
+                CreatedOnUtc = DateTime.MinValue.ToIso8601()},
 
             new AuditRecord {Id = "d", EntityId = Entity3,  AuditRecordType = Update,  EntityName = Name3, UserId = User1,
-                OnUtc = DateTime.MinValue.ToIso8601()},
+                CreatedOnUtc = DateTime.MinValue.ToIso8601()},
 
             new AuditRecord {Id = "e", EntityId = Entity1,  AuditRecordType = Delete,  EntityName = Name2,
-                OnUtc = DateTime.MinValue.ToIso8601()},
+                CreatedOnUtc = DateTime.MinValue.ToIso8601()},
 
             new AuditRecord {Id = "f", EntityId = Entity2,  AuditRecordType = Delete,  EntityName = Name1, UserId = User1,
-                OnUtc = DateTime.MinValue.ToIso8601()},
+                CreatedOnUtc = DateTime.MinValue.ToIso8601()},
 
             new AuditRecord {Id = "g", EntityId = Entity3,  AuditRecordType = Create,  EntityName = Name2, ClientId = Client1,
-                OnUtc = DateTime.MinValue.ToIso8601()},
+                CreatedOnUtc = DateTime.MinValue.ToIso8601()},
 
-            new AuditRecord {Id = "h", EntityId = Entity1,  AuditRecordType = Update,  EntityName = Name3, UserId = User1, OnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(10)).ToIso8601()},
-            new AuditRecord {Id = "i", EntityId = Entity3,  AuditRecordType = Delete,  EntityName = Name3, OnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromDays(1)).ToIso8601()},
+            new AuditRecord {Id = "h", EntityId = Entity1,  AuditRecordType = Update,  EntityName = Name3, UserId = User1, CreatedOnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(10)).ToIso8601()},
+            new AuditRecord {Id = "i", EntityId = Entity3,  AuditRecordType = Delete,  EntityName = Name3, CreatedOnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromDays(1)).ToIso8601()},
         };
 
         public class TestAuditManager : AuditManager
