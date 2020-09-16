@@ -152,7 +152,7 @@ namespace AnyService.Tests.Services
             var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, fsm.Object, logger.Object, null, null, null, am.Object);
             var res = await cSrv.Create(model);
             res.Result.ShouldBe(ServiceResult.Ok);
-            res.Data.ShouldBe(model);
+            res.Payload.ShouldBe(model);
 
             mp.Verify(a => a.PrepareForCreate(It.Is<AuditableTestModel>(e => e == model)), Times.Once);
             am.Verify(a => a.InsertAuditRecord(
@@ -227,7 +227,7 @@ namespace AnyService.Tests.Services
             var id = "some-id";
             var res = await cSrv.GetById(id);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
-            res.Data.Id.ShouldBe(id);
+            res.Payload.Id.ShouldBe(id);
         }
         [Fact]
         public async Task GetById_Returns_NullResponseFromDB()
@@ -257,7 +257,7 @@ namespace AnyService.Tests.Services
             var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null, null);
             var res = await cSrv.GetById("123");
             res.Result.ShouldBe(ServiceResult.NotFound);
-            res.Data.ShouldBeNull();
+            res.Payload.ShouldBeNull();
         }
         [Fact]
         public async Task GetById_ErrorFromRepository()
@@ -331,7 +331,7 @@ namespace AnyService.Tests.Services
             var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null, null);
             var res = await cSrv.GetById("123");
             res.Result.ShouldBe(ServiceResult.Ok);
-            res.Data.ShouldBe(model);
+            res.Payload.ShouldBe(model);
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == ekr.Read),
                 It.Is<DomainEventData>(ed => ed.Data == model && ed.PerformedByUserId == wc.CurrentUserId)), Times.Once);
@@ -371,7 +371,7 @@ namespace AnyService.Tests.Services
             var res = await cSrv.GetAll(null);
 
             res.Result.ShouldBe(ServiceResult.Ok);
-            var p = res.Data.ShouldBeOfType<Pagination<AuditableTestModel>>();
+            var p = res.Payload.ShouldBeOfType<Pagination<AuditableTestModel>>();
             p.Data.ShouldBe(dbRes);
         }
         [Fact]
@@ -385,7 +385,7 @@ namespace AnyService.Tests.Services
             var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null, null);
             var res = await cSrv.GetAll(null);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
-            res.Data.ShouldBeNull();
+            res.Payload.ShouldBeNull();
         }
         [Theory]
         [MemberData(nameof(GetAll_EmptyQuery_DATA))]
@@ -420,7 +420,7 @@ namespace AnyService.Tests.Services
             var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, null, wc, eb.Object, null, logger.Object, null, null, null, null);
             var res = await cSrv.GetAll(pagination);
             res.Result.ShouldBe(ServiceResult.Ok);
-            var p = res.Data.ShouldBeOfType<Pagination<AuditableTestModel>>();
+            var p = res.Payload.ShouldBeOfType<Pagination<AuditableTestModel>>();
             p.Data.ShouldBe(dbRes);
         }
         public static IEnumerable<object[]> GetAll_EmptyQuery_DATA => new[]{
@@ -465,7 +465,7 @@ namespace AnyService.Tests.Services
             var p = new Pagination<AuditableTestModel>("id>0");
             var res = await cSrv.GetAll(p);
             res.Result.ShouldBe(ServiceResult.Ok);
-            var data = res.Data.GetPropertyValueByName<object>("Data");
+            var data = res.Payload.GetPropertyValueByName<object>("Data");
             data.ShouldBeOfType<AuditableTestModel[]>().Length.ShouldBe(0);
             eb.Verify(e => e.Publish(
                     It.Is<string>(k => k == ekr.Read),
@@ -559,7 +559,7 @@ namespace AnyService.Tests.Services
             var res = await cSrv.GetAll(paginate);
             res.Result.ShouldBe(ServiceResult.Ok);
             paginate.Data.ShouldBe(dbRes);
-            res.Data.ShouldBe(paginate);
+            res.Payload.ShouldBe(paginate);
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == ekr.Read),
                 It.Is<DomainEventData>(ed => ed.Data == paginate && ed.PerformedByUserId == wc.CurrentUserId)), Times.Once);
@@ -580,7 +580,7 @@ namespace AnyService.Tests.Services
             var res = await cSrv.Update("123", entity);
 
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
-            res.Data.ShouldBeNull();
+            res.Payload.ShouldBeNull();
         }
         [Fact]
         public async Task Update_RepositoryReturnsNull_OnGetDbEntity()

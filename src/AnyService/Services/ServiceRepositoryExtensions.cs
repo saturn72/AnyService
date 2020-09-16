@@ -32,7 +32,7 @@ namespace AnyService.Services
                 serviceResponse.Message = "Failed to command repository";
                 return data;
             }
-            serviceResponse.Data = data;
+            serviceResponse.Payload = data;
 
             return data;
         }
@@ -62,7 +62,7 @@ namespace AnyService.Services
                 serviceResponse.Message = "Item not found in repository";
             }
 
-            serviceResponse.Data = data;
+            serviceResponse.Payload = data;
             return data;
         }
     }

@@ -67,7 +67,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         {
             var srvRes = new ServiceResponse<object>()
             {
-                Data = "name",
+                Payload = "name",
                 Result = ServiceResult.Ok
             };
             var w = new ServiceResponseWrapper<object>(srvRes);
@@ -78,7 +78,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         {
             var srvRes = new ServiceResponse<object>()
             {
-                Data = "name",
+                Payload = "name",
                 Result = ServiceResult.Accepted
             };
             var w = new ServiceResponseWrapper<object>(srvRes);
@@ -89,7 +89,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         {
             var srvRes = new ServiceResponse<object>()
             {
-                Data = "name",
+                Payload = "name",
                 Result = ServiceResult.Ok
             };
             var w = new ServiceResponseWrapper<object>(srvRes);

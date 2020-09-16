@@ -56,14 +56,14 @@ namespace AnyService.Services.ServiceResponseMappers
                         new UnauthorizedResult() as IActionResult
                 },
             };
-        public IActionResult MapServiceResponse(ServiceResponse serviceResponse) => ConversionFuncs[serviceResponse.Result](serviceResponse);
-        public IActionResult MapServiceResponse(Type source, Type destination, ServiceResponse serviceResponse)
+        public IActionResult MapServiceResponse<T>(ServiceResponse<T> serviceResponse) => ConversionFuncs[serviceResponse.Result](serviceResponse);
+        public IActionResult MapServiceResponse<T>(Type source, Type destination, ServiceResponse<T> serviceResponse)
         {
-            if (serviceResponse.Data != null)
+            if (serviceResponse.Payload != null)
             {
-                if (!source.IsAssignableFrom(serviceResponse.Data.GetType()))
-                    throw new InvalidOperationException($"Cannot map from {serviceResponse.Data.GetType()} to {source}");
-                serviceResponse.Data = serviceResponse.Data.Map(destination);
+                if (!source.IsAssignableFrom(serviceResponse.Payload.GetType()))
+                    throw new InvalidOperationException($"Cannot map from {serviceResponse.Payload.GetType()} to {source}");
+                serviceResponse.Payload = serviceResponse.PayloadObject.Map(destination);
             }
             return MapServiceResponse(serviceResponse);
         }

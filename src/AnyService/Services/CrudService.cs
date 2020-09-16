@@ -88,7 +88,7 @@ namespace AnyService.Services
             if (entity is ICreatableAudit)
                 await AuditManager.InsertCreateRecord(entity);
 
-            Publish(EventKeys.Create, serviceResponse.Data);
+            Publish(EventKeys.Create, serviceResponse.Payload);
             serviceResponse.Result = ServiceResult.Ok;
 
             //if (entity is IFileContainer)
@@ -133,13 +133,13 @@ namespace AnyService.Services
 
             if (data != null && serviceResponse.Result == ServiceResult.NotSet)
             {
-                serviceResponse.Data = data;
+                serviceResponse.Payload = data;
                 serviceResponse.Result = ServiceResult.Ok;
 
                 if (typeof(TDomainModel) is IReadableAudit)
                     await AuditManager.InsertReadRecord(data);
 
-                Publish(EventKeys.Read, serviceResponse.Data);
+                Publish(EventKeys.Read, serviceResponse.Payload);
             }
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
@@ -165,13 +165,13 @@ namespace AnyService.Services
             pagination.Data = data ?? new TDomainModel[] { };
             if (serviceResponse.Result == ServiceResult.NotSet)
             {
-                serviceResponse.Data = pagination;
+                serviceResponse.Payload = pagination;
                 serviceResponse.Result = ServiceResult.Ok;
 
                 if (typeof(TDomainModel) is IReadableAudit)
                     await AuditManager.InsertReadRecord(pagination);
 
-                Publish(EventKeys.Read, serviceResponse.Data);
+                Publish(EventKeys.Read, serviceResponse.Payload);
             }
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
@@ -270,7 +270,7 @@ namespace AnyService.Services
             if (entity is IUpdatableAudit)
                 await AuditManager.InsertUpdatedRecord(dbEntry, entity);
 
-            Publish(EventKeys.Update, serviceResponse.Data);
+            Publish(EventKeys.Update, serviceResponse.Payload);
             serviceResponse.Result = ServiceResult.Ok;
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
@@ -318,7 +318,7 @@ namespace AnyService.Services
             if (dbEntry is IDeletableAudit)
                 await AuditManager.InsertDeletedRecord(dbEntry);
 
-            Publish(EventKeys.Delete, serviceResponse.Data);
+            Publish(EventKeys.Delete, serviceResponse.Payload);
             serviceResponse.Result = ServiceResult.Ok;
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;

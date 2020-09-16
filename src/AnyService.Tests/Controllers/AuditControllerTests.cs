@@ -83,7 +83,7 @@ namespace AnyService.Tests.Controllers
             };
             var aSrv = new Mock<IAuditManager>();
             aSrv.Setup(c => c.GetAll(It.IsAny<AuditPagination>()))
-                .ReturnsAsync(new ServiceResponse<AuditPagination> { Data = page, Result = ServiceResult.Ok });
+                .ReturnsAsync(new ServiceResponse<AuditPagination> { Payload = page, Result = ServiceResult.Ok });
 
             var l = new Mock<ILogger<AuditController>>();
             var rm = new Mock<IServiceResponseMapper>();

@@ -1,18 +1,19 @@
 namespace AnyService.Services
 {
-    public class ServiceResponse<T> : ServiceResponse
+    public class ServiceResponse<T>
     {
-        public new T Data { get; set; }
-    }
-    public class ServiceResponse
-    {
+        internal object PayloadObject { get; private set; }
         public ServiceResponse()
         {
             Result = ServiceResult.NotSet;
         }
         public string Result { get; set; }
         public string Message { get; set; }
-        public object Data { get; set; }
+        public T Payload
+        {
+            get { return (T)PayloadObject; }
+            set { PayloadObject = value; }
+        }
         public object ExceptionId { get; set; }
     }
 }

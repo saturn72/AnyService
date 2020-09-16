@@ -25,7 +25,7 @@ namespace AnyService.Tests.Services
             var w = new ServiceResponseWrapper<TestClass>(sr);
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetById("some-id"), w);
             res.ShouldBeNull();
-            sr.Data.ShouldBeNull();
+            sr.Payload.ShouldBeNull();
             sr.Result.ShouldBe(ServiceResult.Error);
             sr.Message.ShouldNotBeNullOrEmpty();
             w.Exception.ShouldBe(ex);
@@ -40,7 +40,7 @@ namespace AnyService.Tests.Services
             var w = new ServiceResponseWrapper<TestClass>(sr);
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetById("some-id"), w);
             res.ShouldBeNull();
-            sr.Data.ShouldBeNull();
+            sr.Payload.ShouldBeNull();
             sr.Result.ShouldBe(ServiceResult.NotFound);
             sr.Message.ShouldNotBeNullOrEmpty();
         }
@@ -61,7 +61,7 @@ namespace AnyService.Tests.Services
             var w = new ServiceResponseWrapper<IEnumerable<TestClass>>(sr);
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), w);
             res.ShouldBe(dbData);
-            sr.Data.ShouldBe(dbData);
+            sr.Payload.ShouldBe(dbData);
             sr.Result.ShouldBe(ServiceResult.NotSet);
             sr.Message.ShouldBeNullOrEmpty();
         }
@@ -88,7 +88,7 @@ namespace AnyService.Tests.Services
             var w = new ServiceResponseWrapper<IEnumerable<TestClass>>(sr);
             var res = await ServiceRepositoryExtensions.Query(repo.Object, r => r.GetAll(null), w);
             res.ShouldBe(dbData);
-            sr.Data.ShouldBe(dbData);
+            sr.Payload.ShouldBe(dbData);
             sr.Result.ShouldBe(ServiceResult.NotSet);
             sr.Message.ShouldBeNullOrEmpty();
         }
@@ -107,7 +107,7 @@ namespace AnyService.Tests.Services
 
             var res = await ServiceRepositoryExtensions.Command(repo.Object, r => r.Insert(tc), w);
             res.ShouldBeNull();
-            sr.Data.ShouldBeNull();
+            sr.Payload.ShouldBeNull();
             sr.Result.ShouldBe(ServiceResult.Error);
             sr.Message.ShouldNotBeNullOrEmpty();
             w.Exception.ShouldBe(ex);
@@ -123,7 +123,7 @@ namespace AnyService.Tests.Services
             var w = new ServiceResponseWrapper<TestClass>(sr);
             var res = await ServiceRepositoryExtensions.Command(repo.Object, r => r.Insert(tc), w);
             res.ShouldBeNull();
-            sr.Data.ShouldBeNull();
+            sr.Payload.ShouldBeNull();
             sr.Result.ShouldBe(ServiceResult.BadOrMissingData);
             sr.Message.ShouldNotBeNullOrEmpty();
         }
@@ -138,7 +138,7 @@ namespace AnyService.Tests.Services
             var w = new ServiceResponseWrapper<TestClass>(sr);
             var res = await ServiceRepositoryExtensions.Command(repo.Object, r => r.Insert(tc), w);
             res.ShouldBe(tc);
-            sr.Data.ShouldBe(tc);
+            sr.Payload.ShouldBe(tc);
             sr.Result.ShouldBe(ServiceResult.NotSet);
             sr.Message.ShouldBeNullOrEmpty();
         }

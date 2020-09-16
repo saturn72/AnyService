@@ -67,7 +67,7 @@ namespace AnyService.Tests.Services.Audit
             var aSrv = new AuditManager(wc, repo.Object, aConfig, null, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Ok);
-            (srvRes.Data as Pagination<AuditRecord>).Data.ShouldBeEmpty();
+            (srvRes.Payload as Pagination<AuditRecord>).Data.ShouldBeEmpty();
         }
         [Fact]
         public async Task GetAll_ReturnsRepositoryData()
@@ -92,7 +92,7 @@ namespace AnyService.Tests.Services.Audit
             var aSrv = new AuditManager(wc, repo.Object, aConfig, null, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Ok);
-            (srvRes.Data as Pagination<AuditRecord>).Data.ShouldBe(repoData);
+            (srvRes.Payload as Pagination<AuditRecord>).Data.ShouldBe(repoData);
         }
         #region Query builder
         private const string
