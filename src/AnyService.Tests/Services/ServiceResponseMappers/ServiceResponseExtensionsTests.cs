@@ -14,7 +14,6 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
     public class ServiceResponseExtensionsTests : MappingTest
     {
 
-
         [Fact]
         public void ToActionResult_DelegatesCallToOverload()
         {
@@ -24,6 +23,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Data = new object(),
             };
             var srm = new Mock<IServiceResponseMapper>();
+            
             ServiceResponseMapperExtensions.Map<TestClass1, object>(srm.Object, serRes);
             srm.Verify(s => s.Map(
                 It.Is<Type>(t => t == typeof(TestClass1)),

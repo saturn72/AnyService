@@ -19,7 +19,7 @@ namespace AnyService.Tests.Services.Audit
         [InlineData(AuditRecordTypes.READ)]
         [InlineData(AuditRecordTypes.UPDATE)]
         [InlineData(AuditRecordTypes.DELETE)]
-        public async Task DoesnotCreateRecord(string art)
+        public async Task DoesNotCreateRecord(string art)
         {
             var aSettings = new AuditSettings
             {
@@ -220,8 +220,10 @@ namespace AnyService.Tests.Services.Audit
             new AuditRecord {Id = "g", EntityId = Entity3,  AuditRecordType = Create,  EntityName = Name2, ClientId = Client1,
                 CreatedOnUtc = DateTime.MinValue.ToIso8601()},
 
-            new AuditRecord {Id = "h", EntityId = Entity1,  AuditRecordType = Update,  EntityName = Name3, UserId = User1, CreatedOnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(10)).ToIso8601()},
-            new AuditRecord {Id = "i", EntityId = Entity3,  AuditRecordType = Delete,  EntityName = Name3, CreatedOnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromDays(1)).ToIso8601()},
+            new AuditRecord {Id = "h", EntityId = Entity1,  AuditRecordType = Update,  EntityName = Name3, UserId = User1, 
+                CreatedOnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(10)).ToIso8601()},
+            new AuditRecord {Id = "i", EntityId = Entity3,  AuditRecordType = Delete,  EntityName = Name3, 
+                CreatedOnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromDays(1)).ToIso8601()},
         };
 
         public class TestAuditManager : AuditManager

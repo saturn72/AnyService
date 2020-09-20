@@ -36,7 +36,7 @@ namespace AnyService.Services.Audit
         #endregion
         public async virtual Task<ServiceResponse> GetAll(AuditPagination pagination)
         {
-            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all audit records flow");
+            _logger.LogInformation(LoggingEvents.BusinessLogicFlow, "Start get all audit records flow");
             pagination.QueryFunc = BuildAuditPaginationQuery(pagination);
 
             _logger.LogDebug(LoggingEvents.Repository, "Get all audit-records from repository using paginate = " + pagination);
@@ -64,10 +64,10 @@ namespace AnyService.Services.Audit
             var userIdsQuery = getCollectionQuery(pagination.UserIds, a => a.UserId);
             var clientIdsQuery = getCollectionQuery(pagination.ClientIds, a => a.ClientId);
             var fromUtcQuery = pagination.FromUtc != null ?
-                new Func<AuditRecord, bool>(c => DateTime.Parse(c.CreatedOnUtc) >= pagination.FromUtc) :
+                new Func<AuditRecord, bool>(c => DateTime.TryParse(c.CreatedOnUtc, out DateTime value) && value >= pagination.FromUtc) :
                 c => true;
             var toUtcQuery = pagination.ToUtc != null ?
-                new Func<AuditRecord, bool>(c => DateTime.Parse(c.CreatedOnUtc) <= pagination.ToUtc) :
+                new Func<AuditRecord, bool>(c => DateTime.TryParse(c.CreatedOnUtc, out DateTime value) && value <= pagination.ToUtc) :
                 c => true;
 
             return x =>
@@ -104,7 +104,6 @@ namespace AnyService.Services.Audit
                 CreatedOnUtc = DateTime.UtcNow.ToIso8601(),
             };
             return await _repository.Insert(record);
-
         }
 
         private bool ShouldAudit(string auditRecordType)

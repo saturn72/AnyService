@@ -75,13 +75,13 @@ namespace AnyService.Tests.Services.Logging
             };
 
             var sp = new Mock<IServiceProvider>();
-            var repo = new Mock<IRepository<LogRecord>>();
+            var lm = new Mock<ILogManager>();
 
-            sp.Setup(p => p.GetService(typeof(IRepository<LogRecord>))).Returns(repo.Object);
+            sp.Setup(p => p.GetService(typeof(ILogManager))).Returns(lm.Object);
 
             var reh = new RepositoryExceptionHandler(sp.Object);
             await reh.InsertRecord(ded);
-            repo.Verify(r => r.Insert(It.Is<LogRecord>(lRec =>
+            lm.Verify(r => r.InsertLogRecord(It.Is<LogRecord>(lRec =>
                 lRec.Level == LogRecordLevel.Error &&
                 lRec.ClientId == wc.CurrentClientId &&
                 lRec.UserId == wc.CurrentUserId &&
