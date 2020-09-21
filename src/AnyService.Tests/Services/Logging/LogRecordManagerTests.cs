@@ -31,9 +31,69 @@ namespace AnyService.Tests.Services.Logging
             repo.Verify(r => r.Insert(It.Is<LogRecord>(l => l == lr)), Times.Once);
         }
         #endregion
-        //#region GetAll
-        //public async Task GetAll_
-        //#endregion
+        #region Get All
+        [Fact]
+        public async Task GetAll_ReturnsErrorOn_RepositoryException()
+        {
+            var wc = new WorkContext
+            {
+                CurrentClientId = "cId",
+                CurrentUserId = "uId",
+            };
+
+            var repo = new Mock<IRepository<LogRecord>>();
+            repo.Setup(x => x.GetAll(It.IsAny<Pagination<LogRecord>>()))
+                .ThrowsAsync(new Exception());
+
+            var logger = new Mock<ILogger<LogRecordManager>>();
+            var lm = new LogRecordManager(repo.Object, logger.Object);
+            var res = await lm.GetAll(new LogRecordPagination());
+            res.ShouldBeNull();
+        }
+        [Fact]
+        public async Task GetAll_ReturnsEmptyArray_OnRepositoryNull()
+        {
+            var wc = new WorkContext
+            {
+                CurrentClientId = "cId",
+                CurrentUserId = "uId",
+            };
+
+            var repo = new Mock<IRepository<LogRecord>>();
+            repo.Setup(x => x.GetAll(It.IsAny<Pagination<LogRecord>>()))
+                .ReturnsAsync(null as IEnumerable<LogRecord>);
+
+            var logger = new Mock<ILogger<LogRecordManager>>();
+            var lm = new LogRecordManager(repo.Object, logger.Object);
+            var res = await lm.GetAll(new LogRecordPagination());
+            var lp = res.ShouldBeOfType<LogRecordPagination>();
+            lp.Data.ShouldBeEmpty();
+        }
+        [Fact]
+        public async Task GetAll_ReturnsRepositoryData()
+        {
+            var wc = new WorkContext
+            {
+                CurrentClientId = "cId",
+                CurrentUserId = "uId",
+            };
+
+            var repo = new Mock<IRepository<LogRecord>>();
+            var repoData = new[]
+            {
+                new LogRecord { Id = "a" },
+                new LogRecord { Id = "b" },
+                new LogRecord { Id = "c" },
+            };
+            repo.Setup(x => x.GetAll(It.IsAny<Pagination<LogRecord>>())).ReturnsAsync(repoData);
+
+            var logger = new Mock<ILogger<LogRecordManager>>();
+            var lm = new LogRecordManager(repo.Object, logger.Object);
+            var res = await lm.GetAll(new LogRecordPagination());
+            var lp = res.ShouldBeOfType<LogRecordPagination>();
+            lp.Data.ShouldBe(repoData);
+        }
+        #endregion
         #region Query Builder
         [Theory]
         [MemberData(nameof(BuildLogPaginationQuery_DATA))]

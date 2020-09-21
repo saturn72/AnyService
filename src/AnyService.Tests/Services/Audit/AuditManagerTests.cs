@@ -29,6 +29,7 @@ namespace AnyService.Tests.Services.Audit
             var res = await am.InsertAuditRecord(null, null, art, null);
             res.ShouldBeNull();
         }
+        #region Get All
         [Fact]
         public async Task GetAll_ReturnsErrorOn_RepositoryException()
         {
@@ -93,6 +94,7 @@ namespace AnyService.Tests.Services.Audit
             srvRes.Result.ShouldBe(ServiceResult.Ok);
             (srvRes.Data as Pagination<AuditRecord>).Data.ShouldBe(repoData);
         }
+        #endregion
         #region Query builder
         private const string
             Entity1 = "e1",
@@ -220,9 +222,9 @@ namespace AnyService.Tests.Services.Audit
             new AuditRecord {Id = "g", EntityId = Entity3,  AuditRecordType = Create,  EntityName = Name2, ClientId = Client1,
                 CreatedOnUtc = DateTime.MinValue.ToIso8601()},
 
-            new AuditRecord {Id = "h", EntityId = Entity1,  AuditRecordType = Update,  EntityName = Name3, UserId = User1, 
+            new AuditRecord {Id = "h", EntityId = Entity1,  AuditRecordType = Update,  EntityName = Name3, UserId = User1,
                 CreatedOnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(10)).ToIso8601()},
-            new AuditRecord {Id = "i", EntityId = Entity3,  AuditRecordType = Delete,  EntityName = Name3, 
+            new AuditRecord {Id = "i", EntityId = Entity3,  AuditRecordType = Delete,  EntityName = Name3,
                 CreatedOnUtc= DateTime.UtcNow.Subtract(TimeSpan.FromDays(1)).ToIso8601()},
         };
 
