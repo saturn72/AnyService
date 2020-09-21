@@ -26,7 +26,7 @@ namespace AnyService.Services.Logging
         private Func<DomainEventData, Task> LogErrorOnException => ed =>
         {
             var lr = ed.Data.GetPropertyValueOrDefaultByName<LogRecord>("logRecord");
-            var exceptionId = lr?.ExceptionId;
+            var exceptionId = lr?.TraceId;
             if (!exceptionId.HasValue())
                 return Task.CompletedTask;
 

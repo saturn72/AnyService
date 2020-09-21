@@ -46,7 +46,7 @@ namespace AnyService.Services.Logging
             var logLevelQuery = getCollectionQuery(pagination.LogLevels, a => a.Level);
             var userIdQuery = getCollectionQuery(pagination.UserIds, a => a.UserId);
             var clientIdQuery = getCollectionQuery(pagination.ClientIds, a => a.ClientId);
-            var exceptionIdQuery = getCollectionQuery(pagination.ExceptionIds, a => a.ExceptionId);
+            var exceptionIdQuery = getCollectionQuery(pagination.ExceptionIds, a => a.TraceId);
             var exceptionRuntimeTypeQuery = getCollectionQuery(pagination.ExceptionRuntimeTypes, a => a.ExceptionRuntimeType);
             var ipAddressQuery = getCollectionQuery(pagination.IpAddresses, a => a.IpAddress);
             var httpMethodQuery = getCollectionQuery(pagination.HttpMethods, a => a.HttpMethod);

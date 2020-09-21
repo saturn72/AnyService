@@ -68,8 +68,7 @@ namespace AnyService.SampleApp
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             var services = app.ApplicationServices;
-            var exHandler = services.GetService<IExceptionHandler>();
-            app.UseExceptionHandler(app => app.Run(ctx => exHandler.Handle(ctx, LoggingEvents.UnexpectedException.Name)));
+            app.UseExceptionHandler("/__error");
             app.UseHsts();
             app.UseHttpsRedirection();
             app.UseAuthentication();

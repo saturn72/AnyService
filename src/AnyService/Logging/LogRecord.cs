@@ -8,7 +8,7 @@ namespace AnyService.Logging
         public string Level { get; set; }
         public string ClientId { get; set; }
         public string UserId { get; set; }
-        public string ExceptionId { get; set; }
+        public string TraceId { get; set; }
         public string ExceptionRuntimeType { get; set; }
         public string ExceptionRuntimeMessage { get; set; }
         public string Message { get; set; }

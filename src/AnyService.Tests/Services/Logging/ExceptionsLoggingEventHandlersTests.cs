@@ -42,7 +42,7 @@ namespace AnyService.Tests.Services.Logging
                 Data = new
                 {
                     exception = expEx,
-                    logRecord = new LogRecord { ExceptionId = "some-ex-id" },
+                    logRecord = new LogRecord { TraceId = "some-ex-id" },
                 }
             };
             h.CreateEventHandler(e);

@@ -4,14 +4,17 @@ using AnyService.Audity;
 using AnyService.Services;
 using AnyService.Services.Preparars;
 using AnyService.Services.ServiceResponseMappers;
+using AvosetGoOnline.Controllers;
 
 namespace AnyService
 {
     public sealed partial class AnyServiceConfig
     {
+        private string _errorEventKey;
         public AnyServiceConfig()
         {
             MaxMultipartBoundaryLength = 50;
+            ErrorEventKey = LoggingEvents.UnexpectedException.Name;
             MaxValueCount = 25;
             DefaultPaginationSettings = new PaginationSettings
             {
@@ -45,6 +48,15 @@ namespace AnyService
         /// <value></value>
         public bool ManageEntityPermissions { get; set; } = true;
         public int MaxMultipartBoundaryLength { get; set; }
+        public string ErrorEventKey
+        {
+            get => _errorEventKey;
+            set
+            {
+                _errorEventKey = value;
+                ErrorController.ErrorEventKey = _errorEventKey;
+            }
+        }
         public int MaxValueCount { get; set; }
         public PaginationSettings DefaultPaginationSettings { get; set; }
         /// <summary>

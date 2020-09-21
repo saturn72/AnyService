@@ -65,7 +65,6 @@ namespace AnyService.SampleApp.ServicesConfigurars
             };
 
             services.AddAnyService(anyServiceConfig);
-            services.AddTransient<IExceptionHandler, DefaultExceptionHandler>();
             return services;
         }
     }

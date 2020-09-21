@@ -52,7 +52,7 @@ namespace AnyService.Tests.Services.Logging
                 Level = LogRecordLevel.Error,
                 ClientId = wc.CurrentClientId,
                 UserId = wc.CurrentUserId,
-                ExceptionId = exceptionId,
+                TraceId = exceptionId,
                 ExceptionRuntimeType = exRuntimeType,
                 ExceptionRuntimeMessage = exMsg,
                 Message = "some-clevermessage",
@@ -84,7 +84,7 @@ namespace AnyService.Tests.Services.Logging
                 lRec.Level == LogRecordLevel.Error &&
                 lRec.ClientId == wc.CurrentClientId &&
                 lRec.UserId == wc.CurrentUserId &&
-                lRec.ExceptionId == exceptionId &&
+                lRec.TraceId == exceptionId &&
                 lRec.ExceptionRuntimeType == exRuntimeType &&
                 lRec.ExceptionRuntimeMessage == exMsg &&
                 lRec.Message.HasValue() &&
