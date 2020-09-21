@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace AnyService.Services.Logging
 {
-    public class LogRecordManager : ILogManager
+    public class LogRecordManager : ILogRecordManager
     {
         #region Fields
         private readonly IRepository<LogRecord> _repository;

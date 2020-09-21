@@ -26,13 +26,13 @@ namespace AnyService.Controllers
             LogRecordLevel.Fatal,
         };
 
-        private readonly ILogManager _logManager;
+        private readonly ILogRecordManager _logManager;
         private readonly ILogger<LogRecordController> _logger;
         #endregion
 
         #region ctor
         public LogRecordController(
-            ILogManager auditManager,
+            ILogRecordManager auditManager,
             ILogger<LogRecordController> logger
             )
         {

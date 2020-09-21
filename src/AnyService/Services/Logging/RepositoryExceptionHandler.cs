@@ -22,7 +22,7 @@ namespace AnyService.Services.Logging
             var lr = ded.Data.GetPropertyValueByName<LogRecord>("logRecord");
             if (lr == null) return Task.CompletedTask;
 
-            var logManager = _serviceProvider.GetService<ILogManager>();
+            var logManager = _serviceProvider.GetService<ILogRecordManager>();
             return logManager.InsertLogRecord(lr);
         };
     }

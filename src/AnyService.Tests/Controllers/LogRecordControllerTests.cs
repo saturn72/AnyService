@@ -73,7 +73,7 @@ namespace AnyService.Tests.Controllers
                     new LogRecord{Id = "d"},
                 }
             };
-            var lm = new Mock<ILogManager>();
+            var lm = new Mock<ILogRecordManager>();
             lm.Setup(c => c.GetAll(It.IsAny<LogRecordPagination>()))
                 .ReturnsAsync(page);
 

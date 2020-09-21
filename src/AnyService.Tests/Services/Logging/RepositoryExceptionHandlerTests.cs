@@ -75,9 +75,9 @@ namespace AnyService.Tests.Services.Logging
             };
 
             var sp = new Mock<IServiceProvider>();
-            var lm = new Mock<ILogManager>();
+            var lm = new Mock<ILogRecordManager>();
 
-            sp.Setup(p => p.GetService(typeof(ILogManager))).Returns(lm.Object);
+            sp.Setup(p => p.GetService(typeof(ILogRecordManager))).Returns(lm.Object);
 
             var reh = new RepositoryExceptionHandler(sp.Object);
             await reh.InsertRecord(ded);
