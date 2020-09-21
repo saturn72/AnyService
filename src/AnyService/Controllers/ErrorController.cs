@@ -1,5 +1,4 @@
-﻿using AnyService;
-using AnyService.Events;
+﻿using AnyService.Events;
 using AnyService.Logging;
 using AnyService.Services;
 using Microsoft.AspNetCore.Diagnostics;
@@ -9,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 
-namespace AvosetGoOnline.Controllers
+namespace AnyService.Controllers
 {
     [ApiController]
     [Route("/__error")]
