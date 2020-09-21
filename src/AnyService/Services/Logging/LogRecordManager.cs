@@ -66,10 +66,15 @@ namespace AnyService.Services.Logging
             var requestPathQuery = getCollectionOrContainuationQuery(pagination.RequestPathContains, pagination.RequestPaths, a => a.RequestPath);
 
             var fromUtcQuery = pagination.FromUtc != null ?
-                new Func<LogRecord, bool>(c => DateTime.TryParse(c.CreatedOnUtc, out DateTime value) && value >= pagination.FromUtc) :
+                new Func<LogRecord, bool>(c => DateTime.TryParse(c.CreatedOnUtc, out DateTime value) && value.ToUniversalTime() >= pagination.FromUtc) :
                 c => true;
+
             var toUtcQuery = pagination.ToUtc != null ?
-                 new Func<LogRecord, bool>(c => DateTime.TryParse(c.CreatedOnUtc, out DateTime value) && value <= pagination.ToUtc) :
+                 new Func<LogRecord, bool>(c =>
+                 {
+                     DateTime.TryParse(c.CreatedOnUtc, out DateTime value);
+                     return value.ToUniversalTime() <= pagination.ToUtc;
+                 }) :
                  c => true;
 
             return x =>
