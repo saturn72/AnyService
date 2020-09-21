@@ -45,7 +45,7 @@ namespace AnyService.Middlewares
             var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
             var ex = exceptionHandlerPathFeature?.Error;
             var httpRequest = context.Request;
-            var record = BuildLogRecord(workContext, ex, exId.ToString(), httpRequest);
+            var record = BuildLogRecord(workContext, ex, exId.ToString(), httpRequest, exceptionHandlerPathFeature.Path);
 
             _logger.LogDebug(LoggingEvents.EventPublishing, $"Publish event using {eventKey} key. Event Data: {record.ToJsonString()}");
 
@@ -60,16 +60,15 @@ namespace AnyService.Middlewares
                 WorkContext = workContext,
             });
         }
-        private LogRecord BuildLogRecord(WorkContext workContext, Exception ex, string exceptionId, HttpRequest httpRequest)
+        private LogRecord BuildLogRecord(WorkContext workContext, Exception ex, string exceptionId, HttpRequest httpRequest, string path)
         {
             var request = new
             {
                 url = httpRequest.Host.Value,
                 port = httpRequest.Host.Port,
                 method = httpRequest.Method,
-                path = httpRequest.Path,
-                headers = httpRequest.Headers.Select(x => $"[{x.Key}:{x.Value}]").Aggregate((f, s) => $"{f}\n{s}"),
-                query = httpRequest.QueryString.Value,
+                path = path,
+                headers = httpRequest.Headers.Select(x => $"[{x.Key}:{x.Value}]").Aggregate((f, s) => $"{f}\n{s}")
             };
 
             return new LogRecord
