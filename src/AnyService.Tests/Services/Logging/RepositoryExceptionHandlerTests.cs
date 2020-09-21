@@ -61,7 +61,6 @@ namespace AnyService.Tests.Services.Logging
                 RequestHeaders = expRequest.headers,
                 HttpMethod = method,
                 Request = expRequest.ToJsonString(),
-                WorkContext = wc.ToJsonString()
             };
             var ded = new DomainEventData
             {
@@ -94,7 +93,6 @@ namespace AnyService.Tests.Services.Logging
                 lRec.RequestHeaders == expRequest.headers &&
                 lRec.HttpMethod == method &&
                 lRec.Request == expRequest.ToJsonString() &&
-                lRec.WorkContext == wc.ToJsonString() &&
                 lRec.CreatedOnUtc == default
             )), Times.Once);
         }

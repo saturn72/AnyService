@@ -31,9 +31,8 @@ namespace AnyService.Tests.Middlewares
             i.Setup(ig => ig.GetNext()).Returns(exId);
             var l = new Mock<ILogger<DefaultExceptionHandler>>();
             var eb = new Mock<IEventBus>();
-            var sp = new Mock<IServiceProvider>();
-            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
-            var h = new DefaultExceptionHandler(i.Object, l.Object, eb.Object, sp.Object);
+
+            var h = new DefaultExceptionHandler(i.Object, l.Object, eb.Object, wc);
 
             var ctx = new Mock<HttpContext>();
 
