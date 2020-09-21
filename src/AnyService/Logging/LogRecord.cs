@@ -17,7 +17,6 @@ namespace AnyService.Logging
         public string RequestHeaders { get; set; }
         public string HttpMethod { get; set; }
         public string Request { get; set; }
-        public string WorkContext { get; set; }
         public string CreatedOnUtc { get; set; }
     }
 }

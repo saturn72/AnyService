@@ -65,14 +65,7 @@ namespace AnyService.SampleApp.ServicesConfigurars
             };
 
             services.AddAnyService(anyServiceConfig);
-
-            services.AddSingleton<IExceptionHandler>(sp =>
-            {
-                var idg = sp.GetService<IIdGenerator>();
-                var l = sp.GetService<ILogger<DefaultExceptionHandler>>();
-                var eb = sp.GetService<IEventBus>();
-                return new DefaultExceptionHandler(idg, l, eb, sp);
-            });
+            services.AddTransient<IExceptionHandler, DefaultExceptionHandler>();
             return services;
         }
     }
