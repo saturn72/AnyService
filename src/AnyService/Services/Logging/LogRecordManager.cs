@@ -27,27 +27,18 @@ namespace AnyService.Services.Logging
             _logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"insert log record to {nameof(IRepository<LogRecord>)}");
             return _repository.Insert(logRecord);
         }
-        public Task<LogRecordPagination> GetAll(LogRecordPagination pagination)
+        public async Task<LogRecordPagination> GetAll(LogRecordPagination pagination)
         {
 
             _logger.LogInformation(LoggingEvents.BusinessLogicFlow, "Start get all log records flow");
             pagination.QueryFunc = BuildLogRecordPaginationQuery(pagination);
-            throw new NotImplementedException();
 
-            //_logger.LogDebug(LoggingEvents.Repository, "Get all audit-records from repository using paginate = " + pagination);
+            _logger.LogDebug(LoggingEvents.Repository, "Get all log-records from repository using paginate = " + pagination);
 
-            //var serviceResponse = new ServiceResponse { Data = pagination };
-            //var wrapper = new ServiceResponseWrapper(serviceResponse);
-            //var data = await _repository.Query(r => r.GetAll(pagination), wrapper);
-            //_logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data.ToJsonString()}");
-            //if (serviceResponse.Result != ServiceResult.NotSet)
-            //    return serviceResponse;
-
-            //pagination.Data = data ?? new AuditRecord[] { };
-            //serviceResponse.Data = pagination;
-            //serviceResponse.Result = ServiceResult.Ok;
-            //_logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
-            //return serviceResponse;
+            var data = await _repository.GetAll(pagination);
+            _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data.ToJsonString()}");
+            pagination.Data = data;
+            return pagination;
         }
         protected Func<LogRecord, bool> BuildLogRecordPaginationQuery(LogRecordPagination pagination)
         {

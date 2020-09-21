@@ -1,6 +1,7 @@
 ﻿using AnyService.Audity;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ namespace AnyService.Services.Audit
     public class AuditManager : IAuditManager
     {
         #region Fields
-        private static readonly IDictionary<Type, string> EntityTypesNames = new Dictionary<Type, string>();
+        private static readonly ConcurrentDictionary<Type, string> EntityTypesNames = new ConcurrentDictionary<Type, string>();
         private readonly WorkContext _workContext;
         private readonly IRepository<AuditRecord> _repository;
         private readonly AuditSettings _auditSettings;
@@ -125,7 +126,7 @@ namespace AnyService.Services.Audit
             if (EntityTypesNames.TryGetValue(entityType, out string value))
                 return value;
 
-            EntityTypesNames[entityType] = _entityConfigRecords.First(entityType).Name;
+            EntityTypesNames.TryAdd(entityType, _entityConfigRecords.First(entityType).Name);
             return EntityTypesNames[entityType];
         }
     }

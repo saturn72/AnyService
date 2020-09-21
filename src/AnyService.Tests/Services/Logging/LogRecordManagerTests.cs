@@ -33,24 +33,6 @@ namespace AnyService.Tests.Services.Logging
         #endregion
         #region Get All
         [Fact]
-        public async Task GetAll_ReturnsErrorOn_RepositoryException()
-        {
-            var wc = new WorkContext
-            {
-                CurrentClientId = "cId",
-                CurrentUserId = "uId",
-            };
-
-            var repo = new Mock<IRepository<LogRecord>>();
-            repo.Setup(x => x.GetAll(It.IsAny<Pagination<LogRecord>>()))
-                .ThrowsAsync(new Exception());
-
-            var logger = new Mock<ILogger<LogRecordManager>>();
-            var lm = new LogRecordManager(repo.Object, logger.Object);
-            var res = await lm.GetAll(new LogRecordPagination());
-            res.ShouldBeNull();
-        }
-        [Fact]
         public async Task GetAll_ReturnsEmptyArray_OnRepositoryNull()
         {
             var wc = new WorkContext
@@ -67,7 +49,7 @@ namespace AnyService.Tests.Services.Logging
             var lm = new LogRecordManager(repo.Object, logger.Object);
             var res = await lm.GetAll(new LogRecordPagination());
             var lp = res.ShouldBeOfType<LogRecordPagination>();
-            lp.Data.ShouldBeEmpty();
+            lp.Data.ShouldBeNull();
         }
         [Fact]
         public async Task GetAll_ReturnsRepositoryData()
