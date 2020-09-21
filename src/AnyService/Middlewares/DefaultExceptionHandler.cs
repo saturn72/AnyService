@@ -86,6 +86,7 @@ namespace AnyService.Middlewares
                 RequestHeaders = request.headers,
                 HttpMethod = request.method,
                 Request = request.ToJsonString(),
+                CreatedOnUtc = DateTime.UtcNow.ToIso8601(),
             };
         }
         private string ExtractExceptionMessage(Exception ex)
