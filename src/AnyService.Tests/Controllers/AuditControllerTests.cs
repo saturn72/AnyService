@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -87,20 +88,19 @@ namespace AnyService.Tests.Controllers
 
             var l = new Mock<ILogger<AuditController>>();
             var rm = new Mock<IServiceResponseMapper>();
-            ServiceResponse srvRes = null;
-            rm.Setup(r => r.MapServiceResponse(It.IsAny<ServiceResponse>()))
+            ServiceResponse<AuditPagination> srvRes = null;
+            rm.Setup(r => r.MapServiceResponse(
+                It.Is<Type>(t => t == typeof(AuditPagination)),
+                It.Is<Type>(t => t == typeof(AuditPaginationModel)),
+                It.IsAny<ServiceResponse<AuditPagination>>()))
                 .Returns(new OkResult())
-                .Callback<ServiceResponse>(s => srvRes = s);
+                .Callback<ServiceResponse<AuditPagination>>(s => srvRes = s);
             var wc = new WorkContext { CurrentClientId = "1232" };
             var ctrl = new AuditController(aSrv.Object, l.Object, wc, rm.Object);
 
             var res = await ctrl.GetAll(auditRecordTypes: AuditRecordTypes.CREATE);
 
-            var v = srvRes.Data as AuditPaginationModel;
-            v.Data.Count().ShouldBe(page.Data.Count());
-            for (int i = 0; i < v.Data.Count(); i++)
-                page.Data.ShouldContain(x => x.Id == v.Data.ElementAt(i).Id);
+            srvRes.Payload.ShouldBe(page);
         }
-
     }
 }

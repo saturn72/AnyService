@@ -24,30 +24,34 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         [Fact]
         public void ToActionResult_InvalidCastThrows()
         {
-            var serRes = new ServiceResponse
+            var serRes = new ServiceResponse<TestClass1>
             {
                 Result = ServiceResult.Ok,
-                Data = new object(),
+                Payload= new TestClass1(),
             };
             var mapper = new DataOnlyServiceResponseMapper();
-            Should.Throw(() => mapper.MapServiceResponse<TestClass1, object>(serRes), typeof(InvalidOperationException));
+            Should.Throw(() => mapper.MapServiceResponse<object, TestClass1>(serRes), typeof(InvalidOperationException));
         }
 
         [Theory]
         [MemberData(nameof(ReturnExpectedActionResultMember_DATA))]
-        public void ReturnExpectedActionResult(string result, TestClass1 data, string message, Type expectedActionResultType)
+        public void ReturnExpectedActionResult(string result, TestClass1 payload, string message, Type expectedActionResultType)
         {
-            var serRes = new ServiceResponse
+            var serRes = new ServiceResponse<TestClass1>
             {
                 Result = result,
-                Data = data,
+                Payload= payload,
                 Message = message
             };
             var mapper = new DataOnlyServiceResponseMapper();
-            mapper.MapServiceResponse<TestClass1, TestClass2>(serRes).ShouldBeOfType(expectedActionResultType);
+            var r = mapper.MapServiceResponse<TestClass1, TestClass2>(serRes);
+            r.ShouldBeOfType(expectedActionResultType);
 
-            if (result == ServiceResult.Ok && data != null)
-                (serRes.Data as TestClass2).Id.ShouldBe(data.Id.ToString());
+            if (result == ServiceResult.Ok && payload != null)
+            {
+                var ok = r.ShouldBeOfType<OkObjectResult>();
+                (ok.Value as TestClass2).Id.ShouldBe(payload.Id.ToString());
+            }
         }
 
         public static IEnumerable<object[]> ReturnExpectedActionResultMember_DATA =>

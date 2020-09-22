@@ -18,10 +18,10 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         [Fact]
         public void ToActionResult_DelegatesCallToOverload()
         {
-            var serRes = new ServiceResponse
+            var serRes = new ServiceResponse<object>
             {
                 Result = ServiceResult.Ok,
-                Data = new object(),
+                Payload = new object(),
             };
             var srm = new Mock<IServiceResponseMapper>();
             ServiceResponseMapperExtensions.MapServiceResponse<TestClass1, object>(srm.Object, serRes);
@@ -45,28 +45,32 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         [Fact]
         public void ToActionResult_InvalidCastThrows()
         {
-            var serRes = new ServiceResponse
+            var serRes = new ServiceResponse<object>
             {
                 Result = ServiceResult.Ok,
-                Data = new object(),
+                Payload = new object(),
             };
             Should.Throw(() => ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(object)), typeof(InvalidOperationException));
         }
 
         [Theory]
         [MemberData(nameof(ReturnExpectedActionResultMember_DATA))]
-        public void ReturnExpectedActionResult(string result, TestClass1 data, string message, Type expectedActionResultType)
+        public void ReturnExpectedActionResult(string result, TestClass1 payload, string message, Type expectedActionResultType)
         {
-            var serRes = new ServiceResponse
+            var serRes = new ServiceResponse<TestClass1>
             {
                 Result = result,
-                Data = data,
+                Payload = payload,
                 Message = message
             };
-            ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(TestClass2)).ShouldBeOfType(expectedActionResultType);
+            var r = ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(TestClass2));
+            r.ShouldBeOfType(expectedActionResultType);
 
-            if (result == ServiceResult.Ok && data != null)
-                (serRes.Data as TestClass2).Id.ShouldBe(data.Id.ToString());
+            if (result == ServiceResult.Ok && payload != null)
+            {
+                var ok = r.ShouldBeOfType<OkObjectResult>();
+                (ok.Value as TestClass2).Id.ShouldBe(payload.Id.ToString());
+            }
         }
 
         public static IEnumerable<object[]> ReturnExpectedActionResultMember_DATA =>
@@ -126,7 +130,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         {
             new object[] { null},
             new object[] { new ServiceResponse{Result = ServiceResult.Error}},
-            new object[] { new ServiceResponse{Result = ServiceResult.Ok, Data = "this is data"}},
+            new object[] { new ServiceResponse<string>{Result = ServiceResult.Ok, Payload = "this is data"}},
         };
         [Theory]
         [MemberData(nameof(ValidateServiceResponse_ReturnsTrue_DATA))]
@@ -136,7 +140,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         }
         public static IEnumerable<object[]> ValidateServiceResponse_ReturnsTrue_DATA => new[]
         {
-            new object[] { new ServiceResponse{Result = ServiceResult.Ok, Data = "this is data"}},
+            new object[] { new ServiceResponse<string>{Result = ServiceResult.Ok, Payload = "this is data"}},
             new object[] { new ServiceResponse{Result = ServiceResult.Accepted}},
         };
     }
