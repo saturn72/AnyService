@@ -11,7 +11,7 @@ using System.Linq;
 namespace AnyService.Controllers
 {
     [ApiController]
-    [Route("/__error")]
+    [Route("__error")]
     public class ErrorController : ControllerBase
     {
         #region fields
