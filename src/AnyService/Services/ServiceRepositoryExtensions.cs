@@ -9,7 +9,7 @@ namespace AnyService.Services
         public static async Task<TResult> Command<TDomainModel, TResult>(
             this IRepository<TDomainModel> repository,
             Func<IRepository<TDomainModel>, Task<TResult>> command,
-            ServiceResponseWrapper<TResult> wrapper)
+            ServiceResponseWrapper wrapper)
                 where TDomainModel : IDomainModelBase
         {
             var data = default(TResult);
@@ -32,14 +32,14 @@ namespace AnyService.Services
                 serviceResponse.Message = "Failed to command repository";
                 return data;
             }
-            serviceResponse.Payload = data;
+            serviceResponse.PayloadObject = data;
 
             return data;
         }
         public static async Task<TResult> Query<TDomainModel, TResult>(
             this IRepository<TDomainModel> repository,
             Func<IRepository<TDomainModel>, Task<TResult>> command,
-            ServiceResponseWrapper<TResult> wrapper)
+            ServiceResponseWrapper wrapper)
             where TDomainModel : IDomainModelBase
         {
             var data = default(TResult);
@@ -62,7 +62,7 @@ namespace AnyService.Services
                 serviceResponse.Message = "Item not found in repository";
             }
 
-            serviceResponse.Payload = data;
+            serviceResponse.PayloadObject = data;
             return data;
         }
     }

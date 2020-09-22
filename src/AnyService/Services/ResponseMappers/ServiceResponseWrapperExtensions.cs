@@ -11,14 +11,14 @@ namespace Microsoft.AspNetCore.Mvc
     {
         private static IServiceProvider _serviceProvider;
         public static void Init(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
-        public static bool ValidateServiceResponseAndPublishException<T>(this ServiceResponseWrapper<T> wrapper, string eventKey, object data)
+        public static bool ValidateServiceResponseAndPublishException<T>(this ServiceResponseWrapper wrapper, string eventKey, object data)
         {
-            if (!PublishExceptionIfExists<T>(wrapper, eventKey, data))
+            if (!PublishExceptionIfExists(wrapper, eventKey, data))
                 return wrapper.ServiceResponse.ValidateServiceResponse<T>();
 
             return false;
         }
-        public static bool PublishExceptionIfExists<T>(this ServiceResponseWrapper<T> wrapper, string eventKey, object data)
+        public static bool PublishExceptionIfExists(this ServiceResponseWrapper wrapper, string eventKey, object data)
         {
             if (wrapper.Exception == null)
                 return false;

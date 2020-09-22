@@ -39,8 +39,8 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
             ServiceResponseWrapperExtensions.Init(sp.Object);
 
             var serviceResponse = new ServiceResponse<object>();
-            var w = new ServiceResponseWrapper<object>(serviceResponse);
-            var pi = typeof(ServiceResponseWrapper<object>).GetProperty("Exception");
+            var w = new ServiceResponseWrapper(serviceResponse);
+            var pi = typeof(ServiceResponseWrapper).GetProperty("Exception");
             pi.SetValue(w, new Exception());
 
             ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<object>(w, eventKey, "ddd");
@@ -58,7 +58,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 {
                     Result = fr
                 };
-                var w = new ServiceResponseWrapper<object>(srvRes);
+                var w = new ServiceResponseWrapper(srvRes);
                 ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<object>(w, "ek", "ddd").ShouldBeFalse();
             }
         }
@@ -70,7 +70,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Payload = "name",
                 Result = ServiceResult.Ok
             };
-            var w = new ServiceResponseWrapper<object>(srvRes);
+            var w = new ServiceResponseWrapper(srvRes);
             ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<object>(w, "ek", "ddd").ShouldBeFalse();
         }
         [Fact]
@@ -81,7 +81,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Payload = "name",
                 Result = ServiceResult.Accepted
             };
-            var w = new ServiceResponseWrapper<object>(srvRes);
+            var w = new ServiceResponseWrapper(srvRes);
             ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<object>(w, "ek", "ddd").ShouldBeTrue();
         }
         [Fact]
@@ -92,7 +92,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Payload = "name",
                 Result = ServiceResult.Ok
             };
-            var w = new ServiceResponseWrapper<object>(srvRes);
+            var w = new ServiceResponseWrapper(srvRes);
             ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<object>(w, "ek", "ddd").ShouldBeTrue();
         }
 
@@ -103,7 +103,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         public void PublishExceptionIfExists_DoesNotPublish()
         {
             var serviceResponse = new ServiceResponse<object>();
-            var w = new ServiceResponseWrapper<object>(serviceResponse);
+            var w = new ServiceResponseWrapper(serviceResponse);
             ServiceResponseWrapperExtensions.PublishExceptionIfExists(w, "ek", "ddd").ShouldBeFalse();
         }
         #endregion

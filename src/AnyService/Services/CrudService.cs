@@ -79,7 +79,7 @@ namespace AnyService.Services
             if (entity is ISoftDelete)
                 (entity as ISoftDelete).Deleted = false;
 
-            var wrapper = new ServiceResponseWrapper<TDomainModel>(serviceResponse);
+            var wrapper = new ServiceResponseWrapper(serviceResponse);
             var dbData = await Repository.Command(r => r.Insert(entity), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository insert response: {dbData}");
 
@@ -124,7 +124,7 @@ namespace AnyService.Services
 
             Logger.LogDebug(LoggingEvents.Repository, "Get by Id from repository");
 
-            var wrapper = new ServiceResponseWrapper<TDomainModel>(serviceResponse);
+            var wrapper = new ServiceResponseWrapper(serviceResponse);
             var data = await Repository.Query(r => r.GetById(id), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
 
@@ -156,7 +156,7 @@ namespace AnyService.Services
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Missing query data");
 
             Logger.LogDebug(LoggingEvents.Repository, "Get all from repository using paginate = " + pagination);
-            var wrapper = new ServiceResponseWrapper<IEnumerable<TDomainModel>>(new ServiceResponse<IEnumerable<TDomainModel>>());
+            var wrapper = new ServiceResponseWrapper(new ServiceResponse<IEnumerable<TDomainModel>>());
             var data = await Repository.Query(r => r.GetAll(pagination), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
 
@@ -237,7 +237,7 @@ namespace AnyService.Services
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
 
             Logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
-            var wrapper = new ServiceResponseWrapper<TDomainModel>(serviceResponse);
+            var wrapper = new ServiceResponseWrapper(serviceResponse);
 
             var dbEntry = await Repository.Query(async r => await r.GetById(id), wrapper);
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Update, id))
@@ -284,7 +284,7 @@ namespace AnyService.Services
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
 
             Logger.LogDebug(LoggingEvents.Repository, "Repository - Fetch entity");
-            var wrapper = new ServiceResponseWrapper<TDomainModel>(serviceResponse);
+            var wrapper = new ServiceResponseWrapper(serviceResponse);
 
             var dbEntry = await Repository.Query(r => r.GetById(id), wrapper);
             if (dbEntry == null)
@@ -331,7 +331,7 @@ namespace AnyService.Services
             serviceResponse.Result = serviceResponseResult;
             return serviceResponse;
         }
-        private bool IsNotFoundOrBadOrMissingDataOrError<T>(ServiceResponseWrapper<T> wrapper, string eventKey, object requestData)
+        private bool IsNotFoundOrBadOrMissingDataOrError(ServiceResponseWrapper wrapper, string eventKey, object requestData)
         {
             var serviceResponse = wrapper.ServiceResponse;
             Logger.LogDebug(LoggingEvents.Repository, $"Has {serviceResponse.Result} response");
@@ -358,7 +358,7 @@ namespace AnyService.Services
                 WorkContext = WorkContext
             });
         }
-        private void PublishException<T>(ServiceResponse<T> serviceResponse, string eventKey, object data, Exception exception)
+        private void PublishException(ServiceResponse serviceResponse, string eventKey, object data, Exception exception)
         {
             serviceResponse.ExceptionId = IdGenerator.GetNext();
             Logger.LogDebug(LoggingEvents.Repository, $"Repository returned with exception. exceptionId: {serviceResponse.ExceptionId}");

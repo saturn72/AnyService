@@ -13,30 +13,30 @@ namespace Microsoft.AspNetCore.Mvc
             {
                 {
                     ServiceResult.Accepted,
-                    sr => sr.Data==null && !sr.Message.HasValue()?
+                    sr => sr.PayloadObject==null && !sr.Message.HasValue()?
                             new AcceptedResult() :
-                            new AcceptedResult("", new{sr.Data,sr.Message})
+                            new AcceptedResult("", new{sr.PayloadObject,sr.Message})
                 },
                 {
                     ServiceResult.BadOrMissingData,
-                    sr =>  sr.Data!=null || sr.Message.HasValue()?
-                        new BadRequestObjectResult(new{ sr.Message, sr.Data}) :
+                    sr =>  sr.PayloadObject!=null || sr.Message.HasValue()?
+                        new BadRequestObjectResult(new{ sr.Message, sr.PayloadObject}) :
                         new BadRequestResult() as IActionResult
                 },
                 {
                     ServiceResult.Error,
                     sr => {
-                        if(sr.Data!=null || sr.Message.HasValue())
+                        if(sr.PayloadObject!=null || sr.Message.HasValue())
                         {
-                            return new ObjectResult(new{ sr.Message, sr.Data}) { StatusCode = StatusCodes.Status500InternalServerError };
+                            return new ObjectResult(new{ sr.Message, sr.PayloadObject}) { StatusCode = StatusCodes.Status500InternalServerError };
                         }
                         return new StatusCodeResult(StatusCodes.Status500InternalServerError);
                     }
                 },
                 {
                     ServiceResult.NotFound,
-                     sr =>  sr.Data!=null || sr.Message.HasValue()?
-                        new NotFoundObjectResult(new{ sr.Message, sr.Data}) :
+                     sr =>  sr.PayloadObject!=null || sr.Message.HasValue()?
+                        new NotFoundObjectResult(new{ sr.Message, sr.PayloadObject}) :
                         new NotFoundResult() as IActionResult
                 },
                 {
@@ -45,14 +45,14 @@ namespace Microsoft.AspNetCore.Mvc
                 },
                 {
                     ServiceResult.Ok,
-                    sr =>  sr.Data!=null || sr.Message.HasValue()?
-                        new OkObjectResult(new{ sr.Message, sr.Data}) :
+                    sr =>  sr.PayloadObject!=null || sr.Message.HasValue()?
+                        new OkObjectResult(new{ sr.Message, sr.PayloadObject}) :
                         new OkResult() as IActionResult
                 },
                 {
                     ServiceResult.Unauthorized,
-                    sr =>  sr.Data!=null || sr.Message.HasValue()?
-                        new UnauthorizedObjectResult(new{ sr.Message, sr.Data}) :
+                    sr =>  sr.PayloadObject!=null || sr.Message.HasValue()?
+                        new UnauthorizedObjectResult(new{ sr.Message, sr.PayloadObject}) :
                         new UnauthorizedResult() as IActionResult
                 },
             };
@@ -62,11 +62,11 @@ namespace Microsoft.AspNetCore.Mvc
 
         public static IActionResult ToActionResult(this ServiceResponse serviceResponse, Type source, Type destination)
         {
-            if (serviceResponse.Data != null)
+            if (serviceResponse.PayloadObject != null)
             {
-                if (!source.IsAssignableFrom(serviceResponse.Data.GetType()))
-                    throw new InvalidOperationException($"Cannot map from {serviceResponse.Data.GetType()} to {source}");
-                serviceResponse.Data = serviceResponse.Data.Map(destination);
+                if (!source.IsAssignableFrom(serviceResponse.PayloadObject.GetType()))
+                    throw new InvalidOperationException($"Cannot map from {serviceResponse.PayloadObject.GetType()} to {source}");
+                serviceResponse.PayloadObject = serviceResponse.PayloadObject.Map(destination);
             }
 
             return ToActionResult(serviceResponse);
@@ -89,6 +89,6 @@ namespace Microsoft.AspNetCore.Mvc
                 value : StatusCodes.Status500InternalServerError;
         }
         public static bool ValidateServiceResponse<T>(this ServiceResponse serviceResponse) =>
-           (serviceResponse?.Result == ServiceResult.Ok && serviceResponse.Data is T) || serviceResponse?.Result == ServiceResult.Accepted;
+           (serviceResponse?.Result == ServiceResult.Ok && serviceResponse.PayloadObject is T) || serviceResponse?.Result == ServiceResult.Accepted;
     }
 }

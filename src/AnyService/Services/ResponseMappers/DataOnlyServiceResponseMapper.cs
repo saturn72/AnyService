@@ -12,22 +12,22 @@ namespace AnyService.Services.ServiceResponseMappers
             {
                 {
                     ServiceResult.Accepted,
-                    sr => sr.Data==null && !sr.Message.HasValue()?
+                    sr => sr.PayloadObject==null && !sr.Message.HasValue()?
                             new AcceptedResult() :
-                            new AcceptedResult("", sr.Data)
+                            new AcceptedResult("", sr.PayloadObject)
                 },
                 {
                     ServiceResult.BadOrMissingData,
-                    sr =>  sr.Data!=null || sr.Message.HasValue()?
-                        new BadRequestObjectResult(sr.Data) :
+                    sr =>  sr.PayloadObject!=null || sr.Message.HasValue()?
+                        new BadRequestObjectResult(sr.PayloadObject) :
                         new BadRequestResult() as IActionResult
                 },
                 {
                     ServiceResult.Error,
                     sr => {
-                        if(sr.Data!=null || sr.Message.HasValue())
+                        if(sr.PayloadObject!=null || sr.Message.HasValue())
                         {
-                            return new ObjectResult( sr.Data) { StatusCode = StatusCodes.Status500InternalServerError
+                            return new ObjectResult( sr.PayloadObject) { StatusCode = StatusCodes.Status500InternalServerError
 };
                         }
                         return new StatusCodeResult(StatusCodes.Status500InternalServerError);
@@ -35,8 +35,8 @@ namespace AnyService.Services.ServiceResponseMappers
                 },
                 {
                     ServiceResult.NotFound,
-                     sr =>  sr.Data!=null || sr.Message.HasValue()?
-                        new NotFoundObjectResult( sr.Data) :
+                     sr =>  sr.PayloadObject!=null || sr.Message.HasValue()?
+                        new NotFoundObjectResult( sr.PayloadObject) :
                         new NotFoundResult() as IActionResult
                 },
                 {
@@ -45,25 +45,34 @@ namespace AnyService.Services.ServiceResponseMappers
                 },
                 {
                     ServiceResult.Ok,
-                    sr =>  sr.Data!=null || sr.Message.HasValue()?
-                        new OkObjectResult( sr.Data) :
+                    sr =>  sr.PayloadObject!=null || sr.Message.HasValue()?
+                        new OkObjectResult( sr.PayloadObject) :
                         new OkResult() as IActionResult
                 },
                 {
                     ServiceResult.Unauthorized,
-                    sr =>  sr.Data!=null || sr.Message.HasValue()?
-                        new UnauthorizedObjectResult( sr.Data) :
+                    sr =>  sr.PayloadObject!=null || sr.Message.HasValue()?
+                        new UnauthorizedObjectResult( sr.PayloadObject) :
                         new UnauthorizedResult() as IActionResult
                 },
             };
-        public IActionResult MapServiceResponse<T>(ServiceResponse<T> serviceResponse) => ConversionFuncs[serviceResponse.Result](serviceResponse);
-        public IActionResult MapServiceResponse<T>(Type source, Type destination, ServiceResponse<T> serviceResponse)
+        public IActionResult MapServiceResponse(ServiceResponse serviceResponse) => ConversionFuncs[serviceResponse.Result](serviceResponse);
+        public IActionResult MapServiceResponse(Type source, Type destination, ServiceResponse serviceResponse)
         {
-            if (serviceResponse.Payload != null)
+            if (serviceResponse.PayloadObject != null)
             {
-                if (!source.IsAssignableFrom(serviceResponse.Payload.GetType()))
-                    throw new InvalidOperationException($"Cannot map from {serviceResponse.Payload.GetType()} to {source}");
-                serviceResponse.Payload = serviceResponse.PayloadObject.Map(destination);
+                if (!source.IsAssignableFrom(serviceResponse.PayloadObject.GetType()))
+                    throw new InvalidOperationException($"Cannot map from {serviceResponse.PayloadObject.GetType()} to {source}");
+
+                var c = new ServiceResponse
+                {
+                    ExceptionId = serviceResponse.ExceptionId,
+                    Message = serviceResponse.Message,
+                    PayloadObject = serviceResponse.PayloadObject.Map(destination),
+                    Result = serviceResponse.Result
+                };
+                return MapServiceResponse(c);
+
             }
             return MapServiceResponse(serviceResponse);
         }

@@ -42,7 +42,7 @@ namespace AnyService.Services.Audit
             _logger.LogDebug(LoggingEvents.Repository, "Get all audit-records from repository using paginate = " + pagination);
 
             var serviceResponse = new ServiceResponse<AuditPagination> { Payload = pagination };
-            var wrapper = new ServiceResponseWrapper<IEnumerable<AuditRecord>>(new ServiceResponse<IEnumerable<AuditRecord>>());
+            var wrapper = new ServiceResponseWrapper(new ServiceResponse<IEnumerable<AuditRecord>>());
             var data = await _repository.Query(r => r.GetAll(pagination), wrapper);
             _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data.ToJsonString()}");
             if (serviceResponse.Result != ServiceResult.NotSet)

@@ -2,13 +2,13 @@ using System;
 
 namespace AnyService.Services
 {
-    public sealed class ServiceResponseWrapper<T>
+    public sealed class ServiceResponseWrapper
     {
-        public ServiceResponseWrapper(ServiceResponse<T> serviceResponse)
+        public ServiceResponseWrapper(ServiceResponse serviceResponse)
         {
             ServiceResponse = serviceResponse;
         }
-        public ServiceResponse<T> ServiceResponse { get; }
+        public ServiceResponse ServiceResponse { get; }
         public Exception Exception { get; internal set; }
     }
 }
