@@ -162,7 +162,7 @@ namespace AnyService.Tests.Services
                     It.IsAny<object>())); eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<DomainEventData>()), Times.Once);
             fsm.Verify(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()), Times.Never);
         }
-        [Fact]
+        [Fact(Skip = "currently file upload not supportted")]
         public async Task Create_CallsFileStorage()
         {
             var file = new FileModel { DisplayFileName = "this is fileName" };
@@ -379,7 +379,7 @@ namespace AnyService.Tests.Services
         {
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
             v.Setup(i => i.ValidateForGet(
-                It.IsAny<Pagination<AuditableTestModel>>(), 
+                It.IsAny<Pagination<AuditableTestModel>>(),
                 It.IsAny<ServiceResponse<Pagination<AuditableTestModel>>>()))
                 .ReturnsAsync(false)
                 .Callback<Pagination<AuditableTestModel>, ServiceResponse<Pagination<AuditableTestModel>>>((p, sr) => sr.Result = ServiceResult.BadOrMissingData);

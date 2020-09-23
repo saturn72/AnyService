@@ -65,35 +65,35 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         [Fact]
         public void ValidateServiceResponseAndPublishException_ReturnServiceResponse_False_InvalidDataObject()
         {
-            var srvRes = new ServiceResponse<object>()
+            var srvRes = new ServiceResponse<string>()
             {
                 Payload = "name",
                 Result = ServiceResult.Ok
             };
             var w = new ServiceResponseWrapper(srvRes);
-            ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<object>(w, "ek", "ddd").ShouldBeFalse();
+            ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<int>(w, "ek", "ddd").ShouldBeFalse();
         }
         [Fact]
         public void ValidateServiceResponseAndPublishException_ReturnServiceResponse_True_Accepted()
         {
-            var srvRes = new ServiceResponse<object>()
+            var srvRes = new ServiceResponse<string>()
             {
                 Payload = "name",
                 Result = ServiceResult.Accepted
             };
             var w = new ServiceResponseWrapper(srvRes);
-            ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<object>(w, "ek", "ddd").ShouldBeTrue();
+            ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<int>(w, "ek", "ddd").ShouldBeTrue();
         }
         [Fact]
         public void ValidateServiceResponseAndPublishException_ReturnServiceResponse_True_Ok()
         {
-            var srvRes = new ServiceResponse<object>()
+            var srvRes = new ServiceResponse<string>()
             {
                 Payload = "name",
                 Result = ServiceResult.Ok
             };
             var w = new ServiceResponseWrapper(srvRes);
-            ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<object>(w, "ek", "ddd").ShouldBeTrue();
+            ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<string>(w, "ek", "ddd").ShouldBeTrue();
         }
 
 
