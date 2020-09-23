@@ -92,9 +92,9 @@ namespace AnyService.Tests.Controllers
             rm.Setup(r => r.MapServiceResponse(
                 It.Is<Type>(t => t == typeof(AuditPagination)),
                 It.Is<Type>(t => t == typeof(AuditPaginationModel)),
-                It.IsAny<ServiceResponse<AuditPagination>>()))
+                It.IsAny<ServiceResponse>()))
                 .Returns(new OkResult())
-                .Callback<ServiceResponse<AuditPagination>>(s => srvRes = s);
+                .Callback<Type, Type, ServiceResponse>((t1, t2, s) => srvRes = s as ServiceResponse<AuditPagination>);
             var wc = new WorkContext { CurrentClientId = "1232" };
             var ctrl = new AuditController(aSrv.Object, l.Object, wc, rm.Object);
 

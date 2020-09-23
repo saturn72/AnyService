@@ -220,14 +220,14 @@ namespace AnyService.Tests.Services
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestModel>>()))
                 .ReturnsAsync(false)
-                .Callback<ServiceResponse<AuditableTestModel>>(sr => sr.Result = ServiceResult.BadOrMissingData);
+                .Callback<string, ServiceResponse<AuditableTestModel>>((str, sr) => sr.Result = ServiceResult.BadOrMissingData);
 
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null, null);
             var id = "some-id";
             var res = await cSrv.GetById(id);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
-            res.Payload.Id.ShouldBe(id);
+            res.Payload.ShouldBeNull();
         }
         [Fact]
         public async Task GetById_Returns_NullResponseFromDB()
@@ -378,9 +378,11 @@ namespace AnyService.Tests.Services
         public async Task GetAll_BadRequest_OnValidatorFailure()
         {
             var v = new Mock<CrudValidatorBase<AuditableTestModel>>();
-            v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestModel>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestModel>>>()))
+            v.Setup(i => i.ValidateForGet(
+                It.IsAny<Pagination<AuditableTestModel>>(), 
+                It.IsAny<ServiceResponse<Pagination<AuditableTestModel>>>()))
                 .ReturnsAsync(false)
-                .Callback<ServiceResponse<AuditableTestModel>>(sr => sr.Result = ServiceResult.BadOrMissingData);
+                .Callback<Pagination<AuditableTestModel>, ServiceResponse<Pagination<AuditableTestModel>>>((p, sr) => sr.Result = ServiceResult.BadOrMissingData);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var cSrv = new CrudService<AuditableTestModel>(_config, null, v.Object, null, null, null, null, logger.Object, null, null, null, null);
             var res = await cSrv.GetAll(null);

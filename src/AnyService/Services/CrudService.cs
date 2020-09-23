@@ -147,7 +147,7 @@ namespace AnyService.Services
         public virtual async Task<ServiceResponse<Pagination<TDomainModel>>> GetAll(Pagination<TDomainModel> pagination)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all flow");
-            var serviceResponse = new ServiceResponse<Pagination<TDomainModel>>();
+            var serviceResponse = new ServiceResponse<Pagination<TDomainModel>> { Payload = pagination };
 
             if (!await Validator.ValidateForGet(pagination, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Request did not pass validation");
@@ -161,7 +161,14 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Read, pagination))
+            {
+                var wSrvRes = wrapper.ServiceResponse;
+                serviceResponse.Message= wSrvRes.Message;
+                serviceResponse.ExceptionId = wSrvRes.ExceptionId;
+                serviceResponse.Result = wSrvRes.Result;
                 return serviceResponse;
+            }
+
             pagination.Data = data ?? new TDomainModel[] { };
             if (serviceResponse.Result == ServiceResult.NotSet)
             {

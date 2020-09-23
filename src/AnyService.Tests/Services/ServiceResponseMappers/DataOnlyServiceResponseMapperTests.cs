@@ -21,17 +21,17 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 DataOnlyServiceResponseMapper.ConversionFuncs.ContainsKey(sr);
         }
 
-        [Fact]
-        public void ToActionResult_InvalidCastThrows()
-        {
-            var serRes = new ServiceResponse<TestClass1>
-            {
-                Result = ServiceResult.Ok,
-                Payload= new TestClass1(),
-            };
-            var mapper = new DataOnlyServiceResponseMapper();
-            Should.Throw(() => mapper.MapServiceResponse<object, TestClass1>(serRes), typeof(InvalidOperationException));
-        }
+        //[Fact]
+        //public void ToActionResult_InvalidCastThrows()
+        //{
+        //    var serRes = new ServiceResponse<TestClass1>
+        //    {
+        //        Result = ServiceResult.Ok,
+        //        Payload= new TestClass1(),
+        //    };
+        //    var mapper = new DataOnlyServiceResponseMapper();
+        //    Should.Throw(() => mapper.MapServiceResponse<object, TestClass1>(serRes), typeof(InvalidOperationException));
+        //}
 
         [Theory]
         [MemberData(nameof(ReturnExpectedActionResultMember_DATA))]

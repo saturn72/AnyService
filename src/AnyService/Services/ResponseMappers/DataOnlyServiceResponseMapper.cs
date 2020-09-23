@@ -61,8 +61,8 @@ namespace AnyService.Services.ServiceResponseMappers
         {
             if (serviceResponse.PayloadObject != null)
             {
-                if (!source.IsAssignableFrom(serviceResponse.PayloadObject.GetType()))
-                    throw new InvalidOperationException($"Cannot map from {serviceResponse.PayloadObject.GetType()} to {source}");
+                //if (!source.IsAssignableFrom(serviceResponse.PayloadObject.GetType()))
+                //    throw new InvalidOperationException($"Cannot map from {serviceResponse.PayloadObject.GetType()} to {source}");
 
                 var c = new ServiceResponse
                 {

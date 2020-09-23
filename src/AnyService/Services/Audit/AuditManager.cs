@@ -16,6 +16,7 @@ namespace AnyService.Services.Audit
         private readonly AuditSettings _auditSettings;
         private readonly IEnumerable<EntityConfigRecord> _entityConfigRecords;
         private readonly ILogger<AuditManager> _logger;
+        private static readonly IEnumerable<string> FaultedServiceResult = new[] { ServiceResult.BadOrMissingData, ServiceResult.Error, ServiceResult.NotFound };
         #endregion
 
         #region ctor
@@ -41,16 +42,22 @@ namespace AnyService.Services.Audit
 
             _logger.LogDebug(LoggingEvents.Repository, "Get all audit-records from repository using paginate = " + pagination);
 
-            var serviceResponse = new ServiceResponse<AuditPagination> { Payload = pagination };
             var wrapper = new ServiceResponseWrapper(new ServiceResponse<IEnumerable<AuditRecord>>());
             var data = await _repository.Query(r => r.GetAll(pagination), wrapper);
-            _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data.ToJsonString()}");
-            if (serviceResponse.Result != ServiceResult.NotSet)
-                return serviceResponse;
+            _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data?.ToJsonString()}");
 
-            pagination.Data = data ?? new AuditRecord[] { };
-            serviceResponse.Payload = pagination;
-            serviceResponse.Result = ServiceResult.Ok;
+            var wSrvRes = wrapper.ServiceResponse;
+
+            var isFault = FaultedServiceResult.Contains(wSrvRes.Result);
+
+            pagination.Data = isFault ? data : (data ?? new AuditRecord[] { });
+            var serviceResponse = new ServiceResponse<AuditPagination>
+            {
+                Payload = pagination,
+                Message = wSrvRes.Message,
+                ExceptionId = wSrvRes.ExceptionId,
+                Result = isFault ? wSrvRes.Result : ServiceResult.Ok
+            };
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
@@ -120,7 +127,7 @@ namespace AnyService.Services.Audit
             if (EntityTypesNames.TryGetValue(entityType, out string value))
                 return value;
 
-            EntityTypesNames[entityType] = _entityConfigRecords.First(entityType).Name ;
+            EntityTypesNames[entityType] = _entityConfigRecords.First(entityType).Name;
             return EntityTypesNames[entityType];
         }
     }

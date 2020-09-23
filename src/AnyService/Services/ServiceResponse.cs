@@ -10,11 +10,18 @@ namespace AnyService.Services
     }
     public class ServiceResponse
     {
-        internal object PayloadObject { get; set; }
         public ServiceResponse()
         {
             Result = ServiceResult.NotSet;
         }
+        public ServiceResponse(ServiceResponse source)
+        {
+            this.PayloadObject = source.PayloadObject;
+            this.Result = source.Result;
+            this.Message = source.Message;
+            this.ExceptionId = source.ExceptionId;
+        }
+        internal object PayloadObject { get; set; }
         public string Result { get; set; }
         public string Message { get; set; }
         public object ExceptionId { get; set; }
