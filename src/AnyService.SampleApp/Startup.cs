@@ -83,6 +83,7 @@ namespace AnyService.SampleApp
             {
                 endpoints.MapAnyService();
                 endpoints.MapHub<ChatHub>("/chatHub");
+                endpoints.MapControllers();
             });
         }
     }

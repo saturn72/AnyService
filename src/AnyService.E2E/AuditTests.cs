@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AnyService.SampleApp.Models;
@@ -43,7 +42,7 @@ namespace AnyService.E2E
             }
             await Task.Delay(1000);
             #region create
-            var res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.CREATE}&entityNames=Stock");
+            var res = await HttpClient.GetAsync($"__audit/?auditRecordTypes={AuditRecordTypes.CREATE}&entityNames=Stock");
             res.EnsureSuccessStatusCode();
             var content = await res.Content.ReadAsStringAsync();
             var jObj = JObject.Parse(content);

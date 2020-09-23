@@ -1,6 +1,7 @@
 ﻿using AnyService.Audity;
 using AnyService.Models;
 using AnyService.Services;
+using AnyService.Services.Audit;
 using AutoMapper;
 using System;
 
@@ -27,6 +28,7 @@ namespace AnyService
 
             cfg.CreateMap<AuditRecord, AuditRecordModel>();
             cfg.CreateMap<AuditRecordModel, AuditRecord>();
+            cfg.CreateMap<AuditPagination, AuditPaginationModel>();
         }
         public static IMapper MapperInstance => _mapper ??= MapperConfiguration.CreateMapper();
         public static object Map(this object source, Type destination)
