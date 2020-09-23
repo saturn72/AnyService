@@ -20,7 +20,7 @@ namespace Microsoft.AspNetCore.Mvc
                 {
                     ServiceResult.BadOrMissingData,
                     sr =>  sr.PayloadObject!=null || sr.Message.HasValue()?
-                        new BadRequestObjectResult(new{ sr.Message, sr.PayloadObject}) :
+                        new BadRequestObjectResult(new{ message = sr.Message, data = sr.PayloadObject}) :
                         new BadRequestResult() as IActionResult
                 },
                 {
@@ -28,7 +28,7 @@ namespace Microsoft.AspNetCore.Mvc
                     sr => {
                         if(sr.PayloadObject!=null || sr.Message.HasValue())
                         {
-                            return new ObjectResult(new{ sr.Message, sr.PayloadObject}) { StatusCode = StatusCodes.Status500InternalServerError };
+                            return new ObjectResult(new{ message = sr.Message, data = sr.PayloadObject}) { StatusCode = StatusCodes.Status500InternalServerError };
                         }
                         return new StatusCodeResult(StatusCodes.Status500InternalServerError);
                     }
@@ -36,7 +36,7 @@ namespace Microsoft.AspNetCore.Mvc
                 {
                     ServiceResult.NotFound,
                      sr =>  sr.PayloadObject!=null || sr.Message.HasValue()?
-                        new NotFoundObjectResult(new{ sr.Message, sr.PayloadObject}) :
+                        new NotFoundObjectResult(new{ message = sr.Message, data = sr.PayloadObject}) :
                         new NotFoundResult() as IActionResult
                 },
                 {
@@ -46,13 +46,13 @@ namespace Microsoft.AspNetCore.Mvc
                 {
                     ServiceResult.Ok,
                     sr =>  sr.PayloadObject!=null || sr.Message.HasValue()?
-                        new OkObjectResult(new{ sr.Message, sr.PayloadObject}) :
+                        new OkObjectResult(new{ message = sr.Message, data = sr.PayloadObject}) :
                         new OkResult() as IActionResult
                 },
                 {
                     ServiceResult.Unauthorized,
                     sr =>  sr.PayloadObject!=null || sr.Message.HasValue()?
-                        new UnauthorizedObjectResult(new{ sr.Message, sr.PayloadObject}) :
+                        new UnauthorizedObjectResult(new{ message = sr.Message, data = sr.PayloadObject}) :
                         new UnauthorizedResult() as IActionResult
                 },
             };

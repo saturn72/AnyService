@@ -2,6 +2,7 @@
 using AnyService.Services.ServiceResponseMappers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
 using Moq;
 using Shouldly;
 using System;
@@ -65,12 +66,23 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
             };
             var r = ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(TestClass2));
             r.ShouldBeOfType(expectedActionResultType);
-
-            if (result == ServiceResult.Ok && payload != null)
+        }
+        [Fact]
+        public void Maps_OkObjectResult()
+        {
+            string id = "1", msg = "msg";
+            var serRes = new ServiceResponse<TestClass1>
             {
-                var ok = r.ShouldBeOfType<OkObjectResult>();
-                (ok.Value as TestClass2).Id.ShouldBe(payload.Id.ToString());
-            }
+                Result = ServiceResult.Ok,
+                Payload = new TestClass1 { Id = int.Parse(id) },
+                Message = msg
+            };
+            var r = ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(TestClass2));
+            var ok = r.ShouldBeOfType<OkObjectResult>();
+
+            ok.Value.GetPropertyValueByName<string>("message").ShouldBe(msg);
+            var tc = ok.Value.GetPropertyValueByName<TestClass2>("data");
+            tc.Id.ShouldBe(id);
         }
 
         public static IEnumerable<object[]> ReturnExpectedActionResultMember_DATA =>
