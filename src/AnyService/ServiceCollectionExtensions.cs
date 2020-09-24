@@ -176,9 +176,7 @@ namespace Microsoft.Extensions.DependencyInjection
             settings.Authorization = SetAuthorization(settings.Authorization);
 
             settings.MapToType ??= ecr.Type;
-
-            if (settings.MapToType != ecr.Type)
-                settings.MapToPaginationType = typeof(PaginationModel<>).MakeGenericType(settings.MapToType);
+            settings.MapToPaginationType ??= typeof(PaginationModel<>).MakeGenericType(settings.MapToType);
             return settings;
         }
         private static AuditSettings NormalizeAudity(EntityConfigRecord ecr, AuditSettings serverAuditSettings)

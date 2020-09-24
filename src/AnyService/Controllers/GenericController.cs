@@ -30,10 +30,12 @@ namespace AnyService.Controllers
         private readonly AnyServiceConfig _config;
         private readonly WorkContext _workContext;
         private readonly Type _curType;
-        private readonly Type _mappedType;
+        private readonly Type _mapToType;
+        private readonly Type _mapToPageType;
         private readonly bool _shouldMap;
         private readonly string _curTypeName;
         private static readonly IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
+        private static readonly Type DefaultPaginationType = typeof(PaginationModel<TDomainModel>);
         #endregion
         #region ctor
         public GenericController(
@@ -49,8 +51,9 @@ namespace AnyService.Controllers
 
             _curTypeName = _workContext.CurrentEntityConfigRecord.Name;
             _curType = _workContext.CurrentEntityConfigRecord.Type;
-            _mappedType = _workContext.CurrentEntityConfigRecord.ControllerSettings.MapToType;
-            _shouldMap = _curType == _mappedType;
+            _mapToType = _workContext.CurrentEntityConfigRecord.ControllerSettings.MapToType;
+            _mapToPageType = _workContext.CurrentEntityConfigRecord.ControllerSettings.MapToPaginationType;
+            _shouldMap = _curType != _mapToType;
         }
         #endregion
         [HttpPost]
@@ -159,9 +162,8 @@ namespace AnyService.Controllers
             _logger.LogDebug(LoggingEvents.Controller,
                 $"Get all public service result: '{srvRes.Result}', message: '{srvRes.Message}', exceptionId: '{srvRes.ExceptionId}', data: '{pagination.Data.ToJsonString()}'");
 
-            return _shouldMap ?
-                _serviceResponseMapper.MapServiceResponse(typeof(Pagination<TDomainModel>), _workContext.CurrentEntityConfigRecord.ControllerSettings.MapToPaginationType, srvRes) :
-                _serviceResponseMapper.MapServiceResponse(srvRes);
+
+            return _serviceResponseMapper.MapServiceResponse(typeof(Pagination<TDomainModel>), _mapToPageType, srvRes);
         }
 
         private Pagination<TDomainModel> GetPagination(string orderBy, int offset, int pageSize, bool withNavProps, string sortOrder, string query)
@@ -209,7 +211,7 @@ namespace AnyService.Controllers
         private IActionResult MapServiceResponseIfRequired(ServiceResponse<TDomainModel> res) =>
            _shouldMap ?
                   _serviceResponseMapper.MapServiceResponse(res) :
-                  _serviceResponseMapper.MapServiceResponse(_curType, _mappedType, res);
+                  _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
         private async Task<TDomainModel> ExctractModelFromStream()
         {
             // Used to accumulate all the form url encoded key value pairs in the 

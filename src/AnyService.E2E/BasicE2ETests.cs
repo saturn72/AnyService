@@ -117,7 +117,7 @@ namespace AnyService.E2E
             res.EnsureSuccessStatusCode();
 
         }
-        [Fact]
+        [Fact(Skip = "file upload not supported at this point")]
         public async Task MultipartFormSampleFlow()
         {
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
@@ -203,7 +203,7 @@ namespace AnyService.E2E
             (jObj["files"] as JArray).First["parentId"].Value<string>().ShouldBe(id);
             #endregion
         }
-        [Fact]
+        [Fact(Skip = "file upload not supported at this point")]
         public async Task MultipartFormStreamSampleFlow_Update()
         {
             #region setup

@@ -18,6 +18,6 @@ namespace AnyService
         /// </summary>
         public PathString Route { get; set; }
         public Type MapToType { get; set; }
-        internal Type MapToPaginationType { get; set; }
+        public Type MapToPaginationType { get; set; }
     }
 }
