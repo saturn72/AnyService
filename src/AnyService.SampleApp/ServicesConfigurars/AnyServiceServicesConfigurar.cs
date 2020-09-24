@@ -65,7 +65,6 @@ namespace AnyService.SampleApp.ServicesConfigurars
             };
 
             services.AddAnyService(anyServiceConfig);
-
             return services;
         }
     }

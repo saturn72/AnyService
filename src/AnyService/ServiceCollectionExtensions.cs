@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using AnyService.Services.Audit;
 using AnyService.Services.Preparars;
 using AnyService.Audity;
-using AnyService.Models;
+using AnyService.Services.Logging;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -81,6 +81,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddScoped<WorkContext>();
             services.TryAddSingleton<IIdGenerator, StringIdGenerator>();
             services.TryAddTransient<IPermissionManager, PermissionManager>();
+            services.TryAddTransient<ILogRecordManager, LogRecordManager>();
 
             services.TryAddScoped(sp =>
             {

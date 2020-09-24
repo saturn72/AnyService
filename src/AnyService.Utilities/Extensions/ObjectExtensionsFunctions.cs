@@ -49,7 +49,7 @@ namespace System
 
         public static T GetPropertyValueOrDefaultByName<T>(this object obj, string propertyName)
         {
-            var pi = obj.GetType().GetProperty(propertyName);
+            var pi = obj?.GetType().GetProperty(propertyName);
             return pi != null ? (T)pi.GetValue(obj) : default;
         }
         public static string ToJsonString(this object obj) => JsonSerializer.Serialize(obj, JsonSerializerOptions);

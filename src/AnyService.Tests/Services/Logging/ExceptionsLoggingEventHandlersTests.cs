@@ -1,15 +1,17 @@
 using System;
 using AnyService.Events;
+using AnyService.Logging;
+using AnyService.Services.Logging;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
-namespace AnyService.Tests.Services.EventHandlers
+namespace AnyService.Tests.Services.Logging
 {
     public class ExceptionsLoggingEventHandlersTests
     {
         [Fact]
-        public void AllHandlersReturnsOnNonException()
+        public void AllHandlersReturnsOnMissingInfo()
         {
             var logger = new Mock<ILogger>();
             var h = new ExceptionsLoggingEventHandlers(logger.Object);
@@ -39,8 +41,8 @@ namespace AnyService.Tests.Services.EventHandlers
             {
                 Data = new
                 {
-                    exceptionId = "some-ex-id",
                     exception = expEx,
+                    logRecord = new LogRecord { TraceId = "some-ex-id" },
                 }
             };
             h.CreateEventHandler(e);

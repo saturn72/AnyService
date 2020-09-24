@@ -1,3 +1,4 @@
+using AnyService.Controllers;
 using AnyService.Services;
 using AnyService.Services.Preparars;
 using AnyService.Services.ServiceResponseMappers;
@@ -27,6 +28,16 @@ namespace AnyService.Tests
             c.AuditSettings.AuditRules.AuditRead.ShouldBeTrue();
             c.AuditSettings.AuditRules.AuditUpdate.ShouldBeTrue();
             c.AuditSettings.AuditRules.AuditDelete.ShouldBeTrue();
+            c.ErrorEventKey.ShouldBe(LoggingEvents.UnexpectedException.Name);
+        }
+        public void ErrorEventKey_ModfiesErrorControllerEventKey()
+        {
+            var c = new AnyServiceConfig();
+            c.ErrorEventKey.ShouldBe(LoggingEvents.UnexpectedException.Name);
+            ErrorController.ErrorEventKey.ShouldBe(LoggingEvents.UnexpectedException.Name);
+            var newKey = "new-key";
+            c.ErrorEventKey = newKey;
+            ErrorController.ErrorEventKey.ShouldBe(newKey);
         }
     }
 }

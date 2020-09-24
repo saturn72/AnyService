@@ -1,6 +1,7 @@
 ﻿using AnyService.Audity;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ namespace AnyService.Services.Audit
     public class AuditManager : IAuditManager
     {
         #region Fields
-        private static readonly IDictionary<Type, string> EntityTypesNames = new Dictionary<Type, string>();
+        private static readonly ConcurrentDictionary<Type, string> EntityTypesNames = new ConcurrentDictionary<Type, string>();
         private readonly WorkContext _workContext;
         private readonly IRepository<AuditRecord> _repository;
         private readonly AuditSettings _auditSettings;
@@ -37,7 +38,7 @@ namespace AnyService.Services.Audit
         #endregion
         public async virtual Task<ServiceResponse<AuditPagination>> GetAll(AuditPagination pagination)
         {
-            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all audit records flow");
+            _logger.LogInformation(LoggingEvents.BusinessLogicFlow, "Start get all audit records flow");
             pagination.QueryFunc = BuildAuditPaginationQuery(pagination);
 
             _logger.LogDebug(LoggingEvents.Repository, "Get all audit-records from repository using paginate = " + pagination);
@@ -70,13 +71,18 @@ namespace AnyService.Services.Audit
             var entityNamesQuery = getCollectionQuery(pagination.EntityNames, a => a.EntityName);
             var userIdsQuery = getCollectionQuery(pagination.UserIds, a => a.UserId);
             var clientIdsQuery = getCollectionQuery(pagination.ClientIds, a => a.ClientId);
+            
             var fromUtcQuery = pagination.FromUtc != null ?
-                new Func<AuditRecord, bool>(c => DateTime.Parse(c.OnUtc) >= pagination.FromUtc) :
-                c => true;
-            var toUtcQuery = pagination.ToUtc != null ?
-                new Func<AuditRecord, bool>(c => DateTime.Parse(c.OnUtc) <= pagination.ToUtc) :
+                new Func<AuditRecord, bool>(c => DateTime.TryParse(c.CreatedOnUtc, out DateTime value) && value.ToUniversalTime() >= pagination.FromUtc) :
                 c => true;
 
+            var toUtcQuery = pagination.ToUtc != null ?
+                new Func<AuditRecord, bool>(c =>
+                {
+                    DateTime.TryParse(c.CreatedOnUtc, out DateTime value);
+                    return value.ToUniversalTime() <= pagination.ToUtc;
+                }) :
+                c => true;
             return x =>
                 auditRecordIds(x) &&
                 entityIdsQuery(x) &&
@@ -105,12 +111,12 @@ namespace AnyService.Services.Audit
                 EntityId = entityId,
                 AuditRecordType = auditRecordType,
                 Data = data.ToJsonString(),
+                WorkContext = _workContext.Parameters.ToJsonString(),
                 UserId = _workContext.CurrentUserId,
                 ClientId = _workContext.CurrentClientId,
-                OnUtc = DateTime.UtcNow.ToIso8601(),
+                CreatedOnUtc = DateTime.UtcNow.ToIso8601(),
             };
             return await _repository.Insert(record);
-
         }
 
         private bool ShouldAudit(string auditRecordType)
@@ -127,7 +133,7 @@ namespace AnyService.Services.Audit
             if (EntityTypesNames.TryGetValue(entityType, out string value))
                 return value;
 
-            EntityTypesNames[entityType] = _entityConfigRecords.First(entityType).Name;
+            EntityTypesNames.TryAdd(entityType, _entityConfigRecords.First(entityType).Name);
             return EntityTypesNames[entityType];
         }
     }
