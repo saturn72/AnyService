@@ -1,6 +1,6 @@
 ﻿using System.Data.SqlTypes;
 
-namespace AnyService.EntityFramework.Utils
+namespace AnyService.EntityFramework
 {
     public static class SqlGuidComparar
     {
