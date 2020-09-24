@@ -16,6 +16,7 @@ using AnyService.Services.Audit;
 using AnyService.Services.Preparars;
 using AnyService.Audity;
 using AnyService.Services.Logging;
+using AnyService.Models;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
