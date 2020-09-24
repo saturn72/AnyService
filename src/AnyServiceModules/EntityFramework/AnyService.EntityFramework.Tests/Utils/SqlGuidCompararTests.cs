@@ -1,5 +1,4 @@
-﻿using AnyService.EntityFramework.Utils;
-using Shouldly;
+﻿using Shouldly;
 using System.Data.SqlTypes;
 using Xunit;
 
