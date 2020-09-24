@@ -89,7 +89,6 @@ public class AuditController : ControllerBase
             srvRes.Data = srvRes.Data.Map<PaginationModel<AuditRecord>>();
         return _serviceResponseMapper.Map(srvRes);
     }
-
     private AuditPagination QueryParamsToPagination(
         string auditRecordTypes,
         string entityNames,
