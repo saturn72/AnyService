@@ -16,6 +16,15 @@ namespace AnyService.SampleApp.ServicesConfigurars
                 {
                     new EntityConfigRecord
                     {
+                        Name = "admin_category",
+                        Type = typeof(Category),
+                        ControllerSettings = new ControllerSettings
+                        {
+                            Route = "/admin/category"
+                        }
+                    },
+                    new EntityConfigRecord
+                    {
                         Type = typeof(Category),
                         ControllerSettings = new ControllerSettings
                         {

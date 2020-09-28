@@ -9,6 +9,7 @@ using Xunit.Abstractions;
 using AnyService.SampleApp.Models;
 using System.Net;
 using System.Linq;
+using AnyService.SampleApp.Domain;
 
 namespace AnyService.E2E
 {
@@ -85,6 +86,80 @@ namespace AnyService.E2E
             await Task.Delay(250);// wait for background tasks (by simulating network delay)
             res = await HttpClient.GetAsync($"{URI}/{id}");
             res.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task CRUD_AdminCategory()
+        {
+            const string AdminUri = "/admin/category";
+
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
+            var model = new Category
+            {
+                Name = "cat-name",
+                AdminComment = "admin-comment"
+            };
+
+            #region create
+            //create
+            var res = await HttpClient.PostAsJsonAsync(AdminUri, model);
+            res.EnsureSuccessStatusCode();
+            await Task.Delay(150);// wait for background tasks (by simulating network delay)
+            var content = await res.Content.ReadAsStringAsync();
+            var jObj = JObject.Parse(content);
+            var id = jObj["id"].Value<string>();
+            id.ShouldNotBeNullOrEmpty();
+            jObj["name"].Value<string>().ShouldBe(model.Name);
+            jObj["adminComment"].Value<string>().ShouldBe(model.AdminComment);
+            #endregion
+
+            #region read
+            //read
+            res = await HttpClient.GetAsync($"{AdminUri}/{id}");
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jObj["id"].Value<string>().ShouldBe(id);
+            jObj["name"].Value<string>().ShouldBe(model.Name);
+            jObj["adminComment"].Value<string>().ShouldBe(model.AdminComment);
+
+            //no query provided
+            res = await HttpClient.GetAsync($"{AdminUri}/");
+            res.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+            res = await HttpClient.GetAsync($"{AdminUri}?query=id==\"{ id}\"");
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            var jArr = jObj["data"] as JArray;
+            jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
+            jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
+            #endregion
+            //update
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
+
+            model.Name = "new name";
+            res = await HttpClient.PutAsJsonAsync($"{AdminUri}/{id}", model);
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jObj["id"].Value<string>().ShouldBe(id);
+            jObj["name"].Value<string>().ShouldBe(model.Name);
+            jObj["adminComment"].Value<string>().ShouldBe(model.AdminComment);
+
+            //delete
+            res = await HttpClient.DeleteAsync($"{AdminUri}/{id}");
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            jObj = JObject.Parse(content);
+            jObj["id"].Value<string>().ShouldBe(id);
+            jObj["name"].Value<string>().ShouldBe(model.Name);
+            jObj["adminComment"].Value<string>().ShouldBe(model.AdminComment);
+
+            //get deleted
+            await Task.Delay(250);// wait for background tasks (by simulating network delay)
+            res = await HttpClient.GetAsync($"{AdminUri}/{id}");
+            res.EnsureSuccessStatusCode();
         }
     }
 }
