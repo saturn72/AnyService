@@ -172,15 +172,29 @@ namespace Microsoft.Extensions.DependencyInjection
             settings.ResponseMapperType ??= config.ServiceResponseMapperType;
             ValidateType<IServiceResponseMapper>(settings.ResponseMapperType);
 
-            settings.ControllerType ??= typeof(GenericController<>).MakeGenericType(ecr.Type);
             ValidateType<ControllerBase>(settings.ControllerType);
 
             settings.Authorization = SetAuthorization(settings.Authorization);
 
             settings.MapToType ??= ecr.Type;
             settings.MapToPaginationType ??= typeof(PaginationModel<>).MakeGenericType(settings.MapToType);
+
+            settings.ControllerType ??= BuildController(settings);
             return settings;
         }
+
+        private static Type BuildController(ControllerSettings controllerSettings)
+        {
+            var t = controllerSettings.MapToType;
+            var isParent = controllerSettings.MapToType.GetInterfaces()
+                .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IParentApiModel<>));
+
+            return isParent
+                ?
+                typeof(GenericParentController<>).MakeGenericType(t) :
+                typeof(GenericController<>).MakeGenericType(t);
+        }
+
         private static AuditSettings NormalizeAudity(EntityConfigRecord ecr, AuditSettings serverAuditSettings)
         {
             if (!serverAuditSettings.Active)

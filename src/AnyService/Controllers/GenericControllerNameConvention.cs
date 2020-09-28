@@ -9,6 +9,7 @@ namespace AnyService.Controllers
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class GenericControllerNameConvention : Attribute, IControllerModelConvention
     {
+        private static IEnumerable<Type> GenericControllerTypes = new[] { typeof(GenericController<>), typeof(GenericParentController<>) };
         private static Func<IEnumerable<EntityConfigRecord>> _entityConfigRecordsResolver;
         public static void Init(IServiceProvider serviceProvider)
         {
@@ -16,16 +17,18 @@ namespace AnyService.Controllers
         }
         public void Apply(ControllerModel controller)
         {
-            if (controller.ControllerType.GetGenericTypeDefinition() !=
-                typeof(GenericController<>))
-            {
+            var genericTypeDefinition = controller.ControllerType.GetGenericTypeDefinition();
+            if (!GenericControllerTypes.Contains(genericTypeDefinition))
                 return;
-            }
+
             var entityType = controller.ControllerType.GenericTypeArguments[0];
             var ecrm = _entityConfigRecordsResolver();
-            var tcr = ecrm.FirstOrDefault(t => t.Type == entityType && t.ControllerSettings.ControllerType == controller.ControllerType);
 
-            controller.ControllerName = tcr.ControllerSettings.Route.Value ?? entityType.Name;
+            //can be removed?
+            //var ecr = ecrm.FirstOrDefault(t => t.Type == entityType && t.ControllerSettings.ControllerType == controller.ControllerType);
+            var ecr = ecrm.FirstOrDefault(t => t.ControllerSettings.ControllerType == controller.ControllerType);
+
+            controller.ControllerName = ecr.ControllerSettings.Route.Value ?? entityType.Name;
         }
     }
 }

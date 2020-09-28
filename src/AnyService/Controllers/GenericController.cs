@@ -59,7 +59,7 @@ namespace AnyService.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] TDomainModel model)
         {
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Start Post flow");
+            _logger.LogInformation(LoggingEvents.Controller, $"{_curTypeName}: Start Post flow");
 
             if (!ModelState.IsValid || model.Equals(default))
                 return new BadRequestObjectResult(new

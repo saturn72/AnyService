@@ -1,9 +1,12 @@
+using System.Collections.Generic;
+
 namespace AnyService
 {
     public interface IDomainModelBase
     {
         string Id { get; set; }
     }
+   
     public abstract class ChildModelBase : IDomainModelBase
     {
         public string Id { get; set; }

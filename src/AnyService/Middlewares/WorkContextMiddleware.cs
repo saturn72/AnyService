@@ -15,7 +15,7 @@ namespace AnyService.Middlewares
         private readonly ILogger<WorkContextMiddleware> _logger;
         private readonly RequestDelegate _next;
         protected readonly IReadOnlyDictionary<string, EntityConfigRecord> RouteMaps;
-        private readonly Func<HttpContext, WorkContext, ILogger, Task<bool>> _onMissingUserIdHandler;
+        private readonly Func<HttpContext, WorkContext, ILogger, Task<bool>> _onMissingUserIdOrClientIdHandler;
 
         public WorkContextMiddleware(
             RequestDelegate next,
@@ -27,7 +27,7 @@ namespace AnyService.Middlewares
             _logger = logger;
             _next = next;
             RouteMaps = LoadRoutes(entityConfigRecords);
-            _onMissingUserIdHandler = onMissingUserIdHandler ??= OnMissingUserIdWorkContextMiddlewareHandlers.DefaultOnMissingUserIdHandler;
+            _onMissingUserIdOrClientIdHandler = onMissingUserIdHandler ??= OnMissingUserIdWorkContextMiddlewareHandlers.DefaultOnMissingUserIdHandler;
         }
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
@@ -36,11 +36,13 @@ namespace AnyService.Middlewares
             var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             _logger.LogDebug(LoggingEvents.WorkContext, $"UserId = {userId}");
             var clientId = httpContext.User.FindFirst("client_id")?.Value;
-            _logger.LogDebug(LoggingEvents.WorkContext, $"ClientId = { clientId}");
+            _logger.LogDebug(LoggingEvents.WorkContext, $"ClientId = {clientId}");
 
-            if (!clientId.HasValue() && !userId.HasValue() && !(await _onMissingUserIdHandler(httpContext, workContext, _logger)))
+            if (!clientId.HasValue() && !userId.HasValue() && !(await _onMissingUserIdOrClientIdHandler(httpContext, workContext, _logger)))
+            {
+                _logger.LogDebug(LoggingEvents.WorkContext, $"breaks middleware execution");
                 return;
-
+            }
             workContext.CurrentUserId = userId;
             workContext.CurrentClientId = clientId;
             workContext.IpAddress = httpContext.Connection?.RemoteIpAddress?.ToString();
@@ -66,9 +68,9 @@ namespace AnyService.Middlewares
             var ecrRoute = RouteMaps.FirstOrDefault(rm => path.StartsWithSegments(rm.Key));
 
             var res = (ecrRoute.Equals(default)) ? null : ecrRoute.Value;
-            _logger.LogDebug(LoggingEvents.WorkContext, 
-                res != null ? 
-                    $"Entity found: {res.Type.Name}. using path: {path}" : 
+            _logger.LogDebug(LoggingEvents.WorkContext,
+                res != null ?
+                    $"Entity found: {res.Type.Name}. using path: {path}" :
                     $"Entity is not found in anyservice's configured {nameof(RouteMaps)}. Path used: {path}. If this is not expected, please verify entity was configured when calling {nameof(ServiceCollectionExtensions.AddAnyService)} method.");
             return res;
         }
@@ -104,6 +106,7 @@ namespace AnyService.Middlewares
                 while (requesteeId.StartsWith("/"))
                     requesteeId = requesteeId.Substring(1);
             }
+
             _logger.LogDebug(LoggingEvents.WorkContext, $"Extracted {nameof(RequestInfo.RequesteeId)} value = {requesteeId}");
             return requesteeId;
         }

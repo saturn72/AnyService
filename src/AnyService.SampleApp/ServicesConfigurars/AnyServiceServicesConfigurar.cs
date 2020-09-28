@@ -1,13 +1,10 @@
-﻿using AnyService.Events;
-using AnyService.Middlewares;
-using AnyService.SampleApp.Controllers;
+﻿using AnyService.SampleApp.Controllers;
+using AnyService.SampleApp.Domain;
 using AnyService.SampleApp.Models;
 using AnyService.SampleApp.Services;
-using AnyService.Utilities;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace AnyService.SampleApp.ServicesConfigurars
 {
@@ -20,6 +17,26 @@ namespace AnyService.SampleApp.ServicesConfigurars
             {
                 EntityConfigRecords = new[]
                 {
+                    new EntityConfigRecord
+                    {
+                        Type = typeof(Category),
+                        ControllerSettings = new ControllerSettings
+                        {
+                            MapToType = typeof(CategoryModel)
+                        }
+                    },
+                    new EntityConfigRecord
+                    {
+                        Type = typeof(Product),
+                        ControllerSettings = new ControllerSettings
+                        {
+                            MapToType = typeof(ProductModel)
+                        }
+                    },
+                    new EntityConfigRecord
+                    {
+                        Type = typeof(ProductAttribute)
+                    },
                       new EntityConfigRecord
                     {
                         Type =   typeof(DependentModel),
