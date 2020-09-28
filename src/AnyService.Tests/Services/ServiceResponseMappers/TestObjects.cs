@@ -13,7 +13,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
     {
         static MappingTest()
         {
-            MappingExtensions.Configure(cfg =>
+            MappingExtensions.Configure(null, cfg =>
             {
                 cfg.CreateMap<TestClass1, TestClass2>()
                     .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.Id.ToString()));

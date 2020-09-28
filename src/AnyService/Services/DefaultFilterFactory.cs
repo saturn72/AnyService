@@ -20,7 +20,7 @@ namespace AnyService.Services
             _workContext = workContext;
             _permissionManager = permissionManager;
         }
-        public virtual Task<Func<object, Func<TDomainModel, bool>>> GetFilter<TDomainModel>(string filterKey) where TDomainModel : IDomainModelBase
+        public virtual Task<Func<object, Func<TDomainModel, bool>>> GetFilter<TDomainModel>(string filterKey) where TDomainModel : IDomainObject
         {
             return filterKey switch
             {
@@ -46,7 +46,7 @@ namespace AnyService.Services
 
             return Task.FromResult(p);
         }
-        protected virtual async Task<Func<object, Func<TDomainModel, bool>>> CanRead<TDomainModel>() where TDomainModel : IDomainModelBase
+        protected virtual async Task<Func<object, Func<TDomainModel, bool>>> CanRead<TDomainModel>() where TDomainModel : IDomainObject
         {
             var ecr = _workContext.CurrentEntityConfigRecord;
             var permittedIds = await _permissionManager.GetPermittedIds(
@@ -55,7 +55,7 @@ namespace AnyService.Services
                 ecr.PermissionRecord.ReadKey);
             return payload => a => permittedIds.Any(x => x == a.Id);
         }
-        protected virtual async Task<Func<object, Func<TDomainModel, bool>>> CanUpdate<TDomainModel>() where TDomainModel : IDomainModelBase
+        protected virtual async Task<Func<object, Func<TDomainModel, bool>>> CanUpdate<TDomainModel>() where TDomainModel : IDomainObject
         {
             var ecr = _workContext.CurrentEntityConfigRecord;
             var permittedIds = await _permissionManager.GetPermittedIds(
@@ -64,7 +64,7 @@ namespace AnyService.Services
                 ecr.PermissionRecord.UpdateKey);
             return payload => a => permittedIds.Any(x => x == a.Id);
         }
-        protected virtual async Task<Func<object, Func<TDomainModel, bool>>> CanDelete<TDomainModel>() where TDomainModel : IDomainModelBase
+        protected virtual async Task<Func<object, Func<TDomainModel, bool>>> CanDelete<TDomainModel>() where TDomainModel : IDomainObject
         {
             var ecr = _workContext.CurrentEntityConfigRecord;
             var permittedIds = await _permissionManager.GetPermittedIds(

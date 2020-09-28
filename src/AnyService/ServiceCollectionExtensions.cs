@@ -179,20 +179,20 @@ namespace Microsoft.Extensions.DependencyInjection
             settings.MapToType ??= ecr.Type;
             settings.MapToPaginationType ??= typeof(PaginationModel<>).MakeGenericType(settings.MapToType);
 
-            settings.ControllerType ??= BuildController(settings);
+            settings.ControllerType ??= BuildController(ecr.Type, settings);
             return settings;
         }
 
-        private static Type BuildController(ControllerSettings controllerSettings)
+        private static Type BuildController(Type entityType, ControllerSettings settings)
         {
-            var t = controllerSettings.MapToType;
-            var isParent = controllerSettings.MapToType.GetInterfaces()
+            var mapToType = settings.MapToType;
+            var isParent = mapToType.GetInterfaces()
                 .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IParentApiModel<>));
 
             return isParent
                 ?
-                typeof(GenericParentController<>).MakeGenericType(t) :
-                typeof(GenericController<>).MakeGenericType(t);
+                typeof(GenericParentController<>).MakeGenericType(mapToType) :
+                typeof(GenericController<,>).MakeGenericType(mapToType, entityType);
         }
 
         private static AuditSettings NormalizeAudity(EntityConfigRecord ecr, AuditSettings serverAuditSettings)

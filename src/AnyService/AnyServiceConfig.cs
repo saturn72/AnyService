@@ -18,7 +18,7 @@ namespace AnyService
             MaxValueCount = 25;
             DefaultPaginationSettings = new PaginationSettings
             {
-                DefaultOrderBy = nameof(IDomainModelBase.Id),
+                DefaultOrderBy = nameof(IDomainObject.Id),
                 DefaultOffset = 0,
                 DefaultPageSize = 50,
                 DefaultSortOrder = PaginationSettings.Asc,

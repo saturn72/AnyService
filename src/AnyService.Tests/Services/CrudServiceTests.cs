@@ -20,13 +20,13 @@ namespace AnyService.Tests.Services
         public string Value { get; set; }
         public IEnumerable<FileModel> Files { get; set; }
     }
-    public class AuditableTestModel : IDomainModelBase, IFullAudit, ISoftDelete
+    public class AuditableTestModel : IDomainObject, IFullAudit, ISoftDelete
     {
         public string Id { get; set; }
 
         public bool Deleted { get; set; }
     }
-    public class TestModel : IDomainModelBase
+    public class TestModel : IDomainObject
     {
         public string Id { get; set; }
         public string Value { get; set; }

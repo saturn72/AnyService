@@ -42,7 +42,7 @@ namespace AnyService.Services
         /// Default value is 'Id'
         /// </summary>
         /// <value></value>
-        public string OrderBy { get; set; } = nameof(IDomainModelBase.Id);
+        public string OrderBy { get; set; } = nameof(IDomainObject.Id);
         /// <summary>
         /// Gets or sets current page data
         /// </summary>

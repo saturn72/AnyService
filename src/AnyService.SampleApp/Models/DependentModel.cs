@@ -2,7 +2,7 @@ using AnyService.Audity;
 
 namespace AnyService.SampleApp.Models
 {
-    public class DependentModel : IDomainModelBase, IFullAudit, IPublishable, ISoftDelete
+    public class DependentModel : IDomainObject, IFullAudit, IPublishable, ISoftDelete
     {
         public string Id { get; set; }
         public string Value { get; set; }

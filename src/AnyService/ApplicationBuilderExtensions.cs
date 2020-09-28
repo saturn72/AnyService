@@ -59,7 +59,10 @@ namespace AnyService
             serviceProvider.GetRequiredService<ICacheManager>();
 
             if (!MappingExtensions.WasConfigured)
-                MappingExtensions.Configure(cfg => { });
+            {
+                var ecrs = serviceProvider.GetService<IEnumerable<EntityConfigRecord>>();
+                MappingExtensions.Configure(ecrs, cfg => { });
+            }
         }
         private static void AddPermissionComponents(IApplicationBuilder app, IServiceProvider serviceProvider)
         {

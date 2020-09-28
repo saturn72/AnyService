@@ -1,20 +1,17 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using AnyService.SampleApp.Domain;
+using AnyService.SampleApp.Models;
 
 namespace AnyService.SampleApp.ServicesConfigurars
 {
-    public class AutoMapperServicesConfigurar : IServicesConfigurar
+    public class AutoMapperServicesConfigurar
     {
-        public IServiceCollection Configure(IServiceCollection services, IConfiguration configuration, IWebHostEnvironment env)
+        public void Configure(AnyServiceConfig anyServiceConfig)
         {
-
-            MappingExtensions.Configure(cfg =>
+            MappingExtensions.Configure(anyServiceConfig.EntityConfigRecords,  cfg =>
             {
-                //cfg.CreateMap<Stock, StockModel>();
-                //cfg.CreateMap<StockModel, Stock>();
+                cfg.CreateMap<CategoryModel, Category>()
+                    .ForMember(dest => dest.AdminComment, mo => mo.Ignore());
             });
-            return services;
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace AnyService.Services
 {
-    public interface IRepository<TDomainModel> where TDomainModel : IDomainModelBase
+    public interface IRepository<TDomainModel> where TDomainModel : IDomainObject
     {
         Task<IQueryable<TDomainModel>> Collection { get; }
         Task<TDomainModel> Insert(TDomainModel entity);

@@ -14,7 +14,7 @@ using System.Collections.Generic;
 
 namespace AnyService.Services
 {
-    public class CrudService<TDomainModel> : ICrudService<TDomainModel> where TDomainModel : IDomainModelBase
+    public class CrudService<TDomainModel> : ICrudService<TDomainModel> where TDomainModel : IDomainObject
     {
         #region fields
         protected readonly AnyServiceConfig Config;
@@ -130,7 +130,7 @@ namespace AnyService.Services
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Read, id))
                 return serviceResponse;
-
+            
             if (data != null && serviceResponse.Result == ServiceResult.NotSet)
             {
                 serviceResponse.Payload = data;
@@ -163,7 +163,7 @@ namespace AnyService.Services
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Read, pagination))
             {
                 var wSrvRes = wrapper.ServiceResponse;
-                serviceResponse.Message= wSrvRes.Message;
+                serviceResponse.Message = wSrvRes.Message;
                 serviceResponse.ExceptionId = wSrvRes.ExceptionId;
                 serviceResponse.Result = wSrvRes.Result;
                 return serviceResponse;

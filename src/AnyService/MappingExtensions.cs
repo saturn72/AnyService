@@ -4,6 +4,7 @@ using AnyService.Services;
 using AnyService.Services.Audit;
 using AutoMapper;
 using System;
+using System.Collections.Generic;
 
 namespace AnyService
 {
@@ -12,19 +13,43 @@ namespace AnyService
         private static IMapper _mapper;
         internal static bool WasConfigured;
         private static MapperConfiguration MapperConfiguration;
-        public static void Configure(Action<IMapperConfigurationExpression> configure)
+        public static void Configure(IEnumerable<EntityConfigRecord> records, Action<IMapperConfigurationExpression> configure)
         {
-            configure += AnyServiceMappingConfiguration;
-            MapperConfiguration = new MapperConfiguration(configure);
+            Action<IMapperConfigurationExpression> configurar = c =>
+            {
+                AnyServiceMappingConfiguration(c);
+                if (!records.IsNullOrEmpty())
+                    EntityConfigRecordsConfiguration(records)(c);
+                configure(c);
+            };
+            MapperConfiguration = new MapperConfiguration(configurar);
             _mapper = null;
             WasConfigured = true;
         }
+
+        private static Action<IMapperConfigurationExpression> EntityConfigRecordsConfiguration(IEnumerable<EntityConfigRecord> records)
+        {
+            return cfg =>
+            {
+                foreach (var r in records)
+                {
+                    var mtt = r.ControllerSettings.MapToType;
+                    if (mtt != r.Type)
+                        cfg.CreateMap(r.Type, r.ControllerSettings.MapToType);
+
+                    var pType = r.ControllerSettings.MapToPaginationType;
+                    if (pType != typeof(Pagination<>).MakeGenericType(mtt) || pType != typeof(PaginationModel<>).MakeGenericType(mtt))
+                        cfg.CreateMap(typeof(Pagination<>).MakeGenericType(mtt), r.ControllerSettings.MapToPaginationType);
+                }
+            };
+        }
+
         private static void AnyServiceMappingConfiguration(IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap(typeof(Pagination<>), typeof(PaginationModel<>))
                     .ForMember(
-                        nameof(PaginationModel<IDomainModelBase>.Query), 
-                        opts => opts.MapFrom(nameof(Pagination<IDomainModelBase>.QueryOrFilter)));
+                        nameof(PaginationModel<IDomainObject>.Query),
+                        opts => opts.MapFrom(nameof(Pagination<IDomainObject>.QueryOrFilter)));
 
             cfg.CreateMap<AuditRecord, AuditRecordModel>();
             cfg.CreateMap<AuditRecordModel, AuditRecord>();

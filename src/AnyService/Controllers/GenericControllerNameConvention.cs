@@ -9,7 +9,7 @@ namespace AnyService.Controllers
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class GenericControllerNameConvention : Attribute, IControllerModelConvention
     {
-        private static IEnumerable<Type> GenericControllerTypes = new[] { typeof(GenericController<>), typeof(GenericParentController<>) };
+        private static IEnumerable<Type> GenericControllerTypes = new[] { typeof(GenericController<,>), typeof(GenericParentController<>) };
         private static Func<IEnumerable<EntityConfigRecord>> _entityConfigRecordsResolver;
         public static void Init(IServiceProvider serviceProvider)
         {

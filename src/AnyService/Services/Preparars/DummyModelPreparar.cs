@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace AnyService.Services.Preparars
 {
-    public class DummyModelPreparar<TDomainModel> : IModelPreparar<TDomainModel> where TDomainModel : IDomainModelBase
+    public class DummyModelPreparar<TDomainModel> : IModelPreparar<TDomainModel> where TDomainModel : IDomainObject
     {
         protected readonly ILogger<DummyModelPreparar<TDomainModel>> Logger;
         protected IReadOnlyDictionary<Type, IDictionary<Type, bool>> IsOfTypeCollection { get; set; }

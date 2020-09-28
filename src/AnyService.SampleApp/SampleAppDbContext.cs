@@ -4,6 +4,7 @@ using AnyService.Security;
 using AnyService.SampleApp.Models;
 using AnyService.Services.FileStorage;
 using Microsoft.EntityFrameworkCore;
+using AnyService.SampleApp.Domain;
 
 namespace AnyService.SampleApp
 {
@@ -32,6 +33,7 @@ namespace AnyService.SampleApp
             modelBuilder.Entity<CustomModel>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
             modelBuilder.Entity<AuditRecord>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
             modelBuilder.Entity<Stock>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+            modelBuilder.Entity<Category>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
         }
     }
 }

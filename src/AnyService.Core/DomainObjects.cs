@@ -2,12 +2,12 @@ using System.Collections.Generic;
 
 namespace AnyService
 {
-    public interface IDomainModelBase
+    public interface IDomainObject
     {
         string Id { get; set; }
     }
    
-    public abstract class ChildModelBase : IDomainModelBase
+    public abstract class ChildModelBase : IDomainObject
     {
         public string Id { get; set; }
         public string ParentKey { get; set; }

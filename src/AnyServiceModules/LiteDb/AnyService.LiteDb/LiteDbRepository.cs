@@ -9,7 +9,7 @@ using LiteDB;
 namespace AnyService.LiteDb
 {
     public class LiteDbRepository<TDomainModel> :
-        IRepository<TDomainModel> where TDomainModel : IDomainModelBase
+        IRepository<TDomainModel> where TDomainModel : IDomainObject
     {
         private readonly string _dbName;
 

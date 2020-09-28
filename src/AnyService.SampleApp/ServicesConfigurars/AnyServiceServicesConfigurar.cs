@@ -2,16 +2,13 @@
 using AnyService.SampleApp.Domain;
 using AnyService.SampleApp.Models;
 using AnyService.SampleApp.Services;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AnyService.SampleApp.ServicesConfigurars
 {
-
-    public class AnyServiceServicesConfigurar : IServicesConfigurar
+    public class AnyServiceServicesConfigurar
     {
-        public IServiceCollection Configure(IServiceCollection services, IConfiguration configuration, IWebHostEnvironment env)
+        public AnyServiceConfig Configure(IServiceCollection services)
         {
             var anyServiceConfig = new AnyServiceConfig
             {
@@ -82,7 +79,7 @@ namespace AnyService.SampleApp.ServicesConfigurars
             };
 
             services.AddAnyService(anyServiceConfig);
-            return services;
+            return anyServiceConfig;
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace AnyService.SampleApp.Models
 {
-    public class Stock : IDomainModelBase, IFullAudit, IPublishable, ISoftDelete
+    public class Stock : IDomainObject, IFullAudit, IPublishable, ISoftDelete
     {
         public string Id { get; set; }
         public string Value { get; set; }

@@ -21,12 +21,14 @@ namespace AnyService.Controllers
     [ApiController]
     [Route("[controller]")]
     [GenericControllerNameConvention]
-    public class GenericController<TDomainModel> : ControllerBase where TDomainModel : IDomainModelBase
+    public class GenericController<TResponseObject, TDomainObject> : ControllerBase
+        where TResponseObject : class
+        where TDomainObject : IDomainObject
     {
         #region fields
-        private readonly ICrudService<TDomainModel> _crudService;
+        private readonly ICrudService<TDomainObject> _crudService;
         private readonly IServiceResponseMapper _serviceResponseMapper;
-        private readonly ILogger<GenericController<TDomainModel>> _logger;
+        private readonly ILogger<GenericController<TResponseObject, TDomainObject>> _logger;
         private readonly AnyServiceConfig _config;
         private readonly WorkContext _workContext;
         private readonly Type _curType;
@@ -35,15 +37,14 @@ namespace AnyService.Controllers
         private readonly bool _shouldMap;
         private readonly string _curTypeName;
         private static readonly IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
-        private static readonly Type DefaultPaginationType = typeof(PaginationModel<TDomainModel>);
         #endregion
         #region ctor
         public GenericController(
             IServiceProvider serviceProvider, AnyServiceConfig config,
             IServiceResponseMapper serviceResponseMapper, WorkContext workContext,
-            ILogger<GenericController<TDomainModel>> logger)
+            ILogger<GenericController<TResponseObject, TDomainObject>> logger)
         {
-            _crudService = serviceProvider.GetService<ICrudService<TDomainModel>>();
+            _crudService = serviceProvider.GetService<ICrudService<TDomainObject>>();
             _config = config;
             _serviceResponseMapper = serviceResponseMapper;
             _workContext = workContext;
@@ -57,7 +58,7 @@ namespace AnyService.Controllers
         }
         #endregion
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] TDomainModel model)
+        public async Task<IActionResult> Post([FromBody] TResponseObject model)
         {
             _logger.LogInformation(LoggingEvents.Controller, $"{_curTypeName}: Start Post flow");
 
@@ -68,8 +69,9 @@ namespace AnyService.Controllers
                     data = model
                 });
 
+            var entity = model.Map<TDomainObject>();
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Call service with value: " + model);
-            var res = await _crudService.Create(model);
+            var res = await _crudService.Create(entity);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Post service response value: " + res);
 
             return MapServiceResponseIfRequired(res);
@@ -82,7 +84,7 @@ namespace AnyService.Controllers
 
             if (!Request.HasFormContentType) return BadRequest();
             var form = Request.Form;
-            var model = form["model"].ToString().ToObject<TDomainModel>();
+            var model = form["model"].ToString().ToObject<TDomainObject>();
 
             var fileList = new List<FileModel>();
             foreach (var ff in form.Files.Where(f => f.Length > 0))
@@ -136,11 +138,12 @@ namespace AnyService.Controllers
             return MapServiceResponseIfRequired(res);
         }
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(string id)
+        public async Task<IActionResult> GetById(string id)
         {
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Start Get by id flow with id " + id);
             var res = await _crudService.GetById(id);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Get all service response value: " + res);
+            if (res.Result == ServiceResult.NotFound) res.Result = ServiceResult.BadOrMissingData;
             return MapServiceResponseIfRequired(res);
         }
 
@@ -163,12 +166,12 @@ namespace AnyService.Controllers
                 $"Get all public service result: '{srvRes.Result}', message: '{srvRes.Message}', exceptionId: '{srvRes.ExceptionId}', data: '{pagination.Data.ToJsonString()}'");
 
 
-            return _serviceResponseMapper.MapServiceResponse(typeof(Pagination<TDomainModel>), _mapToPageType, srvRes);
+            return _serviceResponseMapper.MapServiceResponse(typeof(Pagination<TDomainObject>), _mapToPageType, srvRes);
         }
 
-        private Pagination<TDomainModel> GetPagination(string orderBy, int offset, int pageSize, bool withNavProps, string sortOrder, string query)
+        private Pagination<TDomainObject> GetPagination(string orderBy, int offset, int pageSize, bool withNavProps, string sortOrder, string query)
         {
-            return new Pagination<TDomainModel>
+            return new Pagination<TDomainObject>
             {
                 OrderBy = orderBy,
                 Offset = offset,
@@ -180,8 +183,9 @@ namespace AnyService.Controllers
 
         }
 
+        #region update
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(string id, [FromBody] TDomainModel model)
+        public async Task<IActionResult> Put(string id, [FromBody] TResponseObject model)
         {
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Start Put flow");
 
@@ -192,12 +196,15 @@ namespace AnyService.Controllers
                     data = model
                 });
 
+            var entity = model.Map<TDomainObject>();
             _logger.LogDebug($"{_curTypeName}: Start update flow with id {id} and model {model}");
-            var res = await _crudService.Update(id, model);
+            var res = await _crudService.Update(id, entity);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Update service response value: " + res);
 
             return MapServiceResponseIfRequired(res);
         }
+        #endregion
+        #region DELETE
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
@@ -207,12 +214,13 @@ namespace AnyService.Controllers
 
             return MapServiceResponseIfRequired(res);
         }
+        #endregion
         #region Utilities
-        private IActionResult MapServiceResponseIfRequired(ServiceResponse<TDomainModel> res) =>
+        private IActionResult MapServiceResponseIfRequired(ServiceResponse<TDomainObject> res) =>
            _shouldMap ?
                   _serviceResponseMapper.MapServiceResponse(res) :
                   _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
-        private async Task<TDomainModel> ExctractModelFromStream()
+        private async Task<TDomainObject> ExctractModelFromStream()
         {
             // Used to accumulate all the form url encoded key value pairs in the 
             // request.
@@ -279,7 +287,7 @@ namespace AnyService.Controllers
             }
             var modelJson = formAccumulator.GetResults()["model"].ToString();
 
-            var model = modelJson.ToObject<TDomainModel>();
+            var model = modelJson.ToObject<TDomainObject>();
             GetFilesProperty(_curType).SetValue(model, files);
 
             return model;

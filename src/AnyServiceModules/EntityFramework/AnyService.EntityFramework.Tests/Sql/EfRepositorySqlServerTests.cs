@@ -12,7 +12,7 @@ namespace AnyService.EntityFramework.Tests.Sql
     public class EfRepositorySqlServerTests
     {
         #region nested classes
-        public class SqlBulkTestClass : IDomainModelBase
+        public class SqlBulkTestClass : IDomainObject
         {
             public string Id { get; set; }
             public int Value { get; set; }

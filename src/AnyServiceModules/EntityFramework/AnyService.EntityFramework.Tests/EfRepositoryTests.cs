@@ -11,12 +11,12 @@ using Moq;
 
 namespace AnyService.EntityFramework.Tests
 {
-    public class TestNestedClass : IDomainModelBase
+    public class TestNestedClass : IDomainObject
     {
         public string Id { get; set; }
         public string Value { get; set; }
     }
-    public class TestClass : IDomainModelBase
+    public class TestClass : IDomainObject
     {
         public string Id { get; set; }
         public bool Flag { get; set; }
@@ -24,7 +24,7 @@ namespace AnyService.EntityFramework.Tests
         public IEnumerable<TestNestedClass> NestedClasses { get; set; }
         public int Number { get; set; }
     }
-    public class BulkTestClass : IDomainModelBase
+    public class BulkTestClass : IDomainObject
     {
         public string Id { get; set; }
         public int Value { get; set; }

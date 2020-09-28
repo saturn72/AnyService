@@ -38,8 +38,8 @@ namespace AnyService.SampleApp
                 .AddScheme<AuthenticationSchemeOptions, ManagedAuthenticationHandler>(ManagedAuthenticationHandler.Schema, options => { });
             services.AddAuthorization();
 
-            new AnyServiceServicesConfigurar().Configure(services, Configuration, null);
-            new AutoMapperServicesConfigurar().Configure(services, Configuration, null);
+            var anyServiceConfig = new AnyServiceServicesConfigurar().Configure(services);
+            new AutoMapperServicesConfigurar().Configure(anyServiceConfig);
           
             ConfigureEntityFramework(services);
             ConfigureCaching(services);

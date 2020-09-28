@@ -19,7 +19,7 @@ namespace AnyService.Services.Security
         }
         public Func<DomainEventData, Task> EntityCreatedHandler => async (eventData) =>
           {
-              if (!(eventData.Data is IDomainModelBase createdEntity))
+              if (!(eventData.Data is IDomainObject createdEntity))
                   return;
 
               var manager = _serviceProvider.GetService<IPermissionManager>();
@@ -61,7 +61,7 @@ namespace AnyService.Services.Security
 
         public Func<DomainEventData, Task> EntityDeletedHandler => async (eventData) =>
       {
-          var deletedEntity = eventData.Data as IDomainModelBase;
+          var deletedEntity = eventData.Data as IDomainObject;
           if (deletedEntity == null)
               return;
 
