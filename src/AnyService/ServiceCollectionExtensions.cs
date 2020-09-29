@@ -127,7 +127,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
 
-                ecr.Name ??= ecr.Type.Name;
+                ecr.Name ??= ecr.ControllerSettings != null && ecr.ControllerSettings.Area.HasValue() ?
+                    $"{ecr.ControllerSettings?.Area}_{ecr.Type.Name}" :
+                    ecr.Type.Name;
 
                 var hasDuplication = temp.Where(e => e.Name == ecr.Name);
                 if (hasDuplication.Count() > 1)
@@ -163,7 +165,11 @@ namespace Microsoft.Extensions.DependencyInjection
             var settings = ecr.ControllerSettings;
             if (settings == null)
                 settings = new ControllerSettings();
-            if (!settings.Route.HasValue) settings.Route = new PathString("/" + ecr.Type.Name);
+            if (!settings.Route.HasValue)
+            {
+                var areaPrefix = settings.Area.HasValue() ? $"{settings.Area}/" : "";
+                settings.Route = new PathString($"/{areaPrefix}{ecr.Type.Name}");
+            }
 
             var route = settings.Route;
             if (route.Value.EndsWith("/"))

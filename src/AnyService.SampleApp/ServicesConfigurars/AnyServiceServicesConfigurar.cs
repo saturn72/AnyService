@@ -16,11 +16,10 @@ namespace AnyService.SampleApp.ServicesConfigurars
                 {
                     new EntityConfigRecord
                     {
-                        Name = "admin_category",
                         Type = typeof(Category),
                         ControllerSettings = new ControllerSettings
                         {
-                            Route = "/admin/category"
+                            Area = "admin"
                         }
                     },
                     new EntityConfigRecord
