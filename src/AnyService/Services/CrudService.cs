@@ -6,6 +6,7 @@ using AnyService.Security;
 using AnyService.Events;
 using AnyService.Services.FileStorage;
 using AnyService.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using AnyService.Services.Audit;
 using AnyService.Services.Preparars;
@@ -35,38 +36,28 @@ namespace AnyService.Services
         #endregion
         #region ctor
         public CrudService(
-            AnyServiceConfig config,
-            IRepository<TDomainObject> repository,
-            CrudValidatorBase<TDomainObject> validator,
-            IModelPreparar<TDomainObject> modelPreparar,
-            WorkContext workContext,
-            IEventBus eventBus,
-            IFileStoreManager fileStorageManager,
-            ILogger<CrudService<TDomainObject>> logger,
-            IIdGenerator idGenerator,
-            IFilterFactory filterFactory,
-            IPermissionManager permissionManager,
-            IAuditManager auditManager
-            )
+            IServiceProvider serviceProvider,
+            ILogger<CrudService<TDomainObject>> logger)
         {
-            Config = config;
-            Repository = repository;
-            Validator = validator;
-            ModelPreparar = modelPreparar;
-            WorkContext = workContext;
-            EventBus = eventBus;
-            EventKeys = workContext?.CurrentEntityConfigRecord?.EventKeys;
-            FileStorageManager = fileStorageManager;
             Logger = logger;
-            IdGenerator = idGenerator;
-            FilterFactory = filterFactory;
-            PermissionManager = permissionManager;
-            AuditManager = auditManager;
+            Config = serviceProvider.GetService<AnyServiceConfig>();
+            Repository = serviceProvider.GetService<IRepository<TDomainObject>>();
+            Validator = serviceProvider.GetService<CrudValidatorBase<TDomainObject>>();
+            ModelPreparar = serviceProvider.GetService<IModelPreparar<TDomainObject>>();
+            WorkContext = serviceProvider.GetService<WorkContext>();
+            EventBus = serviceProvider.GetService<IEventBus>();
+            FileStorageManager = serviceProvider.GetService<IFileStoreManager>();
+            IdGenerator = serviceProvider.GetService<IIdGenerator>();
+            FilterFactory = serviceProvider.GetService<IFilterFactory>();
+            PermissionManager = serviceProvider.GetService<IPermissionManager>();
+            AuditManager = serviceProvider.GetService<IAuditManager>();
+
+            EventKeys = WorkContext?.CurrentEntityConfigRecord?.EventKeys;
 
             lock (lockObj)
             {
                 if (ObjectMetadata == null)
-                    Initialize(workContext.CurrentEntityConfigRecord);
+                    Initialize(WorkContext.CurrentEntityConfigRecord);
             }
         }
 
