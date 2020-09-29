@@ -33,6 +33,21 @@ namespace AnyService.Utilities.Tests
         }
         #endregion
 
+        #region IsOfType
+
+        [Fact]
+        public void IsOfType_ReturnsTrue()
+        {
+            ObjectExtensionsFunctions.IsOfType<T1>(typeof(T2)).ShouldBeTrue();
+            ObjectExtensionsFunctions.IsOfType(typeof(T2), typeof(T1)).ShouldBeTrue();
+        }
+        [Fact]
+        public void IsOfType_ReturnsFalse()
+        {
+            ObjectExtensionsFunctions.IsOfType<string>(typeof(T1)).ShouldBeFalse();
+            ObjectExtensionsFunctions.IsOfType(typeof(T1), typeof(string)).ShouldBeFalse();
+        }
+        #endregion
         [Fact]
         public void GetPropertyInfo_ReturnsNull()
         {

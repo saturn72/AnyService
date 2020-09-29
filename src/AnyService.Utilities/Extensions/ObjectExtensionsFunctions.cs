@@ -6,6 +6,8 @@ namespace System
 {
     public static class ObjectExtensionsFunctions
     {
+        public static bool IsOfType(this Type source, Type typeToCheck) => typeToCheck.IsAssignableFrom(source);
+        public static bool IsOfType<T>(this Type source) => IsOfType(source, typeof(T));
         public static IEnumerable<Type> GetAllBaseTypes(this Type type, Type excludeFromType = null)
         {
             var baseTypes = new List<Type>();

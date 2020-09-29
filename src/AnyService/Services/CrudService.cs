@@ -17,6 +17,7 @@ namespace AnyService.Services
     {
         #region fields
         private static DomainObjectMetadata ObjectMetadata;
+        private static readonly object lockObj = new object();
 
         protected readonly AnyServiceConfig Config;
         protected readonly IRepository<TDomainObject> Repository;
@@ -62,21 +63,25 @@ namespace AnyService.Services
             PermissionManager = permissionManager;
             AuditManager = auditManager;
 
-            if (ObjectMetadata == null)
-                Initialize(workContext?.CurrentEntityConfigRecord);
+            lock (lockObj)
+            {
+                if (ObjectMetadata == null)
+                    Initialize(workContext.CurrentEntityConfigRecord);
+            }
         }
 
         #endregion
         internal static void Initialize(EntityConfigRecord ecr)
         {
+            var isSoftDeleted = ecr.Type.IsOfType<ISoftDelete>();
             ObjectMetadata = new DomainObjectMetadata
             {
-                IsSoftDeleted = ecr.Type is ISoftDelete,
-                ShowSoftDeleted = ecr.Type is ISoftDelete ? (bool?)!ecr.HideSoftDeleted : null,
-                IsCreatableAudit = ecr.Type is ICreatableAudit,
-                IsReadableAudit = ecr.Type is IReadableAudit,
-                IsUpdatableAudit = ecr.Type is IUpdatableAudit,
-                IsDeletableAudit = ecr.Type is IDeletableAudit,
+                IsSoftDeleted = isSoftDeleted,
+                ShowSoftDeleted = isSoftDeleted && !ecr.HideSoftDeleted,
+                IsCreatableAudit = ecr.Type.IsOfType<ICreatableAudit>(),
+                IsReadableAudit = ecr.Type.IsOfType<IReadableAudit>(),
+                IsUpdatableAudit = ecr.Type.IsOfType<IUpdatableAudit>(),
+                IsDeletableAudit = ecr.Type.IsOfType<IDeletableAudit>(),
             };
         }
         public virtual async Task<ServiceResponse<TDomainObject>> Create(TDomainObject entity)
@@ -398,7 +403,7 @@ namespace AnyService.Services
         private class DomainObjectMetadata
         {
             public bool IsSoftDeleted { get; set; }
-            public bool? ShowSoftDeleted { get; set; }
+            public bool ShowSoftDeleted { get; set; }
             public bool IsCreatableAudit { get; set; }
             public bool IsReadableAudit { get; set; }
             public bool IsUpdatableAudit { get; set; }

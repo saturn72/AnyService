@@ -68,6 +68,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -104,6 +105,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -143,6 +145,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -186,6 +189,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(TestFileContainer),
                     EventKeys = ekr,
                 }
             };
@@ -251,6 +255,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -284,6 +289,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -323,12 +329,18 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-
-            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, null, null, null);
+            var am = new Mock<IAuditManager>();
+            var cSrv = new CrudService<AuditableTestModel>(
+                _config, repo.Object, 
+                v.Object, mp.Object, 
+                wc, eb.Object, null, 
+                logger.Object, null, 
+                null, null, am.Object);
             var res = await cSrv.GetById("123");
             res.Result.ShouldBe(ServiceResult.Ok);
             res.Payload.ShouldBe(model);
@@ -361,13 +373,19 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                     PaginationSettings = new PaginationSettings(),
                 }
             };
 
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, null, wc, eb.Object, null, logger.Object, null, null, null, null);
+            var am = new Mock<IAuditManager>();
+            var cSrv = new CrudService<AuditableTestModel>(
+                _config, repo.Object, v.Object, 
+                null, wc, eb.Object, 
+                null, logger.Object, null, 
+                null, null, am.Object);
             var res = await cSrv.GetAll(null);
 
             res.Result.ShouldBe(ServiceResult.Ok);
@@ -413,13 +431,20 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                     PaginationSettings = new PaginationSettings(),
                 }
             };
 
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, null, wc, eb.Object, null, logger.Object, null, null, null, null);
+            var am = new Mock<IAuditManager>();
+            var cSrv = new CrudService<AuditableTestModel>(
+                _config, repo.Object, v.Object, 
+                null, wc, eb.Object, 
+                null, logger.Object, 
+                null, null, null, 
+                am.Object);
             var res = await cSrv.GetAll(pagination);
             res.Result.ShouldBe(ServiceResult.Ok);
             var p = res.Payload.ShouldBeOfType<Pagination<AuditableTestModel>>();
@@ -452,6 +477,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                     PaginationSettings = new PaginationSettings(),
                 }
@@ -462,8 +488,12 @@ namespace AnyService.Tests.Services
             ff.Setup(f => f.GetFilter<AuditableTestModel>(It.IsAny<string>())).ReturnsAsync(f);
 
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-
-            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, ff.Object, null, null);
+            var am = new Mock<IAuditManager>();
+            var cSrv = new CrudService<AuditableTestModel>(
+                _config, repo.Object, v.Object, 
+                mp.Object, wc, eb.Object, 
+                null, logger.Object, null, 
+                ff.Object, null, am.Object);
             var p = new Pagination<AuditableTestModel>("id>0");
             var res = await cSrv.GetAll(p);
             res.Result.ShouldBe(ServiceResult.Ok);
@@ -499,6 +529,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                     PaginationSettings = new PaginationSettings(),
                 }
@@ -547,6 +578,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                     PaginationSettings = new PaginationSettings(),
                 }
@@ -557,7 +589,12 @@ namespace AnyService.Tests.Services
             ff.Setup(f => f.GetFilter<AuditableTestModel>(It.IsAny<string>())).ReturnsAsync(f);
 
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
-            var cSrv = new CrudService<AuditableTestModel>(_config, repo.Object, v.Object, mp.Object, wc, eb.Object, null, logger.Object, null, ff.Object, null, null);
+            var am = new Mock<IAuditManager>(); 
+            var cSrv = new CrudService<AuditableTestModel>(
+                _config, repo.Object, v.Object, 
+                mp.Object, wc, eb.Object, 
+                null, logger.Object, null, 
+                ff.Object, null, am.Object);
             var res = await cSrv.GetAll(paginate);
             res.Result.ShouldBe(ServiceResult.Ok);
             paginate.Data.ShouldBe(dbRes);
@@ -603,6 +640,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -636,6 +674,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 },
             };
@@ -682,6 +721,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -722,6 +762,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -771,6 +812,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -814,6 +856,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -866,6 +909,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(TestFileContainer),
                     EventKeys = ekr,
                 }
             };
@@ -923,6 +967,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -955,6 +1000,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -965,7 +1011,7 @@ namespace AnyService.Tests.Services
             mp.Verify(a => a.PrepareForDelete(It.Is<AuditableTestModel>(e => e == dbModel)), Times.Once);
         }
         [Fact]
-        public async Task delete_RepositoryUpdate_Throws()
+        public async Task Delete_RepositoryUpdate_Throws()
         {
             var id = "some-id";
             var dbModel = new AuditableTestModel
@@ -990,6 +1036,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -1038,6 +1085,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(TestModel),
                     EventKeys = ekr,
                 }
             };
@@ -1069,6 +1117,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(TestModel),
                     EventKeys = ekr,
                 }
             };
@@ -1113,6 +1162,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -1155,6 +1205,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(AuditableTestModel),
                     EventKeys = ekr,
                 }
             };
@@ -1199,6 +1250,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
+                    Type = typeof(TestModel),
                     EventKeys = ekr,
                 }
             };

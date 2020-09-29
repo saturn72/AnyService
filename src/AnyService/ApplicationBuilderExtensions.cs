@@ -12,6 +12,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using AnyService.Services.Logging;
+using AnyService.Services;
+using System.Reflection;
 
 namespace AnyService
 {
@@ -62,6 +64,24 @@ namespace AnyService
             {
                 var ecrs = serviceProvider.GetService<IEnumerable<EntityConfigRecord>>();
                 MappingExtensions.Configure(ecrs, cfg => { });
+            }
+            InitializeCrudServices(serviceProvider);
+        }
+
+        private static void InitializeCrudServices(IServiceProvider serviceProvider)
+        {
+            var entityConfigRecords = serviceProvider.GetService<IEnumerable<EntityConfigRecord>>();
+            var sd = serviceProvider.GetService<IServiceCollection>();
+            foreach (var ecr in entityConfigRecords)
+            {
+                var cSrvService = serviceProvider.GetService(typeof(ICrudService<>).MakeGenericType(ecr.Type));
+                var cSrvImpl = typeof(CrudService<>).MakeGenericType(ecr.Type);
+
+                if (cSrvService.GetType() == cSrvImpl)
+                {
+                    var mi = cSrvImpl.GetMethod("Initialize", BindingFlags.NonPublic | BindingFlags.Static);
+                    mi.Invoke(null, new object[] { ecr });
+                }
             }
         }
         private static void AddPermissionComponents(IApplicationBuilder app, IServiceProvider serviceProvider)
