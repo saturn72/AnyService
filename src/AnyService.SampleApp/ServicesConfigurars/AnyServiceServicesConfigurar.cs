@@ -25,6 +25,7 @@ namespace AnyService.SampleApp.ServicesConfigurars
                     new EntityConfigRecord
                     {
                         Type = typeof(Category),
+                        HideSoftDeleted = true,
                         ControllerSettings = new ControllerSettings
                         {
                             MapToType = typeof(CategoryModel)

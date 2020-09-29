@@ -9,23 +9,24 @@ using AnyService.Utilities;
 using Microsoft.Extensions.Logging;
 using AnyService.Services.Audit;
 using AnyService.Services.Preparars;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace AnyService.Services
 {
-    public class CrudService<TDomainModel> : ICrudService<TDomainModel> where TDomainModel : IDomainObject
+    public class CrudService<TDomainObject> : ICrudService<TDomainObject> where TDomainObject : IDomainObject
     {
         #region fields
+        private static DomainObjectMetadata ObjectMetadata;
+
         protected readonly AnyServiceConfig Config;
-        protected readonly IRepository<TDomainModel> Repository;
-        protected readonly CrudValidatorBase<TDomainModel> Validator;
-        protected readonly IModelPreparar<TDomainModel> ModelPreparar;
+        protected readonly IRepository<TDomainObject> Repository;
+        protected readonly CrudValidatorBase<TDomainObject> Validator;
+        protected readonly IModelPreparar<TDomainObject> ModelPreparar;
         protected readonly WorkContext WorkContext;
         protected readonly IEventBus EventBus;
         protected readonly EventKeyRecord EventKeys;
         protected readonly IFileStoreManager FileStorageManager;
-        protected readonly ILogger<CrudService<TDomainModel>> Logger;
+        protected readonly ILogger<CrudService<TDomainObject>> Logger;
         protected readonly IIdGenerator IdGenerator;
         protected readonly IFilterFactory FilterFactory;
         protected readonly IPermissionManager PermissionManager;
@@ -34,13 +35,13 @@ namespace AnyService.Services
         #region ctor
         public CrudService(
             AnyServiceConfig config,
-            IRepository<TDomainModel> repository,
-            CrudValidatorBase<TDomainModel> validator,
-            IModelPreparar<TDomainModel> modelPreparar,
+            IRepository<TDomainObject> repository,
+            CrudValidatorBase<TDomainObject> validator,
+            IModelPreparar<TDomainObject> modelPreparar,
             WorkContext workContext,
             IEventBus eventBus,
             IFileStoreManager fileStorageManager,
-            ILogger<CrudService<TDomainModel>> logger,
+            ILogger<CrudService<TDomainObject>> logger,
             IIdGenerator idGenerator,
             IFilterFactory filterFactory,
             IPermissionManager permissionManager,
@@ -60,14 +61,29 @@ namespace AnyService.Services
             FilterFactory = filterFactory;
             PermissionManager = permissionManager;
             AuditManager = auditManager;
+
+            if (ObjectMetadata == null)
+                Initialize(workContext?.CurrentEntityConfigRecord);
         }
 
         #endregion
-        public virtual async Task<ServiceResponse<TDomainModel>> Create(TDomainModel entity)
+        internal static void Initialize(EntityConfigRecord ecr)
+        {
+            ObjectMetadata = new DomainObjectMetadata
+            {
+                IsSoftDeleted = ecr.Type is ISoftDelete,
+                ShowSoftDeleted = ecr.Type is ISoftDelete ? (bool?)!ecr.HideSoftDeleted : null,
+                IsCreatableAudit = ecr.Type is ICreatableAudit,
+                IsReadableAudit = ecr.Type is IReadableAudit,
+                IsUpdatableAudit = ecr.Type is IUpdatableAudit,
+                IsDeletableAudit = ecr.Type is IDeletableAudit,
+            };
+        }
+        public virtual async Task<ServiceResponse<TDomainObject>> Create(TDomainObject entity)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start create flow for entity: {entity}");
 
-            var serviceResponse = new ServiceResponse<TDomainModel>();
+            var serviceResponse = new ServiceResponse<TDomainObject>();
             if (!await Validator.ValidateForCreate(entity, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
 
@@ -76,8 +92,7 @@ namespace AnyService.Services
 
             Logger.LogDebug(LoggingEvents.Repository, $"Insert entity to repository");
 
-            if (entity is ISoftDelete)
-                (entity as ISoftDelete).Deleted = false;
+            if (ObjectMetadata.IsSoftDeleted) (entity as ISoftDelete).Deleted = false;
 
             var wrapper = new ServiceResponseWrapper(serviceResponse);
             var dbData = await Repository.Command(r => r.Insert(entity), wrapper);
@@ -85,7 +100,7 @@ namespace AnyService.Services
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Create, entity))
                 return serviceResponse;
-            if (entity is ICreatableAudit)
+            if (ObjectMetadata.IsCreatableAudit)
                 await AuditManager.InsertCreateRecord(entity);
 
             Publish(EventKeys.Create, serviceResponse.Payload);
@@ -114,11 +129,11 @@ namespace AnyService.Services
         //    var uploadResponses = await FileStorageManager.Upload(files);
         //    serviceResponse.Data = new { entity = serviceResponse.Data, filesUploadStatus = uploadResponses };
         //}
-        public virtual async Task<ServiceResponse<TDomainModel>> GetById(string id)
+        public virtual async Task<ServiceResponse<TDomainObject>> GetById(string id)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start get by id with id = {id}");
 
-            var serviceResponse = new ServiceResponse<TDomainModel>();
+            var serviceResponse = new ServiceResponse<TDomainObject>();
             if (!await Validator.ValidateForGet(id, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
 
@@ -130,13 +145,13 @@ namespace AnyService.Services
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Read, id))
                 return serviceResponse;
-            
+
             if (data != null && serviceResponse.Result == ServiceResult.NotSet)
             {
                 serviceResponse.Payload = data;
                 serviceResponse.Result = ServiceResult.Ok;
 
-                if (typeof(TDomainModel) is IReadableAudit)
+                if (ObjectMetadata.IsReadableAudit)
                     await AuditManager.InsertReadRecord(data);
 
                 Publish(EventKeys.Read, serviceResponse.Payload);
@@ -144,10 +159,10 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
-        public virtual async Task<ServiceResponse<Pagination<TDomainModel>>> GetAll(Pagination<TDomainModel> pagination)
+        public virtual async Task<ServiceResponse<Pagination<TDomainObject>>> GetAll(Pagination<TDomainObject> pagination)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all flow");
-            var serviceResponse = new ServiceResponse<Pagination<TDomainModel>> { Payload = pagination };
+            var serviceResponse = new ServiceResponse<Pagination<TDomainObject>> { Payload = pagination };
 
             if (!await Validator.ValidateForGet(pagination, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Request did not pass validation");
@@ -156,7 +171,7 @@ namespace AnyService.Services
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Missing query data");
 
             Logger.LogDebug(LoggingEvents.Repository, "Get all from repository using paginate = " + pagination);
-            var wrapper = new ServiceResponseWrapper(new ServiceResponse<IEnumerable<TDomainModel>>());
+            var wrapper = new ServiceResponseWrapper(new ServiceResponse<IEnumerable<TDomainObject>>());
             var data = await Repository.Query(r => r.GetAll(pagination), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
 
@@ -169,13 +184,13 @@ namespace AnyService.Services
                 return serviceResponse;
             }
 
-            pagination.Data = data ?? new TDomainModel[] { };
+            pagination.Data = data ?? new TDomainObject[] { };
             if (serviceResponse.Result == ServiceResult.NotSet)
             {
                 serviceResponse.Payload = pagination;
                 serviceResponse.Result = ServiceResult.Ok;
 
-                if (typeof(TDomainModel) is IReadableAudit)
+                if (ObjectMetadata.IsReadableAudit)
                     await AuditManager.InsertReadRecord(pagination);
 
                 Publish(EventKeys.Read, serviceResponse.Payload);
@@ -184,15 +199,15 @@ namespace AnyService.Services
             return serviceResponse;
         }
 
-        private async Task<Pagination<TDomainModel>> NormalizePagination(Pagination<TDomainModel> pagination)
+        private async Task<Pagination<TDomainObject>> NormalizePagination(Pagination<TDomainObject> pagination)
         {
-            var p = pagination ??= new Pagination<TDomainModel>();
+            var p = pagination ??= new Pagination<TDomainObject>();
 
             if (!p.QueryOrFilter.HasValue() && p.QueryFunc == null)
                 p.QueryFunc = x => x.Id.HasValue();
 
             var filter = p.QueryOrFilter.HasValue() ?
-                await FilterFactory.GetFilter<TDomainModel>(p.QueryOrFilter) : null;
+                await FilterFactory.GetFilter<TDomainObject>(p.QueryOrFilter) : null;
 
             if (filter != null)
             {
@@ -205,14 +220,14 @@ namespace AnyService.Services
             {
                 if (p.QueryFunc == null) //build only if func not exists
                 {
-                    var right = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(p.QueryOrFilter)?.Compile();
+                    var right = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainObject>(p.QueryOrFilter)?.Compile();
                     if (right == null) return null;
 
                     var ecr = WorkContext.CurrentEntityConfigRecord;
                     if (Config.ManageEntityPermissions)
                     {
                         var permittedIds = await PermissionManager.GetPermittedIds(WorkContext.CurrentUserId, ecr.EntityKey, ecr.PermissionRecord.ReadKey);
-                        Func<TDomainModel, bool> left = a => permittedIds.Contains(a.Id);
+                        Func<TDomainObject, bool> left = a => permittedIds.Contains(a.Id);
                         p.QueryFunc = x => left(x) && right(x);
                     }
                     else
@@ -234,11 +249,11 @@ namespace AnyService.Services
             return p;
         }
 
-        public virtual async Task<ServiceResponse<TDomainModel>> Update(string id, TDomainModel entity)
+        public virtual async Task<ServiceResponse<TDomainObject>> Update(string id, TDomainObject entity)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start update flow for id: {id}, entity: {entity}");
             entity.Id = id;
-            var serviceResponse = new ServiceResponse<TDomainModel>();
+            var serviceResponse = new ServiceResponse<TDomainObject>();
 
             if (!await Validator.ValidateForUpdate(entity, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
@@ -250,8 +265,7 @@ namespace AnyService.Services
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Update, id))
                 return serviceResponse;
 
-            var deletable = dbEntry as ISoftDelete;
-            if (deletable != null && deletable.Deleted)
+            if (ObjectMetadata.IsSoftDeleted && (dbEntry as ISoftDelete).Deleted)
             {
                 Logger.LogDebug(LoggingEvents.Audity, "entity already deleted");
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
@@ -274,7 +288,7 @@ namespace AnyService.Services
             //    await UploadFiles(fileContainer, serviceResponse);
             //}
 
-            if (entity is IUpdatableAudit)
+            if (ObjectMetadata.IsUpdatableAudit)
                 await AuditManager.InsertUpdatedRecord(dbEntry, entity);
 
             Publish(EventKeys.Update, serviceResponse.Payload);
@@ -282,10 +296,10 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
-        public virtual async Task<ServiceResponse<TDomainModel>> Delete(string id)
+        public virtual async Task<ServiceResponse<TDomainObject>> Delete(string id)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start delete flow for id: {id}");
-            var serviceResponse = new ServiceResponse<TDomainModel>();
+            var serviceResponse = new ServiceResponse<TDomainObject>();
 
             if (!await Validator.ValidateForDelete(id, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
@@ -299,18 +313,18 @@ namespace AnyService.Services
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Delete, id))
                 return serviceResponse;
-            var softDelete = dbEntry as ISoftDelete;
-            if (softDelete != null && softDelete.Deleted)
+
+            if (ObjectMetadata.IsSoftDeleted && (dbEntry as ISoftDelete).Deleted)
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Entity already deleted");
 
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Prepare for deletion");
             await ModelPreparar.PrepareForDelete(dbEntry);
 
-            TDomainModel deletedModel;
-            if (softDelete != null)
+            TDomainObject deletedModel;
+            if (ObjectMetadata.IsSoftDeleted)
             {
                 (dbEntry as ISoftDelete).Deleted = true;
-                Logger.LogDebug(LoggingEvents.Repository, $"Repository - soft deletion (update) {nameof(IDeletableAudit)} entity");
+                Logger.LogDebug(LoggingEvents.Repository, $"Repository - soft deletion (update) {nameof(ISoftDelete)} entity");
                 deletedModel = await Repository.Command(r => r.Update(dbEntry), wrapper);
             }
             else
@@ -322,7 +336,7 @@ namespace AnyService.Services
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Delete, id))
                 return serviceResponse;
 
-            if (dbEntry is IDeletableAudit)
+            if (ObjectMetadata.IsDeletableAudit)
                 await AuditManager.InsertDeletedRecord(dbEntry);
 
             Publish(EventKeys.Delete, serviceResponse.Payload);
@@ -377,6 +391,18 @@ namespace AnyService.Services
                 exception = exception
             };
             Publish(eventKey, exceptionData);
+        }
+        #endregion
+
+        #region nested classes
+        private class DomainObjectMetadata
+        {
+            public bool IsSoftDeleted { get; set; }
+            public bool? ShowSoftDeleted { get; set; }
+            public bool IsCreatableAudit { get; set; }
+            public bool IsReadableAudit { get; set; }
+            public bool IsUpdatableAudit { get; set; }
+            public bool IsDeletableAudit { get; set; }
         }
         #endregion
     }

@@ -91,7 +91,7 @@ namespace AnyService.E2E
         [Fact]
         public async Task CRUD_AdminCategory()
         {
-            const string AdminUri = "admin/category";
+            const string AdminUri = "admiN/category";
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var model = new Category

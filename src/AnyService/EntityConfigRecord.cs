@@ -2,7 +2,6 @@ using System;
 using AnyService.Audity;
 using AnyService.Security;
 using AnyService.Services;
-using Microsoft.AspNetCore.Http;
 
 namespace AnyService
 {
@@ -21,6 +20,11 @@ namespace AnyService
         /// These keys are used to uniquly identify CRUD operation events on the entity. 
         /// </summary>
         public EventKeyRecord EventKeys { get; set; }
+        /// <summary>
+        /// Gets or sets value to expose/hide ISoftDeleted object when ISoftDeleted.Deleted is true
+        /// Default is false
+        /// </summary>
+        public bool HideSoftDeleted { get; set; }
         /// <summary>
         /// Gets or sets entity permission record keys
         /// These keys uniqly identify entity's permission record keys, which used durin entity authorization.

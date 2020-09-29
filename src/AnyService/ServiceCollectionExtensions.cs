@@ -17,6 +17,7 @@ using AnyService.Services.Preparars;
 using AnyService.Audity;
 using AnyService.Services.Logging;
 using AnyService.Models;
+using AnyService.Logging;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -45,6 +46,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton(config);
             services.TryAddTransient(sp => sp.GetService<WorkContext>().CurrentEntityConfigRecord?.AuditSettings ?? config.AuditSettings);
 
+            InitializeCrudServices(config.EntityConfigRecords);
             services.TryAddTransient(typeof(ICrudService<>), typeof(CrudService<>));
 
             // services.
@@ -117,6 +119,18 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return services;
         }
+
+        private static void InitializeCrudServices(IEnumerable<EntityConfigRecord> entityConfigRecords)
+        {
+            foreach (var ecr in entityConfigRecords)
+            {
+                var cSrv = typeof(CrudService<>).MakeGenericType(ecr.Type);
+
+                var mi = cSrv.GetMethod("Initialize");
+                mi.Invoke(cSrv, null);
+            }
+        }
+
         private static void NormalizeConfiguration(AnyServiceConfig config)
         {
             var temp = config.EntityConfigRecords.ToArray();
