@@ -41,12 +41,15 @@ namespace AnyService.EntityFramework
         {
             if (pagination == null || pagination.QueryFunc == null)
                 throw new ArgumentNullException(nameof(pagination));
-            _logger.LogDebug(EfRepositoryEventIds.Read, "Get all with pagination: " + pagination.QueryOrFilter);
+            _logger.LogDebug(EfRepositoryEventIds.Read, "Get all with pagination: " + pagination.QueryOrFilter ?? pagination.QueryFunc.ToString());
             pagination.Total = _collection.Where(pagination.QueryFunc).Count();
             _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll set total to: " + pagination.Total);
 
             var q = pagination.IncludeNested ? IncludeNavigations(_collection) : _collection;
-            q = q.OrderBy(pagination.OrderBy ?? nameof(IDomainModelBase.Id), pagination.SortOrder == PaginationSettings.Desc)
+
+            var isDesc = pagination.SortOrder == PaginationSettings.Desc;
+            var orderByPropertyName = GetOrderByProperty(pagination.OrderBy);
+            q = q.OrderBy(orderByPropertyName, isDesc)
                 .Where(pagination.QueryFunc).AsQueryable();
 
             q = pagination.Offset == 0 ?
@@ -54,11 +57,19 @@ namespace AnyService.EntityFramework
                q.Skip(pagination.Offset).Take(pagination.PageSize);
 
             var page = q.ToArray();
+            _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll Detaching entities");
             await DetachEntities(q);
 
             _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll total entities in page: " + page.Count());
             return page;
         }
+
+        private static string GetOrderByProperty(string paginationOrderBy)
+        {
+            return paginationOrderBy != null && GetTypePropertyInfos().Any(x => x.Name == paginationOrderBy) ?
+                paginationOrderBy : nameof(IDomainModelBase.Id);
+        }
+
         public virtual async Task<TDomainModel> GetById(string id)
         {
             _logger.LogDebug(EfRepositoryEventIds.Read, $"{nameof(GetById)} with id = {id}");
@@ -162,7 +173,7 @@ namespace AnyService.EntityFramework
                 source = source.AsQueryable().Include(name);
             return source.AsQueryable();
         }
-        private IEnumerable<PropertyInfo> GetTypePropertyInfos()
+        private static IEnumerable<PropertyInfo> GetTypePropertyInfos()
         {
             var type = typeof(TDomainModel);
             if (!TypeProperties.TryGetValue(type, out IEnumerable<PropertyInfo> pInfos))
