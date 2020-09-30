@@ -2,6 +2,9 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AnyService.Events;
+using Castle.Core.Logging;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Shouldly;
 using Xunit;
 
@@ -18,7 +21,8 @@ namespace AnyService.Tests.Events
                 Data = "this is data"
             };
 
-            var eb = new DefaultEventsBus();
+            var l = new Mock<ILogger<DefaultEventsBus>>();
+            var eb = new DefaultEventsBus(l.Object);
 
             eb.Publish(ek, ed);
             ed.PublishedOnUtc.ShouldBe(default);
@@ -38,8 +42,9 @@ namespace AnyService.Tests.Events
                 return Task.CompletedTask;
             });
 
-            var eb = new DefaultEventsBus();
-            var handlerId = eb.Subscribe(ek, handler);
+            var l = new Mock<ILogger<DefaultEventsBus>>();
+            var eb = new DefaultEventsBus(l.Object);
+            var handlerId = eb.Subscribe(ek, handler, "name");
             eb.Publish(ek, ed);
             Thread.Sleep(50);
             handleCounter.ShouldBe(1);

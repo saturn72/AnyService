@@ -1,3 +1,5 @@
+using AnyService.Services;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,23 +9,27 @@ namespace AnyService.Events
 {
     public class DefaultEventsBus : IEventBus
     {
+        private readonly ILogger<DefaultEventsBus> _logger;
         private readonly IDictionary<string, ICollection<HandlerData>> _handlers;
-        public DefaultEventsBus()
+        public DefaultEventsBus(ILogger<DefaultEventsBus> logger)
         {
+            _logger = logger;
             _handlers = new Dictionary<string, ICollection<HandlerData>>();
         }
         public void Publish(string eventKey, DomainEventData eventData)
         {
+            _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event with key: {eventKey}, data: {eventData.ToJsonString()}");
             if (_handlers.TryGetValue(eventKey, out ICollection<HandlerData> handlerDatas))
             {
                 foreach (var h in handlerDatas)
                 {
+                    _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event to handler named {h.Name}");
                     eventData.PublishedOnUtc = DateTime.UtcNow;
                     var t = h.Handler(eventData);
                 }
             }
         }
-        public string Subscribe(string eventKey, Func<DomainEventData, Task> handler)
+        public string Subscribe(string eventKey, Func<DomainEventData, Task> handler, string name)
         {
             var handlerId = Convert
                 .ToBase64String(Guid.NewGuid().ToByteArray())
@@ -33,7 +39,8 @@ namespace AnyService.Events
             var handlerData = new HandlerData
             {
                 HandlerId = handlerId,
-                Handler = handler
+                Handler = handler,
+                Name = name,
             };
 
             if (_handlers.ContainsKey(eventKey))
@@ -56,6 +63,7 @@ namespace AnyService.Events
         private class HandlerData
         {
             public string HandlerId { get; set; }
+            public string Name { get; set; }
             public Func<DomainEventData, Task> Handler { get; set; }
         }
         #endregion

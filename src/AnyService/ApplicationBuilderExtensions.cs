@@ -45,10 +45,10 @@ namespace AnyService
                 var handlers = new ExceptionsLoggingEventHandlers(exLogger);
                 foreach (var ek in eventKeys)
                 {
-                    eventBus.Subscribe(ek.Create, handlers.CreateEventHandler);
-                    eventBus.Subscribe(ek.Read, handlers.ReadEventHandler);
-                    eventBus.Subscribe(ek.Update, handlers.UpdateEventHandler);
-                    eventBus.Subscribe(ek.Delete, handlers.DeleteEventHandler);
+                    eventBus.Subscribe(ek.Create, handlers.CreateEventHandler, "domain-object-handler-created");
+                    eventBus.Subscribe(ek.Read, handlers.ReadEventHandler, "domain-object-handler-read");
+                    eventBus.Subscribe(ek.Update, handlers.UpdateEventHandler, "domain-object-handler-updated");
+                    eventBus.Subscribe(ek.Delete, handlers.DeleteEventHandler, "domain-object-handler-deleted");
                 }
             }
             if (usePermissionMiddleware) AddPermissionComponents(app, sp);
@@ -82,8 +82,8 @@ namespace AnyService
             var peh = serviceProvider.GetRequiredService<IPermissionEventsHandler>();
             foreach (var e in ekr)
             {
-                eventBus.Subscribe(e.Create, peh.EntityCreatedHandler);
-                eventBus.Subscribe(e.Delete, peh.EntityDeletedHandler);
+                eventBus.Subscribe(e.Create, peh.EntityCreatedHandler, "entity-created-permission-handler");
+                eventBus.Subscribe(e.Delete, peh.EntityDeletedHandler, "entity-deleted-permission-handler");
             }
         }
     }
