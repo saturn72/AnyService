@@ -17,7 +17,6 @@ namespace AnyService.Services
     public class CrudService<TDomainObject> : ICrudService<TDomainObject> where TDomainObject : IDomainObject
     {
         #region fields
-        private static DomainObjectMetadata ObjectMetadata;
         private static readonly object lockObj = new object();
 
         protected readonly AnyServiceConfig Config;
@@ -33,6 +32,7 @@ namespace AnyService.Services
         protected readonly IFilterFactory FilterFactory;
         protected readonly IPermissionManager PermissionManager;
         protected readonly IAuditManager AuditManager;
+        private readonly DomainObjectMetadata ObjectMetadata;
         #endregion
         #region ctor
         public CrudService(
@@ -43,8 +43,8 @@ namespace AnyService.Services
             Config = serviceProvider.GetService<AnyServiceConfig>();
             Repository = serviceProvider.GetService<IRepository<TDomainObject>>();
             Validator = serviceProvider.GetService<CrudValidatorBase<TDomainObject>>();
-            ModelPreparar = serviceProvider.GetService<IModelPreparar<TDomainObject>>();
             WorkContext = serviceProvider.GetService<WorkContext>();
+            ModelPreparar = serviceProvider.GetService<IModelPreparar<TDomainObject>>();
             EventBus = serviceProvider.GetService<IEventBus>();
             FileStorageManager = serviceProvider.GetService<IFileStoreManager>();
             IdGenerator = serviceProvider.GetService<IIdGenerator>();
@@ -53,28 +53,12 @@ namespace AnyService.Services
             AuditManager = serviceProvider.GetService<IAuditManager>();
 
             EventKeys = WorkContext?.CurrentEntityConfigRecord?.EventKeys;
-
-            lock (lockObj)
-            {
-                if (ObjectMetadata == null)
-                    Initialize(WorkContext.CurrentEntityConfigRecord);
-            }
+            var f = serviceProvider.GetService<DomainObjectMetadataFactory>();
+            ObjectMetadata = f.Get(WorkContext.CurrentType).Result;
         }
 
         #endregion
-        internal static void Initialize(EntityConfigRecord ecr)
-        {
-            var isSoftDeleted = ecr.Type.IsOfType<ISoftDelete>();
-            ObjectMetadata = new DomainObjectMetadata
-            {
-                IsSoftDeleted = isSoftDeleted,
-                ShowSoftDeleted = isSoftDeleted && !ecr.HideSoftDeleted,
-                IsCreatableAudit = ecr.Type.IsOfType<ICreatableAudit>(),
-                IsReadableAudit = ecr.Type.IsOfType<IReadableAudit>(),
-                IsUpdatableAudit = ecr.Type.IsOfType<IUpdatableAudit>(),
-                IsDeletableAudit = ecr.Type.IsOfType<IDeletableAudit>(),
-            };
-        }
+
         public virtual async Task<ServiceResponse<TDomainObject>> Create(TDomainObject entity)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start create flow for entity: {entity}");
@@ -387,18 +371,6 @@ namespace AnyService.Services
                 exception = exception
             };
             Publish(eventKey, exceptionData);
-        }
-        #endregion
-
-        #region nested classes
-        private class DomainObjectMetadata
-        {
-            public bool IsSoftDeleted { get; set; }
-            public bool ShowSoftDeleted { get; set; }
-            public bool IsCreatableAudit { get; set; }
-            public bool IsReadableAudit { get; set; }
-            public bool IsUpdatableAudit { get; set; }
-            public bool IsDeletableAudit { get; set; }
         }
         #endregion
     }

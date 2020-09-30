@@ -45,9 +45,23 @@ namespace AnyService.Tests.Services
                 .Callback<AuditableTestModel, ServiceResponse>((ep, sr) => sr.Result = ServiceResult.BadOrMissingData);
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });           
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AuditableTestModel),
+                }
+            };
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
-
             var cSrv = new CrudService<AuditableTestModel>(sp.Object, logger.Object);
             var res = await cSrv.Create(new AuditableTestModel());
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
@@ -77,6 +91,10 @@ namespace AnyService.Tests.Services
                 }
             };
             var sp = new Mock<IServiceProvider>();
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -122,6 +140,11 @@ namespace AnyService.Tests.Services
                 }
             };
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf); 
+            
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -173,6 +196,11 @@ namespace AnyService.Tests.Services
             var fsm = new Mock<IFileStoreManager>();
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+            
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -234,6 +262,11 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<TestFileContainer>>>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -269,6 +302,21 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AuditableTestModel),
+                }
+            };
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
 
@@ -307,6 +355,11 @@ namespace AnyService.Tests.Services
             };
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -350,6 +403,11 @@ namespace AnyService.Tests.Services
             };
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -402,6 +460,11 @@ namespace AnyService.Tests.Services
             var am = new Mock<IAuditManager>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -454,6 +517,11 @@ namespace AnyService.Tests.Services
             var am = new Mock<IAuditManager>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -480,6 +548,21 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AuditableTestModel),
+                }
+            };
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
 
@@ -522,6 +605,11 @@ namespace AnyService.Tests.Services
             var am = new Mock<IAuditManager>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -576,6 +664,11 @@ namespace AnyService.Tests.Services
             var am = new Mock<IAuditManager>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -633,6 +726,11 @@ namespace AnyService.Tests.Services
             ff.Setup(f => f.GetFilter<AuditableTestModel>(It.IsAny<string>())).ReturnsAsync(f);
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -696,6 +794,11 @@ namespace AnyService.Tests.Services
             var am = new Mock<IAuditManager>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -728,6 +831,21 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+           
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AuditableTestModel),
+                }
+            };
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
 
@@ -762,6 +880,11 @@ namespace AnyService.Tests.Services
             };
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -806,6 +929,11 @@ namespace AnyService.Tests.Services
             gn.Setup(g => g.GetNext()).Returns(exId);
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -860,6 +988,11 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -913,6 +1046,11 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -971,6 +1109,11 @@ namespace AnyService.Tests.Services
             var am = new Mock<IAuditManager>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -1022,6 +1165,11 @@ namespace AnyService.Tests.Services
                 }
             };
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -1083,6 +1231,11 @@ namespace AnyService.Tests.Services
             var am = new Mock<IAuditManager>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(TestFileContainer), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<TestFileContainer>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<TestFileContainer>))).Returns(v.Object);
@@ -1118,6 +1271,21 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+            
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AuditableTestModel),
+                }
+            };
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
 
@@ -1150,6 +1318,11 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -1189,6 +1362,11 @@ namespace AnyService.Tests.Services
             };
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -1237,6 +1415,11 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestModel>>>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -1291,6 +1474,11 @@ namespace AnyService.Tests.Services
                 }
             };
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(TestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<TestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<TestModel>))).Returns(v.Object);
@@ -1336,6 +1524,11 @@ namespace AnyService.Tests.Services
 
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(TestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<TestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<TestModel>))).Returns(v.Object);
@@ -1388,6 +1581,11 @@ namespace AnyService.Tests.Services
             var am = new Mock<IAuditManager>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -1441,6 +1639,11 @@ namespace AnyService.Tests.Services
             var am = new Mock<IAuditManager>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(AuditableTestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestModel>))).Returns(v.Object);
@@ -1496,6 +1699,11 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<TestModel>>>();
 
             var sp = new Mock<IServiceProvider>();
+
+            var dom = new DomainObjectMetadata(typeof(TestModel), false);
+            var domf = new DomainObjectMetadataFactory(new[] { dom });
+            sp.Setup(s => s.GetService(typeof(DomainObjectMetadataFactory))).Returns(domf);
+
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<TestModel>))).Returns(repo.Object);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<TestModel>))).Returns(v.Object);

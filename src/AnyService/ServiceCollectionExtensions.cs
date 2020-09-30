@@ -17,6 +17,9 @@ using AnyService.Services.Preparars;
 using AnyService.Audity;
 using AnyService.Services.Logging;
 using AnyService.Models;
+using System.Reflection;
+using System.Runtime.InteropServices.ComTypes;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -43,8 +46,9 @@ namespace Microsoft.Extensions.DependencyInjection
             NormalizeConfiguration(config);
 
             services.TryAddSingleton(config);
-            services.TryAddTransient(sp => sp.GetService<WorkContext>().CurrentEntityConfigRecord?.AuditSettings ?? config.AuditSettings);
-            services.TryAddTransient(typeof(ICrudService<>), typeof(CrudService<>));
+            services.TryAddScoped(sp => sp.GetService<WorkContext>().CurrentEntityConfigRecord?.AuditSettings ?? config.AuditSettings);
+            services.TryAddScoped(typeof(ICrudService<>), typeof(CrudService<>));
+            AddMetadata(services, config.EntityConfigRecords);
 
             // services.
             services.AddSingleton(config.EntityConfigRecords);
@@ -58,7 +62,7 @@ namespace Microsoft.Extensions.DependencyInjection
             foreach (var vType in validatorTypes)
             {
                 foreach (var vt in vType.GetAllBaseTypes(typeof(object)))
-                    services.TryAddTransient(vt, vType);
+                    services.TryAddScoped(vt, vType);
             }
             foreach (var ecr in config.EntityConfigRecords)
             {
@@ -69,9 +73,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 var impl = ecr.ModelPrepararType.IsGenericTypeDefinition ?
                     ecr.ModelPrepararType.MakeGenericType(ecr.Type) :
                     ecr.ModelPrepararType;
-                services.TryAddTransient(srv, impl);
+                services.TryAddScoped(srv, impl);
             }
-            services.TryAddTransient(typeof(IFilterFactory), sp =>
+            services.TryAddScoped(typeof(IFilterFactory), sp =>
             {
                 var wc = sp.GetService<WorkContext>();
                 var ffType = wc.CurrentEntityConfigRecord.FilterFactoryType;
@@ -80,8 +84,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.TryAddScoped<WorkContext>();
             services.TryAddSingleton<IIdGenerator, StringIdGenerator>();
-            services.TryAddTransient<IPermissionManager, PermissionManager>();
-            services.TryAddTransient<ILogRecordManager, LogRecordManager>();
+            services.TryAddScoped<IPermissionManager, PermissionManager>();
+            services.TryAddScoped<ILogRecordManager, LogRecordManager>();
 
             services.TryAddScoped(sp =>
             {
@@ -97,7 +101,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return wc.CurrentEntityConfigRecord.PermissionRecord;
             });
 
-            services.AddTransient(sp =>
+            services.TryAddScoped(sp =>
             {
                 var wc = sp.GetService<WorkContext>();
                 var mt = wc.CurrentEntityConfigRecord?.ControllerSettings.ResponseMapperType ?? config.ServiceResponseMapperType;
@@ -113,12 +117,16 @@ namespace Microsoft.Extensions.DependencyInjection
 
             if (config.ManageEntityPermissions)
                 services.TryAddSingleton<IPermissionEventsHandler, DefaultPermissionsEventsHandler>();
-
             return services;
         }
-
-       
-
+        private static void AddMetadata(IServiceCollection services, IEnumerable<EntityConfigRecord> entityConfigRecords)
+        {
+            var allDoms = entityConfigRecords
+                .DistinctBy(e => e.Type)
+                .Select(ecr => new DomainObjectMetadata(ecr.Type, ecr.ShowSoftDelete));
+            var domf = new DomainObjectMetadataFactory(allDoms.DistinctBy(x => x.Type).ToArray());
+            services.AddSingleton(domf);
+        }
         private static void NormalizeConfiguration(AnyServiceConfig config)
         {
             var temp = config.EntityConfigRecords.ToArray();

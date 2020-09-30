@@ -2,7 +2,6 @@
 using AnyService.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Threading.Tasks;
 
 namespace AnyService.SampleApp.Controllers
 {
@@ -17,7 +16,7 @@ namespace AnyService.SampleApp.Controllers
             _srv = srv;
         }
         [HttpGet]
-        public async Task<string> Get()
+        public string Get()
         {
             return DateTime.UtcNow.ToIso8601();
         }

@@ -24,7 +24,7 @@ namespace AnyService
         /// Gets or sets value to expose/hide ISoftDeleted object when ISoftDeleted.Deleted is true
         /// Default is false
         /// </summary>
-        public bool HideSoftDeleted { get; set; }
+        public bool ShowSoftDelete { get; set; }
         /// <summary>
         /// Gets or sets entity permission record keys
         /// These keys uniqly identify entity's permission record keys, which used durin entity authorization.
