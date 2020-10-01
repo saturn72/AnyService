@@ -1,12 +1,12 @@
 ﻿using AnyService.SampleApp.Controllers;
-using AnyService.SampleApp.Domain;
+using AnyService.SampleApp.Entities;
 using AnyService.SampleApp.Models;
 using AnyService.SampleApp.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AnyService.SampleApp.ServicesConfigurars
+namespace AnyService.SampleApp.Configurars
 {
-    public class AnyServiceServicesConfigurar
+    public class AnyServiceConfigurar
     {
         public AnyServiceConfig Configure(IServiceCollection services)
         {
@@ -83,6 +83,18 @@ namespace AnyService.SampleApp.ServicesConfigurars
                     {
                         Type = typeof(CustomModel),
                         Name = "area2_cutomModel"
+                    },
+                      new EntityConfigRecord
+                    {
+                        Type = typeof(CustomModel),
+                        Name = "method_not_allowed",
+                        ControllerSettings = new ControllerSettings
+                        {
+                            Route = "/api/na",
+                            PostSettings = new ControllerMethodSettings{Active = false },
+                            PutSettings = new ControllerMethodSettings{Active = false },
+                            DeleteSettings = new ControllerMethodSettings{Active = false },
+                        }
                     },
                 }
             };

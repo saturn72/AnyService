@@ -1,7 +1,7 @@
-﻿using AnyService.SampleApp.Domain;
+﻿using AnyService.SampleApp.Entities;
 using AnyService.SampleApp.Models;
 
-namespace AnyService.SampleApp.ServicesConfigurars
+namespace AnyService.SampleApp.Configurars
 {
     public class AutoMapperServicesConfigurar
     {

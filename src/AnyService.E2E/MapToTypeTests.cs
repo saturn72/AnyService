@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 using AnyService.SampleApp.Models;
 using System.Net;
 using System.Linq;
-using AnyService.SampleApp.Domain;
+using AnyService.SampleApp.Entities;
 
 namespace AnyService.E2E
 {

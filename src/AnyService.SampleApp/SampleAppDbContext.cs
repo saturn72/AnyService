@@ -4,7 +4,7 @@ using AnyService.Security;
 using AnyService.SampleApp.Models;
 using AnyService.Services.FileStorage;
 using Microsoft.EntityFrameworkCore;
-using AnyService.SampleApp.Domain;
+using AnyService.SampleApp.Entities;
 
 namespace AnyService.SampleApp
 {
