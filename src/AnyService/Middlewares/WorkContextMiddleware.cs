@@ -70,7 +70,9 @@ namespace AnyService.Middlewares
         {
             _logger.LogInformation(LoggingEvents.WorkContext,
                 $"Validate HttpMethod is active for {nameof(EntityConfigRecord)}. {nameof(RequestInfo)}: {workContext.RequestInfo.Method}");
-            throw new NotImplementedException();
+
+            var key = string.Format(MapKeyFormat, workContext.CurrentEntityConfigRecord.Name, workContext.RequestInfo.Method);
+            return ActivationMaps[key];
         }
         private IReadOnlyDictionary<string, EntityConfigRecord> LoadRoutes(IEnumerable<EntityConfigRecord> entityConfigRecords)
         {

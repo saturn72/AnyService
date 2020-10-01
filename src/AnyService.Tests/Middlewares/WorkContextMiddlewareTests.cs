@@ -21,6 +21,10 @@ namespace AnyService.Tests.Middlewares
                 ControllerSettings = new ControllerSettings
                 {
                     Route = "/some-resource",
+                    PostSettings = new ControllerMethodSettings { Active = true },
+                    GetSettings = new ControllerMethodSettings { Active = false },
+                    PutSettings = new ControllerMethodSettings { Active = false },
+                    DeleteSettings = new ControllerMethodSettings { Active = true },
                 },
                 Type = typeof(string),
             };
@@ -45,13 +49,18 @@ namespace AnyService.Tests.Middlewares
                 route = "/some-resource/part2/",
                 expRequesteeId = "123",
                 expPath = $"{route}/__public/{expRequesteeId}",
-                expMethod = "some-method";
+                expMethod = "get";
 
             var ecr = new EntityConfigRecord
             {
+                Name = "nane",
                 ControllerSettings = new ControllerSettings
                 {
                     Route = route,
+                    PostSettings = new ControllerMethodSettings { Active = true },
+                    GetSettings = new ControllerMethodSettings { Active = true },
+                    PutSettings = new ControllerMethodSettings { Active = true },
+                    DeleteSettings = new ControllerMethodSettings { Active = true },
                 },
                 Type = typeof(string),
             };
@@ -91,8 +100,10 @@ namespace AnyService.Tests.Middlewares
                 Name = "name",
                 ControllerSettings = new ControllerSettings
                 {
+                    PostSettings = new ControllerMethodSettings { Active = true },
                     GetSettings = new ControllerMethodSettings { Active = false },
                     PutSettings = new ControllerMethodSettings { Active = false },
+                    DeleteSettings = new ControllerMethodSettings { Active = true },
                 }
             };
             var wcmt = new WorkContextMiddleware_ForTests(new[] { e });
