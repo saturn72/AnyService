@@ -19,5 +19,10 @@ namespace AnyService
         public PathString Route { get; set; }
         public Type MapToType { get; set; }
         public Type MapToPaginationType { get; set; }
+        public ControllerMethodSettings PostSettings { get; set; }
+        public ControllerMethodSettings GetSettings { get; set; }
+        public ControllerMethodSettings PutSettings { get; set; }
+        public ControllerMethodSettings DeleteSettings { get; set; }
+        public bool Active { get; set; } = true;
     }
 }

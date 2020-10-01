@@ -8,7 +8,7 @@ namespace AnyService.Tests
 {
     public class PaginationTests
     {
-        public class TestClass : IDomainObject
+        public class TestClass : IDomainEntity
         {
             public string Id { get; set; }
         }

@@ -48,8 +48,8 @@ namespace AnyService
         {
             cfg.CreateMap(typeof(Pagination<>), typeof(PaginationModel<>))
                     .ForMember(
-                        nameof(PaginationModel<IDomainObject>.Query),
-                        opts => opts.MapFrom(nameof(Pagination<IDomainObject>.QueryOrFilter)));
+                        nameof(PaginationModel<IDomainEntity>.Query),
+                        opts => opts.MapFrom(nameof(Pagination<IDomainEntity>.QueryOrFilter)));
 
             cfg.CreateMap<AuditRecord, AuditRecordModel>();
             cfg.CreateMap<AuditRecordModel, AuditRecord>();

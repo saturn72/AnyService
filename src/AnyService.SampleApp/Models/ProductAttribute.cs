@@ -1,6 +1,6 @@
 ﻿namespace AnyService.SampleApp.Models
 {
-    public class ProductAttribute : IDomainObject
+    public class ProductAttribute : IDomainEntity
     {
         public string Id { get; set; }
         public string Name { get; set; }

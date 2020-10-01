@@ -10,7 +10,7 @@ namespace AnyService.Services
             this IRepository<TDomainModel> repository,
             Func<IRepository<TDomainModel>, Task<TResult>> command,
             ServiceResponseWrapper wrapper)
-                where TDomainModel : IDomainObject
+                where TDomainModel : IDomainEntity
         {
             var data = default(TResult);
             var serviceResponse = wrapper.ServiceResponse;
@@ -40,7 +40,7 @@ namespace AnyService.Services
             this IRepository<TDomainModel> repository,
             Func<IRepository<TDomainModel>, Task<TResult>> command,
             ServiceResponseWrapper wrapper)
-            where TDomainModel : IDomainObject
+            where TDomainModel : IDomainEntity
         {
             var data = default(TResult);
             var serviceResponse = wrapper.ServiceResponse;

@@ -10,7 +10,7 @@ using System.Collections.Generic;
 
 namespace AnyService.Tests.Services.Security
 {
-    public class TestClass : IDomainObject
+    public class TestClass : IDomainEntity
     {
         public string Id { get; set; }
         public int Value { get; set; }

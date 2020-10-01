@@ -13,7 +13,7 @@ using EFCore.BulkExtensions;
 namespace AnyService.EntityFramework
 {
     public class EfRepository<TDomainModel> : IRepository<TDomainModel>
-        where TDomainModel : class, IDomainObject
+        where TDomainModel : class, IDomainEntity
     {
         #region fields
         private static readonly ConcurrentDictionary<Type, IEnumerable<PropertyInfo>> TypeProperties = new ConcurrentDictionary<Type, IEnumerable<PropertyInfo>>();
@@ -24,7 +24,7 @@ namespace AnyService.EntityFramework
         private static readonly BulkConfig InsertBulkConfig = new BulkConfig
         {
             PreserveInsertOrder = true,
-            PropertiesToExclude = new List<string> { nameof(IDomainObject.Id) },
+            PropertiesToExclude = new List<string> { nameof(IDomainEntity.Id) },
         };
         #endregion
         #region ctor
@@ -46,7 +46,7 @@ namespace AnyService.EntityFramework
             _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll set total to: " + pagination.Total);
 
             var q = pagination.IncludeNested ? IncludeNavigations(_collection) : _collection;
-            q = q.OrderBy(pagination.OrderBy ?? nameof(IDomainObject.Id), pagination.SortOrder == PaginationSettings.Desc)
+            q = q.OrderBy(pagination.OrderBy ?? nameof(IDomainEntity.Id), pagination.SortOrder == PaginationSettings.Desc)
                 .Where(pagination.QueryFunc).AsQueryable();
 
             q = pagination.Offset == 0 ?

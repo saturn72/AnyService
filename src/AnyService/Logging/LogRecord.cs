@@ -2,7 +2,7 @@
 
 namespace AnyService.Logging
 {
-    public class LogRecord : IDomainObject
+    public class LogRecord : IDomainEntity
     {
         public string Id { get; set; }
         public string Level { get; set; }

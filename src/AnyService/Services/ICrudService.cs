@@ -2,7 +2,7 @@
 
 namespace AnyService.Services
 {
-    public interface ICrudService<TDomainModel> where TDomainModel : IDomainObject
+    public interface ICrudService<TDomainModel> where TDomainModel : IDomainEntity
     {
         Task<ServiceResponse<TDomainModel>> Create(TDomainModel entity);
         Task<ServiceResponse<TDomainModel>> Delete(string id);

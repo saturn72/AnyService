@@ -1,6 +1,6 @@
 ﻿namespace AnyService.Audity
 {
-    public class AuditRecord : IDomainObject
+    public class AuditRecord : IDomainEntity
     {
         public string Id { get; set; }
         public string AuditRecordType { get; set; }

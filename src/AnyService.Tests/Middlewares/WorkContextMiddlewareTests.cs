@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
+using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Xunit;
@@ -24,7 +25,7 @@ namespace AnyService.Tests.Middlewares
                 Type = typeof(string),
             };
             var entityConfigRecords = new[] { ecr };
-            var wcm = new WorkContextMiddleware(null, logger.Object, entityConfigRecords);
+            var wcm = new WorkContextMiddleware(null, entityConfigRecords, logger.Object);
 
             var user = new Mock<ClaimsPrincipal>();
             user.Setup(u => u.Claims).Returns(new Claim[] { });
@@ -74,13 +75,39 @@ namespace AnyService.Tests.Middlewares
             ctx.Setup(h => h.Response).Returns(response.Object);
             var wc = new WorkContext();
 
-            var wcm = new WorkContextMiddleware(reqDel, logger.Object, entityConfigRecords);
+            var wcm = new WorkContextMiddleware(reqDel, entityConfigRecords, logger.Object);
             await wcm.InvokeAsync(ctx.Object, wc);
             i.ShouldBe(expI);
             wc.CurrentEntityConfigRecord.ShouldBe(ecr);
             wc.RequestInfo.Path.ShouldBe(expPath);
             wc.RequestInfo.Method.ShouldBe(expMethod);
             wc.RequestInfo.RequesteeId.ShouldBe(expRequesteeId);
+        }
+        [Fact]
+        public void BuildActivationMap()
+        {
+            var e = new EntityConfigRecord
+            {
+                Name = "name",
+                ControllerSettings = new ControllerSettings
+                {
+                    GetSettings = new ControllerMethodSettings { Active = false },
+                    PutSettings = new ControllerMethodSettings { Active = false },
+                }
+            };
+            var wcmt = new WorkContextMiddleware_ForTests(new[] { e });
+            wcmt.ActiveMap[$"{e.Name}_post"].ShouldBeTrue();
+            wcmt.ActiveMap[$"{e.Name}_get"].ShouldBeFalse();
+            wcmt.ActiveMap[$"{e.Name}_put"].ShouldBeFalse();
+            wcmt.ActiveMap[$"{e.Name}_delete"].ShouldBeTrue();
+        }
+        public class WorkContextMiddleware_ForTests : WorkContextMiddleware
+        {
+            public WorkContextMiddleware_ForTests(IEnumerable<EntityConfigRecord> entityConfigRecords)
+                : base(null, entityConfigRecords, null, null)
+            {
+            }
+            public IReadOnlyDictionary<string, bool> ActiveMap => base.ActivationMaps;
         }
     }
 }

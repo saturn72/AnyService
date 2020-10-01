@@ -193,7 +193,26 @@ namespace Microsoft.Extensions.DependencyInjection
             settings.MapToPaginationType ??= typeof(PaginationModel<>).MakeGenericType(settings.MapToType);
 
             settings.ControllerType ??= BuildController(ecr.Type, settings);
+
+            if (settings.Active)
+                BuildControllerMethodSettings(settings, ecr);
             return settings;
+        }
+
+        private static void BuildControllerMethodSettings(ControllerSettings settings, EntityConfigRecord ecr)
+        {
+            var defaultControllerMethodSettings = new ControllerMethodSettings { Active = true };
+            settings.PostSettings ??= defaultControllerMethodSettings;
+            settings.GetSettings ??= defaultControllerMethodSettings;
+            settings.PutSettings ??= defaultControllerMethodSettings;
+            settings.DeleteSettings ??= defaultControllerMethodSettings;
+
+            if (
+                !settings.PostSettings.Active &&
+                !settings.GetSettings.Active &&
+                !settings.PutSettings.Active &&
+                !settings.DeleteSettings.Active)
+                throw new ArgumentException($"Invalid operation: {nameof(EntityConfigRecord)} named {ecr.Name} has all httpMethods deactivated");
         }
 
         private static Type BuildController(Type entityType, ControllerSettings settings)

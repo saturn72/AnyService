@@ -12,22 +12,26 @@ namespace AnyService.Middlewares
 {
     public class WorkContextMiddleware
     {
+        private const string MapKeyFormat = "{0}_{1}";
         private readonly ILogger<WorkContextMiddleware> _logger;
+        private readonly Func<HttpContext, WorkContext, ILogger, Task<bool>> _onMissingUserIdOrClientIdHandler;
         private readonly RequestDelegate _next;
         protected readonly IReadOnlyDictionary<string, EntityConfigRecord> RouteMaps;
-        private readonly Func<HttpContext, WorkContext, ILogger, Task<bool>> _onMissingUserIdOrClientIdHandler;
+        protected readonly IReadOnlyDictionary<string, bool> ActivationMaps;
 
         public WorkContextMiddleware(
             RequestDelegate next,
-            ILogger<WorkContextMiddleware> logger,
             IEnumerable<EntityConfigRecord> entityConfigRecords,
+            ILogger<WorkContextMiddleware> logger,
             Func<HttpContext, WorkContext, ILogger, Task<bool>> onMissingUserIdHandler = null
             )
         {
             _logger = logger;
             _next = next;
             RouteMaps = LoadRoutes(entityConfigRecords);
+            ActivationMaps = ToActivationMaps(entityConfigRecords);
             _onMissingUserIdOrClientIdHandler = onMissingUserIdHandler ??= OnMissingUserIdWorkContextMiddlewareHandlers.DefaultOnMissingUserIdHandler;
+
         }
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
@@ -53,14 +57,39 @@ namespace AnyService.Middlewares
                 workContext.CurrentEntityConfigRecord = ecr;
                 workContext.RequestInfo = ToRequestInfo(httpContext, ecr);
             }
+            if (!MethodActive(workContext))
+            {
+                httpContext.Response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+                return;
+            }
             _logger.LogDebug(LoggingEvents.WorkContext, "Finish parsing current WorkContext");
             await _next(httpContext);
+        }
+
+        private bool MethodActive(WorkContext workContext)
+        {
+            _logger.LogInformation(LoggingEvents.WorkContext,
+                $"Validate HttpMethod is active for {nameof(EntityConfigRecord)}. {nameof(RequestInfo)}: {workContext.RequestInfo.Method}");
+            throw new NotImplementedException();
         }
         private IReadOnlyDictionary<string, EntityConfigRecord> LoadRoutes(IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
             var res = new Dictionary<string, EntityConfigRecord>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var ecr in entityConfigRecords)
                 res[ecr.ControllerSettings.Route] = ecr;
+            return res;
+        }
+        private IReadOnlyDictionary<string, bool> ToActivationMaps(IEnumerable<EntityConfigRecord> entityConfigRecords)
+        {
+            var res = new Dictionary<string, bool>(StringComparer.InvariantCultureIgnoreCase);
+            foreach (var ecr in entityConfigRecords)
+            {
+                var name = ecr.Name;
+                res[string.Format(MapKeyFormat, name, "post")] = ecr.ControllerSettings.PostSettings.Active;
+                res[string.Format(MapKeyFormat, name, "get")] = ecr.ControllerSettings.GetSettings.Active;
+                res[string.Format(MapKeyFormat, name, "put")] = ecr.ControllerSettings.PutSettings.Active;
+                res[string.Format(MapKeyFormat, name, "delete")] = ecr.ControllerSettings.DeleteSettings.Active;
+            }
             return res;
         }
         private EntityConfigRecord GetEntityConfigRecordByRoute(PathString path)

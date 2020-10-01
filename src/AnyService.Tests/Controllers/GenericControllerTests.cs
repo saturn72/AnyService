@@ -33,7 +33,7 @@ namespace AnyService.Tests.Controllers
             att.HttpMethods.First().ShouldBe(expHttpVerb);
             att.Template.ShouldBe(expTemplate);
         }
-        public class MyClass : IDomainObject
+        public class MyClass : IDomainEntity
         {
             public string Id { get; set; }
         }

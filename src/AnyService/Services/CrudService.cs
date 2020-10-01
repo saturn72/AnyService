@@ -14,7 +14,7 @@ using System.Collections.Generic;
 
 namespace AnyService.Services
 {
-    public class CrudService<TDomainObject> : ICrudService<TDomainObject> where TDomainObject : IDomainObject
+    public class CrudService<TDomainObject> : ICrudService<TDomainObject> where TDomainObject : IDomainEntity
     {
         #region fields
         private static readonly object lockObj = new object();

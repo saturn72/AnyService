@@ -10,7 +10,7 @@ namespace AnyService.Tests.Services
 {
     public class ServiceRepositoryExtensionsTests
     {
-        public class TestClass : IDomainObject
+        public class TestClass : IDomainEntity
         {
             public string Id { get; set; }
         }

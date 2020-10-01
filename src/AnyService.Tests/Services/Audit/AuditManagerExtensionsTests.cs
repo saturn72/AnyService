@@ -9,7 +9,7 @@ namespace AnyService.Tests.Services.Audit
 {
     public class AuditManagerExtensionsTests
     {
-        public class TestClass : IDomainObject
+        public class TestClass : IDomainEntity
         {
             public string Id { get; set; }
         }

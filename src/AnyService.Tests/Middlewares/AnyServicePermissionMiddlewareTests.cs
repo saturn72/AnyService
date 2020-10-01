@@ -232,7 +232,7 @@ namespace AnyService.Tests.Middlewares
         }
 
         #endregion
-        public class TestModel : IDomainObject
+        public class TestModel : IDomainEntity
         {
             public string Id { get; set; }
             public int Value { get; set; }
