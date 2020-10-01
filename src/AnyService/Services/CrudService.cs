@@ -71,7 +71,6 @@ namespace AnyService.Services
             await ModelPreparar.PrepareForCreate(entity);
 
             Logger.LogDebug(LoggingEvents.Repository, $"Insert entity to repository");
-
             if (ObjectMetadata.IsSoftDeleted) (entity as ISoftDelete).Deleted = false;
 
             var wrapper = new ServiceResponseWrapper(serviceResponse);

@@ -17,9 +17,6 @@ using AnyService.Services.Preparars;
 using AnyService.Audity;
 using AnyService.Services.Logging;
 using AnyService.Models;
-using System.Reflection;
-using System.Runtime.InteropServices.ComTypes;
-using Microsoft.AspNetCore.StaticFiles;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -84,8 +81,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.TryAddScoped<WorkContext>();
             services.TryAddSingleton<IIdGenerator, StringIdGenerator>();
-            services.TryAddScoped<IPermissionManager, PermissionManager>();
-            services.TryAddScoped<ILogRecordManager, LogRecordManager>();
+            services.TryAddTransient<IPermissionManager, PermissionManager>();
+            services.TryAddTransient<ILogRecordManager, LogRecordManager>();
 
             services.TryAddScoped(sp =>
             {
@@ -112,7 +109,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 typeof(AuditManager) :
                 typeof(DummyAuditManager);
 
-            services.TryAddScoped(typeof(IAuditManager), auditManagerType);
+            services.TryAddTransient(typeof(IAuditManager), auditManagerType);
             services.TryAddSingleton<IEventBus, DefaultEventsBus>();
 
             if (config.ManageEntityPermissions)

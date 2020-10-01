@@ -47,6 +47,7 @@ namespace AnyService.Tests.Services.Audit
             var ah = new Mock<IAuditManager>();
             var page = new Pagination<TestClass>
             {
+                Total = 123,
                 Data = new[] { new TestClass { Id = "b" } }
             };
             await AuditManagerExtensions.InsertReadRecord(ah.Object, page);
@@ -54,7 +55,7 @@ namespace AnyService.Tests.Services.Audit
                 It.Is<Type>(x => x == typeof(TestClass)),
                 It.Is<string>(i => i == null),
                 It.Is<string>(i => i == AuditRecordTypes.READ),
-                It.Is<object>(x => x == page)),
+                It.Is<object>(x => x.GetPropertyValueByName<int>("total") == page.Total)),
                 Times.Once);
         }
 

@@ -18,7 +18,7 @@ namespace AnyService.Events
         }
         public void Publish(string eventKey, DomainEventData eventData)
         {
-            _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event with key: {eventKey}, data: {eventData.ToJsonString()}");
+            _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event with key: {eventKey}");
             if (_handlers.TryGetValue(eventKey, out ICollection<HandlerData> handlerDatas))
             {
                 foreach (var h in handlerDatas)

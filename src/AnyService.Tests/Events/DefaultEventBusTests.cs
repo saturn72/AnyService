@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AnyService.Events;
-using Castle.Core.Logging;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;

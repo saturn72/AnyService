@@ -14,7 +14,18 @@ namespace AnyService.Services.Audit
         }
         public static Task InsertReadRecord<TEntity>(this IAuditManager auditHelper, Pagination<TEntity> page) where TEntity : IDomainObject
         {
-            return auditHelper.InsertAuditRecord(typeof(TEntity), null, AuditRecordTypes.READ, page);
+            var p = new
+            {
+                total = page.Total,
+                offset = page.Offset,
+                pageSize = page.PageSize,
+                sortOrder = page.SortOrder,
+                orderBy = page.OrderBy,
+                data = page.Data,
+                queryOrFilter = page.QueryOrFilter,
+                includeNested = page.IncludeNested
+            };
+            return auditHelper.InsertAuditRecord(typeof(TEntity), null, AuditRecordTypes.READ, p);
         }
 
         public static Task InsertUpdatedRecord<TEntity>(this IAuditManager auditHelper, TEntity before, TEntity after) where TEntity : IDomainObject
