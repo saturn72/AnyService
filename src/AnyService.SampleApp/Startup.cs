@@ -14,7 +14,7 @@ using AnyService.Middlewares;
 using AnyService.Endpoints;
 using AnyService.SampleApp.Hubs;
 using Microsoft.AspNetCore.Http;
-using AnyService.SampleApp.ServicesConfigurars;
+using AnyService.SampleApp.Configurars;
 
 namespace AnyService.SampleApp
 {
@@ -38,7 +38,7 @@ namespace AnyService.SampleApp
                 .AddScheme<AuthenticationSchemeOptions, ManagedAuthenticationHandler>(ManagedAuthenticationHandler.Schema, options => { });
             services.AddAuthorization();
 
-            var anyServiceConfig = new AnyServiceServicesConfigurar().Configure(services);
+            var anyServiceConfig = new AnyServiceConfigurar().Configure(services);
             new AutoMapperServicesConfigurar().Configure(anyServiceConfig);
           
             ConfigureEntityFramework(services);

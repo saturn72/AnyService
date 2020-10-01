@@ -1,9 +1,11 @@
 ﻿using AnyService.SampleApp;
+using AnyService.SampleApp.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Shouldly;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -18,6 +20,7 @@ namespace AnyService.Tests.IntegrationTests
         [Fact]
         public async Task PostMethodNotAllowed()
         {
+            Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var model = new
             {
                 value = "dddd"
@@ -28,6 +31,7 @@ namespace AnyService.Tests.IntegrationTests
         [Fact]
         public async Task PutMethodNotAllowed()
         {
+            Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var model = new
             {
                 value = "dddd"
@@ -38,6 +42,7 @@ namespace AnyService.Tests.IntegrationTests
         [Fact]
         public async Task DeleteMethodNotAllowed()
         {
+            Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
             var model = new
             {
                 value = "dddd"

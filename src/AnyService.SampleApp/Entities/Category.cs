@@ -1,4 +1,4 @@
-﻿namespace AnyService.SampleApp.Domain
+﻿namespace AnyService.SampleApp.Entities
 {
     public class Category : IDomainEntity
     {
