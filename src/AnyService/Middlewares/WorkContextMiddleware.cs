@@ -56,11 +56,11 @@ namespace AnyService.Middlewares
             {
                 workContext.CurrentEntityConfigRecord = ecr;
                 workContext.RequestInfo = ToRequestInfo(httpContext, ecr);
-            }
-            if (!MethodActive(workContext))
-            {
-                httpContext.Response.StatusCode = StatusCodes.Status405MethodNotAllowed;
-                return;
+                if (!MethodActive(workContext))
+                {
+                    httpContext.Response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+                    return;
+                }
             }
             _logger.LogDebug(LoggingEvents.WorkContext, "Finish parsing current WorkContext");
             await _next(httpContext);

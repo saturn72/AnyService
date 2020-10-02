@@ -1,6 +1,5 @@
 ﻿using AnyService.SampleApp;
 using AnyService.SampleApp.Identity;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Shouldly;
 using System.Net;
