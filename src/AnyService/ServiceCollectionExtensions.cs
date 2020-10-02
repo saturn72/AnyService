@@ -45,7 +45,6 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton(config);
             services.TryAddScoped(sp => sp.GetService<WorkContext>().CurrentEntityConfigRecord?.AuditSettings ?? config.AuditSettings);
             services.TryAddScoped(typeof(ICrudService<>), typeof(CrudService<>));
-            AddMetadata(services, config.EntityConfigRecords);
 
             // services.
             services.AddSingleton(config.EntityConfigRecords);
@@ -115,14 +114,6 @@ namespace Microsoft.Extensions.DependencyInjection
             if (config.ManageEntityPermissions)
                 services.TryAddSingleton<IPermissionEventsHandler, DefaultPermissionsEventsHandler>();
             return services;
-        }
-        private static void AddMetadata(IServiceCollection services, IEnumerable<EntityConfigRecord> entityConfigRecords)
-        {
-            var allDoms = entityConfigRecords
-                .DistinctBy(e => e.Type)
-                .Select(ecr => new DomainObjectMetadata(ecr.Type, ecr.ShowSoftDelete));
-            var domf = new DomainObjectMetadataFactory(allDoms.DistinctBy(x => x.Type).ToArray());
-            services.AddSingleton(domf);
         }
         private static void NormalizeConfiguration(AnyServiceConfig config)
         {

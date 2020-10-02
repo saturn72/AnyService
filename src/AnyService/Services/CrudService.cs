@@ -32,7 +32,7 @@ namespace AnyService.Services
         protected readonly IFilterFactory FilterFactory;
         protected readonly IPermissionManager PermissionManager;
         protected readonly IAuditManager AuditManager;
-        private readonly DomainObjectMetadata ObjectMetadata;
+        private readonly DomainEntityMetadata EntityMetadata;
         #endregion
         #region ctor
         public CrudService(
@@ -53,8 +53,7 @@ namespace AnyService.Services
             AuditManager = serviceProvider.GetService<IAuditManager>();
 
             EventKeys = WorkContext?.CurrentEntityConfigRecord?.EventKeys;
-            var f = serviceProvider.GetService<DomainObjectMetadataFactory>();
-            ObjectMetadata = f.Get(WorkContext.CurrentType).Result;
+            EntityMetadata = WorkContext?.CurrentEntityConfigRecord?.Metadata;
         }
 
         #endregion
@@ -71,7 +70,7 @@ namespace AnyService.Services
             await ModelPreparar.PrepareForCreate(entity);
 
             Logger.LogDebug(LoggingEvents.Repository, $"Insert entity to repository");
-            if (ObjectMetadata.IsSoftDeleted) (entity as ISoftDelete).Deleted = false;
+            if (EntityMetadata.IsSoftDeleted) (entity as ISoftDelete).Deleted = false;
 
             var wrapper = new ServiceResponseWrapper(serviceResponse);
             var dbData = await Repository.Command(r => r.Insert(entity), wrapper);
@@ -79,7 +78,7 @@ namespace AnyService.Services
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Create, entity))
                 return serviceResponse;
-            if (ObjectMetadata.IsCreatableAudit)
+            if (EntityMetadata.IsCreatableAudit)
                 await AuditManager.InsertCreateRecord(entity);
 
             Publish(EventKeys.Create, serviceResponse.Payload);
@@ -124,13 +123,18 @@ namespace AnyService.Services
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Read, id))
                 return serviceResponse;
+            if(EntityMetadata.IsSoftDeleted && !EntityMetadata.ShowSoftDeleted && (data as ISoftDelete).Deleted)
+            {
+                serviceResponse.Result = ServiceResult.BadOrMissingData;
+                return serviceResponse;
+            }
 
             if (data != null && serviceResponse.Result == ServiceResult.NotSet)
             {
                 serviceResponse.Payload = data;
                 serviceResponse.Result = ServiceResult.Ok;
 
-                if (ObjectMetadata.IsReadableAudit)
+                if (EntityMetadata.IsReadableAudit)
                     await AuditManager.InsertReadRecord(data);
 
                 Publish(EventKeys.Read, serviceResponse.Payload);
@@ -169,7 +173,7 @@ namespace AnyService.Services
                 serviceResponse.Payload = pagination;
                 serviceResponse.Result = ServiceResult.Ok;
 
-                if (ObjectMetadata.IsReadableAudit)
+                if (EntityMetadata.IsReadableAudit)
                     await AuditManager.InsertReadRecord(pagination);
 
                 Publish(EventKeys.Read, serviceResponse.Payload);
@@ -244,7 +248,7 @@ namespace AnyService.Services
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Update, id))
                 return serviceResponse;
 
-            if (ObjectMetadata.IsSoftDeleted && (dbEntry as ISoftDelete).Deleted)
+            if (EntityMetadata.IsSoftDeleted && (dbEntry as ISoftDelete).Deleted)
             {
                 Logger.LogDebug(LoggingEvents.Audity, "entity already deleted");
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
@@ -267,7 +271,7 @@ namespace AnyService.Services
             //    await UploadFiles(fileContainer, serviceResponse);
             //}
 
-            if (ObjectMetadata.IsUpdatableAudit)
+            if (EntityMetadata.IsUpdatableAudit)
                 await AuditManager.InsertUpdatedRecord(dbEntry, entity);
 
             Publish(EventKeys.Update, serviceResponse.Payload);
@@ -293,14 +297,14 @@ namespace AnyService.Services
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Delete, id))
                 return serviceResponse;
 
-            if (ObjectMetadata.IsSoftDeleted && (dbEntry as ISoftDelete).Deleted)
+            if (EntityMetadata.IsSoftDeleted && (dbEntry as ISoftDelete).Deleted)
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Entity already deleted");
 
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Prepare for deletion");
             await ModelPreparar.PrepareForDelete(dbEntry);
 
             TDomainObject deletedModel;
-            if (ObjectMetadata.IsSoftDeleted)
+            if (EntityMetadata.IsSoftDeleted)
             {
                 (dbEntry as ISoftDelete).Deleted = true;
                 Logger.LogDebug(LoggingEvents.Repository, $"Repository - soft deletion (update) {nameof(ISoftDelete)} entity");
@@ -315,7 +319,7 @@ namespace AnyService.Services
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Delete, id))
                 return serviceResponse;
 
-            if (ObjectMetadata.IsDeletableAudit)
+            if (EntityMetadata.IsDeletableAudit)
                 await AuditManager.InsertDeletedRecord(dbEntry);
 
             Publish(EventKeys.Delete, serviceResponse.Payload);
