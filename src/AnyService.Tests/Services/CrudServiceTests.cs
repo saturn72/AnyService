@@ -12,6 +12,8 @@ using Microsoft.Extensions.Logging;
 using AnyService.Utilities;
 using AnyService.Services.Preparars;
 using AnyService.Services.Audit;
+using System.Linq;
+
 namespace AnyService.Tests.Services
 {
     public class TestFileContainer : AuditableTestEntity, IFileContainer, ISoftDelete
@@ -541,7 +543,8 @@ Times.Once);
         public static IEnumerable<object[]> GetAll_EmptyQuery_DATA => new[]{
             new object[]{ new Pagination<AuditableTestEntity>() },
             new object[]{ new Pagination<AuditableTestEntity>("") },
-        };[Fact]
+        };
+        [Fact]
         public async Task GetAll_Returns_NullResponseFromDB()
         {
             var model = new AuditableTestEntity();
@@ -561,7 +564,8 @@ Times.Once);
                     EventKeys = ekr,
                     PaginationSettings = new PaginationSettings(),
                 }
-            }; var ff = new Mock<IFilterFactory>();
+            };
+            var ff = new Mock<IFilterFactory>();
             var f = new Func<object, Func<AuditableTestEntity, bool>>(p => (x => x.Id != ""));
             ff.Setup(f => f.GetFilter<AuditableTestEntity>(It.IsAny<string>())).ReturnsAsync(f); var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
@@ -618,12 +622,12 @@ Times.Once);
             sp.Setup(s => s.GetService(typeof(IIdGenerator))).Returns(gn.Object); var cSrv = new CrudService<AuditableTestEntity>(sp.Object, logger.Object);
             var model = new AuditableTestEntity(); var pagination = new Pagination<AuditableTestEntity>("id>0");
             var res = await cSrv.GetAll(pagination); res.Result.ShouldBe(ServiceResult.Error); eb.Verify(e => e.Publish(
-It.Is<string>(s => s == ekr.Read),
-It.Is<DomainEventData>(ed =>
-ed.Data.GetPropertyValueByName<Pagination<AuditableTestEntity>>("incomingObject") == pagination &&
-ed.Data.GetPropertyValueByName<object>("exceptionId") == exId &&
-ed.PerformedByUserId == wc.CurrentUserId)),
-Times.Once);
+                It.Is<string>(s => s == ekr.Read),
+                It.Is<DomainEventData>(ed =>
+                ed.Data.GetPropertyValueByName<Pagination<AuditableTestEntity>>("incomingObject") == pagination &&
+                ed.Data.GetPropertyValueByName<object>("exceptionId") == exId &&
+                ed.PerformedByUserId == wc.CurrentUserId)),
+                Times.Once);
         }
         [Fact]
         public async Task GetAll_ReturnesResponseFromDB()
@@ -665,6 +669,101 @@ Times.Once);
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == ekr.Read),
                 It.Is<DomainEventData>(ed => ed.Data == paginate && ed.PerformedByUserId == wc.CurrentUserId)), Times.Once);
+        }
+        [Fact]
+        public async Task GetAll_ReturnsDeletedByConfiguration_DoShowDeleted_QueryRepository_With_Deleted()
+        {
+            var sp = new Mock<IServiceProvider>();
+            var data = new[]
+            {
+                new SoftDeleteEntity { Id = "a", Deleted = true },
+                new SoftDeleteEntity { Id = "b", },
+                new SoftDeleteEntity { Id = "c", Deleted = true },
+                new SoftDeleteEntity { Id = "d", },
+            };
+            var repo = new Mock<IRepository<SoftDeleteEntity>>();
+            repo.Setup(r => r.GetAll(It.IsAny<Pagination<SoftDeleteEntity>>())).ReturnsAsync(data);
+            sp.Setup(s => s.GetService(typeof(IRepository<SoftDeleteEntity>))).Returns(repo.Object);
+
+            var v = new Mock<CrudValidatorBase<SoftDeleteEntity>>();
+            v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<SoftDeleteEntity>>(), It.IsAny<ServiceResponse<Pagination<SoftDeleteEntity>>>()))
+               .ReturnsAsync(true);
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<SoftDeleteEntity>))).Returns(v.Object);
+
+            var eb = new Mock<IEventBus>();
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(SoftDeleteEntity),
+                    EventKeys = new EventKeyRecord(null, "read", null, null),
+                    ShowSoftDelete = true,
+                }
+            };
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+
+            var ff = new Mock<IFilterFactory>();
+            sp.Setup(s => s.GetService(typeof(IFilterFactory))).Returns(ff.Object);
+
+            var logger = new Mock<ILogger<CrudService<SoftDeleteEntity>>>();
+            var cSrv = new CrudService<SoftDeleteEntity>(sp.Object, logger.Object);
+            var p = new Pagination<SoftDeleteEntity>(sde => sde.Id.HasValue());
+            var res = await cSrv.GetAll(p);
+
+            repo.Verify(r => r.GetAll(It.Is<Pagination<SoftDeleteEntity>>(p => data.Where(p.QueryFunc).Count() == data.Length)),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetAll_ReturnsDeletedByConfiguration_DoNotShowDeleted_QueryRepository_Without_Deleted()
+        {
+            var sp = new Mock<IServiceProvider>();
+
+            var data = new[]
+           {
+                new SoftDeleteEntity { Id = "a", Deleted = true },
+                new SoftDeleteEntity { Id = "b", },
+                new SoftDeleteEntity { Id = "c", Deleted = true },
+                new SoftDeleteEntity { Id = "d", },
+            };
+            var repo = new Mock<IRepository<SoftDeleteEntity>>();
+            repo.Setup(r => r.GetAll(It.IsAny<Pagination<SoftDeleteEntity>>())).ReturnsAsync(data);
+            sp.Setup(s => s.GetService(typeof(IRepository<SoftDeleteEntity>))).Returns(repo.Object);
+
+            var v = new Mock<CrudValidatorBase<SoftDeleteEntity>>();
+            v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<SoftDeleteEntity>>(), It.IsAny<ServiceResponse<Pagination<SoftDeleteEntity>>>()))
+               .ReturnsAsync(true);
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<SoftDeleteEntity>))).Returns(v.Object);
+
+            var eb = new Mock<IEventBus>();
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(SoftDeleteEntity),
+                    EventKeys = new EventKeyRecord(null, "read", null, null),
+                }
+            };
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+
+            var ff = new Mock<IFilterFactory>();
+            sp.Setup(s => s.GetService(typeof(IFilterFactory))).Returns(ff.Object);
+
+            var logger = new Mock<ILogger<CrudService<SoftDeleteEntity>>>();
+            var cSrv = new CrudService<SoftDeleteEntity>(sp.Object, logger.Object);
+
+            var p = new Pagination<SoftDeleteEntity>(sde => sde.Id.HasValue());
+            var res = await cSrv.GetAll(p);
+
+            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
+            repo.Verify(r => r.GetAll(It.Is<Pagination<SoftDeleteEntity>>(p => data.Where(p.QueryFunc).All(d => !d.Deleted))),
+                    Times.Once);
         }
         #endregion
         #region Update

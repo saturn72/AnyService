@@ -123,7 +123,7 @@ namespace AnyService.Services
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Read, id))
                 return serviceResponse;
-            if(EntityMetadata.IsSoftDeleted && !EntityMetadata.ShowSoftDeleted && (data as ISoftDelete).Deleted)
+            if (!EntityMetadata.ShowSoftDeleted && (data as ISoftDelete).Deleted)
             {
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
                 return serviceResponse;
