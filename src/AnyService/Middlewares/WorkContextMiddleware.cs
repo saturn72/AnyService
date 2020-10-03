@@ -78,7 +78,7 @@ namespace AnyService.Middlewares
         {
             var res = new Dictionary<string, EntityConfigRecord>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var ecr in entityConfigRecords)
-                res[ecr.ControllerSettings.Route] = ecr;
+                res[ecr.EndpointSettings.Route] = ecr;
             return res;
         }
         private IReadOnlyDictionary<string, bool> ToActivationMaps(IEnumerable<EntityConfigRecord> entityConfigRecords)
@@ -87,10 +87,10 @@ namespace AnyService.Middlewares
             foreach (var ecr in entityConfigRecords)
             {
                 var name = ecr.Name;
-                res[string.Format(MapKeyFormat, name, "post")] = ecr.ControllerSettings.PostSettings.Active;
-                res[string.Format(MapKeyFormat, name, "get")] = ecr.ControllerSettings.GetSettings.Active;
-                res[string.Format(MapKeyFormat, name, "put")] = ecr.ControllerSettings.PutSettings.Active;
-                res[string.Format(MapKeyFormat, name, "delete")] = ecr.ControllerSettings.DeleteSettings.Active;
+                res[string.Format(MapKeyFormat, name, "post")] = ecr.EndpointSettings.PostSettings.Active;
+                res[string.Format(MapKeyFormat, name, "get")] = ecr.EndpointSettings.GetSettings.Active;
+                res[string.Format(MapKeyFormat, name, "put")] = ecr.EndpointSettings.PutSettings.Active;
+                res[string.Format(MapKeyFormat, name, "delete")] = ecr.EndpointSettings.DeleteSettings.Active;
             }
             return res;
         }
@@ -113,7 +113,7 @@ namespace AnyService.Middlewares
             {
                 Path = path,
                 Method = httpContext.Request.Method,
-                RequesteeId = GetRequesteeId(ecr.ControllerSettings.Route, path),
+                RequesteeId = GetRequesteeId(ecr.EndpointSettings.Route, path),
                 Parameters = httpContext.Request.Query?.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)).ToArray()
             };
             _logger.LogDebug(LoggingEvents.WorkContext, $"Parsed requestInfo: {reqInfo.ToJsonString()}");

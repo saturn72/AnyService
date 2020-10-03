@@ -18,13 +18,13 @@ namespace AnyService.Tests.Middlewares
             var logger = new Mock<ILogger<WorkContextMiddleware>>();
             var ecr = new EntityConfigRecord
             {
-                ControllerSettings = new ControllerSettings
+                EndpointSettings = new EndpointSettings
                 {
                     Route = "/some-resource",
-                    PostSettings = new ControllerMethodSettings { Active = true },
-                    GetSettings = new ControllerMethodSettings { Active = false },
-                    PutSettings = new ControllerMethodSettings { Active = false },
-                    DeleteSettings = new ControllerMethodSettings { Active = true },
+                    PostSettings = new EndpointMethodSettings { Active = true },
+                    GetSettings = new EndpointMethodSettings { Active = false },
+                    PutSettings = new EndpointMethodSettings { Active = false },
+                    DeleteSettings = new EndpointMethodSettings { Active = true },
                 },
                 Type = typeof(string),
             };
@@ -54,13 +54,13 @@ namespace AnyService.Tests.Middlewares
             var ecr = new EntityConfigRecord
             {
                 Name = "nane",
-                ControllerSettings = new ControllerSettings
+                EndpointSettings = new EndpointSettings
                 {
                     Route = route,
-                    PostSettings = new ControllerMethodSettings { Active = true },
-                    GetSettings = new ControllerMethodSettings { Active = true },
-                    PutSettings = new ControllerMethodSettings { Active = true },
-                    DeleteSettings = new ControllerMethodSettings { Active = true },
+                    PostSettings = new EndpointMethodSettings { Active = true },
+                    GetSettings = new EndpointMethodSettings { Active = true },
+                    PutSettings = new EndpointMethodSettings { Active = true },
+                    DeleteSettings = new EndpointMethodSettings { Active = true },
                 },
                 Type = typeof(string),
             };
@@ -98,12 +98,12 @@ namespace AnyService.Tests.Middlewares
             var e = new EntityConfigRecord
             {
                 Name = "name",
-                ControllerSettings = new ControllerSettings
+                EndpointSettings = new EndpointSettings
                 {
-                    PostSettings = new ControllerMethodSettings { Active = true },
-                    GetSettings = new ControllerMethodSettings { Active = false },
-                    PutSettings = new ControllerMethodSettings { Active = false },
-                    DeleteSettings = new ControllerMethodSettings { Active = true },
+                    PostSettings = new EndpointMethodSettings { Active = true },
+                    GetSettings = new EndpointMethodSettings { Active = false },
+                    PutSettings = new EndpointMethodSettings { Active = false },
+                    DeleteSettings = new EndpointMethodSettings { Active = true },
                 }
             };
             var wcmt = new WorkContextMiddleware_ForTests(new[] { e });

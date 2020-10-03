@@ -14,7 +14,7 @@ namespace AnyService.Endpoints
 
             foreach (var cr in configRecords)
             {
-                var cs = cr.ControllerSettings;
+                var cs = cr.EndpointSettings;
                 if (cs.Area.HasValue())
                 {
                     builder.MapAreaControllerRoute(cr.Name, cs.Area, cs.Route);

@@ -49,7 +49,7 @@ namespace Microsoft.Extensions.DependencyInjection
             // services.
             services.AddSingleton(config.EntityConfigRecords);
             //mappers
-            var mappers = config.EntityConfigRecords.Select(t => t.ControllerSettings.ResponseMapperType).ToArray();
+            var mappers = config.EntityConfigRecords.Select(t => t.EndpointSettings.ResponseMapperType).ToArray();
             foreach (var m in mappers)
                 services.TryAddSingleton(m);
 
@@ -100,7 +100,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddScoped(sp =>
             {
                 var wc = sp.GetService<WorkContext>();
-                var mt = wc.CurrentEntityConfigRecord?.ControllerSettings.ResponseMapperType ?? config.ServiceResponseMapperType;
+                var mt = wc.CurrentEntityConfigRecord?.EndpointSettings.ResponseMapperType ?? config.ServiceResponseMapperType;
                 return sp.GetService(mt) as IServiceResponseMapper;
             });
 
@@ -125,13 +125,13 @@ namespace Microsoft.Extensions.DependencyInjection
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
 
-                ecr.Name ??= ecr.ControllerSettings != null && ecr.ControllerSettings.Area.HasValue() ?
-                    $"{ecr.ControllerSettings?.Area}_{ecr.Type.Name}" :
+                ecr.Name ??= ecr.EndpointSettings != null && ecr.EndpointSettings.Area.HasValue() ?
+                    $"{ecr.EndpointSettings?.Area}_{ecr.Type.Name}" :
                     ecr.Type.Name;
 
                 var hasDuplication = temp.Where(e => e.Name == ecr.Name);
                 if (hasDuplication.Count() > 1)
-                    throw new InvalidOperationException($"Duplication in {nameof(EntityConfigRecord.Name)} field : {ecr.Name}. Please provide unique name for the controller. See configured entities where Routes equals {hasDuplication.First().ControllerSettings.Route} and {hasDuplication.Last().ControllerSettings.Route}");
+                    throw new InvalidOperationException($"Duplication in {nameof(EntityConfigRecord.Name)} field : {ecr.Name}. Please provide unique name for the controller. See configured entities where Routes equals {hasDuplication.First().EndpointSettings.Route} and {hasDuplication.Last().EndpointSettings.Route}");
 
                 ecr.EventKeys ??= ekr;
                 ecr.PermissionRecord ??= pr;
@@ -141,7 +141,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 ecr.ModelPrepararType ??= config.ModelPrepararType;
 
                 ecr.AuditSettings = NormalizeAudity(ecr, config.AuditSettings);
-                ecr.ControllerSettings = NormalizeControllerSettings(ecr, config);
+                ecr.EndpointSettings = NormalizeControllerSettings(ecr, config);
 
                 if (ecr.CrudValidatorType != null)
                 {
@@ -158,11 +158,11 @@ namespace Microsoft.Extensions.DependencyInjection
             config.EntityConfigRecords = temp;
         }
 
-        private static ControllerSettings NormalizeControllerSettings(EntityConfigRecord ecr, AnyServiceConfig config)
+        private static EndpointSettings NormalizeControllerSettings(EntityConfigRecord ecr, AnyServiceConfig config)
         {
-            var settings = ecr.ControllerSettings;
+            var settings = ecr.EndpointSettings;
             if (settings == null)
-                settings = new ControllerSettings();
+                settings = new EndpointSettings();
             if (!settings.Route.HasValue)
             {
                 var areaPrefix = settings.Area.HasValue() ? $"{settings.Area}/" : "";
@@ -190,9 +190,9 @@ namespace Microsoft.Extensions.DependencyInjection
             return settings;
         }
 
-        private static void BuildControllerMethodSettings(ControllerSettings settings, EntityConfigRecord ecr)
+        private static void BuildControllerMethodSettings(EndpointSettings settings, EntityConfigRecord ecr)
         {
-            var defaultControllerMethodSettings = new ControllerMethodSettings { Active = true };
+            var defaultControllerMethodSettings = new EndpointMethodSettings { Active = true };
             settings.PostSettings ??= defaultControllerMethodSettings;
             settings.GetSettings ??= defaultControllerMethodSettings;
             settings.PutSettings ??= defaultControllerMethodSettings;
@@ -206,7 +206,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentException($"Invalid operation: {nameof(EntityConfigRecord)} named {ecr.Name} has all httpMethods deactivated");
         }
 
-        private static Type BuildController(Type entityType, ControllerSettings settings)
+        private static Type BuildController(Type entityType, EndpointSettings settings)
         {
             var mapToType = settings.MapToType;
             var isParent = mapToType.GetInterfaces()

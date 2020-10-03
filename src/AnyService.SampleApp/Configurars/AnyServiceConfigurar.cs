@@ -17,7 +17,7 @@ namespace AnyService.SampleApp.Configurars
                     new EntityConfigRecord
                     {
                         Type = typeof(Category),
-                        ControllerSettings = new ControllerSettings
+                        EndpointSettings = new EndpointSettings
                         {
                             Area = "admin"
                         }
@@ -26,7 +26,7 @@ namespace AnyService.SampleApp.Configurars
                     {
                         Type = typeof(Category),
                         ShowSoftDelete = true,
-                        ControllerSettings = new ControllerSettings
+                        EndpointSettings = new EndpointSettings
                         {
                             MapToType = typeof(CategoryModel)
                         }
@@ -34,7 +34,7 @@ namespace AnyService.SampleApp.Configurars
                     new EntityConfigRecord
                     {
                         Type = typeof(Product),
-                        ControllerSettings = new ControllerSettings
+                        EndpointSettings = new EndpointSettings
                         {
                             MapToType = typeof(ProductModel)
                         }
@@ -50,7 +50,7 @@ namespace AnyService.SampleApp.Configurars
                     new EntityConfigRecord
                     {
                         Type =   typeof(Stock),
-                        ControllerSettings = new ControllerSettings
+                        EndpointSettings = new EndpointSettings
                         {Authorization = new AuthorizationInfo
                         {
                             ControllerAuthorizationNode = new AuthorizationNode{Roles = new[]{"some-role"}}
@@ -59,7 +59,7 @@ namespace AnyService.SampleApp.Configurars
                     new EntityConfigRecord
                     {
                         Type = typeof(Dependent2),
-                        ControllerSettings = new ControllerSettings
+                        EndpointSettings = new EndpointSettings
                         {
                             Route = "/api/d/",
                         },
@@ -72,7 +72,7 @@ namespace AnyService.SampleApp.Configurars
                     },
                     new EntityConfigRecord
                     {
-                        ControllerSettings = new ControllerSettings
+                        EndpointSettings = new EndpointSettings
                         {
                             Route = "/v1/my-great-route",
                             ControllerType = typeof(CustomController),
@@ -88,12 +88,12 @@ namespace AnyService.SampleApp.Configurars
                     {
                         Type = typeof(CustomModel),
                         Name = "method_not_allowed",
-                        ControllerSettings = new ControllerSettings
+                        EndpointSettings = new EndpointSettings
                         {
                             Route = "/api/na",
-                            PostSettings = new ControllerMethodSettings{Active = false },
-                            PutSettings = new ControllerMethodSettings{Active = false },
-                            DeleteSettings = new ControllerMethodSettings{Active = false },
+                            PostSettings = new EndpointMethodSettings{Active = false },
+                            PutSettings = new EndpointMethodSettings{Active = false },
+                            DeleteSettings = new EndpointMethodSettings{Active = false },
                         }
                     },
                 }

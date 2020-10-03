@@ -33,13 +33,13 @@ namespace AnyService
             {
                 foreach (var r in records)
                 {
-                    var mtt = r.ControllerSettings.MapToType;
+                    var mtt = r.EndpointSettings.MapToType;
                     if (mtt != r.Type)
-                        cfg.CreateMap(r.Type, r.ControllerSettings.MapToType);
+                        cfg.CreateMap(r.Type, r.EndpointSettings.MapToType);
 
-                    var pType = r.ControllerSettings.MapToPaginationType;
+                    var pType = r.EndpointSettings.MapToPaginationType;
                     if (pType != typeof(Pagination<>).MakeGenericType(mtt) || pType != typeof(PaginationModel<>).MakeGenericType(mtt))
-                        cfg.CreateMap(typeof(Pagination<>).MakeGenericType(mtt), r.ControllerSettings.MapToPaginationType);
+                        cfg.CreateMap(typeof(Pagination<>).MakeGenericType(mtt), r.EndpointSettings.MapToPaginationType);
                 }
             };
         }

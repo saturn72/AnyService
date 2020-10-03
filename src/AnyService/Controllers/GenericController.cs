@@ -52,8 +52,8 @@ namespace AnyService.Controllers
 
             _curTypeName = _workContext.CurrentEntityConfigRecord.Name;
             _curType = _workContext.CurrentEntityConfigRecord.Type;
-            _mapToType = _workContext.CurrentEntityConfigRecord.ControllerSettings.MapToType;
-            _mapToPageType = _workContext.CurrentEntityConfigRecord.ControllerSettings.MapToPaginationType;
+            _mapToType = _workContext.CurrentEntityConfigRecord.EndpointSettings.MapToType;
+            _mapToPageType = _workContext.CurrentEntityConfigRecord.EndpointSettings.MapToPaginationType;
             _shouldMap = _curType != _mapToType;
         }
         #endregion

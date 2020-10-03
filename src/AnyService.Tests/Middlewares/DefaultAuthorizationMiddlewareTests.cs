@@ -48,7 +48,7 @@ namespace AnyService.Tests.Middlewares
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
-                    ControllerSettings = new ControllerSettings
+                    EndpointSettings = new EndpointSettings
                     {
                         Route = "/test",
                         Authorization = new AuthorizationInfo
@@ -96,7 +96,7 @@ namespace AnyService.Tests.Middlewares
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
-                    ControllerSettings = new ControllerSettings
+                    EndpointSettings = new EndpointSettings
                     {
                         Route = "/test",
                         Authorization = new AuthorizationInfo

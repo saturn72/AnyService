@@ -57,7 +57,7 @@ namespace AnyService
         /// <summary>
         /// Gets or sets the object that sets up entity controller's behavior
         /// </summary>
-        public ControllerSettings ControllerSettings { get; set; }
+        public EndpointSettings EndpointSettings { get; set; }
         public Type CrudValidatorType { get; set; }
         /// <summary>
         /// Gets or sets paginate default settings

@@ -1,6 +1,6 @@
 ﻿namespace AnyService
 {
-    public sealed class ControllerMethodSettings
+    public sealed class EndpointMethodSettings
     {
         public bool Active { get; set; }
     }

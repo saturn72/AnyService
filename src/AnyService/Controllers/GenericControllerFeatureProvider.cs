@@ -22,7 +22,7 @@ namespace AnyService.Controllers
             var ecrm = _serviceProvider.GetService<IEnumerable<EntityConfigRecord>>();
             
             var controllersToAdd = ecrm
-                .Select(e => e.ControllerSettings.ControllerType)
+                .Select(e => e.EndpointSettings.ControllerType)
                 .Where(ct => existsControllers.All(c => c != ct));
 
             foreach (var cta in controllersToAdd)

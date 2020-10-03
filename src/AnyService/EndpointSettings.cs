@@ -3,7 +3,7 @@ using System;
 
 namespace AnyService
 {
-    public sealed class ControllerSettings
+    public sealed class EndpointSettings
     {
         /// <summary>
         /// Gets or sets value indicating whether the get operation is public to all users or just to the creator
@@ -19,10 +19,10 @@ namespace AnyService
         public PathString Route { get; set; }
         public Type MapToType { get; set; }
         public Type MapToPaginationType { get; set; }
-        public ControllerMethodSettings PostSettings { get; set; }
-        public ControllerMethodSettings GetSettings { get; set; }
-        public ControllerMethodSettings PutSettings { get; set; }
-        public ControllerMethodSettings DeleteSettings { get; set; }
+        public EndpointMethodSettings PostSettings { get; set; }
+        public EndpointMethodSettings GetSettings { get; set; }
+        public EndpointMethodSettings PutSettings { get; set; }
+        public EndpointMethodSettings DeleteSettings { get; set; }
         public bool Active { get; set; } = true;
     }
 }

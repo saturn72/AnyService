@@ -26,9 +26,9 @@ namespace AnyService.Controllers
 
             //can be removed?
             //var ecr = ecrm.FirstOrDefault(t => t.Type == entityType && t.ControllerSettings.ControllerType == controller.ControllerType);
-            var ecr = ecrm.FirstOrDefault(t => t.ControllerSettings.ControllerType == controller.ControllerType);
+            var ecr = ecrm.FirstOrDefault(t => t.EndpointSettings.ControllerType == controller.ControllerType);
 
-            controller.ControllerName = ecr.ControllerSettings.Route.Value ?? entityType.Name;
+            controller.ControllerName = ecr.EndpointSettings.Route.Value ?? entityType.Name;
         }
     }
 }
