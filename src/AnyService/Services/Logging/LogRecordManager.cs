@@ -66,7 +66,7 @@ namespace AnyService.Services.Logging
                  }) :
                  null;
 
-            return logRecordIdQuery.AndAlso(
+            var q = logRecordIdQuery.AndAlso(
                 logLevelQuery,
                 userIdQuery,
                 clientIdQuery,
@@ -79,6 +79,7 @@ namespace AnyService.Services.Logging
                 requestPathQuery,
                 fromUtcQuery,
                 toUtcQuery);
+            return q ?? new Func<LogRecord, bool>(x => true);
 
             Func<LogRecord, bool> getCollectionOrContainuationQuery(IEnumerable<string> contains, IEnumerable<string> collection, Func<LogRecord, string> propertyValue)
             {

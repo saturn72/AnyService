@@ -82,7 +82,7 @@ namespace AnyService.Services.Audit
                     DateTime.TryParse(c.CreatedOnUtc, out DateTime value);
                     return value.ToUniversalTime() <= pagination.ToUtc;
                 }) : null;
-            return auditRecordIds.AndAlso(
+            var q = auditRecordIds.AndAlso(
                     entityIdsQuery,
                     auditRecordsQuery,
                     entityNamesQuery,
@@ -90,6 +90,7 @@ namespace AnyService.Services.Audit
                     clientIdsQuery,
                     fromUtcQuery,
                     toUtcQuery);
+            return q ?? new Func<AuditRecord, bool>(x => true);
 
             Func<AuditRecord, bool> getCollectionQuery(IEnumerable<string> collection, Func<AuditRecord, string> propertyValue)
             {
