@@ -18,6 +18,7 @@ namespace AnyService.Services
     {
         #region fields
         private static readonly object lockObj = new object();
+        private static readonly Func<ISoftDelete, bool> HideSoftDeletedFunc = x => !x.Deleted;
 
         protected readonly AnyServiceConfig Config;
         protected readonly IRepository<TDomainObject> Repository;
@@ -221,6 +222,8 @@ namespace AnyService.Services
             }
 
             if (p.QueryFunc == null) return null;
+            if (!EntityMetadata.ShowSoftDeleted && EntityMetadata.IsSoftDeleted)
+                p.QueryFunc = x => HideSoftDeletedFunc(x as ISoftDelete) && p.QueryFunc(x);
 
             var paginationSettings = WorkContext.CurrentEntityConfigRecord.PaginationSettings;
             p.OrderBy ??= paginationSettings.DefaultOrderBy;
