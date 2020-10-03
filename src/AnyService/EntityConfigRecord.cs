@@ -23,7 +23,7 @@ namespace AnyService
             set
             {
                 _type = value;
-                Metadata = new DomainEntityMetadata(_type, ShowSoftDelete);
+                Metadata = new DomainEntityMetadata(_type, _showSoftDelete);
             }
         }
         /// <summary>
@@ -41,8 +41,8 @@ namespace AnyService
             set
             {
                 _showSoftDelete = value;
-                if (Type != null)
-                    Metadata = new DomainEntityMetadata(Type, ShowSoftDelete);
+                if (_type != null)
+                    Metadata = new DomainEntityMetadata(_type, _showSoftDelete);
             }
         }
         /// <summary>

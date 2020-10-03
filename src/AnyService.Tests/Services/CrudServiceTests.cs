@@ -13,7 +13,6 @@ using AnyService.Utilities;
 using AnyService.Services.Preparars;
 using AnyService.Services.Audit;
 using System.Linq;
-using System.Net.WebSockets;
 
 namespace AnyService.Tests.Services
 {
