@@ -5,8 +5,7 @@ using Xunit;
 
 namespace AnyService.Tests.IntegrationTests
 {
-    public abstract class IntegrationTestsBase
-        : IClassFixture<WebApplicationFactory<Startup>>
+    public abstract class IntegrationTestsBase : IClassFixture<WebApplicationFactory<Startup>>
     {
         private readonly WebApplicationFactory<Startup> _factory;
         protected HttpClient Client;

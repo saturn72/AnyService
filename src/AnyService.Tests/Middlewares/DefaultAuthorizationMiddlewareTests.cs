@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AnyService.Middlewares;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -40,9 +41,9 @@ namespace AnyService.Tests.Middlewares
             var logger = new Mock<ILogger<DefaultAuthorizationMiddleware>>();
             var mw = new DefaultAuthorizationMiddleware(null, logger.Object);
 
-            var an = new AuthorizationNode
+            var an = new AuthorizeAttribute
             {
-                Roles = new[] { "role-1" },
+                Roles = "role-1",
             };
             var wc = new WorkContext
             {
@@ -51,10 +52,7 @@ namespace AnyService.Tests.Middlewares
                     EndpointSettings = new EndpointSettings
                     {
                         Route = "/test",
-                        Authorization = new AuthorizationInfo
-                        {
-                            GetAuthorizationNode = an
-                        }
+                        GetSettings = new EndpointMethodSettings { Authorization = an }
                     }
                 }
             };
@@ -88,9 +86,9 @@ namespace AnyService.Tests.Middlewares
             var logger = new Mock<ILogger<DefaultAuthorizationMiddleware>>();
             var mw = new DefaultAuthorizationMiddleware(reqDel, logger.Object);
             var role = "role-1";
-            var an = new AuthorizationNode
+            var an = new AuthorizeAttribute
             {
-                Roles = new[] { role },
+                Roles = role,
             };
             var wc = new WorkContext
             {
@@ -99,10 +97,7 @@ namespace AnyService.Tests.Middlewares
                     EndpointSettings = new EndpointSettings
                     {
                         Route = "/test",
-                        Authorization = new AuthorizationInfo
-                        {
-                            GetAuthorizationNode = an
-                        }
+                        GetSettings = new EndpointMethodSettings { Authorization = an }
                     }
                 }
             };

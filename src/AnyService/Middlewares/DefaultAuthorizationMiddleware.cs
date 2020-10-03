@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AnyService.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -13,16 +15,15 @@ namespace AnyService.Middlewares
     {
         private readonly ILogger<DefaultAuthorizationMiddleware> _logger;
         private readonly RequestDelegate _next;
-        private static readonly IDictionary<string, Func<ClaimsPrincipal, bool>> AuthorizationWorkers
-            = new Dictionary<string, Func<ClaimsPrincipal, bool>>(StringComparer.CurrentCultureIgnoreCase);
-        private static readonly IReadOnlyDictionary<string, Func<AuthorizationInfo, AuthorizationNode>> HttpMethodToAuthorizationNode = new Dictionary<string, Func<AuthorizationInfo, AuthorizationNode>>(StringComparer.CurrentCultureIgnoreCase)
+        private static readonly ConcurrentDictionary<string, Func<ClaimsPrincipal, bool>> AuthorizationWorkers
+            = new ConcurrentDictionary<string, Func<ClaimsPrincipal, bool>>(StringComparer.CurrentCultureIgnoreCase);
+        private static readonly IReadOnlyDictionary<string, Func<EndpointSettings, AuthorizeAttribute>> HttpMethodToAuthorizeAttribute = new Dictionary<string, Func<EndpointSettings, AuthorizeAttribute>>(StringComparer.CurrentCultureIgnoreCase)
         {
-            { "post", ai => ai.PostAuthorizationNode},
-            { "get",ai =>ai.GetAuthorizationNode},
-            { "put",ai => ai.PutAuthorizationNode},
-            { "delete",ai =>  ai.DeleteAuthorizationNode},
+            { "post", es => es.PostSettings.Authorization},
+            { "get",es =>es.GetSettings.Authorization },
+            { "put",es => es.PutSettings.Authorization},
+            { "delete",es =>  es.DeleteSettings.Authorization},
         };
-        private static readonly object lockObj = new object();
         public DefaultAuthorizationMiddleware(RequestDelegate next, ILogger<DefaultAuthorizationMiddleware> logger)
         {
             _logger = logger;
@@ -41,12 +42,9 @@ namespace AnyService.Middlewares
             var key = $"{entityConfig.EndpointSettings.Route}_{currentHttpMethod}";
             if (!AuthorizationWorkers.TryGetValue(key, out Func<ClaimsPrincipal, bool> worker))
             {
-                var an = HttpMethodToAuthorizationNode[currentHttpMethod](entityConfig.EndpointSettings.Authorization);
-                worker = cp => an.Roles.Any(r => cp.IsInRole(r));
-                lock (lockObj)
-                {
-                    AuthorizationWorkers[key] = worker;
-                }
+                var aa = HttpMethodToAuthorizeAttribute[currentHttpMethod](entityConfig.EndpointSettings);
+                worker = cp => aa.Roles.Any(r => cp.IsInRole(r));
+                AuthorizationWorkers.TryAdd(key, worker);
             }
 
             if (!worker(httpContext.User))
@@ -56,7 +54,6 @@ namespace AnyService.Middlewares
             }
             await _next(httpContext);
             _logger.LogDebug(LoggingEvents.Authorization, "End middleware invokation");
-
         }
     }
 }

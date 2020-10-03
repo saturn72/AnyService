@@ -2,6 +2,7 @@
 using AnyService.SampleApp.Entities;
 using AnyService.SampleApp.Models;
 using AnyService.SampleApp.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AnyService.SampleApp.Configurars
@@ -51,10 +52,9 @@ namespace AnyService.SampleApp.Configurars
                     {
                         Type =   typeof(Stock),
                         EndpointSettings = new EndpointSettings
-                        {Authorization = new AuthorizationInfo
                         {
-                            ControllerAuthorizationNode = new AuthorizationNode{Roles = new[]{"some-role"}}
-                        } }
+                            Authorization = new AuthorizeAttribute{Roles = "some-role"}
+                        }
                     },
                     new EntityConfigRecord
                     {

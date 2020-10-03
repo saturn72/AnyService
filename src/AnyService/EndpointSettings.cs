@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using System;
 
 namespace AnyService
@@ -10,7 +11,7 @@ namespace AnyService
         /// </summary>
         public bool PublicGet { get; set; }
         public Type ResponseMapperType { get; set; }
-        public AuthorizationInfo Authorization { get; set; }
+        public AuthorizeAttribute Authorization { get; set; }
         public Type ControllerType { get; set; }
         public string Area { get; set; }
         /// <summary>

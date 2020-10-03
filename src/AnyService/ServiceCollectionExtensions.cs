@@ -17,6 +17,7 @@ using AnyService.Services.Preparars;
 using AnyService.Audity;
 using AnyService.Services.Logging;
 using AnyService.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -175,10 +176,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
             settings.ResponseMapperType ??= config.ServiceResponseMapperType;
             ValidateType<IServiceResponseMapper>(settings.ResponseMapperType);
-
             ValidateType<ControllerBase>(settings.ControllerType);
-
-            settings.Authorization = SetAuthorization(settings.Authorization);
+            SetAuthorization(settings);
 
             settings.MapToType ??= ecr.Type;
             settings.MapToPaginationType ??= typeof(PaginationModel<>).MakeGenericType(settings.MapToType);
@@ -240,29 +239,14 @@ namespace Microsoft.Extensions.DependencyInjection
             if (type != null && !typeof(TService).IsAssignableFrom(type))
                 throw new InvalidOperationException($"{type.Name} must implement {nameof(TService)}");
         }
-
-        private static AuthorizationInfo SetAuthorization(AuthorizationInfo authzInfo)
+        private static void SetAuthorization(EndpointSettings settings)
         {
-            if (authzInfo == null)
-                return null;
+            var ctrlAuthzAttribute = settings.Authorization;
 
-            var ctrlAuthzAttribute = authzInfo.ControllerAuthorizationNode;
-            if (authzInfo.ControllerAuthorizationNode == null &&
-                authzInfo.PostAuthorizationNode == null &&
-                authzInfo.GetAuthorizationNode == null &&
-                authzInfo.PutAuthorizationNode == null &&
-                authzInfo.DeleteAuthorizationNode == null)
-                return null;
-
-            //align authorization with controller's if empty or null
-            if (ctrlAuthzAttribute == null || ctrlAuthzAttribute.Roles.IsNullOrEmpty())
-                ctrlAuthzAttribute = null;
-            if (authzInfo.PostAuthorizationNode == null || authzInfo.PostAuthorizationNode.Roles.IsNullOrEmpty()) authzInfo.PostAuthorizationNode = ctrlAuthzAttribute;
-            if (authzInfo.GetAuthorizationNode == null || authzInfo.GetAuthorizationNode.Roles.IsNullOrEmpty()) authzInfo.GetAuthorizationNode = ctrlAuthzAttribute;
-            if (authzInfo.PutAuthorizationNode == null || authzInfo.PutAuthorizationNode.Roles.IsNullOrEmpty()) authzInfo.PutAuthorizationNode = ctrlAuthzAttribute;
-            if (authzInfo.DeleteAuthorizationNode == null || authzInfo.DeleteAuthorizationNode.Roles.IsNullOrEmpty()) authzInfo.DeleteAuthorizationNode = ctrlAuthzAttribute;
-
-            return authzInfo;
+            settings.PostSettings.Authorization ??= ctrlAuthzAttribute;
+            settings.GetSettings.Authorization ??= ctrlAuthzAttribute;
+            settings.PutSettings.Authorization ??= ctrlAuthzAttribute;
+            settings.DeleteSettings.Authorization ??= ctrlAuthzAttribute;
         }
     }
 }
