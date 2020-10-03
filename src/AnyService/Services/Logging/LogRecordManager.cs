@@ -56,7 +56,7 @@ namespace AnyService.Services.Logging
 
             var fromUtcQuery = pagination.FromUtc != null ?
                 new Func<LogRecord, bool>(c => DateTime.TryParse(c.CreatedOnUtc, out DateTime value) && value.ToUniversalTime() >= pagination.FromUtc) :
-                c => true;
+                null;
 
             var toUtcQuery = pagination.ToUtc != null ?
                  new Func<LogRecord, bool>(c =>
@@ -64,22 +64,21 @@ namespace AnyService.Services.Logging
                      DateTime.TryParse(c.CreatedOnUtc, out DateTime value);
                      return value.ToUniversalTime() <= pagination.ToUtc;
                  }) :
-                 c => true;
+                 null;
 
-            return x =>
-                logRecordIdQuery(x) &&
-                logLevelQuery(x) &&
-                userIdQuery(x) &&
-                clientIdQuery(x) &&
-                exceptionIdQuery(x) &&
-                exceptionRuntimeTypeQuery(x) &&
-                ipAddressQuery(x) &&
-                httpMethodQuery(x) &&
-                exceptionRuntimeMessageQuery(x) &&
-                messageQuery(x) &&
-                requestPathQuery(x) &&
-                fromUtcQuery(x) &&
-                toUtcQuery(x);
+            return logRecordIdQuery.AndAlso(
+                logLevelQuery,
+                userIdQuery,
+                clientIdQuery,
+                exceptionIdQuery,
+                exceptionRuntimeTypeQuery,
+                ipAddressQuery,
+                httpMethodQuery,
+                exceptionRuntimeMessageQuery,
+                messageQuery,
+                requestPathQuery,
+                fromUtcQuery,
+                toUtcQuery);
 
             Func<LogRecord, bool> getCollectionOrContainuationQuery(IEnumerable<string> contains, IEnumerable<string> collection, Func<LogRecord, string> propertyValue)
             {
@@ -98,7 +97,7 @@ namespace AnyService.Services.Logging
             Func<LogRecord, bool> getCollectionQuery(IEnumerable<string> collection, Func<LogRecord, string> propertyValue)
             {
                 return collection.IsNullOrEmpty() ?
-                    c => true :
+                    null :
                     new Func<LogRecord, bool>(c => collection.Contains(propertyValue(c)));
             }
         }

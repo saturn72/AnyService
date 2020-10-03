@@ -71,32 +71,30 @@ namespace AnyService.Services.Audit
             var entityNamesQuery = getCollectionQuery(pagination.EntityNames, a => a.EntityName);
             var userIdsQuery = getCollectionQuery(pagination.UserIds, a => a.UserId);
             var clientIdsQuery = getCollectionQuery(pagination.ClientIds, a => a.ClientId);
-            
+
             var fromUtcQuery = pagination.FromUtc != null ?
                 new Func<AuditRecord, bool>(c => DateTime.TryParse(c.CreatedOnUtc, out DateTime value) && value.ToUniversalTime() >= pagination.FromUtc) :
-                c => true;
+                null;
 
             var toUtcQuery = pagination.ToUtc != null ?
                 new Func<AuditRecord, bool>(c =>
                 {
                     DateTime.TryParse(c.CreatedOnUtc, out DateTime value);
                     return value.ToUniversalTime() <= pagination.ToUtc;
-                }) :
-                c => true;
-            return x =>
-                auditRecordIds(x) &&
-                entityIdsQuery(x) &&
-                auditRecordsQuery(x) &&
-                entityNamesQuery(x) &&
-                userIdsQuery(x) &&
-                clientIdsQuery(x) &&
-                fromUtcQuery(x) &&
-                toUtcQuery(x);
+                }) : null;
+            return auditRecordIds.AndAlso(
+                    entityIdsQuery,
+                    auditRecordsQuery,
+                    entityNamesQuery,
+                    userIdsQuery,
+                    clientIdsQuery,
+                    fromUtcQuery,
+                    toUtcQuery);
 
             Func<AuditRecord, bool> getCollectionQuery(IEnumerable<string> collection, Func<AuditRecord, string> propertyValue)
             {
                 return collection.IsNullOrEmpty() ?
-                    c => true :
+                    null :
                     new Func<AuditRecord, bool>(c => collection.Contains(propertyValue(c)));
             }
         }
