@@ -142,7 +142,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 ecr.ModelPrepararType ??= config.ModelPrepararType;
 
                 ecr.AuditSettings = NormalizeAudity(ecr, config.AuditSettings);
-                ecr.EndpointSettings = NormalizeControllerSettings(ecr, config);
+                ecr.EndpointSettings = NormalizeEndpointSettings(ecr, config);
 
                 if (ecr.CrudValidatorType != null)
                 {
@@ -159,11 +159,12 @@ namespace Microsoft.Extensions.DependencyInjection
             config.EntityConfigRecords = temp;
         }
 
-        private static EndpointSettings NormalizeControllerSettings(EntityConfigRecord ecr, AnyServiceConfig config)
+        private static EndpointSettings NormalizeEndpointSettings(EntityConfigRecord ecr, AnyServiceConfig config)
         {
-            var settings = ecr.EndpointSettings;
-            if (settings == null)
-                settings = new EndpointSettings();
+            var settings = (ecr.EndpointSettings ??= new EndpointSettings());
+            if (settings.Active)
+                BuildControllerMethodSettings(settings, ecr);
+
             if (!settings.Route.HasValue)
             {
                 var areaPrefix = settings.Area.HasValue() ? $"{settings.Area}/" : "";
@@ -184,8 +185,6 @@ namespace Microsoft.Extensions.DependencyInjection
 
             settings.ControllerType ??= BuildController(ecr.Type, settings);
 
-            if (settings.Active)
-                BuildControllerMethodSettings(settings, ecr);
             return settings;
         }
 

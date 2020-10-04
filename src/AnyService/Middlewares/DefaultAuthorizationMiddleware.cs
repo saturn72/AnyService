@@ -43,7 +43,7 @@ namespace AnyService.Middlewares
             if (!AuthorizationWorkers.TryGetValue(key, out Func<ClaimsPrincipal, bool> worker))
             {
                 var aa = HttpMethodToAuthorizeAttribute[currentHttpMethod](entityConfig.EndpointSettings);
-                worker = cp => aa.Roles.Any(r => cp.IsInRole(r));
+                worker = BuildAuthorizeLogic(aa);
                 AuthorizationWorkers.TryAdd(key, worker);
             }
 
@@ -54,6 +54,15 @@ namespace AnyService.Middlewares
             }
             await _next(httpContext);
             _logger.LogDebug(LoggingEvents.Authorization, "End middleware invokation");
+        }
+
+        private Func<ClaimsPrincipal, bool> BuildAuthorizeLogic(AuthorizeAttribute aa)
+        {
+            if (aa.Policy.HasValue())
+                throw new NotImplementedException();
+            var roles = aa.Roles.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
+
+            return cp => roles.Any(r => cp.IsInRole(r));
         }
     }
 }
