@@ -17,7 +17,6 @@ using AnyService.Services.Preparars;
 using AnyService.Audity;
 using AnyService.Services.Logging;
 using AnyService.Models;
-using Microsoft.AspNetCore.Authorization;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

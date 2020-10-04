@@ -11,39 +11,28 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
 {
     public class DataOnlyServiceResponseMapperTests : MappingTest
     {
-        public DataOnlyServiceResponseMapperTests()
+        [Fact]
+        public void ToActionResult_ValidateConvertableItemCount()
         {
             MappingExtensions.Configure(null, c =>
             {
                 c.CreateMap<TestClass1, TestClass2>();
             });
-        }
-        [Fact]
-        public void ToActionResult_ValidateConvertableItemCount()
-        {
             var allSrvResults = ServiceResult.All;
             DataOnlyServiceResponseMapper.ConversionFuncs.Keys.Count().ShouldBe(allSrvResults.Count());
 
             foreach (var sr in allSrvResults)
                 DataOnlyServiceResponseMapper.ConversionFuncs.ContainsKey(sr);
         }
-
-        //[Fact]
-        //public void ToActionResult_InvalidCastThrows()
-        //{
-        //    var serRes = new ServiceResponse<TestClass1>
-        //    {
-        //        Result = ServiceResult.Ok,
-        //        Payload= new TestClass1(),
-        //    };
-        //    var mapper = new DataOnlyServiceResponseMapper();
-        //    Should.Throw(() => mapper.MapServiceResponse<object, TestClass1>(serRes), typeof(InvalidOperationException));
-        //}
-
         [Theory]
         [MemberData(nameof(ReturnExpectedActionResultMember_DATA))]
         public void ReturnExpectedActionResult(string result, TestClass1 payload, string message, Type expectedActionResultType)
         {
+            MappingExtensions.Configure(null, c =>
+            {
+                c.CreateMap<TestClass1, TestClass2>();
+            });
+
             var serRes = new ServiceResponse<TestClass1>
             {
                 Result = result,
