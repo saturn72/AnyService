@@ -11,6 +11,13 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
 {
     public class DataOnlyServiceResponseMapperTests : MappingTest
     {
+        public DataOnlyServiceResponseMapperTests()
+        {
+            MappingExtensions.Configure(null, c =>
+            {
+                c.CreateMap<TestClass1, TestClass2>();
+            });
+        }
         [Fact]
         public void ToActionResult_ValidateConvertableItemCount()
         {
