@@ -14,10 +14,6 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         [Fact]
         public void ToActionResult_ValidateConvertableItemCount()
         {
-            MappingExtensions.Configure(null, c =>
-            {
-                c.CreateMap<TestClass1, TestClass2>();
-            });
             var allSrvResults = ServiceResult.All;
             DataOnlyServiceResponseMapper.ConversionFuncs.Keys.Count().ShouldBe(allSrvResults.Count());
 
@@ -28,11 +24,6 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         [MemberData(nameof(ReturnExpectedActionResultMember_DATA))]
         public void ReturnExpectedActionResult(string result, TestClass1 payload, string message, Type expectedActionResultType)
         {
-            MappingExtensions.Configure(null, c =>
-            {
-                c.CreateMap<TestClass1, TestClass2>();
-            });
-
             var serRes = new ServiceResponse<TestClass1>
             {
                 Result = result,
