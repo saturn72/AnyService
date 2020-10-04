@@ -23,6 +23,7 @@ namespace AnyService.Tests.Middlewares
                 i = expValue;
                 return Task.CompletedTask;
             };
+
             var logger = new Mock<ILogger<DefaultAuthorizationMiddleware>>();
             var mw = new DefaultAuthorizationMiddleware(reqDel, logger.Object);
             await mw.InvokeAsync(null, wc);

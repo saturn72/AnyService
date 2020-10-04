@@ -31,18 +31,22 @@ namespace AnyService.Middlewares
         }
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
         {
-            _logger.LogDebug(LoggingEvents.Authorization, "Start middleware invokation");
-            var entityConfig = workContext?.CurrentEntityConfigRecord;
-            if (entityConfig?.EndpointSettings?.Authorization == null)
+            _logger.LogInformation(LoggingEvents.Authorization, $"Start {nameof(DefaultAuthorizationMiddleware)} invokation");
+            var ecr = workContext?.CurrentEntityConfigRecord;
+
+            if (ecr == null)
             {
+                _logger.LogDebug(LoggingEvents.Authorization, $"No {nameof(EntityConfigRecord)} found in current {nameof(WorkContext)} - invokes {nameof(_next)}");
+
                 await _next(httpContext);
                 return;
             }
+
             var currentHttpMethod = httpContext.Request.Method;
-            var key = $"{entityConfig.EndpointSettings.Route}_{currentHttpMethod}";
+            var key = $"{ecr.EndpointSettings.Route}_{currentHttpMethod}";
             if (!AuthorizationWorkers.TryGetValue(key, out Func<ClaimsPrincipal, bool> worker))
             {
-                var aa = HttpMethodToAuthorizeAttribute[currentHttpMethod](entityConfig.EndpointSettings);
+                var aa = HttpMethodToAuthorizeAttribute[currentHttpMethod](ecr.EndpointSettings);
                 worker = BuildAuthorizeLogic(aa);
                 AuthorizationWorkers.TryAdd(key, worker);
             }
@@ -58,6 +62,9 @@ namespace AnyService.Middlewares
 
         private Func<ClaimsPrincipal, bool> BuildAuthorizeLogic(AuthorizeAttribute aa)
         {
+            if (aa == null)
+                return cp => true;
+
             if (aa.Policy.HasValue())
                 throw new NotImplementedException();
             var roles = aa.Roles.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
