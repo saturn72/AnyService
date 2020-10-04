@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <PackageId>AnyService.EntityFramework</PackageId>
-    <Version>1.0.21-Preview</Version>
+    <Version>1.0.22-Preview</Version>
     <Authors>roi@saturn72.com</Authors>
     <Company>saturn technologies</Company>
   </PropertyGroup>
