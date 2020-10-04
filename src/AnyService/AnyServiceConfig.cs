@@ -37,6 +37,9 @@ namespace AnyService
                     AuditDelete = true,
                 }
             };
+
+            UseLogRecordEndpoint = true;
+            UseErrorEndpointForExceptionHandling = true;
         }
 
         public IEnumerable<EntityConfigRecord> EntityConfigRecords { get; set; }
@@ -71,5 +74,7 @@ namespace AnyService
         /// Gets or sets the sudit config for the entity
         /// </summary>
         public AuditSettings AuditSettings { get; set; }
+        public bool UseLogRecordEndpoint { get; set; }
+        public bool UseErrorEndpointForExceptionHandling { get; set; }
     }
 }

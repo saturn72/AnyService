@@ -29,6 +29,8 @@ namespace AnyService.Tests
             c.AuditSettings.AuditRules.AuditUpdate.ShouldBeTrue();
             c.AuditSettings.AuditRules.AuditDelete.ShouldBeTrue();
             c.ErrorEventKey.ShouldBe(LoggingEvents.UnexpectedException.Name);
+            c.UseErrorEndpointForExceptionHandling.ShouldBeTrue();
+            c.UseLogRecordEndpoint.ShouldBeTrue();
         }
         public void ErrorEventKey_ModfiesErrorControllerEventKey()
         {

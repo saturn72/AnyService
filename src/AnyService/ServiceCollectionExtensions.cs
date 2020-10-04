@@ -17,6 +17,7 @@ using AnyService.Services.Preparars;
 using AnyService.Audity;
 using AnyService.Services.Logging;
 using AnyService.Models;
+using AnyService.Logging;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -117,7 +118,9 @@ namespace Microsoft.Extensions.DependencyInjection
         }
         private static void NormalizeConfiguration(AnyServiceConfig config)
         {
+            AddAnyServiceControllers(config);
             var temp = config.EntityConfigRecords.ToArray();
+
             foreach (var ecr in temp)
             {
                 var e = ecr.Type;
@@ -156,6 +159,36 @@ namespace Microsoft.Extensions.DependencyInjection
                 }
             }
             config.EntityConfigRecords = temp;
+        }
+
+        private static void AddAnyServiceControllers(AnyServiceConfig config)
+        {
+            var list = new List<EntityConfigRecord>(config.EntityConfigRecords);
+            if (config.AuditSettings.Active)
+            {
+                list.Add(new EntityConfigRecord
+                {
+                    Type = typeof(AuditRecord),
+                    EndpointSettings = new EndpointSettings
+                    {
+                        Area = "__anyservice",
+                        ControllerType = typeof(AuditController),
+                    }
+                });
+            }
+            if (config.UseLogRecordEndpoint)
+            {
+                list.Add(new EntityConfigRecord
+                {
+                    Type = typeof(LogRecord),
+                    EndpointSettings = new EndpointSettings
+                    {
+                        Area = "__anyservice",
+                        ControllerType = typeof(LogRecordController),
+                    }
+                });
+            }
+            config.EntityConfigRecords = list;
         }
 
         private static EndpointSettings NormalizeEndpointSettings(EntityConfigRecord ecr, AnyServiceConfig config)
@@ -214,20 +247,19 @@ namespace Microsoft.Extensions.DependencyInjection
                 typeof(GenericParentController<>).MakeGenericType(mapToType) :
                 typeof(GenericController<,>).MakeGenericType(mapToType, entityType);
         }
-
-        private static AuditSettings NormalizeAudity(EntityConfigRecord ecr, AuditSettings serverAuditSettings)
+        private static AuditSettings NormalizeAudity(EntityConfigRecord ecr, AuditSettings auditSettings)
         {
-            if (!serverAuditSettings.Active)
+            if (!auditSettings.Active)
                 return new AuditSettings
                 {
                     AuditRules = new AuditRules()
                 };
 
             return ecr.AuditRules == null ?
-                serverAuditSettings :
+                auditSettings :
                 new AuditSettings
                 {
-                    Active = serverAuditSettings.Active,
+                    Active = auditSettings.Active,
                     AuditRules = ecr.AuditRules,
                 };
         }

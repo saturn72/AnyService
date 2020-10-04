@@ -40,7 +40,7 @@ namespace AnyService.SampleApp
 
             var anyServiceConfig = new AnyServiceConfigurar().Configure(services);
             new AutoMapperServicesConfigurar().Configure(anyServiceConfig);
-          
+
             ConfigureEntityFramework(services);
             ConfigureCaching(services);
         }
@@ -67,8 +67,9 @@ namespace AnyService.SampleApp
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            var services = app.ApplicationServices;
-            app.UseExceptionHandler("/__error");
+            var config = app.ApplicationServices.GetRequiredService<AnyServiceConfig>();
+            if (config.UseErrorEndpointForExceptionHandling)
+                app.UseExceptionHandler("/__error");
             app.UseHsts();
             app.UseHttpsRedirection();
             app.UseAuthentication();
