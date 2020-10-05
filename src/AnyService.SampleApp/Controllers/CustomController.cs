@@ -9,7 +9,7 @@ namespace AnyService.SampleApp.Controllers
     {
 
         [HttpPost]
-        public string Post([FromBody] CustomModel model)
+        public string Post([FromBody] CustomEntity model)
         {
             return model.Value?.ToLower() == "ping" ? "pong" : "not-pong";
         }

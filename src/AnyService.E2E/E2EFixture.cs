@@ -35,7 +35,6 @@ namespace AnyService.E2E
                         builder.AddConsole();
                         builder.AddDebug();
                     });
-
                 });
             })
             .CreateClient();

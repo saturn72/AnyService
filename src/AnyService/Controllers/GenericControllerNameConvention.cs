@@ -11,6 +11,7 @@ namespace AnyService.Controllers
     {
         private static IEnumerable<Type> GenericControllerTypes = new[] { typeof(GenericController<,>), typeof(GenericParentController<>) };
         private static Func<IEnumerable<EntityConfigRecord>> _entityConfigRecordsResolver;
+
         public static void Init(IServiceProvider serviceProvider)
         {
             _entityConfigRecordsResolver = () => serviceProvider.GetService<IEnumerable<EntityConfigRecord>>();
@@ -21,14 +22,15 @@ namespace AnyService.Controllers
             if (!GenericControllerTypes.Contains(genericTypeDefinition))
                 return;
 
-            var entityType = controller.ControllerType.GenericTypeArguments[0];
+            var controllerModelType = controller.ControllerType.GenericTypeArguments[0];
             var ecrm = _entityConfigRecordsResolver();
 
-            //can be removed?
-            //var ecr = ecrm.FirstOrDefault(t => t.Type == entityType && t.ControllerSettings.ControllerType == controller.ControllerType);
-            var ecr = ecrm.FirstOrDefault(t => t.EndpointSettings.ControllerType == controller.ControllerType);
+            var matchEcrs = ecrm.Where(e =>
+                controllerModelType == e.EndpointSettings.MapToType &&
+                e.EndpointSettings.ControllerType == controller.ControllerType);
 
-            controller.ControllerName = ecr.EndpointSettings.Route.Value ?? entityType.Name;
+            foreach (var ecr in matchEcrs)
+                controller.ControllerName = ecr.EndpointSettings.Route.Value ?? controllerModelType.Name;
         }
     }
 }

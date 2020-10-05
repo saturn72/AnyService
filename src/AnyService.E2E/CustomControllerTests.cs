@@ -11,6 +11,7 @@ namespace AnyService.E2E
 {
     public class CustomControllerTests : E2EFixture
     {
+        private const string URI = "v1/my-great-route";
         public CustomControllerTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
         }
@@ -24,25 +25,11 @@ namespace AnyService.E2E
             };
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
-            var res = await HttpClient.PostAsJsonAsync("v1/my-great-route", model);
+          
+            var res = await HttpClient.PostAsJsonAsync(URI, model);
             res.EnsureSuccessStatusCode();
             var c = await res.Content.ReadAsStringAsync();
             c.ShouldBe("pong");
-        }
-
-        [Fact]
-        public async Task PostNewValue_ToOverridenController()
-        {
-            var model = new CustomModel
-            {
-                Value = "ping"
-            };
-
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
-            var res = await HttpClient.PostAsJsonAsync("CustomModel", model);
-            res.EnsureSuccessStatusCode();
-            var c = await res.Content.ReadAsStringAsync();
-            c.ShouldNotBe("pong");
         }
     }
 }

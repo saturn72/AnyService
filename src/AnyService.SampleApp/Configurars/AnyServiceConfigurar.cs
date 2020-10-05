@@ -77,16 +77,16 @@ namespace AnyService.SampleApp.Configurars
                             Route = "/v1/my-great-route",
                             ControllerType = typeof(CustomController),
                         },
-                        Type = typeof(CustomModel),
+                        Type = typeof(CustomEntity),
                     },
                       new EntityConfigRecord
                     {
-                        Type = typeof(CustomModel),
+                        Type = typeof(CustomEntity),
                         Name = "area2_cutomModel"
                     },
                       new EntityConfigRecord
                     {
-                        Type = typeof(CustomModel),
+                        Type = typeof(CustomEntity),
                         Name = "method_not_allowed",
                         EndpointSettings = new EndpointSettings
                         {
