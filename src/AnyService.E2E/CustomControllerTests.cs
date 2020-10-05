@@ -5,7 +5,6 @@ using System.Net.Http.Headers;
 using Xunit;
 using Xunit.Abstractions;
 using Shouldly;
-using AnyService.SampleApp.Models;
 
 namespace AnyService.E2E
 {
@@ -21,7 +20,7 @@ namespace AnyService.E2E
         {
             var model = new
             {
-                Value = "ping"
+                Value = "ping"TWorkContexrMiddlewa
             };
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
