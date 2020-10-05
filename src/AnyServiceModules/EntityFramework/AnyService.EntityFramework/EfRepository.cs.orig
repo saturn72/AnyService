@@ -46,10 +46,14 @@ namespace AnyService.EntityFramework
             _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll set total to: " + pagination.Total);
 
             var q = pagination.IncludeNested ? IncludeNavigations(_collection) : _collection;
+<<<<<<< HEAD
+            q = q.OrderBy(pagination.OrderBy ?? nameof(IDomainEntity.Id), pagination.SortOrder == PaginationSettings.Desc)
+=======
 
             var isDesc = pagination.SortOrder == PaginationSettings.Desc;
             var orderByPropertyName = GetOrderByProperty(pagination.OrderBy);
             q = q.OrderBy(orderByPropertyName, isDesc)
+>>>>>>> f643b9b245d460baf490c4ca1ba813d7fd34fe8a
                 .Where(pagination.QueryFunc).AsQueryable();
 
             q = pagination.Offset == 0 ?
@@ -67,7 +71,7 @@ namespace AnyService.EntityFramework
         private static string GetOrderByProperty(string paginationOrderBy)
         {
             return paginationOrderBy != null && GetTypePropertyInfos().Any(x => x.Name == paginationOrderBy) ?
-                paginationOrderBy : nameof(IDomainEntity.Id);
+                paginationOrderBy : nameof(IDomainModelBase.Id);
         }
 
         public virtual async Task<TDomainModel> GetById(string id)

@@ -18,6 +18,8 @@ using AnyService.Audity;
 using AnyService.Services.Logging;
 using AnyService.Models;
 using AnyService.Logging;
+using AutoMapper;
+using AutoMapper.Configuration.Annotations;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -34,6 +36,38 @@ namespace Microsoft.Extensions.DependencyInjection
         }
         public static IServiceCollection AddAnyService(this IServiceCollection services, AnyServiceConfig config)
         {
+            NormalizeConfiguration(config);
+            RegisterDependencies(services, config);
+            AddEntityConfigRecordsMappings(config.EntityConfigRecords);
+
+            return services;
+        }
+
+        private static void AddEntityConfigRecordsMappings(IEnumerable<EntityConfigRecord> entityConfigRecords)
+        {
+            MappingExtensions.AddConfiguration(cfg =>
+              {
+                  foreach (var r in entityConfigRecords)
+                  {
+                      var mtt = r.EndpointSettings.MapToType;
+                      if (mtt != r.Type)
+                      {
+                          cfg.CreateMap(r.Type, r.EndpointSettings.MapToType);
+                          cfg.CreateMap(r.EndpointSettings.MapToType, r.Type);
+                      }
+                      var mtptType = r.EndpointSettings.MapToPaginationType;
+                      var pType = typeof(Pagination<>).MakeGenericType(mtt);
+                      if (mtptType != pType || mtptType != typeof(PaginationModel<>).MakeGenericType(mtt))
+                      {
+                          cfg.CreateMap(pType, mtptType);
+                          cfg.CreateMap(mtptType, pType);
+                      }
+                  }
+              });
+        }
+
+        private static void RegisterDependencies(IServiceCollection services, AnyServiceConfig config)
+        {
             services.TryAddSingleton<IdGeneratorFactory>(sp =>
             {
                 var stringGenerator = new StringIdGenerator();
@@ -41,7 +75,6 @@ namespace Microsoft.Extensions.DependencyInjection
                 f.AddOrReplace(typeof(string), stringGenerator);
                 return f;
             });
-            NormalizeConfiguration(config);
 
             services.TryAddSingleton(config);
             services.TryAddScoped(sp => sp.GetService<WorkContext>().CurrentEntityConfigRecord?.AuditSettings ?? config.AuditSettings);
@@ -114,7 +147,6 @@ namespace Microsoft.Extensions.DependencyInjection
 
             if (config.ManageEntityPermissions)
                 services.TryAddSingleton<IPermissionEventsHandler, DefaultPermissionsEventsHandler>();
-            return services;
         }
         private static void NormalizeConfiguration(AnyServiceConfig config)
         {

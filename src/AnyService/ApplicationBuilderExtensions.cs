@@ -12,8 +12,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using AnyService.Services.Logging;
-using AnyService.Services;
-using System.Reflection;
 
 namespace AnyService
 {
@@ -52,6 +50,7 @@ namespace AnyService
                 }
             }
             if (usePermissionMiddleware) AddPermissionComponents(app, sp);
+            MappingExtensions.Configure();
             return app;
         }
         private static void InitializeAndValidateRequiredServices(IServiceProvider serviceProvider)
@@ -59,12 +58,6 @@ namespace AnyService
             ServiceResponseWrapperExtensions.Init(serviceProvider);
             GenericControllerNameConvention.Init(serviceProvider);
             serviceProvider.GetRequiredService<ICacheManager>();
-
-            if (!MappingExtensions.WasConfigured)
-            {
-                var ecrs = serviceProvider.GetService<IEnumerable<EntityConfigRecord>>();
-                MappingExtensions.Configure(ecrs, cfg => { });
-            }
         }
        
         private static void AddPermissionComponents(IApplicationBuilder app, IServiceProvider serviceProvider)

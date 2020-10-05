@@ -5,6 +5,7 @@ using AnyService.Services.Audit;
 using AutoMapper;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AnyService
 {
@@ -13,35 +14,26 @@ namespace AnyService
         private static IMapper _mapper;
         internal static bool WasConfigured;
         private static MapperConfiguration MapperConfiguration;
-        public static void Configure(IEnumerable<EntityConfigRecord> records, Action<IMapperConfigurationExpression> configure)
-        {
-            Action<IMapperConfigurationExpression> configurar = c =>
+        private static ICollection<Action<IMapperConfigurationExpression>> CreateMapActions =
+            new List<Action<IMapperConfigurationExpression>>
             {
-                AnyServiceMappingConfiguration(c);
-                if (!records.IsNullOrEmpty())
-                    EntityConfigRecordsConfiguration(records)(c);
-                configure(c);
+                AnyServiceMappingConfiguration,
             };
-            MapperConfiguration = new MapperConfiguration(configurar);
-            _mapper = null;
-            WasConfigured = true;
+
+        public static void AddConfiguration(Action<IMapperConfigurationExpression> configuration) => CreateMapActions.Add(configuration);
+
+        public static void Configure(Action<IMapperConfigurationExpression> configuration)
+        {
+            CreateMapActions.Add(configuration);
+            Configure();
         }
 
-        private static Action<IMapperConfigurationExpression> EntityConfigRecordsConfiguration(IEnumerable<EntityConfigRecord> records)
+        public static void Configure()
         {
-            return cfg =>
-            {
-                foreach (var r in records)
-                {
-                    var mtt = r.EndpointSettings.MapToType;
-                    if (mtt != r.Type)
-                        cfg.CreateMap(r.Type, r.EndpointSettings.MapToType);
-
-                    var pType = r.EndpointSettings.MapToPaginationType;
-                    if (pType != typeof(Pagination<>).MakeGenericType(mtt) || pType != typeof(PaginationModel<>).MakeGenericType(mtt))
-                        cfg.CreateMap(typeof(Pagination<>).MakeGenericType(mtt), r.EndpointSettings.MapToPaginationType);
-                }
-            };
+            var configuration = (Action<IMapperConfigurationExpression>)Delegate.Combine(CreateMapActions.ToArray());
+            MapperConfiguration = new MapperConfiguration(configuration);
+            _mapper = null;
+            WasConfigured = true;
         }
 
         private static void AnyServiceMappingConfiguration(IMapperConfigurationExpression cfg)
