@@ -19,24 +19,25 @@ using AnyService.Conventions;
 
 namespace AnyService.Controllers
 {
-    //[ApiController]
-    //[Route("[controller]")]
     [GenericControllerModelConvention]
     public class GenericController<TResponseObject, TDomainObject> : ControllerBase
         where TResponseObject : class
         where TDomainObject : IDomainEntity
     {
         #region fields
+
+        private static Type _curType;
+        private static Type _curEnumerableType;
+        private static Type _mapToType;
+        private static Type _mapToTypeEnumerableType;
+        private static Type _mapToPageType;
+        private static string _curTypeName;
+
         private readonly ICrudService<TDomainObject> _crudService;
         private readonly IServiceResponseMapper _serviceResponseMapper;
         private readonly ILogger<GenericController<TResponseObject, TDomainObject>> _logger;
         private readonly AnyServiceConfig _config;
         private readonly WorkContext _workContext;
-        private readonly Type _curType;
-        private readonly Type _mapToType;
-        private readonly Type _mapToPageType;
-        private readonly bool _shouldMap;
-        private readonly string _curTypeName;
         private static readonly IDictionary<Type, PropertyInfo> FilesPropertyInfos = new Dictionary<Type, PropertyInfo>();
         #endregion
         #region ctor
@@ -51,13 +52,10 @@ namespace AnyService.Controllers
             _workContext = workContext;
             _logger = logger;
 
-            _curTypeName = _workContext.CurrentEntityConfigRecord.Name;
-            _curType = _workContext.CurrentEntityConfigRecord.Type;
-            _mapToType = _workContext.CurrentEntityConfigRecord.EndpointSettings.MapToType;
-            _mapToPageType = _workContext.CurrentEntityConfigRecord.EndpointSettings.MapToPaginationType;
-            _shouldMap = _curType != _mapToType;
+            InitStaticMembers();
         }
         #endregion
+        #region POST
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] TResponseObject model)
         {
@@ -75,7 +73,7 @@ namespace AnyService.Controllers
             var res = await _crudService.Create(entity);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Post service response value: " + res);
 
-            return MapServiceResponseIfRequired(res);
+            return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
         }
 
         [HttpPost(Consts.MultipartSuffix)]
@@ -111,9 +109,8 @@ namespace AnyService.Controllers
             var res = await _crudService.Create(model);
 
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Post service response value: " + res);
-            return MapServiceResponseIfRequired(res);
+            return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
         }
-
         [DisableFormValueModelBinding]
         [HttpPost(Consts.StreamSuffix)]
         public async Task<IActionResult> PostMultipartStream()
@@ -124,20 +121,10 @@ namespace AnyService.Controllers
             var res = await _crudService.Create(model);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Post service response value: " + res);
 
-            return MapServiceResponseIfRequired(res);
+            return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
         }
-        [DisableFormValueModelBinding]
-        [HttpPut(Consts.StreamSuffix + "/{id}")]
-        public async Task<IActionResult> PutMultipartStream()
-        {
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Start Put for multipart flow stream");
-            var model = await ExctractModelFromStream();
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Call service with value: " + model);
-            var res = await _crudService.Update(_workContext.RequestInfo.RequesteeId, model);
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Put service response value: " + res);
-
-            return MapServiceResponseIfRequired(res);
-        }
+        #endregion
+        #region GET
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(string id)
         {
@@ -145,7 +132,7 @@ namespace AnyService.Controllers
             var res = await _crudService.GetById(id);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Get all service response value: " + res);
             if (res.Result == ServiceResult.NotFound) res.Result = ServiceResult.BadOrMissingData;
-            return MapServiceResponseIfRequired(res);
+            return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
         }
 
         [HttpGet]
@@ -178,7 +165,7 @@ namespace AnyService.Controllers
                 return _serviceResponseMapper.MapServiceResponse(typeof(Pagination<TDomainObject>), _mapToPageType, srvRes);
 
             srvRes.PayloadObject = srvRes.Payload.Data;
-            return _serviceResponseMapper.MapServiceResponse(typeof(TDomainObject), _mapToType, srvRes);
+            return _serviceResponseMapper.MapServiceResponse(_curEnumerableType, _mapToTypeEnumerableType, srvRes);
         }
 
         private Pagination<TDomainObject> GetPagination(string orderBy, int offset, int pageSize, bool withNavProps, string sortOrder, string query)
@@ -192,9 +179,8 @@ namespace AnyService.Controllers
                 SortOrder = sortOrder,
                 QueryOrFilter = query
             };
-
         }
-
+        #endregion
         #region update
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(string id, [FromBody] TResponseObject model)
@@ -213,7 +199,19 @@ namespace AnyService.Controllers
             var res = await _crudService.Update(id, entity);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Update service response value: " + res);
 
-            return MapServiceResponseIfRequired(res);
+            return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
+        }
+        [DisableFormValueModelBinding]
+        [HttpPut(Consts.StreamSuffix + "/{id}")]
+        public async Task<IActionResult> PutMultipartStream()
+        {
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Start Put for multipart flow stream");
+            var model = await ExctractModelFromStream();
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Call service with value: " + model);
+            var res = await _crudService.Update(_workContext.RequestInfo.RequesteeId, model);
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Put service response value: " + res);
+
+            return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
         }
         #endregion
         #region DELETE
@@ -224,14 +222,19 @@ namespace AnyService.Controllers
             var res = await _crudService.Delete(id);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Delete service response value: " + res);
 
-            return MapServiceResponseIfRequired(res);
+            return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
         }
         #endregion
         #region Utilities
-        private IActionResult MapServiceResponseIfRequired(ServiceResponse<TDomainObject> res) =>
-           _shouldMap ?
-                  _serviceResponseMapper.MapServiceResponse(res) :
-                  _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
+        private void InitStaticMembers()
+        {
+            _curTypeName ??= _workContext.CurrentEntityConfigRecord.Name;
+            _curType ??= _workContext.CurrentEntityConfigRecord.Type;
+            _curEnumerableType ??= typeof(IEnumerable<>).MakeGenericType(_curType);
+            _mapToType ??= _workContext.CurrentEntityConfigRecord.EndpointSettings.MapToType;
+            _mapToTypeEnumerableType ??= typeof(IEnumerable<>).MakeGenericType(_mapToType);
+            _mapToPageType ??= _workContext.CurrentEntityConfigRecord.EndpointSettings.MapToPaginationType;
+        }
         private async Task<TDomainObject> ExctractModelFromStream()
         {
             // Used to accumulate all the form url encoded key value pairs in the 

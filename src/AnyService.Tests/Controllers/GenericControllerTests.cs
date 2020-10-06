@@ -1,7 +1,6 @@
 using System.Linq;
 using System.Reflection;
 using AnyService.Controllers;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Shouldly;
 using Xunit;
@@ -10,13 +9,6 @@ namespace AnyService.Tests.Controllers
 {
     public class GenericControllerTests
     {
-        [Fact]
-        public void ValidateRoute()
-        {
-            var type = typeof(GenericController<,>);
-            var route = type.GetCustomAttributes(typeof(RouteAttribute)).First() as RouteAttribute;
-            route.Template.ShouldBe("[controller]");
-        }
         [Theory]
         [InlineData(nameof(GenericController<MyClass, MyClass>.Post), "POST", null)]
         [InlineData(nameof(GenericController<MyClass, MyClass>.PostMultipart), "POST", "__multipart")]

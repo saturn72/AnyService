@@ -59,7 +59,7 @@ namespace AnyService.Services.ServiceResponseMappers
         public IActionResult MapServiceResponse(ServiceResponse serviceResponse) => ConversionFuncs[serviceResponse.Result](serviceResponse);
         public IActionResult MapServiceResponse(Type source, Type destination, ServiceResponse serviceResponse)
         {
-            if (serviceResponse.PayloadObject != null)
+            if (source != destination && serviceResponse.PayloadObject != null)
             {
                 //if (!source.IsAssignableFrom(serviceResponse.PayloadObject.GetType()))
                 //    throw new InvalidOperationException($"Cannot map from {serviceResponse.PayloadObject.GetType()} to {source}");

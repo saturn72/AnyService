@@ -28,9 +28,6 @@ namespace AnyService.Conventions
             if (!genericControllerTypes.Contains(genericTypeDefinition))
                 return;
 
-            var controllerModelType = controller.ControllerType.GenericTypeArguments[0];
-            var controllerEntityType = controller.ControllerType.GenericTypeArguments[1];
-
             var currentEcrs = allEcrs.Where(e =>
                 e.EndpointSettings.ControllerType == controller.ControllerType);
             controller.ControllerName = allEcrs.First().EndpointSettings.ControllerName;

@@ -35,21 +35,19 @@ namespace AnyService.E2E
             var res = await HttpClient.PostAsJsonAsync(URI, model);
             res.EnsureSuccessStatusCode();
             await Task.Delay(150);// wait for background tasks (by simulating network delay)
-            var content = await res.Content.ReadAsStringAsync();
-            var jObj = JObject.Parse(content);
-            var id = jObj["id"].Value<string>();
+            var cm = await res.Content.ReadAsAsync<CategoryModel>();
+            var id = cm.Id;
             id.ShouldNotBeNullOrEmpty();
-            jObj["name"].Value<string>().ShouldBe(model.Name);
+            cm.Name.ShouldBe(model.Name);
             #endregion
 
             #region read
             //read
             res = await HttpClient.GetAsync($"{URI}/{id}");
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["id"].Value<string>().ShouldBe(id);
-            jObj["name"].Value<string>().ShouldBe(model.Name);
+            cm = await res.Content.ReadAsAsync<CategoryModel>();
+            cm.Id.ShouldBe(id);
+            cm.Name.ShouldBe(model.Name);
 
             //no query provided
             res = await HttpClient.GetAsync($"{URI}/");
@@ -57,11 +55,9 @@ namespace AnyService.E2E
 
             res = await HttpClient.GetAsync($"{URI}?query=id==\"{ id}\"");
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            var jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
-            jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
+            var cmArr = await res.Content.ReadAsAsync<CategoryModel[]>();
+            cmArr.Length.ShouldBeGreaterThanOrEqualTo(1);
+            cmArr.ShouldContain(x => x.Id == id);
             #endregion
             //update
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
@@ -69,18 +65,18 @@ namespace AnyService.E2E
             model.Name = "new name";
             res = await HttpClient.PutAsJsonAsync($"{URI}/{id}", model);
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["id"].Value<string>().ShouldBe(id);
-            jObj["name"].Value<string>().ShouldBe(model.Name);
+            cm = await res.Content.ReadAsAsync<CategoryModel>();
+
+            cm.Id.ShouldBe(id);
+            cm.Name.ShouldBe(model.Name);
 
             //delete
             res = await HttpClient.DeleteAsync($"{URI}/{id}");
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["id"].Value<string>().ShouldBe(id);
-            jObj["name"].Value<string>().ShouldBe(model.Name);
+            cm = await res.Content.ReadAsAsync<CategoryModel>();
+
+            cm.Id.ShouldBe(id);
+            cm.Name.ShouldBe(model.Name);
 
             //get deleted
             await Task.Delay(250);// wait for background tasks (by simulating network delay)
@@ -105,23 +101,23 @@ namespace AnyService.E2E
             var res = await HttpClient.PostAsJsonAsync(AdminUri, model);
             res.EnsureSuccessStatusCode();
             await Task.Delay(150);// wait for background tasks (by simulating network delay)
-            var content = await res.Content.ReadAsStringAsync();
-            var jObj = JObject.Parse(content);
-            var id = jObj["id"].Value<string>();
+            var cm = await res.Content.ReadAsAsync<Category>();
+
+            var id = cm.Id;
             id.ShouldNotBeNullOrEmpty();
-            jObj["name"].Value<string>().ShouldBe(model.Name);
-            jObj["adminComment"].Value<string>().ShouldBe(model.AdminComment);
+            cm.Name.ShouldBe(model.Name);
+            cm.AdminComment.ShouldBe(model.AdminComment);
             #endregion
 
             #region read
             //read
             res = await HttpClient.GetAsync($"{AdminUri}/{id}");
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["id"].Value<string>().ShouldBe(id);
-            jObj["name"].Value<string>().ShouldBe(model.Name);
-            jObj["adminComment"].Value<string>().ShouldBe(model.AdminComment);
+            cm = await res.Content.ReadAsAsync<Category>();
+
+            cm.Id.ShouldBe(id);
+            cm.Name.ShouldBe(model.Name);
+            cm.AdminComment.ShouldBe(model.AdminComment);
 
             //no query provided
             res = await HttpClient.GetAsync($"{AdminUri}/");
@@ -129,11 +125,9 @@ namespace AnyService.E2E
 
             res = await HttpClient.GetAsync($"{AdminUri}?query=id==\"{ id}\"");
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            var jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
-            jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
+            var cmArr = await res.Content.ReadAsAsync<Category[]>();
+            cmArr.Length.ShouldBeGreaterThanOrEqualTo(1);
+            cmArr.ShouldContain(x => x.Id == id);
             #endregion
             //update
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
@@ -141,20 +135,20 @@ namespace AnyService.E2E
             model.Name = "new name";
             res = await HttpClient.PutAsJsonAsync($"{AdminUri}/{id}", model);
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["id"].Value<string>().ShouldBe(id);
-            jObj["name"].Value<string>().ShouldBe(model.Name);
-            jObj["adminComment"].Value<string>().ShouldBe(model.AdminComment);
+            cm = await res.Content.ReadAsAsync<Category>();
+
+            cm.Id.ShouldBe(id);
+            cm.Name.ShouldBe(model.Name);
+            cm.AdminComment.ShouldBe(model.AdminComment);
 
             //delete
             res = await HttpClient.DeleteAsync($"{AdminUri}/{id}");
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["id"].Value<string>().ShouldBe(id);
-            jObj["name"].Value<string>().ShouldBe(model.Name);
-            jObj["adminComment"].Value<string>().ShouldBe(model.AdminComment);
+            cm = await res.Content.ReadAsAsync<Category>();
+
+            cm.Id.ShouldBe(id);
+            cm.Name.ShouldBe(model.Name);
+            cm.AdminComment.ShouldBe(model.AdminComment);
 
             //get deleted
             await Task.Delay(250);// wait for background tasks (by simulating network delay)

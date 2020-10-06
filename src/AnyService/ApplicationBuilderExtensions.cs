@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using AnyService.Controllers;
 using AnyService.Caching;
 using AnyService.Events;
 using AnyService.Middlewares;

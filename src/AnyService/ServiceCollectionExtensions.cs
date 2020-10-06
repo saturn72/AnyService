@@ -18,8 +18,6 @@ using AnyService.Audity;
 using AnyService.Services.Logging;
 using AnyService.Models;
 using AnyService.Logging;
-using AutoMapper;
-using AutoMapper.Configuration.Annotations;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -47,15 +45,15 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             MappingExtensions.AddConfiguration(cfg =>
               {
-                  foreach (var r in entityConfigRecords)
+                  foreach (var ecr in entityConfigRecords)
                   {
-                      var mtt = r.EndpointSettings.MapToType;
-                      if (mtt != r.Type)
+                      var mtt = ecr.EndpointSettings.MapToType;
+                      if (mtt != ecr.Type)
                       {
-                          cfg.CreateMap(r.Type, r.EndpointSettings.MapToType);
-                          cfg.CreateMap(r.EndpointSettings.MapToType, r.Type);
+                          cfg.CreateMap(ecr.Type, mtt);
+                          cfg.CreateMap(mtt, ecr.Type);
                       }
-                      var mtptType = r.EndpointSettings.MapToPaginationType;
+                      var mtptType = ecr.EndpointSettings.MapToPaginationType;
                       var pType = typeof(Pagination<>).MakeGenericType(mtt);
                       if (mtptType != pType || mtptType != typeof(PaginationModel<>).MakeGenericType(mtt))
                       {

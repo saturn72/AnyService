@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using System.Net;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Threading.Tasks;
 using AnyService.SampleApp.Models;
 using Newtonsoft.Json.Linq;
@@ -14,6 +12,7 @@ namespace AnyService.E2E
 {
     public class FilterFactoryTests : E2EFixture
     {
+        private const string URI = "dependentmodel";
         public FilterFactoryTests(ITestOutputHelper output) : base(output)
         {
         }
@@ -31,63 +30,55 @@ namespace AnyService.E2E
                     Value = "init value_" + i + 1,
                     Public = i % 2 == 0,
                 };
-                var r = await HttpClient.PostAsJsonAsync("dependentmodel", model);
+                var r = await HttpClient.PostAsJsonAsync(URI, model);
 
                 r.EnsureSuccessStatusCode();
             }
             #region public
-            var res = await HttpClient.GetAsync($"dependentmodel?query=__public");
+            var res = await HttpClient.GetAsync($"{URI}?query=__public");
             res.EnsureSuccessStatusCode();
-            var content = await res.Content.ReadAsStringAsync();
-            var jObj = JObject.Parse(content);
-            var jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(totalEntities / 2);
+            var dmArr = await res.Content.ReadAsAsync<DependentModel[]>();
+            dmArr.Length.ShouldBe(totalEntities / 2);
             #endregion
             #region canRead
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
-            res = await HttpClient.GetAsync($"dependentmodel?query=__canRead");
+            res = await HttpClient.GetAsync($"{URI}?query=__canRead");
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(totalEntities);
+            dmArr = await res.Content.ReadAsAsync<DependentModel[]>();
+            dmArr.Length.ShouldBe(totalEntities);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-            content = await HttpClient.GetStringAsync($"dependentmodel?query=__canRead");
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(0);
+            res = await HttpClient.GetAsync($"{URI}?query=__canRead");
+            res.EnsureSuccessStatusCode();
+            dmArr = await res.Content.ReadAsAsync<DependentModel[]>();
+            dmArr.Length.ShouldBe(0);
             #endregion
 
             #region canUpdate
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
-            res = await HttpClient.GetAsync($"dependentmodel?query=__canUpdate");
+            res = await HttpClient.GetAsync($"{URI}?query=__canUpdate");
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(totalEntities);
+            dmArr = await res.Content.ReadAsAsync<DependentModel[]>();
+            dmArr.Length.ShouldBe(totalEntities);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-            content = await HttpClient.GetStringAsync($"dependentmodel?query=__canUpdate");
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(0);
+            res = await HttpClient.GetAsync($"{URI}?query=__canUpdate");
+            res.EnsureSuccessStatusCode();
+            dmArr = await res.Content.ReadAsAsync<DependentModel[]>();
+            dmArr.Length.ShouldBe(0);
             #endregion
             #region canUpdate
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson3);
-            res = await HttpClient.GetAsync($"dependentmodel?query=__canDelete");
+            res = await HttpClient.GetAsync($"{URI}?query=__canDelete");
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(totalEntities);
+            dmArr = await res.Content.ReadAsAsync<DependentModel[]>();
+            dmArr.Length.ShouldBe(totalEntities);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
-            content = await HttpClient.GetStringAsync($"dependentmodel?query=__canDelete");
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(0);
+            res = await HttpClient.GetAsync($"{URI}?query=__canDelete");
+            res.EnsureSuccessStatusCode();
+            dmArr = await res.Content.ReadAsAsync<DependentModel[]>();
+            dmArr.Length.ShouldBe(0);
             #endregion
         }
     }

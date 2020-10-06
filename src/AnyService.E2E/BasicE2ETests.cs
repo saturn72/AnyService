@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -17,6 +16,7 @@ namespace AnyService.E2E
 
     public class BasicE2ETests : E2EFixture
     {
+        private const string URI = "dependentmodel";
         public BasicE2ETests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
         }
@@ -38,15 +38,14 @@ namespace AnyService.E2E
                 HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(usr);
                 for (var i = 0; i < totalEntitiesPerUser; i++)
                 {
-                    var r = await HttpClient.PostAsJsonAsync("dependentmodel", model);
+                    var r = await HttpClient.PostAsJsonAsync(URI, model);
 
                     r.EnsureSuccessStatusCode();
                 }
             }
-            var c = await HttpClient.GetStringAsync($"dependentmodel?query=value ==\"" + model.Value + "\"");
-            var jObj = JObject.Parse(c);
-            var jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBe(totalEntitiesPerUser);
+            var res = await HttpClient.GetAsync($"{URI}?query=value ==\"" + model.Value + "\"");
+            var arr = await res.Content.ReadAsAsync<DependentModel[]>();
+            arr.Length.ShouldBe(totalEntitiesPerUser);
         }
         [Fact]
         public async Task CRUD_Dependent()
@@ -59,35 +58,31 @@ namespace AnyService.E2E
 
             #region create
             //create
-            var res = await HttpClient.PostAsJsonAsync("dependentmodel", model);
+            var res = await HttpClient.PostAsJsonAsync(URI, model);
             res.EnsureSuccessStatusCode();
             await Task.Delay(150);// wait for background tasks (by simulating network delay)
-            var content = await res.Content.ReadAsStringAsync();
-            var jObj = JObject.Parse(content);
-            var id = jObj["id"].Value<string>();
-            id.ShouldNotBeNullOrEmpty();
-            jObj["value"].Value<string>().ShouldBe(model.Value);
+            var dm = await res.Content.ReadAsAsync<Stock>();
+            dm.Id.ShouldNotBeNullOrEmpty();
+            var id = dm.Id;
+            dm.Value.ShouldBe(model.Value);
             #endregion
             #region read
             //read
-            res = await HttpClient.GetAsync("dependentmodel/" + id);
+            res = await HttpClient.GetAsync($"{URI}/{id}");
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["id"].Value<string>().ShouldBe(id);
-            jObj["value"].Value<string>().ShouldBe(model.Value);
+            var stock = await res.Content.ReadAsAsync<Stock>();
+            dm.Id.ShouldBe(dm.Id);
+            dm.Value.ShouldBe(model.Value);
 
             //no query provided
-            res = await HttpClient.GetAsync("dependentmodel/");
+            res = await HttpClient.GetAsync(URI);
             res.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-            res = await HttpClient.GetAsync($"dependentmodel?query=id==\"{id}\"");
+            res = await HttpClient.GetAsync($"{URI}?query=id==\"{id}\"");
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            var jArr = jObj["data"] as JArray;
-            jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
-            jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
+            var allStocks = await res.Content.ReadAsAsync<Stock[]>();
+            allStocks.Length.ShouldBeGreaterThanOrEqualTo(1);
+            allStocks.ShouldContain(x => x.Id == id);
             #endregion
             //update
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
@@ -96,24 +91,22 @@ namespace AnyService.E2E
             {
                 Value = "new Value"
             };
-            res = await HttpClient.PutAsJsonAsync("dependentmodel/" + id, updateModel);
+            res = await HttpClient.PutAsJsonAsync($"{URI}/{id}", updateModel);
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["id"].Value<string>().ShouldBe(id);
-            jObj["value"].Value<string>().ShouldBe(updateModel.Value);
+            dm = await res.Content.ReadAsAsync<Stock>();
+            dm.Id.ShouldBe(id);
+            dm.Value.ShouldBe(updateModel.Value);
 
             //delete
-            res = await HttpClient.DeleteAsync("dependentmodel/" + id);
+            res = await HttpClient.DeleteAsync($"{URI}/{id}");
             res.EnsureSuccessStatusCode();
-            content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jObj["id"].Value<string>().ShouldBe(id);
-            jObj["value"].Value<string>().ShouldBe(updateModel.Value);
+            dm = await res.Content.ReadAsAsync<Stock>();
+            dm.Id.ShouldBe(id);
+            dm.Value.ShouldBe(updateModel.Value);
 
             //get deleted
             await Task.Delay(250);// wait for background tasks (by simulating network delay)
-            res = await HttpClient.GetAsync("dependentmodel/" + id);
+            res = await HttpClient.GetAsync($"{URI}/{id}");
             res.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
 
         }
