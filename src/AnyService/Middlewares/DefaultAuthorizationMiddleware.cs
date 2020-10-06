@@ -67,8 +67,10 @@ namespace AnyService.Middlewares
 
             if (aa.Policy.HasValue())
                 throw new NotImplementedException();
-            var roles = aa.Roles.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
+            if (aa.Roles.IsNullOrEmpty())
+                return cp => cp.Identities.Any();
 
+            var roles = aa.Roles.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
             return cp => roles.Any(r => cp.IsInRole(r));
         }
     }

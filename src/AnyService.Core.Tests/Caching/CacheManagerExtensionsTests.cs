@@ -7,7 +7,7 @@ using Moq;
 using Shouldly;
 using Xunit;
 
-namespace AnyService.Core.Tests.Caching
+namespace AnyService.Conventions.Tests.Caching
 {
     public class CacheManagerExtensionsTests
     {

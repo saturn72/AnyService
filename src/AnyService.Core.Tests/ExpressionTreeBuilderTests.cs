@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using Shouldly;
 using Xunit;
 
-namespace AnyService.Core.Tests
+namespace AnyService.Conventions.Tests
 {
     public class TestClass
     {

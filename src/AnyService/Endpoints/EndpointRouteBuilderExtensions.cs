@@ -10,18 +10,18 @@ namespace AnyService.Endpoints
     {
         public static IEndpointRouteBuilder MapAnyService(this IEndpointRouteBuilder builder)
         {
-            var configRecords = builder.ServiceProvider.GetRequiredService<IEnumerable<EntityConfigRecord>>();
+            var entityConfigRecords = builder.ServiceProvider.GetRequiredService<IEnumerable<EntityConfigRecord>>();
 
-            foreach (var cr in configRecords)
+            foreach (var ecr in entityConfigRecords)
             {
-                var cs = cr.EndpointSettings;
-                if (cs.Area.HasValue())
+                var es = ecr.EndpointSettings;
+                if (es.Area.HasValue())
                 {
-                    builder.MapAreaControllerRoute(cr.Name, cs.Area, cs.Route);
+                    builder.MapAreaControllerRoute(ecr.Name, es.Area, es.Route);
                 }
                 else
                 {
-                    builder.MapControllerRoute(cr.Name, cs.Route);
+                    builder.MapControllerRoute(ecr.Name, es.Route);
                 }
             }
             return builder;

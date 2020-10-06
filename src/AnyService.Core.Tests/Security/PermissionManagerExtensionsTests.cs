@@ -7,7 +7,7 @@ using Moq;
 using Shouldly;
 using Xunit;
 
-namespace AnyService.Core.Security
+namespace AnyService.Conventions.Security
 {
     public class PermissionManagerExtensionsTests
     {

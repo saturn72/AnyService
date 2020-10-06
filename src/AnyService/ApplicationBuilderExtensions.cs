@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using AnyService.Services.Logging;
+using AnyService.Conventions;
 
 namespace AnyService
 {
@@ -56,10 +57,10 @@ namespace AnyService
         private static void InitializeAndValidateRequiredServices(IServiceProvider serviceProvider)
         {
             ServiceResponseWrapperExtensions.Init(serviceProvider);
-            GenericControllerNameConvention.Init(serviceProvider);
+            GenericControllerModelConvention.Init(serviceProvider);
             serviceProvider.GetRequiredService<ICacheManager>();
         }
-       
+
         private static void AddPermissionComponents(IApplicationBuilder app, IServiceProvider serviceProvider)
         {
             var config = serviceProvider.GetRequiredService<AnyServiceConfig>();

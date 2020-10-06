@@ -1,12 +1,8 @@
-﻿using AnyService.Models;
-using AnyService.Services;
+﻿using AnyService.Conventions;
 using AnyService.Services.ServiceResponseMappers;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace AnyService.Controllers
@@ -14,7 +10,7 @@ namespace AnyService.Controllers
 
     [ApiController]
     [Route("[controller]")]
-    [GenericControllerNameConvention]
+    [GenericControllerModelConvention]
     public class GenericParentController<T> : ControllerBase
     {
         #region fields

@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using System;
 
-namespace AnyService
+namespace AnyService.Settings
 {
     public sealed class EndpointSettings
     {
@@ -25,6 +25,5 @@ namespace AnyService
         public EndpointMethodSettings PutSettings { get; set; }
         public EndpointMethodSettings DeleteSettings { get; set; }
         public bool Active { get; set; } = true;
-        internal string ControllerName => ControllerType?.FullName;
     }
 }
