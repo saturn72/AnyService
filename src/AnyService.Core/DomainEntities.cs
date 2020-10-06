@@ -4,7 +4,7 @@ namespace AnyService
     {
         string Id { get; set; }
     }
-   
+
     public abstract class ChildModelBase : IDomainEntity
     {
         public string Id { get; set; }
