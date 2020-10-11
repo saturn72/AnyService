@@ -36,6 +36,24 @@ namespace AnyService.Tests.Services
         public string Id { get; set; }
         public bool Deleted { get; set; }
     }
+    public class OptionEntity : IDomainEntity
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+    }
+    public class Aggregated : IDomainEntity
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+    }
+    public class AggregateRootEntity : IDomainEntity
+    {
+        public string Id { get; set; }
+        [Aggregated("OptionEntity", "options")]
+        public OptionEntity Options { get; set; }
+        [Aggregated("Aggregated", "childs")]
+        public IEnumerable<Aggregated> Childs { get; set; }
+    }
     public class CrudServiceTests
     {
         AnyServiceConfig _config = new AnyServiceConfig();
@@ -435,6 +453,9 @@ Times.Once);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
             repo.Verify(r => r.GetById(It.IsAny<string>()), Times.Once);
         }
+        #region Aggregation
+
+        #endregion
         #endregion
         #region get all
         [Fact]
@@ -770,6 +791,329 @@ Times.Once);
             var actualData = data.Where(func);
             actualData.Count().ShouldBe(2);
             actualData.ShouldAllBe(x => data.Contains(x));
+        }
+        #endregion
+        #region GetAggregated
+        [Theory]
+        [InlineData(null, new[] { "1" })]
+        [InlineData("1", null)]
+        [InlineData(null, null)]
+        public async Task GetAggregated_NoAggregatedToFetch(string parentId, IEnumerable<string> aggToFetch)
+        {
+            var repo = new Mock<IRepository<AuditableTestEntity>>();
+            var eb = new Mock<IEventBus>();
+            var ekr = new EventKeyRecord(null, "read", null, null);
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AuditableTestEntity),
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                }
+            }; var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
+            var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
+
+            sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
+            sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestEntity>))).Returns(repo.Object);
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestEntity>)));
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
+
+            var cSrv = new CrudService<AuditableTestEntity>(sp.Object, logger.Object);
+            var res = await cSrv.GetAggregated(parentId, aggToFetch);
+            var r = res.ShouldBeOfType<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>>();
+            r.Result.ShouldBe(ServiceResult.BadOrMissingData);
+            r.Payload.ShouldBeNull();
+        }
+        [Theory]
+        [InlineData("not-exists")]
+        [InlineData("not-exists,OptionEntity")]
+        public async Task GetAggregated_NoAggregatedToFetch_IntersectWithAggregatedList(string toAggregate)
+        {
+            var aggToFetch = toAggregate.Split(",");
+            var repo = new Mock<IRepository<AggregateRootEntity>>();
+            var eb = new Mock<IEventBus>();
+            var ekr = new EventKeyRecord(null, "read", null, null);
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AggregateRootEntity),
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                }
+            }; var logger = new Mock<ILogger<CrudService<AggregateRootEntity>>>();
+            var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
+
+            sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
+            sp.Setup(s => s.GetService(typeof(IRepository<AggregateRootEntity>))).Returns(repo.Object);
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AggregateRootEntity>)));
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
+
+            var cSrv = new CrudService<AggregateRootEntity>(sp.Object, logger.Object);
+            var res = await cSrv.GetAggregated("pId", aggToFetch);
+            var r = res.ShouldBeOfType<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>>();
+            r.Result.ShouldBe(ServiceResult.BadOrMissingData);
+            r.Payload.ShouldBeNull();
+        }
+        [Fact]
+        public async Task GetAggregated_MissingRepositoryDefintionReturnsError()
+        {
+            var sp = new Mock<IServiceProvider>();
+
+            var aggregateRootId = "p-id";
+            var aggToFetch = new[] { "OptionEntity", "Aggregated" };
+            var repo = new Mock<IRepository<AggregateRootEntity>>();
+            var mapCollection = new[]
+            {
+                new EntityMapping
+                {
+                    Id = "em-a",
+                    ParentEntityName = "AggregateRootEntity",
+                    ParentId = aggregateRootId,
+                    ChildEntityName = "OptionEntity",
+                    ChildId = "ch-a",
+                },
+                new EntityMapping
+                {
+                    Id = "em-b",
+                    ParentEntityName = "AggregateRootEntity",
+                    ParentId = aggregateRootId,
+                    ChildEntityName = "OptionEntity",
+                    ChildId = "ch-b",
+                },
+                new EntityMapping
+                {
+                    Id = "em-b",
+                    ParentEntityName = "AggregateRootEntity",
+                    ParentId = "anther=parent",
+                    ChildEntityName = "OptionEntity",
+                    ChildId = "ch-c",
+                },
+                new EntityMapping
+                {
+                    Id = "em-c",
+                    ParentEntityName = "AggregateRootEntity",
+                    ParentId = aggregateRootId,
+                    ChildEntityName = "Aggregated",
+                    ChildId = "ch-d",
+                },
+                new EntityMapping
+                {
+                    Id = "em-d",
+                    ParentEntityName = "AggregateRootEntity",
+                    ParentId = "another-parent",
+                    ChildEntityName = "Aggregated",
+                    ChildId = "ch-e",
+                },
+            };
+            var mapRepo = new Mock<IRepository<EntityMapping>>();
+            mapRepo.Setup(mr => mr.Collection).ReturnsAsync(mapCollection.AsQueryable());
+            sp.Setup(s => s.GetService(typeof(IRepository<EntityMapping>))).Returns(mapRepo.Object);
+
+            var oeCol = new[]
+            {
+                new  OptionEntity
+                {
+                    Id = "ch-a",
+                    Name = "a"
+                },
+                new  OptionEntity
+                {
+                    Id = "ch-b",
+                    Name = "b"
+                },
+                new  OptionEntity
+                {
+                    Id = "ch-c",
+                    Name = "c"
+                },
+                new  OptionEntity
+                {
+                    Id = "ch-d",
+                    Name = "d"
+                },
+            };
+            var oeRepo = new Mock<IRepository<OptionEntity>>();
+            oeRepo.Setup(oe => oe.Collection).ReturnsAsync(oeCol.AsQueryable());
+            sp.Setup(s => s.GetService(typeof(IRepository<OptionEntity>))).Returns(oeRepo.Object);
+
+            var ekr = new EventKeyRecord(null, "read", null, null);
+            var arConfigRecord = new EntityConfigRecord
+            {
+                Type = typeof(AggregateRootEntity),
+                Name = "AggregateRootEntity",
+                EventKeys = ekr,
+                PaginationSettings = new PaginationSettings(),
+            };
+            var ecrs = new[]
+            {
+                arConfigRecord,
+                new EntityConfigRecord
+                {
+                    Type = typeof(OptionEntity),
+                    Name = "OptionEntity",
+                },
+                new EntityConfigRecord
+                {
+                    Type = typeof(Aggregated),
+                    Name = "Aggregated",
+                },
+            };
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(ecrs);
+
+            var eb = new Mock<IEventBus>();
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = arConfigRecord,
+            };
+            var logger = new Mock<ILogger<CrudService<AggregateRootEntity>>>();
+            var am = new Mock<IAuditManager>();
+
+            sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
+            sp.Setup(s => s.GetService(typeof(IRepository<AggregateRootEntity>))).Returns(repo.Object);
+
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestEntity>)));
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
+
+            var cSrv = new CrudService<AggregateRootEntity>(sp.Object, logger.Object);
+            var res = await cSrv.GetAggregated(aggregateRootId, aggToFetch);
+            res.Result.ShouldBe(ServiceResult.Error);
+            res.Payload.ShouldBeNull();
+        }
+
+        [Fact]
+        public async Task GetAggregated_ReturnAggregatedCollection()
+        {
+            var sp = new Mock<IServiceProvider>();
+
+            var aggregateRootId = "p-id";
+            var aggToFetch = new[] { "OptionEntity", "Aggregated" };
+            var repo = new Mock<IRepository<AggregateRootEntity>>();
+            var mapCollection = new[]
+            {
+                new EntityMapping
+                {
+                    Id = "em-a",
+                    ParentEntityName = "AggregateRootEntity",
+                    ParentId = aggregateRootId,
+                    ChildEntityName = "OptionEntity",
+                    ChildId = "ch-a",
+                },
+                new EntityMapping
+                {
+                    Id = "em-b",
+                    ParentEntityName = "AggregateRootEntity",
+                    ParentId = aggregateRootId,
+                    ChildEntityName = "OptionEntity",
+                    ChildId = "ch-b",
+                },
+                new EntityMapping
+                {
+                    Id = "em-b",
+                    ParentEntityName = "AggregateRootEntity",
+                    ParentId = "anther=parent",
+                    ChildEntityName = "OptionEntity",
+                    ChildId = "ch-c",
+                },
+                new EntityMapping
+                {
+                    Id = "em-c",
+                    ParentEntityName = "AggregateRootEntity",
+                    ParentId = aggregateRootId,
+                    ChildEntityName = "Aggregated",
+                    ChildId = "ch-d",
+                },
+                new EntityMapping
+                {
+                    Id = "em-d",
+                    ParentEntityName = "AggregateRootEntity",
+                    ParentId = "another-parent",
+                    ChildEntityName = "Aggregated",
+                    ChildId = "ch-e",
+                },
+            };
+            var mapRepo = new Mock<IRepository<EntityMapping>>();
+            mapRepo.Setup(mr => mr.Collection).ReturnsAsync(mapCollection.AsQueryable());
+            sp.Setup(s => s.GetService(typeof(IRepository<EntityMapping>))).Returns(mapRepo.Object);
+
+            var oeCol = new[]
+            {
+                new  OptionEntity { Id = "ch-a", Name = "a" },
+                new  OptionEntity { Id = "ch-b", Name = "b" },
+                new  OptionEntity { Id = "ch-c", Name = "c" },
+                new  OptionEntity { Id = "ch-d", Name = "d" },
+            };
+            var oeRepo = new Mock<IRepository<OptionEntity>>();
+            oeRepo.Setup(oe => oe.Collection).ReturnsAsync(oeCol.AsQueryable());
+            sp.Setup(s => s.GetService(typeof(IRepository<OptionEntity>))).Returns(oeRepo.Object);
+
+            var aggCol = new[]
+            {
+                new  Aggregated { Id = "ch-a", Name = "a" },
+                new  Aggregated { Id = "ch-b", Name = "b" },
+                new  Aggregated { Id = "ch-c", Name = "c" },
+                new  Aggregated { Id = "ch-d", Name = "d" },
+            };
+            var aggRepo = new Mock<IRepository<Aggregated>>();
+            aggRepo.Setup(oe => oe.Collection).ReturnsAsync(aggCol.AsQueryable());
+            sp.Setup(s => s.GetService(typeof(IRepository<Aggregated>))).Returns(aggRepo.Object);
+
+            var ekr = new EventKeyRecord(null, "read", null, null);
+            var arConfigRecord = new EntityConfigRecord
+            {
+                Type = typeof(AggregateRootEntity),
+                Name = "AggregateRootEntity",
+                EventKeys = ekr,
+                PaginationSettings = new PaginationSettings(),
+            };
+            var ecrs = new[]
+            {
+                arConfigRecord,
+                new EntityConfigRecord
+                {
+                    Type = typeof(OptionEntity),
+                    Name = "OptionEntity",
+                },
+                new EntityConfigRecord
+                {
+                    Type = typeof(Aggregated),
+                    Name = "Aggregated",
+                },
+            };
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(ecrs);
+
+            var eb = new Mock<IEventBus>();
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = arConfigRecord,
+            };
+            var logger = new Mock<ILogger<CrudService<AggregateRootEntity>>>();
+            var am = new Mock<IAuditManager>();
+
+            sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
+            sp.Setup(s => s.GetService(typeof(IRepository<AggregateRootEntity>))).Returns(repo.Object);
+
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestEntity>)));
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
+
+            var cSrv = new CrudService<AggregateRootEntity>(sp.Object, logger.Object);
+            var res = await cSrv.GetAggregated(aggregateRootId, aggToFetch);
+            var r = res.ShouldBeOfType<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>>();
+            r.Result.ShouldBe(ServiceResult.Ok);
+            r.Payload.Count().ShouldBe(2);
         }
         #endregion
         #region Update

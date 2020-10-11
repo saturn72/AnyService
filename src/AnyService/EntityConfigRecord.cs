@@ -2,6 +2,7 @@ using System;
 using AnyService.Audity;
 using AnyService.Security;
 using AnyService.Services;
+using AnyService.Services.Internals;
 
 namespace AnyService
 {
@@ -9,10 +10,15 @@ namespace AnyService
     {
         private bool _showSoftDelete;
         private Type _type;
+
         /// <summary>
-        /// Name
+        /// Gets or sets entity name
         /// </summary>
         public string Name { get; set; }
+        /// <summary>
+        /// Unique identifier for the entity
+        /// </summary>
+        public string Identifier { get; set; }
         /// <summary>
         /// 
         /// Gets or sets entity type 

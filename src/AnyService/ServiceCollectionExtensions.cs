@@ -18,6 +18,7 @@ using AnyService.Audity;
 using AnyService.Services.Logging;
 using AnyService.Models;
 using AnyService.Logging;
+using AnyService.Domain;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -158,13 +159,13 @@ namespace Microsoft.Extensions.DependencyInjection
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
 
-                ecr.Name ??= ecr.EndpointSettings != null && ecr.EndpointSettings.Area.HasValue() ?
+                ecr.Identifier ??= ecr.EndpointSettings != null && ecr.EndpointSettings.Area.HasValue() ?
                     $"{ecr.EndpointSettings?.Area}_{ecr.Type.Name}" :
                     ecr.Type.Name;
 
-                var hasDuplication = temp.Where(e => e.Name == ecr.Name);
+                var hasDuplication = temp.Where(e => e.Identifier == ecr.Identifier);
                 if (hasDuplication.Count() > 1)
-                    throw new InvalidOperationException($"Duplication in {nameof(EntityConfigRecord.Name)} field : {ecr.Name}. Please provide unique name for the controller. See configured entities where Routes equals {hasDuplication.First().EndpointSettings.Route} and {hasDuplication.Last().EndpointSettings.Route}");
+                    throw new InvalidOperationException($"Duplication in {nameof(EntityConfigRecord.Identifier)} field : {ecr.Identifier}. Please provide unique name for the controller. See configured entities where Routes equals {hasDuplication.First().EndpointSettings.Route} and {hasDuplication.Last().EndpointSettings.Route}");
 
                 ecr.EventKeys ??= ekr;
                 ecr.PermissionRecord ??= pr;
@@ -263,18 +264,18 @@ namespace Microsoft.Extensions.DependencyInjection
                 !settings.GetSettings.Active &&
                 !settings.PutSettings.Active &&
                 !settings.DeleteSettings.Active)
-                throw new ArgumentException($"Invalid operation: {nameof(EntityConfigRecord)} named {ecr.Name} has all httpMethods deactivated");
+                throw new ArgumentException($"Invalid operation: {nameof(EntityConfigRecord)} named {ecr.Identifier} has all httpMethods deactivated");
         }
 
         private static Type BuildController(Type entityType, EndpointSettings settings)
         {
             var mapToType = settings.MapToType;
             var isParent = mapToType.GetInterfaces()
-                .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IParentApiModel<>));
+                .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IAggregateRoot<>));
 
             return isParent
                 ?
-                typeof(GenericParentController<>).MakeGenericType(mapToType) :
+                typeof(GenericAggregateRootController<,>).MakeGenericType(mapToType, entityType) :
                 typeof(GenericController<,>).MakeGenericType(mapToType, entityType);
         }
         private static AuditSettings NormalizeAudity(EntityConfigRecord ecr, AuditSettings auditSettings)

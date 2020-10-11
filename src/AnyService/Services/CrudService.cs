@@ -11,17 +11,19 @@ using Microsoft.Extensions.Logging;
 using AnyService.Services.Audit;
 using AnyService.Services.Preparars;
 using System.Collections.Generic;
+using AnyService.Services.Internals;
 
 namespace AnyService.Services
 {
     public class CrudService<TDomainEntity> : ICrudService<TDomainEntity> where TDomainEntity : IDomainEntity
     {
         #region fields
-        private static readonly object lockObj = new object();
-        private static readonly Func<TDomainEntity, bool> HideSoftDeletedFunc = x => !(x as ISoftDelete).Deleted;
+        private static IEnumerable<string> AllAggregatedNames;
 
+        protected readonly IServiceProvider ServiceProvider;
         protected readonly AnyServiceConfig Config;
         protected readonly IRepository<TDomainEntity> Repository;
+        protected readonly IRepository<EntityMapping> MapRepository;
         protected readonly CrudValidatorBase<TDomainEntity> Validator;
         protected readonly IModelPreparar<TDomainEntity> ModelPreparar;
         protected readonly WorkContext WorkContext;
@@ -41,8 +43,11 @@ namespace AnyService.Services
             ILogger<CrudService<TDomainEntity>> logger)
         {
             Logger = logger;
+            ServiceProvider = serviceProvider;
             Config = serviceProvider.GetService<AnyServiceConfig>();
             Repository = serviceProvider.GetService<IRepository<TDomainEntity>>();
+            MapRepository = serviceProvider.GetService<IRepository<EntityMapping>>();
+
             Validator = serviceProvider.GetService<CrudValidatorBase<TDomainEntity>>();
             WorkContext = serviceProvider.GetService<WorkContext>();
             ModelPreparar = serviceProvider.GetService<IModelPreparar<TDomainEntity>>();
@@ -52,9 +57,9 @@ namespace AnyService.Services
             FilterFactory = serviceProvider.GetService<IFilterFactory>();
             PermissionManager = serviceProvider.GetService<IPermissionManager>();
             AuditManager = serviceProvider.GetService<IAuditManager>();
-
             EventKeys = WorkContext?.CurrentEntityConfigRecord?.EventKeys;
             EntityMetadata = WorkContext?.CurrentEntityConfigRecord?.Metadata;
+            AllAggregatedNames ??= EntityMetadata.Aggregations.Select(a => a.EntityName.ToLower());
         }
 
         #endregion
@@ -108,9 +113,10 @@ namespace AnyService.Services
         //    var uploadResponses = await FileStorageManager.Upload(files);
         //    serviceResponse.Data = new { entity = serviceResponse.Data, filesUploadStatus = uploadResponses };
         //}
+        #region GetById
         public virtual async Task<ServiceResponse<TDomainEntity>> GetById(string id)
         {
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start get by id with id = {id}");
+            Logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"Start get by id with {nameof(id)} = {id}");
 
             var serviceResponse = new ServiceResponse<TDomainEntity>();
             if (!await Validator.ValidateForGet(id, serviceResponse))
@@ -141,8 +147,11 @@ namespace AnyService.Services
                 Publish(EventKeys.Read, serviceResponse.Payload);
             }
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
+
             return serviceResponse;
         }
+        #endregion
+        #region GetAll
         public virtual async Task<ServiceResponse<Pagination<TDomainEntity>>> GetAll(Pagination<TDomainEntity> pagination)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all flow");
@@ -182,7 +191,6 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
-
         private async Task<Pagination<TDomainEntity>> NormalizePagination(Pagination<TDomainEntity> pagination)
         {
             var p = pagination ??= new Pagination<TDomainEntity>();
@@ -223,7 +231,7 @@ namespace AnyService.Services
 
             if (p.QueryFunc == null) return null;
             if (!EntityMetadata.ShowSoftDeleted && EntityMetadata.IsSoftDeleted)
-                p.QueryFunc = p.QueryFunc.AndAlso(HideSoftDeletedFunc);
+                p.QueryFunc = p.QueryFunc.AndAlso(x => !(x as ISoftDelete).Deleted);
 
             var paginationSettings = WorkContext.CurrentEntityConfigRecord.PaginationSettings;
             p.OrderBy ??= paginationSettings.DefaultOrderBy;
@@ -234,7 +242,64 @@ namespace AnyService.Services
 
             return p;
         }
+        #endregion
+        #region Get Aggregated
+        public async Task<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>> GetAggregated(
+            string aggregateRootId,
+            IEnumerable<string> aggregatedNames
+            )
+        {
+            var srvRes = new ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>();
+            if (
+                !aggregateRootId.HasValue() ||
+                aggregatedNames.IsNullOrEmpty() ||
+                !AllAggregatedExists())
+            {
+                srvRes.Result = ServiceResult.BadOrMissingData;
+                return srvRes;
+            }
 
+            var col = await MapRepository.Collection;
+            var q = from c in col
+                    where
+                    c.ParentEntityName == WorkContext.CurrentEntityConfigRecord.Name &&
+                    c.ParentId == aggregateRootId &&
+                    aggregatedNames.Contains(c.ChildEntityName, StringComparer.InvariantCultureIgnoreCase)
+                    group c by c.ChildEntityName into g
+                    select new { AggregatedName = g.Key, AggregatedIds = g.Select(x => x.ChildId) };
+
+            var ecrs = ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
+            var res = new Dictionary<string, IEnumerable<IDomainEntity>>();
+            foreach (var group in q)
+            {
+                var ecr = ecrs.FirstOrDefault(e => e.Name.ToLower() == group.AggregatedName.ToLower());
+                if (ecr == default)
+                    continue;
+
+                dynamic r = ServiceProvider.GetGenericService(typeof(IRepository<>), ecr.Type);
+                if (r == null)
+                {
+                    srvRes.Result = ServiceResult.Error;
+                    return srvRes;
+                }
+                var curCol = (await r.Collection) as IQueryable<IDomainEntity>;
+                var aggregated = curCol?.Where(x => group.AggregatedIds.Contains(x.Id));
+
+                res[group.AggregatedName] = aggregated.ToArray();
+            }
+
+            srvRes.Result = ServiceResult.Ok;
+            srvRes.Payload = res;
+            return srvRes;
+
+            bool AllAggregatedExists()
+            {
+                aggregatedNames = aggregatedNames.Select(x => x.Trim().ToLower());
+                return AllAggregatedNames.All(aggregatedNames.Contains);
+            }
+        }
+        #endregion
+        #region Update
         public virtual async Task<ServiceResponse<TDomainEntity>> Update(string id, TDomainEntity entity)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start update flow for id: {id}, entity: {entity}");
@@ -282,6 +347,8 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
+        #endregion
+        #region Delete
         public virtual async Task<ServiceResponse<TDomainEntity>> Delete(string id)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start delete flow for id: {id}");
@@ -330,7 +397,7 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
-
+        #endregion
         #region Utilities
         private ServiceResponse<T> SetServiceResponse<T>(ServiceResponse<T> serviceResponse, string serviceResponseResult, EventId eventId, string logMessage)
         {

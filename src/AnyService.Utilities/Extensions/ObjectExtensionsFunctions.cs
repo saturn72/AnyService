@@ -22,10 +22,10 @@ namespace System
         private static readonly IDictionary<Type, IDictionary<string, PropertyInfo>> PropertyInfos = new Dictionary<Type, IDictionary<string, PropertyInfo>>();
         public static PropertyInfo GetPropertyInfo(this Type type, string propertyName)
         {
-            if (!PropertyInfos.TryGetValue((Type)type, out IDictionary<string, PropertyInfo> curPropertyInfo))
+            if (!PropertyInfos.TryGetValue(type, out IDictionary<string, PropertyInfo> curPropertyInfo))
             {
                 curPropertyInfo = new Dictionary<string, PropertyInfo>();
-                PropertyInfos[(Type)type] = curPropertyInfo;
+                PropertyInfos[type] = curPropertyInfo;
             }
             if (!curPropertyInfo.TryGetValue(propertyName, out PropertyInfo pi))
             {

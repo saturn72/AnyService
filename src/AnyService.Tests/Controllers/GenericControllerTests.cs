@@ -1,13 +1,20 @@
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using AnyService.Controllers;
+using AnyService.Services;
+using AnyService.Services.ServiceResponseMappers;
+using AnyService.Tests.Services.ServiceResponseMappers;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Shouldly;
 using Xunit;
 
 namespace AnyService.Tests.Controllers
 {
-    public class GenericControllerTests
+    public class GenericControllerTests : MappingTest
     {
         [Theory]
         [InlineData(nameof(GenericController<MyClass, MyClass>.Post), "POST", null)]
@@ -29,5 +36,72 @@ namespace AnyService.Tests.Controllers
         {
             public string Id { get; set; }
         }
+        #region Post
+        [Fact]
+        public async Task CreateReturnsBadRequestOnInvalidModel()
+        {
+            var t = typeof(Category);
+            var wc = new WorkContext
+            {
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Identifier = t.Name,
+                    Type = t,
+                    EndpointSettings = new EndpointSettings
+                    {
+                        MapToType = typeof(CategoryModel),
+                    }
+                }
+            };
+            var log = new Mock<ILogger<GenericController<CategoryModel, Category>>>();
+            var ctrl = new GenericController<CategoryModel, Category>(
+                null, null,
+                null,
+                wc, log.Object);
+
+            ctrl.ModelState.AddModelError("k", "err");
+            var res = await ctrl.Post(null);
+            res.ShouldBeOfType<BadRequestObjectResult>();
+        }
+        [Fact]
+        public async Task Create_ReturnsServiceResponse()
+        {
+            var log = new Mock<ILogger<GenericController<Category, Category>>>();
+            var t = typeof(Category);
+            var wc = new WorkContext
+            {
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Identifier = t.Name,
+                    Type = t,
+                    EndpointSettings = new EndpointSettings
+                    {
+                        MapToType = t,
+                    }
+                }
+            };
+            var srvRes = new ServiceResponse<Category>
+            {
+                Result = ServiceResult.Accepted,
+                Message = "this is message"
+            };
+            var srv = new Mock<ICrudService<Category>>();
+            srv.Setup(s => s.Create(It.IsAny<Category>())).ReturnsAsync(srvRes);
+
+            var sm = new Mock<IServiceResponseMapper>();
+            var expData = "data";
+            sm.Setup(s => s.MapServiceResponse(typeof(Category), typeof(Category), It.IsAny<ServiceResponse>()))
+                .Returns(new JsonResult(expData));
+            var ctrl = new GenericController<Category, Category>(
+                srv.Object, null,
+                sm.Object, wc,
+                log.Object);
+
+            var model = new Category();
+            var res = await ctrl.Post(model);
+            var js = res.ShouldBeOfType<JsonResult>();
+            js.Value.ShouldBe(expData);
+        }
+        #endregion
     }
 }
