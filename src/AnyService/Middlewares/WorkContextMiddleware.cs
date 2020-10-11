@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AnyService.Http;
 using AnyService.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,20 +37,9 @@ namespace AnyService.Middlewares
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
         {
-            _logger.LogDebug(LoggingEvents.WorkContext, "Start WorkContextMiddleware invokation");
-            var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            _logger.LogDebug(LoggingEvents.WorkContext, $"UserId = {userId}");
-            var clientId = httpContext.User.FindFirst("client_id")?.Value;
-            _logger.LogDebug(LoggingEvents.WorkContext, $"ClientId = {clientId}");
-
-            if (!clientId.HasValue() && !userId.HasValue() && !(await _onMissingUserIdOrClientIdHandler(httpContext, workContext, _logger)))
-            {
-                _logger.LogDebug(LoggingEvents.WorkContext, $"breaks middleware execution");
+            _logger.LogInformation(LoggingEvents.WorkContext, $"Start {nameof(WorkContextMiddleware)} invokation");
+            if (!await HttpContextToWorkContext(httpContext, workContext))
                 return;
-            }
-            workContext.CurrentUserId = userId;
-            workContext.CurrentClientId = clientId;
-            workContext.IpAddress = httpContext.Connection?.RemoteIpAddress?.ToString();
 
             var ecr = GetEntityConfigRecordByRoute(httpContext.Request.Path);
             if (ecr != null && !ecr.Equals(default))
@@ -64,6 +54,29 @@ namespace AnyService.Middlewares
             }
             _logger.LogDebug(LoggingEvents.WorkContext, "Finish parsing current WorkContext");
             await _next(httpContext);
+        }
+        protected async Task<bool> HttpContextToWorkContext(HttpContext httpContext, WorkContext workContext)
+        {
+            _logger.LogDebug(LoggingEvents.WorkContext, $"Extract headers");
+            workContext.SessionId = httpContext.Request.Headers[HttpHeaderNames.ClientSessionId];
+            _logger.LogDebug(LoggingEvents.WorkContext, $"header: {HttpHeaderNames.ClientSessionId} with value {workContext.SessionId}");
+            workContext.ReferenceId = httpContext.Request.Headers[HttpHeaderNames.ClientRequestReference];
+            _logger.LogDebug(LoggingEvents.WorkContext, $"header: {HttpHeaderNames.ClientRequestReference} with value {workContext.ReferenceId}");
+
+            var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            _logger.LogDebug(LoggingEvents.WorkContext, $"UserId = {userId}");
+            var clientId = httpContext.User.FindFirst("client_id")?.Value;
+            _logger.LogDebug(LoggingEvents.WorkContext, $"ClientId = {clientId}");
+
+            if (!clientId.HasValue() && !userId.HasValue() && !(await _onMissingUserIdOrClientIdHandler(httpContext, workContext, _logger)))
+            {
+                _logger.LogDebug(LoggingEvents.WorkContext, $"breaks middleware execution");
+                return false;
+            }
+            workContext.CurrentUserId = userId;
+            workContext.CurrentClientId = clientId;
+            workContext.IpAddress = httpContext.Connection?.RemoteIpAddress?.ToString();
+            return true;
         }
 
         private bool MethodActive(WorkContext workContext)

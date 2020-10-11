@@ -1,3 +1,4 @@
+using AnyService.Http;
 using AnyService.Middlewares;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -33,12 +34,15 @@ namespace AnyService.Tests.Middlewares
 
             var user = new Mock<ClaimsPrincipal>();
             user.Setup(u => u.Claims).Returns(new Claim[] { });
-            var hc = new Mock<HttpContext>();
-            var hr = new Mock<HttpResponse>();
-            hc.Setup(h => h.User).Returns(user.Object);
-            hc.Setup(h => h.Response).Returns(hr.Object);
-            await wcm.InvokeAsync(hc.Object, null);
-            hr.VerifySet(r => r.StatusCode = StatusCodes.Status401Unauthorized, Times.Once);
+            var ctx = new Mock<HttpContext>();
+
+            ctx.SetupGet(r => r.Request.Headers).Returns(new HeaderDictionary());
+            var res = new Mock<HttpResponse>();
+            ctx.Setup(h => h.User).Returns(user.Object);
+            ctx.Setup(h => h.Response).Returns(res.Object);
+            var wc = new WorkContext();
+            await wcm.InvokeAsync(ctx.Object, wc);
+            res.VerifySet(r => r.StatusCode = StatusCodes.Status401Unauthorized, Times.Once);
         }
         [Fact]
         public async Task ParseRequestInfoAndMoveToNext()
@@ -74,13 +78,14 @@ namespace AnyService.Tests.Middlewares
             var logger = new Mock<ILogger<WorkContextMiddleware>>();
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, expUserId) }));
             var ctx = new Mock<HttpContext>();
-            var request = new Mock<HttpRequest>();
-            request.Setup(r => r.Path).Returns(new PathString(expPath));
-            request.Setup(r => r.Method).Returns(expMethod);
+            var req = new Mock<HttpRequest>();
+            req.Setup(r => r.Path).Returns(new PathString(expPath));
+            req.Setup(r => r.Method).Returns(expMethod);
+            req.SetupGet(r => r.Headers).Returns(new HeaderDictionary());
 
             var response = new Mock<HttpResponse>();
             ctx.Setup(h => h.User).Returns(user);
-            ctx.Setup(h => h.Request).Returns(request.Object);
+            ctx.Setup(h => h.Request).Returns(req.Object);
             ctx.Setup(h => h.Response).Returns(response.Object);
             var wc = new WorkContext();
 
@@ -112,12 +117,52 @@ namespace AnyService.Tests.Middlewares
             wcmt.ActiveMap[$"{e.Identifier}_put"].ShouldBeFalse();
             wcmt.ActiveMap[$"{e.Identifier}_delete"].ShouldBeTrue();
         }
+
+        [Fact]
+        public async Task ExtractsHttpContext()
+        {
+            string expUserId = "u-id",
+                expClientId = "c-Id",
+                expSessionId = "s-id",
+                expRefId = "r-id";
+            var hd = new HeaderDictionary
+            {
+                { HttpHeaderNames.ClientSessionId, expSessionId },
+                { HttpHeaderNames.ClientRequestReference, expRefId },
+            };
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new[] {
+                new Claim(ClaimTypes.NameIdentifier, expUserId),
+                new Claim("client_id", expClientId),
+            }));
+            var ctx = new Mock<HttpContext>();
+            var req = new Mock<HttpRequest>();
+            req.Setup(r => r.Path).Returns(new PathString("/do/123"));
+            req.Setup(r => r.Method).Returns("get");
+            req.SetupGet(r => r.Headers).Returns(hd);
+            var response = new Mock<HttpResponse>();
+            ctx.Setup(h => h.User).Returns(user);
+            ctx.Setup(h => h.Request).Returns(req.Object);
+
+            var mw = new WorkContextMiddleware_ForTests(new EntityConfigRecord[] { });
+
+            var wc = new WorkContext();
+            var res = await mw.ExtractHttpContext(ctx.Object, wc);
+            res.ShouldBeTrue();
+
+            wc.CurrentUserId.ShouldBe(expUserId);
+            wc.CurrentClientId.ShouldBe(expClientId);
+            wc.SessionId.ShouldBe(expSessionId);
+            wc.ReferenceId.ShouldBe(expRefId);
+        }
+
         public class WorkContextMiddleware_ForTests : WorkContextMiddleware
         {
             public WorkContextMiddleware_ForTests(IEnumerable<EntityConfigRecord> entityConfigRecords)
-                : base(null, entityConfigRecords, null, null)
+                : base(null, entityConfigRecords, new Mock<ILogger<WorkContextMiddleware_ForTests>>().Object, null)
             {
             }
+            public Task<bool> ExtractHttpContext(HttpContext ctx, WorkContext wc) => HttpContextToWorkContext(ctx, wc);
             public IReadOnlyDictionary<string, bool> ActiveMap => base.ActivationMaps;
         }
     }
