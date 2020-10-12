@@ -245,34 +245,28 @@ namespace AnyService.Services
         #endregion
         #region Get Aggregated
         public async Task<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>> GetAggregated(
-            string aggregateRootId,
-            IEnumerable<string> aggregatedNames
+            string parentId,
+            IEnumerable<string> childEntityNames
             )
         {
             var srvRes = new ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>();
             if (
-                !aggregateRootId.HasValue() ||
-                aggregatedNames.IsNullOrEmpty() ||
+                !parentId.HasValue() ||
+                childEntityNames.IsNullOrEmpty() ||
                 !AllAggregatedExists())
             {
                 srvRes.Result = ServiceResult.BadOrMissingData;
                 return srvRes;
             }
 
-            var col = await MapRepository.Collection;
-            var q = from c in col
-                    where
-                    c.ParentEntityName == WorkContext.CurrentEntityConfigRecord.Name &&
-                    c.ParentId == aggregateRootId &&
-                    aggregatedNames.Contains(c.ChildEntityName, StringComparer.InvariantCultureIgnoreCase)
-                    group c by c.ChildEntityName into g
-                    select new { AggregatedName = g.Key, AggregatedIds = g.Select(x => x.ChildId) };
-
             var ecrs = ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
             var res = new Dictionary<string, IEnumerable<IDomainEntity>>();
-            foreach (var group in q)
+
+            var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, childEntityNames);
+            foreach (var gm in groupMaps)
             {
-                var ecr = ecrs.FirstOrDefault(e => e.Name.ToLower() == group.AggregatedName.ToLower());
+                var cuChildIds = gm.Select(s => s.ChildId);
+                var ecr = ecrs.FirstOrDefault(e => e.Name.ToLower() == gm.Key.ToLower());
                 if (ecr == default)
                     continue;
 
@@ -283,9 +277,9 @@ namespace AnyService.Services
                     return srvRes;
                 }
                 var curCol = (await r.Collection) as IQueryable<IDomainEntity>;
-                var aggregated = curCol?.Where(x => group.AggregatedIds.Contains(x.Id));
+                var aggregated = curCol.Where(c => cuChildIds.Contains(c.Id));
 
-                res[group.AggregatedName] = aggregated.ToArray();
+                res[gm.Key] = aggregated.ToArray();
             }
 
             srvRes.Result = ServiceResult.Ok;
@@ -294,9 +288,52 @@ namespace AnyService.Services
 
             bool AllAggregatedExists()
             {
-                aggregatedNames = aggregatedNames.Select(x => x.Trim().ToLower());
-                return AllAggregatedNames.All(aggregatedNames.Contains);
+                childEntityNames = childEntityNames.Select(x => x.Trim().ToLower());
+                return AllAggregatedNames.All(childEntityNames.Contains);
             }
+        }
+        public async Task<ServiceResponse<Pagination<IDomainEntity>>> GetAggregatedPage(string parentId, string childEntityName, Pagination<IDomainEntity> pagination)
+        {
+            var srvRes = new ServiceResponse<Pagination<IDomainEntity>> { Payload = pagination };
+            var ecrs = ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
+            var ecr = ecrs.FirstOrDefault(e => e.Name.ToLower() == childEntityName.ToLower());
+
+            if (ecr == null || !AllAggregatedNames.Contains(childEntityName.ToLower()))
+            {
+                srvRes.Result = ServiceResult.BadOrMissingData;
+                return srvRes;
+            }
+
+            var maps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, new[] { childEntityName });
+            if (maps.IsNullOrEmpty())
+            {
+                srvRes.Result = ServiceResult.BadOrMissingData;
+                return srvRes;
+            }
+
+            var childIds = maps.First().Select(s => s.ChildId);
+
+            /*-------------------------note tested from here------------------------------------------------------*/
+            dynamic r = ServiceProvider.GetGenericService(typeof(IRepository<>), ecr.Type);
+            if (r == null)
+            {
+                srvRes.Result = ServiceResult.Error;
+                return srvRes;
+            }
+            pagination.QueryFunc = new Func<IDomainEntity, bool>(s => childIds.Contains(s.Id));
+            var data = await r.GetAll(pagination) as IEnumerable<IDomainEntity>;
+            pagination.Data = data;
+            return srvRes;
+        }
+        private async Task<IQueryable<IGrouping<string, EntityMapping>>> GetGroupedMappingByParentIdAndChildEntityNames(string parentId, IEnumerable<string> childEntityNames)
+        {
+            var col = await MapRepository.Collection;
+            return from c in col
+                   where
+                   c.ParentEntityName == WorkContext.CurrentEntityConfigRecord.Name &&
+                   c.ParentId == parentId &&
+                   childEntityNames.Contains(c.ChildEntityName, StringComparer.InvariantCultureIgnoreCase)
+                   group c by c.ChildEntityName;
         }
         #endregion
         #region Update

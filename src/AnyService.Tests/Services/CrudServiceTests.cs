@@ -1116,6 +1116,215 @@ Times.Once);
             r.Payload.Count().ShouldBe(2);
         }
         #endregion
+        #region GetAggregatedPage
+        [Fact]
+        public async Task GetAggregatedPage_AggregatedNotConfigured()
+        {
+            var repo = new Mock<IRepository<AuditableTestEntity>>();
+            var eb = new Mock<IEventBus>();
+            var ekr = new EventKeyRecord(null, "read", null, null);
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AuditableTestEntity),
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                }
+            }; var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
+            var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
+
+            sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
+            sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestEntity>))).Returns(repo.Object);
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestEntity>)));
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(new EntityConfigRecord[] { });
+
+            var cSrv = new CrudService<AuditableTestEntity>(sp.Object, logger.Object);
+            var res = await cSrv.GetAggregatedPage(null, "not-exists", null);
+            var r = res.ShouldBeOfType<ServiceResponse<Pagination<IDomainEntity>>>();
+            r.Result.ShouldBe(ServiceResult.BadOrMissingData);
+            r.Payload.ShouldBeNull();
+        }
+        [Fact]
+        public async Task GetAggregatedPage_AggregatedNotExistsForEntity()
+        {
+            var repo = new Mock<IRepository<AuditableTestEntity>>();
+            var eb = new Mock<IEventBus>();
+            var ekr = new EventKeyRecord(null, "read", null, null);
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AuditableTestEntity),
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                }
+            }; var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
+            var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
+
+            sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
+            sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestEntity>))).Returns(repo.Object);
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestEntity>)));
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
+
+            var ecrs = new[]
+            {
+                new EntityConfigRecord
+                {
+                    Type = typeof(AggregateRootEntity),
+                    Name = "AggregateRootEntity",
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                },
+                new EntityConfigRecord
+                {
+                    Type = typeof(OptionEntity),
+                    Name = "OptionEntity",
+                },
+                new EntityConfigRecord
+                {
+                    Type = typeof(Aggregated),
+                    Name = "Aggregated",
+                },
+            };
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(ecrs);
+
+            var cSrv = new CrudService<AuditableTestEntity>(sp.Object, logger.Object);
+            var res = await cSrv.GetAggregatedPage(null, "not-exists", null);
+            var r = res.ShouldBeOfType<ServiceResponse<Pagination<IDomainEntity>>>();
+            r.Result.ShouldBe(ServiceResult.BadOrMissingData);
+            r.Payload.ShouldBeNull();
+        }
+        [Fact]
+        public async Task GetAggregatedPage_ParentNotExists()
+        {
+            var ekr = new EventKeyRecord(null, "read", null, null);
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AggregateRootEntity),
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                }
+            };
+            var sp = new Mock<IServiceProvider>();
+
+            sp.Setup(s => s.GetService(typeof(AnyServiceConfig)));
+            sp.Setup(s => s.GetService(typeof(IRepository<AggregateRootEntity>)));
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AggregateRootEntity>)));
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            sp.Setup(s => s.GetService(typeof(IEventBus)));
+            sp.Setup(s => s.GetService(typeof(IAuditManager)));
+
+            var mapRepo = new Mock<IRepository<EntityMapping>>();
+            mapRepo.Setup(mr => mr.Collection);
+            sp.Setup(s => s.GetService(typeof(IRepository<EntityMapping>))).Returns(mapRepo.Object);
+
+            var ecrs = new[]
+            {
+                new EntityConfigRecord
+                {
+                    Type = typeof(AggregateRootEntity),
+                    Name = "AggregateRootEntity",
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                },
+                new EntityConfigRecord
+                {
+                    Type = typeof(OptionEntity),
+                    Name = "OptionEntity",
+                },
+                new EntityConfigRecord
+                {
+                    Type = typeof(Aggregated),
+                    Name = "Aggregated",
+                },
+            };
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(ecrs);
+
+            var logger = new Mock<ILogger<CrudService<AggregateRootEntity>>>();
+            var cSrv = new CrudService<AggregateRootEntity>(sp.Object, logger.Object);
+            var res = await cSrv.GetAggregatedPage("not-exists", "aggregated", null);
+            var r = res.ShouldBeOfType<ServiceResponse<Pagination<IDomainEntity>>>();
+            r.Result.ShouldBe(ServiceResult.BadOrMissingData);
+            r.Payload.ShouldBeNull();
+        }
+        [Fact]
+        public async Task GetAggregatedPage_MissingRepositoryDefintionReturnsError()
+        {
+            var ekr = new EventKeyRecord(null, "read", null, null);
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AggregateRootEntity),
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                }
+            };
+            var sp = new Mock<IServiceProvider>();
+
+            sp.Setup(s => s.GetService(typeof(AnyServiceConfig)));
+            sp.Setup(s => s.GetService(typeof(IRepository<AggregateRootEntity>)));
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AggregateRootEntity>)));
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            sp.Setup(s => s.GetService(typeof(IEventBus)));
+            sp.Setup(s => s.GetService(typeof(IAuditManager)));
+
+            var maps = new[]
+            {
+                new EntityMapping
+            }
+            var mapRepo = new Mock<IRepository<EntityMapping>>();
+            mapRepo.Setup(mr => mr.Collection).Returns(maps);
+            sp.Setup(s => s.GetService(typeof(IRepository<EntityMapping>))).Returns(mapRepo.Object);
+
+            var ecrs = new[]
+            {
+                new EntityConfigRecord
+                {
+                    Type = typeof(AggregateRootEntity),
+                    Name = "AggregateRootEntity",
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                },
+                new EntityConfigRecord
+                {
+                    Type = typeof(OptionEntity),
+                    Name = "OptionEntity",
+                },
+                new EntityConfigRecord
+                {
+                    Type = typeof(Aggregated),
+                    Name = "Aggregated",
+                },
+            };
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(ecrs);
+
+            var logger = new Mock<ILogger<CrudService<AggregateRootEntity>>>();
+            var cSrv = new CrudService<AggregateRootEntity>(sp.Object, logger.Object);
+            var res = await cSrv.GetAggregatedPage("not-exists", "aggregated", null);
+            var r = res.ShouldBeOfType<ServiceResponse<Pagination<IDomainEntity>>>();
+            r.Result.ShouldBe(ServiceResult.BadOrMissingData);
+            r.Payload.ShouldBeNull();
+            throw new NotImplementedException();
+        }
+        [Fact]
+        public async Task GetAggregatedPage_GetPage()
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
         #region Update
         [Fact]
         public async Task Update_BadRequest_OnValidatorFailure()
