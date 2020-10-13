@@ -267,7 +267,7 @@ namespace AnyService.Services
 
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(parentId)} = {parentId}, {nameof(childEntityNames)} = {childEntityNames.ToJsonString()}");
             var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, childEntityNames);
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Returns mapping: {groupMaps.ToJsonString()}");
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Returns mapping: {groupMaps}");
 
             foreach (var gm in groupMaps)
             {
@@ -328,7 +328,7 @@ namespace AnyService.Services
 
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(parentId)} = {parentId}, {nameof(childEntityName)} = {ecr.Name}");
             var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, new[] { ecr.Name });
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Returns mapping: {groupMaps.ToJsonString()}");
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Returns mapping: {groupMaps}");
             if (groupMaps.IsNullOrEmpty())
             {
                 Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{ServiceResult.BadOrMissingData} - no mappings found");
@@ -352,7 +352,7 @@ namespace AnyService.Services
             serviceResponse.Result = ServiceResult.Ok;
 
             Publish(EventKeys.Read, pagination);
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(ServiceResponse)} = {serviceResponse.ToJsonString()}");
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(ServiceResponse)} = {serviceResponse}");
             return serviceResponse;
         }
         private async Task<IQueryable<IGrouping<string, EntityMapping>>> GetGroupedMappingByParentIdAndChildEntityNames(string parentId, IEnumerable<string> childEntityNames)

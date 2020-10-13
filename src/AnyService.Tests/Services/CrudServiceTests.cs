@@ -1329,7 +1329,8 @@ Times.Once);
             sp.Setup(s => s.GetService(typeof(IRepository<AggregateRootEntity>)));
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AggregateRootEntity>)));
             sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
-            sp.Setup(s => s.GetService(typeof(IEventBus)));
+            var eb = new Mock<IEventBus>();
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
             sp.Setup(s => s.GetService(typeof(IAuditManager)));
 
             var maps = new[]
@@ -1383,11 +1384,13 @@ Times.Once);
             r.Result.ShouldBe(ServiceResult.Ok);
             r.Payload.ShouldBe(p);
             p.Data.ShouldBe(page);
+
+            eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Read), It.Is<DomainEventData>(ded => ded.Data == p)), Times.Once);
         }
         #endregion
         #region UpdateMapping
         [Fact]
-        public async Task UpdateMappings_
+        public async Task UpdateMappings_()
         {
             throw new NotImplementedException();
         }
