@@ -20,15 +20,10 @@ namespace AnyService.Conventions
         public void Apply(ControllerModel controller)
         {
             var allEcrs = _serviceProvider.GetService<IEnumerable<EntityConfigRecord>>();
-            var genericControllerTypes = new[]
-            {
-                typeof(GenericController<,>),
-                typeof(GenericAggregateRootController<,>)
-            };
 
             var p = controller.Application.Properties;
             var genericTypeDefinition = controller.ControllerType.GetGenericTypeDefinition();
-            if (!genericControllerTypes.Contains(genericTypeDefinition))
+            if (typeof(GenericController<,>) != genericTypeDefinition)
                 return;
 
             var currentEcrs = allEcrs.Where(e =>

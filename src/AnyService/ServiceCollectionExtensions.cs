@@ -270,13 +270,7 @@ namespace Microsoft.Extensions.DependencyInjection
         private static Type BuildController(Type entityType, EndpointSettings settings)
         {
             var mapToType = settings.MapToType;
-            var isParent = mapToType.GetInterfaces()
-                .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IAggregateRoot<>));
-
-            return isParent
-                ?
-                typeof(GenericAggregateRootController<,>).MakeGenericType(mapToType, entityType) :
-                typeof(GenericController<,>).MakeGenericType(mapToType, entityType);
+            return typeof(GenericController<,>).MakeGenericType(mapToType, entityType);
         }
         private static AuditSettings NormalizeAudity(EntityConfigRecord ecr, AuditSettings auditSettings)
         {
