@@ -1114,6 +1114,8 @@ Times.Once);
             var r = res.ShouldBeOfType<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>>();
             r.Result.ShouldBe(ServiceResult.Ok);
             r.Payload.Count().ShouldBe(2);
+
+            eb.Verify(e => e.Publish(It.IsAny<string>(), It.IsAny<DomainEventData>()), Times.Once);
         }
         #endregion
         #region GetAggregatedPage
@@ -1381,6 +1383,13 @@ Times.Once);
             r.Result.ShouldBe(ServiceResult.Ok);
             r.Payload.ShouldBe(p);
             p.Data.ShouldBe(page);
+        }
+        #endregion
+        #region UpdateMapping
+        [Fact]
+        public async Task UpdateMappings_
+        {
+            throw new NotImplementedException();
         }
         #endregion
         #region Update

@@ -249,14 +249,17 @@ namespace AnyService.Services
             IEnumerable<string> childEntityNames
             )
         {
-            var srvRes = new ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>();
+            Logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"Start get aggregated with parameters: {nameof(parentId)} = {parentId}, {nameof(childEntityNames)} = {childEntityNames.ToJsonString()}");
+            var serviceResponse = new ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>();
             if (
                 !parentId.HasValue() ||
                 childEntityNames.IsNullOrEmpty() ||
                 !AllAggregatedExists())
             {
-                srvRes.Result = ServiceResult.BadOrMissingData;
-                return srvRes;
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Invalid parameters");
+
+                serviceResponse.Result = ServiceResult.BadOrMissingData;
+                return serviceResponse;
             }
 
             var ecrs = ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
@@ -273,23 +276,31 @@ namespace AnyService.Services
                 dynamic r = ServiceProvider.GetGenericService(typeof(IRepository<>), ecr.Type);
                 if (r == null)
                 {
-                    srvRes.Result = ServiceResult.Error;
-                    return srvRes;
+                    Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Generic type {nameof(IRepository<object>)} for EntityConfigRecord {nameof(ecr.Name)} not defined");
+                    serviceResponse.Result = ServiceResult.Error;
+                    return serviceResponse;
                 }
                 var curCol = (await r.Collection) as IQueryable<IDomainEntity>;
                 var aggregated = curCol.Where(c => cuChildIds.Contains(c.Id));
-
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Add to returned collection: {nameof(gm.Key)} = {gm.Key}, Value = {aggregated.ToJsonString()}");
                 res[gm.Key] = aggregated.ToArray();
             }
 
-            srvRes.Result = ServiceResult.Ok;
-            srvRes.Payload = res;
-            return srvRes;
+            serviceResponse.Result = ServiceResult.Ok;
+            serviceResponse.Payload = res;
+
+            Publish(EventKeys.Read, serviceResponse.Payload);
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(ServiceResponse)} = {serviceResponse.ToJsonString()}");
+
+            return serviceResponse;
 
             bool AllAggregatedExists()
             {
                 childEntityNames = childEntityNames.Select(x => x.Trim().ToLower());
-                return AllAggregatedNames.All(childEntityNames.Contains);
+                var res = AllAggregatedNames.All(childEntityNames.Contains);
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{childEntityNames}{(res ? "" : " NOT")} exists in {AllAggregatedNames.ToJsonString()}");
+
+                return res;
             }
         }
         public async Task<ServiceResponse<Pagination<TChild>>> GetAggregatedPage<TChild>(string parentId, Pagination<TChild> pagination, string childEntityName = null)
@@ -341,6 +352,12 @@ namespace AnyService.Services
                    group c by c.ChildEntityName;
         }
         #endregion
+        #region UpdateMappings
+        public Task<ServiceResponse<IEnumerable<string>>> UpdateMappings<TChild>(string parentId, IEnumerable<string> childIdsToAdd, IEnumerable<string> childIdsToRemove, string childEntityName = null) where TChild : IDomainEntity
+        {
+            throw new NotImplementedException();
+        }
+        #endregion 
         #region Update
         public virtual async Task<ServiceResponse<TDomainEntity>> Update(string id, TDomainEntity entity)
         {
@@ -463,7 +480,6 @@ namespace AnyService.Services
             }
             return false;
         }
-
         private void Publish(string eventKey, object data)
         {
             Logger.LogDebug(LoggingEvents.EventPublishing, $"Publish event using {eventKey} key");
