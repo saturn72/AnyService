@@ -265,7 +265,10 @@ namespace AnyService.Services
             var ecrs = ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
             var res = new Dictionary<string, IEnumerable<IDomainEntity>>();
 
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(parentId)} = {parentId}, {nameof(childEntityNames)} = {childEntityNames.ToJsonString()}");
             var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, childEntityNames);
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Returns mapping: {groupMaps.ToJsonString()}");
+
             foreach (var gm in groupMaps)
             {
                 var cuChildIds = gm.Select(s => s.ChildId);
@@ -306,7 +309,9 @@ namespace AnyService.Services
         public async Task<ServiceResponse<Pagination<TChild>>> GetAggregatedPage<TChild>(string parentId, Pagination<TChild> pagination, string childEntityName = null)
             where TChild : IDomainEntity
         {
-            var srvRes = new ServiceResponse<Pagination<TChild>> { Payload = pagination };
+            Logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"Start {nameof(GetAggregatedPage)} with parameters: {nameof(parentId)} = {parentId}, {nameof(pagination)} = {pagination.ToJsonString()}, {nameof(childEntityName)} = {childEntityName}");
+
+            var serviceResponse = new ServiceResponse<Pagination<TChild>> { Payload = pagination };
             var genericTypeArgument = pagination?.GetType().GenericTypeArguments[0];
 
             var ecrs = ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
@@ -316,30 +321,39 @@ namespace AnyService.Services
 
             if (ecr == null)
             {
-                srvRes.Result = ServiceResult.BadOrMissingData;
-                return srvRes;
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(EntityConfigRecord)} of type {nameof(genericTypeArgument.Name)} OR named {nameof(childEntityName)} is not configures");
+                serviceResponse.Result = ServiceResult.BadOrMissingData;
+                return serviceResponse;
             }
 
-            var maps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, new[] { ecr.Name });
-            if (maps.IsNullOrEmpty())
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(parentId)} = {parentId}, {nameof(childEntityName)} = {ecr.Name}");
+            var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, new[] { ecr.Name });
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Returns mapping: {groupMaps.ToJsonString()}");
+            if (groupMaps.IsNullOrEmpty())
             {
-                srvRes.Result = ServiceResult.BadOrMissingData;
-                return srvRes;
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{ServiceResult.BadOrMissingData} - no mappings found");
+                serviceResponse.Result = ServiceResult.BadOrMissingData;
+                return serviceResponse;
             }
 
-            var childIds = maps.First().Select(s => s.ChildId);
+            var childIds = groupMaps.First().Select(s => s.ChildId);
             dynamic r = ServiceProvider.GetGenericService(typeof(IRepository<>), ecr.Type);
             if (r == null)
             {
-                srvRes.Result = ServiceResult.Error;
-                return srvRes;
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Generic type {nameof(IRepository<object>)} for EntityConfigRecord {nameof(ecr.Name)} not defined");
+                serviceResponse.Result = ServiceResult.Error;
+                return serviceResponse;
             }
 
             pagination.QueryFunc = new Func<TChild, bool>(s => childIds.Contains(s.Id));
             var data = await r.GetAll(pagination) as IEnumerable<TChild>;
             pagination.Data = data;
-            srvRes.Result = ServiceResult.Ok;
-            return srvRes;
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get paged data = {data.ToJsonString()}");
+            serviceResponse.Result = ServiceResult.Ok;
+
+            Publish(EventKeys.Read, pagination);
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(ServiceResponse)} = {serviceResponse.ToJsonString()}");
+            return serviceResponse;
         }
         private async Task<IQueryable<IGrouping<string, EntityMapping>>> GetGroupedMappingByParentIdAndChildEntityNames(string parentId, IEnumerable<string> childEntityNames)
         {
