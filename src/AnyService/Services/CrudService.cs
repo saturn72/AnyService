@@ -367,8 +367,44 @@ namespace AnyService.Services
         }
         #endregion
         #region UpdateMappings
-        public Task<ServiceResponse<IEnumerable<string>>> UpdateMappings<TChild>(string parentId, IEnumerable<string> childIdsToAdd, IEnumerable<string> childIdsToRemove, string childEntityName = null) where TChild : IDomainEntity
+        public async Task<ServiceResponse<IEnumerable<string>>> UpdateMappings<TChild>(string parentId, IEnumerable<string> childIdsToAdd, IEnumerable<string> childIdsToRemove, string childEntityName = null) where TChild : IDomainEntity
         {
+            Logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"Start {nameof(UpdateMappings)} with parameters: {nameof(parentId)} = {parentId}, {nameof(childIdsToAdd)} = {childIdsToAdd.ToJsonString()}, {nameof(childIdsToRemove)} = {childIdsToRemove.ToJsonString()}, {nameof(childEntityName)} = {childEntityName}");
+
+            var serviceResponse = new ServiceResponse<IEnumerable<string>>();
+
+            var ecrs = ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
+            var ecr = childEntityName.HasValue() ?
+                ecrs.FirstOrDefault(e => e.Name == childEntityName) :
+                ecrs.FirstOrDefault(e => e.Type == typeof(TChild));
+
+            if (ecr == null)
+            {
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(EntityConfigRecord)} of type {typeof(TChild).Name} OR named {nameof(childEntityName)} is not configures");
+                serviceResponse.Result = ServiceResult.BadOrMissingData;
+                return serviceResponse;
+            }
+            throw new NotImplementedException("check if ids to add exists in the database. If not - return Bad or missing data");
+
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(parentId)} = {parentId}, {nameof(childEntityName)} = {ecr.Name}");
+            var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, new[] { ecr.Name });
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Returns mapping: {groupMaps}");
+
+
+            //verify all ids exists
+
+
+
+
+            var toDelete = groupMaps.FirstOrDefault()?.Where(e => childIdsToRemove.Contains(e.ChildId));
+            //delete
+            if (!toDelete.IsNullOrEmpty())
+                MapRepository.BulkDelete(toDelete);
+
+            var toAdd= childIdsToAdd?.Select(new EntityMapping
+            {
+                
+            })
             throw new NotImplementedException();
         }
         #endregion 

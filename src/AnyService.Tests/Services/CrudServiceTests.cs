@@ -1390,9 +1390,178 @@ Times.Once);
         #endregion
         #region UpdateMapping
         [Fact]
-        public async Task UpdateMappings_()
+        public async Task UpdateMappings_NamedChildTypeNotConfigured()
         {
-            throw new NotImplementedException();
+            var parentId = "p-id";
+            var ekr = new EventKeyRecord(null, "read", null, null);
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AggregateRootEntity),
+                    Name = "AggregateRootEntity",
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                }
+            };
+            var sp = new Mock<IServiceProvider>();
+
+            sp.Setup(s => s.GetService(typeof(AnyServiceConfig)));
+            sp.Setup(s => s.GetService(typeof(IRepository<AggregateRootEntity>)));
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AggregateRootEntity>)));
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            var eb = new Mock<IEventBus>();
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+            sp.Setup(s => s.GetService(typeof(IAuditManager)));
+            var ecrs = new[]
+          {
+                new EntityConfigRecord
+                {
+                    Type = typeof(AggregateRootEntity),
+                    Name = "AggregateRootEntity",
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                },
+                new EntityConfigRecord
+                {
+                    Type = typeof(OptionEntity),
+                    Name = "OptionEntity",
+                },
+                new EntityConfigRecord
+                {
+                    Type = typeof(AggregatedChild),
+                    Name = "Aggregated",
+                },
+            };
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(ecrs);
+
+            var logger = new Mock<ILogger<CrudService<AggregateRootEntity>>>();
+            var cSrv = new CrudService<AggregateRootEntity>(sp.Object, logger.Object);
+            var res = await cSrv.UpdateMappings<AggregatedChild>(parentId, new[] { "a", "b", "c" }, new[] { "d", "e" }, "not-exists");
+
+            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
+        }
+        [Fact]
+        public async Task UpdateMappings_ChildTypeNotConfigured()
+        {
+            var parentId = "p-id";
+            var ekr = new EventKeyRecord(null, "read", null, null);
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AggregateRootEntity),
+                    Name = "AggregateRootEntity",
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                }
+            };
+            var sp = new Mock<IServiceProvider>();
+
+            sp.Setup(s => s.GetService(typeof(AnyServiceConfig)));
+            sp.Setup(s => s.GetService(typeof(IRepository<AggregateRootEntity>)));
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AggregateRootEntity>)));
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            var eb = new Mock<IEventBus>();
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+            sp.Setup(s => s.GetService(typeof(IAuditManager)));
+            var ecrs = new[]
+          {
+                new EntityConfigRecord
+                {
+                    Type = typeof(AggregateRootEntity),
+                    Name = "AggregateRootEntity",
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                },
+                new EntityConfigRecord
+                {
+                    Type = typeof(OptionEntity),
+                    Name = "OptionEntity",
+                },
+            };
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(ecrs);
+
+            var logger = new Mock<ILogger<CrudService<AggregateRootEntity>>>();
+            var cSrv = new CrudService<AggregateRootEntity>(sp.Object, logger.Object);
+            var res = await cSrv.UpdateMappings<AggregatedChild>(parentId, new[] { "a", "b", "c" }, new[] { "d", "e" });
+
+            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
+        }
+        [Fact]
+        public async Task UpdateMappings_Maps()
+        {
+            var parentId = "p-id";
+            var ekr = new EventKeyRecord(null, "read", null, null);
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AggregateRootEntity),
+                    Name = "AggregateRootEntity",
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                }
+            };
+            var sp = new Mock<IServiceProvider>();
+
+            sp.Setup(s => s.GetService(typeof(AnyServiceConfig)));
+            sp.Setup(s => s.GetService(typeof(IRepository<AggregateRootEntity>)));
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AggregateRootEntity>)));
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            var eb = new Mock<IEventBus>();
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+            sp.Setup(s => s.GetService(typeof(IAuditManager)));
+            var ecrs = new[]
+            {
+                new EntityConfigRecord
+                {
+                    Type = typeof(AggregateRootEntity),
+                    Name = typeof(AggregateRootEntity).Name,
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                },
+                new EntityConfigRecord
+                {
+                    Type = typeof(OptionEntity),
+                    Name = "OptionEntity",
+                },
+                  new EntityConfigRecord
+                {
+                    Type = typeof(AggregatedChild),
+                    Name = "AggregatedChild",
+                },
+            };
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(ecrs);
+
+            var mapRepo = new Mock<IRepository<EntityMapping>>();
+            var mapData = new[]
+            {
+                new EntityMapping{ParentId = parentId, ChildId = "d" }
+            };
+            mapRepo.Setup(mr => mr.Collection).ReturnsAsync(mapData.AsQueryable());
+            sp.Setup(s => s.GetService(typeof(IRepository<EntityMapping>))).Returns(mapRepo.Object);
+
+            var logger = new Mock<ILogger<CrudService<AggregateRootEntity>>>();
+            var cSrv = new CrudService<AggregateRootEntity>(sp.Object, logger.Object);
+            var expIds = new[] { "a", "b", "c" };
+            var res = await cSrv.UpdateMappings<AggregatedChild>(parentId, expIds, new[] { "d", "e" });
+
+            res.Result.ShouldBe(ServiceResult.Error);
+
+            //mapRepo.Verify(mr => mr.BulkDelete(ids => ids.Count() == 1 && ids.Contains("d")), Times.Once);
+            Func<IEnumerable<EntityMapping>, bool> VerifyBulkInsertEntities =
+                entities =>
+                {
+                    var cName = typeof(AggregatedChild).Name;
+                    var pName = typeof(AggregateRootEntity).Name;
+                    return entities.Count() == 3 &&
+                    entities.All(e => e.ParentEntityName == pName && e.ParentId == parentId && e.ChildEntityName == cName && expIds.Contains(e.Id));
+                };
+            mapRepo.Verify(mr => mr.BulkInsert(It.Is<IEnumerable<EntityMapping>>(e => VerifyBulkInsertEntities(e)), It.IsAny<bool>()), Times.Once);
         }
         #endregion
         #region Update
