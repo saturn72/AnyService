@@ -12,6 +12,7 @@ using AnyService.Services.Audit;
 using AnyService.Services.Preparars;
 using System.Collections.Generic;
 using AnyService.Services.Internals;
+using System.Reflection.Metadata.Ecma335;
 
 namespace AnyService.Services
 {
@@ -271,7 +272,6 @@ namespace AnyService.Services
 
             foreach (var gm in groupMaps)
             {
-                var cuChildIds = gm.Select(s => s.ChildId);
                 var ecr = ecrs.FirstOrDefault(e => e.Name.ToLower() == gm.Key.ToLower());
                 if (ecr == default)
                     continue;
@@ -283,8 +283,9 @@ namespace AnyService.Services
                     serviceResponse.Result = ServiceResult.Error;
                     return serviceResponse;
                 }
+                var curChildIds = gm.Select(s => s.ChildId);
                 var curCol = (await r.Collection) as IQueryable<IDomainEntity>;
-                var aggregated = curCol.Where(c => cuChildIds.Contains(c.Id));
+                var aggregated = curCol.Where(c => curChildIds.Contains(c.Id));
                 Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Add to returned collection: {nameof(gm.Key)} = {gm.Key}, Value = {aggregated.ToJsonString()}");
                 res[gm.Key] = aggregated.ToArray();
             }
@@ -384,28 +385,43 @@ namespace AnyService.Services
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
                 return serviceResponse;
             }
-            throw new NotImplementedException("check if ids to add exists in the database. If not - return Bad or missing data");
+
+            dynamic r = ServiceProvider.GetGenericService(typeof(IRepository<>), ecr.Type);
+            if (r == null)
+            {
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Generic type {nameof(IRepository<object>)} for EntityConfigRecord {nameof(ecr.Name)} not defined");
+                serviceResponse.Result = ServiceResult.Error;
+                return serviceResponse;
+            }
+            var curCol = (await r.Collection) as IQueryable<IDomainEntity>;
+            var entries = curCol.Where(c => childIdsToAdd.Contains(c.Id));
+            if (entries.Count() != childIdsToAdd.Count())
+            {
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Missing entities in persistency layer. matching entities: {childIdsToAdd.ToJsonString()}, required entities: {entries.ToJsonString()}");
+                serviceResponse.Result = ServiceResult.BadOrMissingData;
+                return serviceResponse;
+            }
+            throw new NotImplementedException();
 
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(parentId)} = {parentId}, {nameof(childEntityName)} = {ecr.Name}");
             var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, new[] { ecr.Name });
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Returns mapping: {groupMaps}");
 
-
-            //verify all ids exists
-
-
-
-
             var toDelete = groupMaps.FirstOrDefault()?.Where(e => childIdsToRemove.Contains(e.ChildId));
             //delete
             if (!toDelete.IsNullOrEmpty())
-                MapRepository.BulkDelete(toDelete);
+                await MapRepository.BulkDelete(toDelete);
 
-            var toAdd= childIdsToAdd?.Select(new EntityMapping
+            var toAdd = childIdsToAdd?.Select(cId => new EntityMapping
             {
-                
-            })
+                ParentEntityName = WorkContext.CurrentEntityConfigRecord.Name,
+                ParentId = parentId,
+                ChildEntityName = ecr.Name,
+                ChildId = cId,
+            });
+            await MapRepository.BulkInsert(toAdd);
             throw new NotImplementedException();
+
         }
         #endregion 
         #region Update

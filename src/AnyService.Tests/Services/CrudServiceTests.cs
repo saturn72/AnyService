@@ -1491,6 +1491,68 @@ Times.Once);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
         }
         [Fact]
+        public async Task UpdateMappings_NotAllChildEntitiesExists_REturnsBadResult()
+        {
+            var parentId = "p-id";
+            var ekr = new EventKeyRecord(null, "read", null, null);
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(AggregateRootEntity),
+                    Name = "AggregateRootEntity",
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                }
+            };
+            var sp = new Mock<IServiceProvider>();
+
+            sp.Setup(s => s.GetService(typeof(AnyServiceConfig)));
+            sp.Setup(s => s.GetService(typeof(IRepository<AggregateRootEntity>)));
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AggregateRootEntity>)));
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            var eb = new Mock<IEventBus>();
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+            sp.Setup(s => s.GetService(typeof(IAuditManager)));
+            var ecrs = new[]
+          {
+                new EntityConfigRecord
+                {
+                    Type = typeof(AggregateRootEntity),
+                    Name = "AggregateRootEntity",
+                    EventKeys = ekr,
+                    PaginationSettings = new PaginationSettings(),
+                },
+                new EntityConfigRecord
+                {
+                    Type = typeof(OptionEntity),
+                    Name = "OptionEntity",
+                },
+                 new EntityConfigRecord
+                {
+                    Type = typeof(AggregatedChild),
+                    Name = typeof(AggregatedChild).Name,
+                },
+            };
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(ecrs);
+
+            var addChData = new[]
+            {
+                new AggregatedChild{Id = "a"}
+            };
+            var aggChRepo = new Mock<IRepository<AggregatedChild>>();
+            aggChRepo.Setup(ar => ar.Collection).ReturnsAsync(addChData.AsQueryable());
+            sp.Setup(s => s.GetService(typeof(IRepository<AggregatedChild>))).Returns(aggChRepo.Object);
+
+
+            var logger = new Mock<ILogger<CrudService<AggregateRootEntity>>>();
+            var cSrv = new CrudService<AggregateRootEntity>(sp.Object, logger.Object);
+            var res = await cSrv.UpdateMappings<AggregatedChild>(parentId, new[] { "a", "b", "c" }, new[] { "d", "e" });
+
+            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
+        }
+        [Fact]
         public async Task UpdateMappings_Maps()
         {
             var parentId = "p-id";
