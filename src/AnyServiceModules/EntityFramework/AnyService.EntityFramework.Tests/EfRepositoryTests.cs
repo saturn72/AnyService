@@ -58,7 +58,7 @@ namespace AnyService.EntityFramework.Tests
                 inserted.Id.ShouldNotBeEmpty();
                 inserted.Value.ShouldBe(entity.Value);
             }
-
+            #region BulkInsert
             [Fact]
             public async Task InsertBulk()
             {
@@ -86,6 +86,38 @@ namespace AnyService.EntityFramework.Tests
                 for (int i = 0; i < total; i++)
                     inserted.ElementAt(i).Value.ShouldBe(i);
             }
+            #endregion
+            #region Bulk Delete
+            [Fact]
+            public async Task BulkDelete()
+            {
+                var options = new DbContextOptionsBuilder<TestDbContext>()
+                    .UseSqlite(@"Filename=test.db")
+                    .Options;
+                var ctx = new TestDbContext(options);
+
+                var l = new Mock<ILogger<EfRepository<BulkTestClass>>>();
+                var total = 4;
+                var entities = new List<BulkTestClass>();
+                for (int i = 0; i < total; i++)
+                    entities.Add(new BulkTestClass
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Value = i,
+                        TestNestedClasses = new[] { new TestNestedClass { Value = i.ToString() } }
+                    });
+
+                await ctx.AddRangeAsync(entities);
+
+                var r = new EfRepository<BulkTestClass>(ctx, l.Object);
+                var deleted = await r.BulkDelete(entities, true);
+
+                deleted.GetHashCode().ShouldBe(entities.GetHashCode());
+                deleted.Count().ShouldBe(total);
+                for (int i = 0; i < total; i++)
+                    deleted.ElementAt(i).Value.ShouldBe(i);
+            }
+            #endregion
             [Fact]
             public async Task GetById_returns_Null_On_NotExists()
             {

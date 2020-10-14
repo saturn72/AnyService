@@ -368,11 +368,11 @@ namespace AnyService.Services
         }
         #endregion
         #region UpdateMappings
-        public async Task<ServiceResponse<IEnumerable<string>>> UpdateMappings<TChild>(string parentId, IEnumerable<string> childIdsToAdd, IEnumerable<string> childIdsToRemove, string childEntityName = null) where TChild : IDomainEntity
+        public async Task<ServiceResponse<IEnumerable<EntityMapping>>> UpdateMappings<TChild>(string parentId, IEnumerable<string> childIdsToAdd, IEnumerable<string> childIdsToRemove, string childEntityName = null) where TChild : IDomainEntity
         {
             Logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"Start {nameof(UpdateMappings)} with parameters: {nameof(parentId)} = {parentId}, {nameof(childIdsToAdd)} = {childIdsToAdd.ToJsonString()}, {nameof(childIdsToRemove)} = {childIdsToRemove.ToJsonString()}, {nameof(childEntityName)} = {childEntityName}");
 
-            var serviceResponse = new ServiceResponse<IEnumerable<string>>();
+            var serviceResponse = new ServiceResponse<IEnumerable<EntityMapping>>();
 
             var ecrs = ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
             var ecr = childEntityName.HasValue() ?
@@ -401,7 +401,6 @@ namespace AnyService.Services
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
                 return serviceResponse;
             }
-            throw new NotImplementedException();
 
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(parentId)} = {parentId}, {nameof(childEntityName)} = {ecr.Name}");
             var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, new[] { ecr.Name });
@@ -410,7 +409,11 @@ namespace AnyService.Services
             var toDelete = groupMaps.FirstOrDefault()?.Where(e => childIdsToRemove.Contains(e.ChildId));
             //delete
             if (!toDelete.IsNullOrEmpty())
+            {
+                var idsToDelete = toDelete.Select(s => s.Id).ToArray();
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<string>.BulkDelete)} entity mapping with Ids: {idsToDelete}");
                 await MapRepository.BulkDelete(toDelete);
+            }
 
             var toAdd = childIdsToAdd?.Select(cId => new EntityMapping
             {
@@ -419,9 +422,13 @@ namespace AnyService.Services
                 ChildEntityName = ecr.Name,
                 ChildId = cId,
             });
-            await MapRepository.BulkInsert(toAdd);
-            throw new NotImplementedException();
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<string>.BulkInsert)} insert entity mapping: {toAdd.ToJsonString()}");
+            var added = await MapRepository.BulkInsert(toAdd);
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<string>.BulkInsert)} response with collection: {added.ToJsonString()}");
 
+            serviceResponse.Result = ServiceResult.Ok;
+            serviceResponse.Payload = added;
+            return serviceResponse;
         }
         #endregion 
         #region Update

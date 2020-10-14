@@ -91,7 +91,7 @@ namespace AnyService.EntityFramework
         }
         public virtual async Task<IEnumerable<TDomainModel>> BulkInsert(IEnumerable<TDomainModel> entities, bool trackIds = false)
         {
-            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} with entity = {entities.ToJsonString()}");
+            _logger.LogInformation(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} with entity = {entities.ToJsonString()}");
             if (trackIds)
             {
                 await _dbContext.Set<TDomainModel>().AddRangeAsync(entities.ToArray());
@@ -106,6 +106,26 @@ namespace AnyService.EntityFramework
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
             await _dbContext.BulkInsertAsync(entities.ToList());
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Bulk operation ended");
+            return entities;
+        }
+        public virtual async Task<IEnumerable<TDomainModel>> BulkDelete(IEnumerable<TDomainModel> entities, bool trackIds = false)
+        {
+            throw new NotImplementedException();
+            _logger.LogInformation(EfRepositoryEventIds.Delete, $"{nameof(BulkDelete)} with ids = {entities.ToJsonString()}");
+            if (trackIds)
+            {
+                _dbContext.Set<TDomainModel>().RemoveRange(entities.ToArray());
+                _logger.LogDebug(EfRepositoryEventIds.Delete, $"{nameof(BulkDelete)} bulk operation started");
+                await _dbContext.SaveChangesAsync();
+                _logger.LogDebug(EfRepositoryEventIds.Delete, $"{nameof(BulkDelete)} Bulk operation ended");
+                _logger.LogDebug(EfRepositoryEventIds.Delete, $"{nameof(BulkDelete)} result = {entities.ToJsonString()}");
+                await DetachEntities(entities);
+                return entities;
+            }
+
+            _logger.LogDebug(EfRepositoryEventIds.Delete, $"{nameof(BulkDelete)} bulk operation started");
+            await _dbContext.BulkDeleteAsync(entities.ToList());
+            _logger.LogDebug(EfRepositoryEventIds.Delete, $"{nameof(BulkDelete)} Bulk operation ended");
             return entities;
         }
 
