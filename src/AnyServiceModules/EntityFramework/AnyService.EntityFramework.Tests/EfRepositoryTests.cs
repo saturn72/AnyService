@@ -60,7 +60,7 @@ namespace AnyService.EntityFramework.Tests
             }
             #region BulkInsert
             [Fact]
-            public async Task InsertBulk()
+            public async Task BulkInsert()
             {
                 var options = new DbContextOptionsBuilder<TestDbContext>()
                     .UseSqlite(@"Filename=test.db")
@@ -104,7 +104,6 @@ namespace AnyService.EntityFramework.Tests
                     {
                         Id = Guid.NewGuid().ToString(),
                         Value = i,
-                        TestNestedClasses = new[] { new TestNestedClass { Value = i.ToString() } }
                     });
 
                 await ctx.AddRangeAsync(entities);

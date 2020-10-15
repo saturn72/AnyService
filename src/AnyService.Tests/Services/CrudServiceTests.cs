@@ -1575,7 +1575,7 @@ Times.Once);
         public async Task UpdateMappings_Maps()
         {
             var parentId = "p-id";
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("created", "read", null, "deleted");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -1651,6 +1651,8 @@ Times.Once);
                     entities.All(e => e.ParentEntityName == pName && e.ParentId == parentId && e.ChildEntityName == cName && expIds.Contains(e.Id));
                 };
             mapRepo.Verify(mr => mr.BulkInsert(It.Is<IEnumerable<EntityMapping>>(e => VerifyBulkInsertEntities(e)), It.IsAny<bool>()), Times.Once);
+            eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Delete), It.IsAny<DomainEventData>()), Times.Once);
+            eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Create), It.IsAny<DomainEventData>()), Times.Once);
         }
         #endregion
         #region Update

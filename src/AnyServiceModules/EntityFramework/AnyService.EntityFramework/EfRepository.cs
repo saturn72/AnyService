@@ -110,7 +110,6 @@ namespace AnyService.EntityFramework
         }
         public virtual async Task<IEnumerable<TDomainModel>> BulkDelete(IEnumerable<TDomainModel> entities, bool trackIds = false)
         {
-            throw new NotImplementedException();
             _logger.LogInformation(EfRepositoryEventIds.Delete, $"{nameof(BulkDelete)} with ids = {entities.ToJsonString()}");
             if (trackIds)
             {

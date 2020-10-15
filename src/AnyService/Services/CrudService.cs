@@ -415,6 +415,7 @@ namespace AnyService.Services
                 var idsToDelete = toDelete.Select(s => s.Id).ToArray();
                 Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<string>.BulkDelete)} entity mapping with Ids: {idsToDelete}");
                 await MapRepository.BulkDelete(toDelete);
+                Publish(EventKeys.Delete, toDelete);
             }
 
             var toAdd = request.ChildIdsToAdd?.Select(cId => new EntityMapping
@@ -424,14 +425,18 @@ namespace AnyService.Services
                 ChildEntityName = ecr.Name,
                 ChildId = cId,
             });
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<string>.BulkInsert)} insert entity mapping: {toAdd.ToJsonString()}");
-            var added = await MapRepository.BulkInsert(toAdd, true);
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<string>.BulkInsert)} response with collection: {added.ToJsonString()}");
 
+            if (!toAdd.IsNullOrEmpty())
+            {
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<string>.BulkInsert)} insert entity mapping: {toAdd.ToJsonString()}");
+                await MapRepository.BulkInsert(toAdd, true);
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<string>.BulkInsert)} response with collection: {toAdd.ToJsonString()}");
+                Publish(EventKeys.Create, toAdd);
+            }
             serviceResponse.Result = ServiceResult.Ok;
             serviceResponse.Payload = new EntityMappingResponse(request)
             {
-                EntityMappingsAdded = added,
+                EntityMappingsAdded = toAdd,
                 EntityMappingsRemoved = toDelete
             };
             return serviceResponse;
