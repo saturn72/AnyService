@@ -3,13 +3,13 @@ using System.Threading.Tasks;
 
 namespace AnyService.Services
 {
-    public interface ICrudService<TDomainModel> where TDomainModel : IDomainEntity
+    public interface ICrudService<TDomainEntity> where TDomainEntity : IDomainEntity
     {
-        Task<ServiceResponse<TDomainModel>> Create(TDomainModel entity);
-        Task<ServiceResponse<TDomainModel>> GetById(string id);
-        Task<ServiceResponse<Pagination<TDomainModel>>> GetAll(Pagination<TDomainModel> pagination);
-        Task<ServiceResponse<TDomainModel>> Update(string id, TDomainModel entity);
-        Task<ServiceResponse<TDomainModel>> Delete(string id);
+        Task<ServiceResponse<TDomainEntity>> Create(TDomainEntity entity);
+        Task<ServiceResponse<TDomainEntity>> GetById(string id);
+        Task<ServiceResponse<Pagination<TDomainEntity>>> GetAll(Pagination<TDomainEntity> pagination);
+        Task<ServiceResponse<TDomainEntity>> Update(string id, TDomainEntity entity);
+        Task<ServiceResponse<TDomainEntity>> Delete(string id);
         /// <summary>
         /// Get Parent with ALL childs
         /// </summary>
@@ -32,22 +32,13 @@ namespace AnyService.Services
             Pagination<TChild> pagination,
             string childEntityName = null)
             where TChild : IDomainEntity;
-
         /// <summary>
         /// Update child-parent mapping
         /// </summary>
-        /// <typeparam name="TChild">Child entity type</typeparam>
-        /// <param name="parentId">Parent Id</param>
-        /// <param name="childIdsToAdd">List of child ids to add to mapping</param>
-        /// <param name="childIdsToRemove">List of child ids to remove from ampping</param>
-        /// <param name="childEntityName">Child entity name. Use this value when using multiple entity records of same type in same aggregate-root (parent)</param>
-        /// <returns>List of all child ids mapped to parent</returns>
-        Task<ServiceResponse<MapRequestResponse<TChild>>> UpdateMappings<TChild>(
-            string parentId,
-            IEnumerable<string> childIdsToAdd,
-            IEnumerable<string> childIdsToRemove,
-            string childEntityName = null)
-            where TChild : IDomainEntity;
+        /// <param name="request">Mapping request details</param>
+        /// <returns></returns>
+        Task<ServiceResponse<EntityMappingResponse>> UpdateMappings(EntityMappingRequest request);
+
         //Task UploadFiles(IFileContainer fileContainer, ServiceResponse serviceResponse);
     }
 }

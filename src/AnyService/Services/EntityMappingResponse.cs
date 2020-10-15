@@ -1,13 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace AnyService.Services
 {
-    public class EntityMappingResponse<TParent, TChild> 
-        where TParent:IDomainEntity
-        where TChild :IDomainEntity
+    public class EntityMappingResponse
     {
+        public EntityMappingResponse(EntityMappingRequest request)
+        {
+            Request = request;
+        }
+        public EntityMappingRequest Request { get; }
+        public IEnumerable<EntityMapping> EntityMappingsAdded { get; set; }
+        public IEnumerable<EntityMapping> EntityMappingsRemoved { get; set; }
     }
 }

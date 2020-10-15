@@ -367,20 +367,23 @@ namespace AnyService.Services
         }
         #endregion
         #region UpdateMappings
-        public async Task<ServiceResponse<IEnumerable<EntityMapping>>> UpdateMappings<TChild>(string parentId, IEnumerable<string> childIdsToAdd, IEnumerable<string> childIdsToRemove, string childEntityName = null) where TChild : IDomainEntity
+        public async Task<ServiceResponse<EntityMappingResponse>> UpdateMappings(EntityMappingRequest request)
         {
-            Logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"Start {nameof(UpdateMappings)} with parameters: {nameof(parentId)} = {parentId}, {nameof(childIdsToAdd)} = {childIdsToAdd.ToJsonString()}, {nameof(childIdsToRemove)} = {childIdsToRemove.ToJsonString()}, {nameof(childEntityName)} = {childEntityName}");
-
-            var serviceResponse = new ServiceResponse<IEnumerable<EntityMapping>>();
+            Logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"Start {nameof(UpdateMappings)} with parameters: {nameof(request)} = {request.ToJsonString()}");
+            var serviceResponse = new ServiceResponse<EntityMappingResponse>();
+            if (request == null)
+            {
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(request)} is null");
+                serviceResponse.Result = ServiceResult.BadOrMissingData;
+                return serviceResponse;
+            }
 
             var ecrs = ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
-            var ecr = childEntityName.HasValue() ?
-                ecrs.FirstOrDefault(e => e.Name == childEntityName) :
-                ecrs.FirstOrDefault(e => e.Type == typeof(TChild));
+            var ecr = ecrs.FirstOrDefault(e => e.Name == request.ChildEntityName);
 
             if (ecr == null)
             {
-                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(EntityConfigRecord)} of type {typeof(TChild).Name} OR named {nameof(childEntityName)} is not configures");
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(EntityConfigRecord)} of named {nameof(request.ChildEntityName)} is not configures");
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
                 return serviceResponse;
             }
@@ -393,19 +396,19 @@ namespace AnyService.Services
                 return serviceResponse;
             }
             var curCol = (await r.Collection) as IQueryable<IDomainEntity>;
-            var entries = curCol.Where(c => childIdsToAdd.Contains(c.Id));
-            if (entries.Count() != childIdsToAdd.Count())
+            var entries = curCol.Where(c => request.ChildIdsToAdd.Contains(c.Id));
+            if (entries.Count() != request.ChildIdsToAdd.Count())
             {
-                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Missing entities in persistency layer. matching entities: {childIdsToAdd.ToJsonString()}, required entities: {entries.ToJsonString()}");
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Missing entities in persistency layer. matching entities: {request.ChildIdsToAdd.ToJsonString()}, required entities: {entries.ToJsonString()}");
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
                 return serviceResponse;
             }
 
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(parentId)} = {parentId}, {nameof(childEntityName)} = {ecr.Name}");
-            var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, new[] { ecr.Name });
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(request.ParentId)} = {request.ParentId}, {nameof(request.ChildEntityName)} = {ecr.Name}");
+            var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(request.ParentId, new[] { ecr.Name });
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Returns mapping: {groupMaps}");
 
-            var toDelete = groupMaps.FirstOrDefault()?.Where(e => childIdsToRemove.Contains(e.ChildId));
+            var toDelete = groupMaps.FirstOrDefault()?.Where(e => request.ChildIdsToRemove.Contains(e.ChildId));
             //delete
             if (!toDelete.IsNullOrEmpty())
             {
@@ -414,19 +417,23 @@ namespace AnyService.Services
                 await MapRepository.BulkDelete(toDelete);
             }
 
-            var toAdd = childIdsToAdd?.Select(cId => new EntityMapping
+            var toAdd = request.ChildIdsToAdd?.Select(cId => new EntityMapping
             {
                 ParentEntityName = WorkContext.CurrentEntityConfigRecord.Name,
-                ParentId = parentId,
+                ParentId = request.ParentId,
                 ChildEntityName = ecr.Name,
                 ChildId = cId,
             });
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<string>.BulkInsert)} insert entity mapping: {toAdd.ToJsonString()}");
-            var added = await MapRepository.BulkInsert(toAdd);
+            var added = await MapRepository.BulkInsert(toAdd, true);
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<string>.BulkInsert)} response with collection: {added.ToJsonString()}");
 
             serviceResponse.Result = ServiceResult.Ok;
-            serviceResponse.Payload = added;
+            serviceResponse.Payload = new EntityMappingResponse(request)
+            {
+                EntityMappingsAdded = added,
+                EntityMappingsRemoved = toDelete
+            };
             return serviceResponse;
         }
         #endregion 
