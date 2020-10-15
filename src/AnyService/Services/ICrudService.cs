@@ -42,7 +42,7 @@ namespace AnyService.Services
         /// <param name="childIdsToRemove">List of child ids to remove from ampping</param>
         /// <param name="childEntityName">Child entity name. Use this value when using multiple entity records of same type in same aggregate-root (parent)</param>
         /// <returns>List of all child ids mapped to parent</returns>
-        Task<ServiceResponse<IEnumerable<string>>> UpdateMappings<TChild>(
+        Task<ServiceResponse<MapRequestResponse<TChild>>> UpdateMappings<TChild>(
             string parentId,
             IEnumerable<string> childIdsToAdd,
             IEnumerable<string> childIdsToRemove,
