@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Moq;
 using AnyService.Audity;
@@ -12,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using AnyService.Utilities;
 using AnyService.Services.Preparars;
 using AnyService.Services.Audit;
-using System.Linq;
 
 namespace AnyService.Tests.Services
 {
@@ -1503,7 +1503,7 @@ Times.Once);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
         }
         [Fact]
-        public async Task UpdateMappings_NotAllChildEntitiesExists_REturnsBadResult()
+        public async Task UpdateMappings_NotAllChildEntitiesExists_ReturnsBadResult()
         {
             var parentId = "p-id";
             var ekr = new EventKeyRecord(null, "read", null, null);
@@ -1621,10 +1621,25 @@ Times.Once);
             var mapRepo = new Mock<IRepository<EntityMapping>>();
             var mapData = new[]
             {
-                new EntityMapping{ParentId = parentId, ChildId = "d" }
+                new EntityMapping
+                {
+                    ParentId = parentId,
+                    ParentEntityName = typeof(AggregateRootEntity).Name,
+                    ChildId = "d",
+                    ChildEntityName = typeof(AggregatedChild).Name
+                }
             };
             mapRepo.Setup(mr => mr.Collection).ReturnsAsync(mapData.AsQueryable());
             sp.Setup(s => s.GetService(typeof(IRepository<EntityMapping>))).Returns(mapRepo.Object);
+            var addChData = new[]
+{
+                new AggregatedChild { Id = "a" },
+                new AggregatedChild { Id = "b" },
+                new AggregatedChild { Id = "c" },
+            };
+            var aggChRepo = new Mock<IRepository<AggregatedChild>>();
+            aggChRepo.Setup(ar => ar.Collection).ReturnsAsync(addChData.AsQueryable());
+            sp.Setup(s => s.GetService(typeof(IRepository<AggregatedChild>))).Returns(aggChRepo.Object);
 
             var logger = new Mock<ILogger<CrudService<AggregateRootEntity>>>();
             var cSrv = new CrudService<AggregateRootEntity>(sp.Object, logger.Object);
@@ -1638,17 +1653,20 @@ Times.Once);
             };
 
             var res = await cSrv.UpdateMappings(req);
+            res.Result.ShouldBe(ServiceResult.Ok);
 
-            res.Result.ShouldBe(ServiceResult.Error);
-
-            //mapRepo.Verify(mr => mr.BulkDelete(ids => ids.Count() == 1 && ids.Contains("d")), Times.Once);
+            mapRepo.Verify(mr => mr.BulkDelete(It.Is<IEnumerable<EntityMapping>>(en => en.Count() == 1 && en.First().ChildId == "d"), It.IsAny<bool>()), Times.Once);
             Func<IEnumerable<EntityMapping>, bool> VerifyBulkInsertEntities =
                 entities =>
                 {
                     var cName = typeof(AggregatedChild).Name;
                     var pName = typeof(AggregateRootEntity).Name;
                     return entities.Count() == 3 &&
-                    entities.All(e => e.ParentEntityName == pName && e.ParentId == parentId && e.ChildEntityName == cName && expIds.Contains(e.Id));
+                    entities.All(e => 
+                        e.ParentEntityName == pName && 
+                        e.ParentId == parentId && 
+                        e.ChildEntityName == cName &&
+                        expIds.Contains(e.ChildId));
                 };
             mapRepo.Verify(mr => mr.BulkInsert(It.Is<IEnumerable<EntityMapping>>(e => VerifyBulkInsertEntities(e)), It.IsAny<bool>()), Times.Once);
             eb.Verify(e => e.Publish(It.Is<string>(s => s == ekr.Delete), It.IsAny<DomainEventData>()), Times.Once);
