@@ -18,7 +18,6 @@ using AnyService.Audity;
 using AnyService.Services.Logging;
 using AnyService.Models;
 using AnyService.Logging;
-using AnyService.Domain;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -159,9 +158,10 @@ namespace Microsoft.Extensions.DependencyInjection
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
 
+                ecr.Name = e.Name;
                 ecr.Identifier ??= ecr.EndpointSettings != null && ecr.EndpointSettings.Area.HasValue() ?
                     $"{ecr.EndpointSettings?.Area}_{ecr.Type.Name}" :
-                    ecr.Type.Name;
+                    e.Name;
 
                 var hasDuplication = temp.Where(e => e.Identifier == ecr.Identifier);
                 if (hasDuplication.Count() > 1)

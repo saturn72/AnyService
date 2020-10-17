@@ -355,15 +355,26 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(ServiceResponse)} = {serviceResponse}");
             return serviceResponse;
         }
-        private async Task<IQueryable<IGrouping<string, EntityMapping>>> GetGroupedMappingByParentIdAndChildEntityNames(string parentId, IEnumerable<string> childEntityNames)
+        private async Task<IEnumerable<IGrouping<string, EntityMapping>>> GetGroupedMappingByParentIdAndChildEntityNames(string parentId, IEnumerable<string> childEntityNames)
         {
             var col = await MapRepository.Collection;
-            return from c in col
-                   where
-                   c.ParentEntityName == WorkContext.CurrentEntityConfigRecord.Name &&
+            var res = col.Where(p())
+                .GroupBy(g => g.ChildEntityName)
+                .Select(x => x);
+
+            return res;
+
+            Func<EntityMapping, bool> p() => c =>
+                c.ParentEntityName == WorkContext.CurrentEntityConfigRecord.Name &&
                    c.ParentId == parentId &&
-                   childEntityNames.Contains(c.ChildEntityName, StringComparer.InvariantCultureIgnoreCase)
-                   group c by c.ChildEntityName;
+                   childEntityNames.Contains(c.ChildEntityName, StringComparer.InvariantCultureIgnoreCase);
+            //return from c in col
+            //       where
+            //       c.ParentEntityName == WorkContext.CurrentEntityConfigRecord.Name &&
+            //       c.ParentId == parentId &&
+            //       childEntityNames.Contains(c.ChildEntityName, StringComparer.InvariantCultureIgnoreCase)
+            //       group c by c.ChildEntityName into g
+            //       select g;
         }
         #endregion
         #region UpdateMappings
@@ -379,7 +390,7 @@ namespace AnyService.Services
             }
 
             var ecrs = ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
-            var ecr = ecrs.FirstOrDefault(e => e.Name == request.ChildEntityName);
+            var ecr = ecrs.FirstOrDefault(e => e.Name.ToLower() == request.ChildEntityName.ToLower());
 
             if (ecr == null)
             {
@@ -408,7 +419,9 @@ namespace AnyService.Services
             var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(request.ParentId, new[] { ecr.Name });
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Returns mapping: {groupMaps}");
 
-            var toDelete = groupMaps.FirstOrDefault()?.Where(e => request.ChildIdsToRemove.Contains(e.ChildId));
+            var toDelete = groupMaps.FirstOrDefault()?
+                .Where(e => request.ChildIdsToRemove.Contains(e.ChildId))?
+                .ToArray() ?? new EntityMapping[] { };
             //delete
             if (!toDelete.IsNullOrEmpty())
             {
@@ -424,7 +437,7 @@ namespace AnyService.Services
                 ParentId = request.ParentId,
                 ChildEntityName = ecr.Name,
                 ChildId = cId,
-            });
+            })?.ToArray() ?? new EntityMapping[] { };
 
             if (!toAdd.IsNullOrEmpty())
             {

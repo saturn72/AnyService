@@ -24,6 +24,7 @@ namespace AnyService.Tests.Controllers
         [InlineData(nameof(GenericController<MyClass, MyClass>.GetAll), "GET", null)]
         [InlineData(nameof(GenericController<MyClass, MyClass>.GetById), "GET", "{id}")]
         [InlineData(nameof(GenericController<MyClass, MyClass>.Put), "PUT", "{id}")]
+        [InlineData(nameof(GenericController<MyClass, MyClass>.UpdateEntityMappings), "PUT", "__map/{id}")]
         public void ValidateVerbs(string methodName, string expHttpVerb, string expTemplate)
         {
             var type = typeof(GenericController<,>);
@@ -101,6 +102,31 @@ namespace AnyService.Tests.Controllers
             var res = await ctrl.Post(model);
             var js = res.ShouldBeOfType<JsonResult>();
             js.Value.ShouldBe(expData);
+        }
+        #endregion
+        #region UpdateEntityMappings
+        [Fact]
+        public async Task UpdateEntityMappings_InvalidModelState()
+        {
+            var wc = new WorkContext
+            {
+                CurrentEntityConfigRecord = new EntityConfigRecord
+                {
+                    Type = typeof(MyClass),
+                    Name = typeof(MyClass).Name,
+                    Identifier = typeof(MyClass).Name,
+                    EndpointSettings = new EndpointSettings
+                    {
+                        MapToType = typeof(MyClass),
+                        MapToPaginationType = typeof(Pagination<MyClass>)
+                    }
+                }
+            };
+            var log = new Mock<ILogger<GenericController<MyClass, MyClass>>>();
+            var ctrl = new GenericController<MyClass, MyClass>(null, null, null, wc, log.Object);
+            ctrl.ModelState.AddModelError("k", "err");
+            var res = await ctrl.UpdateEntityMappings("id", null);
+            res.ShouldBeOfType<BadRequestResult>();
         }
         #endregion
     }

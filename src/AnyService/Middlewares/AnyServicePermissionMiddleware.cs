@@ -20,7 +20,7 @@ namespace AnyService.Middlewares
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext, IPermissionManager permissionManager)
         {
-            _logger.LogDebug(LoggingEvents.Permission, "Start AnyServicePermissionMiddleware invokation");
+            _logger.LogInformation(LoggingEvents.Permission, "Start AnyServicePermissionMiddleware invokation");
 
             if (workContext.CurrentType == null) // in-case not using Anyservice pipeline
             {
