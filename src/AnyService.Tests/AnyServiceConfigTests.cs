@@ -31,6 +31,7 @@ namespace AnyService.Tests
             c.ErrorEventKey.ShouldBe(LoggingEvents.UnexpectedException.Name);
             c.UseErrorEndpointForExceptionHandling.ShouldBeTrue();
             c.UseLogRecordEndpoint.ShouldBeTrue();
+            c.DefaultMapperName.ShouldBe("default");
         }
         public void ErrorEventKey_ModfiesErrorControllerEventKey()
         {

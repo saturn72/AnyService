@@ -19,13 +19,13 @@ using AnyService.Services.Logging;
 using AnyService.Models;
 using AnyService.Logging;
 using AnyService.Internals;
+using AnyService.Mapping;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddAnyService(this IServiceCollection services,
-            IEnumerable<Type> entities)
+        public static IServiceCollection AddAnyService(this IServiceCollection services, IEnumerable<Type> entities)
         {
             var config = new AnyServiceConfig
             {
@@ -37,14 +37,33 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             NormalizeConfiguration(config);
             RegisterDependencies(services, config);
-            AddEntityConfigRecordsMappings(config.EntityConfigRecords);
+            AddDefaultMapping(config.DefaultMapperName);
+            AddEntityConfigRecordsMappings(config.DefaultMapperName, config.EntityConfigRecords);
 
             return services;
         }
-
-        private static void AddEntityConfigRecordsMappings(IEnumerable<EntityConfigRecord> entityConfigRecords)
+        private static void AddDefaultMapping(string mapperName)
         {
-            MappingExtensions.AddConfiguration(cfg =>
+            MappingExtensions.AddConfiguration(
+                mapperName,
+                cfg =>
+           {
+               cfg.CreateMap(typeof(Pagination<>), typeof(PaginationModel<>))
+                       .ForMember(
+                           nameof(PaginationModel<IDomainEntity>.Query),
+                           opts => opts.MapFrom(nameof(Pagination<IDomainEntity>.QueryOrFilter)));
+
+               cfg.CreateMap<AuditRecord, AuditRecordModel>();
+               cfg.CreateMap<AuditRecordModel, AuditRecord>();
+               cfg.CreateMap<AuditPagination, AuditPaginationModel>();
+           });
+        }
+
+        private static void AddEntityConfigRecordsMappings(string mapperName, IEnumerable<EntityConfigRecord> entityConfigRecords)
+        {
+            MappingExtensions.AddConfiguration(
+                mapperName,
+                cfg =>
               {
                   foreach (var r in entityConfigRecords)
                   {

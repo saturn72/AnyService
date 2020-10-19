@@ -18,8 +18,8 @@ namespace AnyService.EntityFramework
         #region fields
         private static readonly ConcurrentDictionary<Type, IEnumerable<PropertyInfo>> TypeProperties = new ConcurrentDictionary<Type, IEnumerable<PropertyInfo>>();
         private readonly DbContext _dbContext;
-        private readonly ILogger<EfRepository<TDomainModel>> _logger;
         private readonly IQueryable<TDomainModel> _collection;
+        private readonly ILogger<EfRepository<TDomainModel>> _logger;
 
         private static readonly BulkConfig InsertBulkConfig = new BulkConfig
         {
@@ -32,6 +32,7 @@ namespace AnyService.EntityFramework
         {
             _dbContext = dbContext;
             _logger = logger;
+
             _collection = _dbContext.Set<TDomainModel>().AsNoTracking();
         }
         #endregion

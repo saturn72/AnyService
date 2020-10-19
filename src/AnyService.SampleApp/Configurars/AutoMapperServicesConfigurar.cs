@@ -7,7 +7,9 @@ namespace AnyService.SampleApp.Configurars
     {
         public void Configure()
         {
-            MappingExtensions.AddConfiguration(cfg =>
+            MappingExtensions.AddConfiguration(
+                "default",
+                cfg =>
             {
                 cfg.CreateMap<CategoryModel, Category>()
                     .ForMember(dest => dest.AdminComment, mo => mo.Ignore());

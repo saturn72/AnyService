@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using AnyService.Mapping;
+using AutoMapper;
 using System.Collections.Concurrent;
 
 namespace AnyService.Internals
