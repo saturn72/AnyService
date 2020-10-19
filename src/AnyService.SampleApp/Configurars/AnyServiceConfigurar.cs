@@ -26,7 +26,7 @@ namespace AnyService.SampleApp.Configurars
                     new EntityConfigRecord
                     {
                         Type = typeof(Category),
-                        ShowSoftDelete = true,
+                        ShowSoftDelete = false,
                         EndpointSettings = new EndpointSettings
                         {
                             MapToType = typeof(CategoryModel)

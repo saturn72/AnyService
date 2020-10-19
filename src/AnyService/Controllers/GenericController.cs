@@ -29,7 +29,6 @@ namespace AnyService.Controllers
         private static Type _mapToType;
         private static Type _mapToTypeEnumerableType;
         private static Type _mapToPageType;
-        private static IReadOnlyDictionary<string, string> _aggregatedChildNames;
         private static string _curTypeIdentifier;
 
         private readonly ICrudService<TDomainEntity> _crudService;
@@ -153,7 +152,7 @@ namespace AnyService.Controllers
             return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
 
             IEnumerable<string> parseChildNames() =>
-                _aggregatedChildNames.Where(c => childNames.Contains(c.Key)).Select(x => x.Value);
+                throw new NotImplementedException();// _aggregatedChildNames.Where(c => childNames.Contains(c.Key)).Select(x => x.Value);
         }
 
 
@@ -269,19 +268,6 @@ namespace AnyService.Controllers
             _mapToType ??= _workContext.CurrentEntityConfigRecord.EndpointSettings?.MapToType;
             _mapToTypeEnumerableType ??= typeof(IEnumerable<>).MakeGenericType(_mapToType);
             _mapToPageType ??= _workContext.CurrentEntityConfigRecord.EndpointSettings.MapToPaginationType;
-
-            _aggregatedChildNames ??= extractAggregatedChildNames();
-
-            IReadOnlyDictionary<string, string> extractAggregatedChildNames()
-            {
-                var atts = _curType
-                    .GetProperties()
-                    .Select(pi => pi.GetCustomAttribute<AggregatedAttribute>())
-                    .Where(c => c != null);
-                return atts?
-                    .Select(x => new KeyValuePair<string, string>(x.ExternalName, x.EntityName))
-                    .ToDictionary(k => k.Key, v => v.Value) ?? new Dictionary<string, string>();
-            }
         }
         private async Task<TDomainEntity> ExctractModelFromStream()
         {

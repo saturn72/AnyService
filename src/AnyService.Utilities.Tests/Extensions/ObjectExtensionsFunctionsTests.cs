@@ -10,10 +10,29 @@ namespace AnyService.Utilities.Tests
         public int Value { get; set; }
     }
     public class T1 { }
-    public class T2:T1 { }
-    public class T3:T2 { }
+    public class T2 : T1 { }
+    public class T3 : T2 { }
     public class ObjectExtensionsTests
     {
+        #region IsSimpleType
+        [Theory]
+        [InlineData(typeof(string))]
+        [InlineData(typeof(decimal))]
+        [InlineData(typeof(DateTime))]
+        [InlineData(typeof(DateTimeOffset))]
+        [InlineData(typeof(TimeSpan))]
+        [InlineData(typeof(Guid))]
+        public void IsSimpleType_ReturnsTrue(Type t)
+        {
+            ObjectExtensionsFunctions.IsSimpleType(t).ShouldBeTrue();
+        }
+        [Fact]
+        public void IsSimpleType_ReturnsFalse()
+        {
+            ObjectExtensionsFunctions.IsSimpleType(typeof(T1)).ShouldBeFalse();
+
+        }
+        #endregion
         #region GetAllBaseTypes
         [Fact]
         public void GetAllBaseTypes_GetEntireTree()
@@ -116,7 +135,7 @@ namespace AnyService.Utilities.Tests
 
         #region ToJsonString
         [Fact]
-        public void  ToJsonString()
+        public void ToJsonString()
         {
             var exp = "{\"value\":123}";
             var t = new TestClass

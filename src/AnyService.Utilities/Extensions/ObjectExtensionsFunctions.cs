@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json;
@@ -43,12 +44,10 @@ namespace System
                 return (T)pi.GetValue(obj);
             throw new InvalidOperationException();
         }
-
         private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         };
-
         public static T GetPropertyValueOrDefaultByName<T>(this object obj, string propertyName)
         {
             var pi = obj?.GetType().GetProperty(propertyName);
@@ -56,5 +55,23 @@ namespace System
         }
         public static string ToJsonString(this object obj) => JsonSerializer.Serialize(obj, JsonSerializerOptions);
         public static T DeepClone<T>(this T source) => source.ToJsonString().ToObject<T>();
+        public static bool IsSimpleType(this Type type)
+        {
+            return type.IsPrimitive ||
+                type.IsEnum ||
+                type == typeof(string) ||
+                type == typeof(decimal) ||
+                type == typeof(DateTime) ||
+                type == typeof(DateTimeOffset) ||
+                type == typeof(TimeSpan) ||
+                type == typeof(Guid) ||
+                IsNullableSimpleType(type);
+
+            static bool IsNullableSimpleType(Type t)
+            {
+                var underlyingType = Nullable.GetUnderlyingType(t);
+                return underlyingType != null && IsSimpleType(underlyingType);
+            }
+        }
     }
 }

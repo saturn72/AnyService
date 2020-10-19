@@ -49,10 +49,8 @@ namespace AnyService.Tests.Services
     public class AggregateRootEntity : IDomainEntity
     {
         public string Id { get; set; }
-        [Aggregated("OptionEntity", "options")]
         public OptionEntity Options { get; set; }
-        [Aggregated("Aggregated", "childs")]
-        public IEnumerable<AggregatedChild> Childs { get; set; }
+        public IEnumerable<AggregatedChild> Aggregated { get; set; }
     }
     public class CrudServiceTests
     {
@@ -1662,9 +1660,9 @@ Times.Once);
                     var cName = typeof(AggregatedChild).Name;
                     var pName = typeof(AggregateRootEntity).Name;
                     return entities.Count() == 3 &&
-                    entities.All(e => 
-                        e.ParentEntityName == pName && 
-                        e.ParentId == parentId && 
+                    entities.All(e =>
+                        e.ParentEntityName == pName &&
+                        e.ParentId == parentId &&
                         e.ChildEntityName == cName &&
                         expIds.Contains(e.ChildId));
                 };

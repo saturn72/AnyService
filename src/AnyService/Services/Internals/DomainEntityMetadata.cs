@@ -28,20 +28,20 @@ namespace AnyService.Services.Internals
             IsAggregatedRoot = Aggregations.Any();
         }
 
-        private IEnumerable<AggregationData> ExtractAggregationData(Type type)
+        private IEnumerable<AggregationDataFactory> ExtractAggregationData(Type type)
         {
-            var aggData = new List<AggregationData>();
-            foreach (var pi in type.GetProperties())
-            {
-                var aggAtt = pi.GetCustomAttributes<AggregatedAttribute>(true);
+            var aggData = new List<AggregationDataFactory>();
+            //foreach (var pi in type.GetProperties())
+            //{
+            //    var aggAtt = pi.GetCustomAttributes<AggregatedAttribute>(true);
 
-                foreach (var aa in aggAtt)
-                    aggData.Add(new AggregationData
-                    {
-                        EntityName = aa.EntityName,
-                        IsEnumerable = pi.PropertyType.IsOfType<IEnumerable>()
-                    }); ;
-            }
+            //    foreach (var aa in aggAtt)
+            //        aggData.Add(new AggregationData
+            //        {
+            //            EntityName = aa.EntityName,
+            //            IsEnumerable = pi.PropertyType.IsOfType<IEnumerable>()
+            //        }); ;
+            //}
             return aggData;
         }
 
@@ -53,6 +53,6 @@ namespace AnyService.Services.Internals
         internal bool IsUpdatableAudit { get; }
         internal bool IsDeletableAudit { get; }
         internal bool IsAggregatedRoot { get; private set; }
-        internal IEnumerable<AggregationData> Aggregations { get; private set; }
+        internal IEnumerable<AggregationDataFactory> Aggregations { get; private set; }
     }
 }
