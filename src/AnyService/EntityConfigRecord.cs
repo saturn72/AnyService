@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using AnyService.Audity;
 using AnyService.Security;
 using AnyService.Services;
@@ -77,5 +78,6 @@ namespace AnyService
         public AuditRules AuditRules { get; set; }
         internal AuditSettings AuditSettings { get; set; }
         internal DomainEntityMetadata Metadata { get; private set; }
+        internal IReadOnlyDictionary<string, AggregationData> AggregationData { get; set; }
     }
 }

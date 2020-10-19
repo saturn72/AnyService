@@ -205,19 +205,24 @@ namespace Microsoft.Extensions.DependencyInjection
                 var mtType = ecr.EndpointSettings?.MapToType ?? ecr.Type;
                 var aggMtts = mtType.GetProperties()
                     .Where(pi => !pi.PropertyType.IsSimpleType() && pi.GetCustomAttribute<IgnoreAggregationAttribute>() == null);
-                
+
                 var allTypes = aggMtts.Distinct();
 
-                var aggData = new Dictionary<string, EntityConfigRecord>();
+                var aggDataList = new Dictionary<string, AggregationData>();
                 foreach (var t in allTypes)
                 {
                     var externalName = t.Name;
                     var isEnumerable = typeof(IEnumerable).IsAssignableFrom(t.PropertyType);
 
+
                     var propertyInnerType = isEnumerable ?
                         t.PropertyType.GetGenericArguments()[0] :
                         t.PropertyType;
-                    var matchEcr = entityConfigRecords.Where(e => e.EndpointSettings?.MapToType == propertyInnerType || e.Type == propertyInnerType);
+
+                    var aggregationAttribute = t.GetCustomAttribute<AggregationAttribute>();
+                    var matchEcr = aggregationAttribute == null ?
+                        entityConfigRecords.Where(e => e.EndpointSettings?.MapToType == propertyInnerType || e.Type == propertyInnerType) :
+                    entityConfigRecords.Where(e => e.Identifier == aggregationAttribute.EntityConfigRecordIdentifier);
 
                     if (matchEcr.IsNullOrEmpty())
                         throw new InvalidOperationException($"Fail to find matched aggregated type for {propertyInnerType.FullName}. Please make sure one was configured");
@@ -225,25 +230,11 @@ namespace Microsoft.Extensions.DependencyInjection
                     if (matchEcr.Count() > 1)
                         throw new InvalidOperationException($"Multiple matches for aggregated of type {propertyInnerType.FullName}. Please use {nameof(AggregationAttribute)} to explicit bind one to property {externalName}");
 
-                    aggData.Add(externalName, ecr);
+                    var ad = new AggregationData(externalName, matchEcr.First(), isEnumerable);
+                    aggDataList.Add(externalName, ad);
                 }
-                ecr.AggregatedData = new AggregationDataFactory();
-
-                    //.Where(pi =>
-                    //{//get name 
-                    //    //bind to by propety type find matching ecr
-                    //    //if ecr.Count!=1 - throw!
-                    //    var aa = pi.GetCustomAttribute<AggregatedAttribute>();
-                    //    return !aa.EntityName.HasValue() || !aa.ExternalName.HasValue();
-                    //})
-                    //.ToList();
+                ecr.AggregationData = aggDataList;
             }
-
-            //var aggAttType = typeof(AggregatedAttribute);
-
-            ////get all aggregate Attributes with no external name and set property name to them
-
-            //throw new NotImplementedException();
         }
 
         private static void AddAnyServiceControllers(AnyServiceConfig config)

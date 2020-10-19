@@ -18,8 +18,6 @@ namespace AnyService.Services
     public class CrudService<TDomainEntity> : ICrudService<TDomainEntity> where TDomainEntity : IDomainEntity
     {
         #region fields
-        private static IEnumerable<string> AllAggregatedNames;
-
         protected readonly IServiceProvider ServiceProvider;
         protected readonly AnyServiceConfig Config;
         protected readonly IRepository<TDomainEntity> Repository;
@@ -28,14 +26,15 @@ namespace AnyService.Services
         protected readonly IModelPreparar<TDomainEntity> ModelPreparar;
         protected readonly WorkContext WorkContext;
         protected readonly IEventBus EventBus;
-        protected readonly EventKeyRecord EventKeys;
-        protected readonly IFileStoreManager FileStorageManager;
         protected readonly ILogger<CrudService<TDomainEntity>> Logger;
         protected readonly IIdGenerator IdGenerator;
         protected readonly IFilterFactory FilterFactory;
         protected readonly IPermissionManager PermissionManager;
         protected readonly IAuditManager AuditManager;
-        private readonly DomainEntityMetadata EntityMetadata;
+        protected readonly IFileStoreManager FileStorageManager;
+        protected static EventKeyRecord EventKeys;
+        private static DomainEntityMetadata EntityMetadata;
+        private static IReadOnlyDictionary<string, AggregationData> AggregationData;
         #endregion
         #region ctor
         public CrudService(
@@ -57,9 +56,10 @@ namespace AnyService.Services
             FilterFactory = serviceProvider.GetService<IFilterFactory>();
             PermissionManager = serviceProvider.GetService<IPermissionManager>();
             AuditManager = serviceProvider.GetService<IAuditManager>();
-            EventKeys = WorkContext?.CurrentEntityConfigRecord?.EventKeys;
-            EntityMetadata = WorkContext?.CurrentEntityConfigRecord?.Metadata;
-            AllAggregatedNames ??= EntityMetadata.Aggregations.Select(a => a.EntityName.ToLower());
+
+            EventKeys ??= WorkContext?.CurrentEntityConfigRecord?.EventKeys;
+            EntityMetadata ??= WorkContext?.CurrentEntityConfigRecord?.Metadata;
+            AggregationData ??= new Dictionary<string, AggregationData>(WorkContext?.CurrentEntityConfigRecord.AggregationData, StringComparer.InvariantCultureIgnoreCase);
         }
 
         #endregion
@@ -262,7 +262,6 @@ namespace AnyService.Services
                 return serviceResponse;
             }
 
-            var ecrs = ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
             var res = new Dictionary<string, IEnumerable<IDomainEntity>>();
 
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(parentId)} = {parentId}, {nameof(childEntityNames)} = {childEntityNames.ToJsonString()}");
@@ -271,7 +270,7 @@ namespace AnyService.Services
 
             foreach (var gm in groupMaps)
             {
-                var ecr = ecrs.FirstOrDefault(e => e.Name.ToLower() == gm.Key.ToLower());
+                var ecr = AggregationData.FirstOrDefault(e => e.Value.Name.ToLower() == gm.Key.ToLower());.Value.EntityConfigRecord;
                 if (ecr == default)
                     continue;
 
@@ -300,9 +299,8 @@ namespace AnyService.Services
             bool AllAggregatedExists()
             {
                 childEntityNames = childEntityNames.Select(x => x.Trim().ToLower());
-                var res = AllAggregatedNames.All(childEntityNames.Contains);
-                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{childEntityNames}{(res ? "" : " NOT")} exists in {AllAggregatedNames.ToJsonString()}");
-
+                var res = childEntityNames.All(AggregationData.Keys.Contains);
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{childEntityNames}{(res ? "" : " NOT")} exists in {AggregationData.Keys.ToJsonString()}");
                 return res;
             }
         }
@@ -355,8 +353,13 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(ServiceResponse)} = {serviceResponse}");
             return serviceResponse;
         }
-        private async Task<IEnumerable<IGrouping<string, EntityMapping>>> GetGroupedMappingByParentIdAndChildEntityNames(string parentId, IEnumerable<string> childEntityNames)
+        private async Task<IEnumerable<IGrouping<string, EntityMapping>>> GetGroupedMappingByParentIdAndChildEntityNames(string parentId, IEnumerable<string> requestedChildNames)
         {
+            var ecrs = AggregationData
+                .Where(x => requestedChildNames.Contains(x.Value.Name, StringComparer.InvariantCultureIgnoreCase))
+                .Select(y => y.Value.EntityConfigRecord);
+            var ecrsNames = ecrs.Select(s => s.Name);
+
             var col = await MapRepository.Collection;
             var res = col.Where(p())
                 .GroupBy(g => g.ChildEntityName)
@@ -367,14 +370,7 @@ namespace AnyService.Services
             Func<EntityMapping, bool> p() => c =>
                 c.ParentEntityName == WorkContext.CurrentEntityConfigRecord.Name &&
                    c.ParentId == parentId &&
-                   childEntityNames.Contains(c.ChildEntityName, StringComparer.InvariantCultureIgnoreCase);
-            //return from c in col
-            //       where
-            //       c.ParentEntityName == WorkContext.CurrentEntityConfigRecord.Name &&
-            //       c.ParentId == parentId &&
-            //       childEntityNames.Contains(c.ChildEntityName, StringComparer.InvariantCultureIgnoreCase)
-            //       group c by c.ChildEntityName into g
-            //       select g;
+                   ecrsNames.Contains(c.ChildEntityName, StringComparer.InvariantCultureIgnoreCase);
         }
         #endregion
         #region UpdateMappings
@@ -382,23 +378,20 @@ namespace AnyService.Services
         {
             Logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"Start {nameof(UpdateMappings)} with parameters: {nameof(request)} = {request.ToJsonString()}");
             var serviceResponse = new ServiceResponse<EntityMappingResponse>();
-            if (request == null)
+            if (!AggregationData.Any() || request == null)
             {
                 Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(request)} is null");
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
                 return serviceResponse;
             }
 
-            var ecrs = ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
-            var ecr = ecrs.FirstOrDefault(e => e.Name.ToLower() == request.ChildEntityName.ToLower());
-
-            if (ecr == null)
+            if (!AggregationData.TryGetValue(request.ChildEntityName, out AggregationData aggData))
             {
                 Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(EntityConfigRecord)} of named {nameof(request.ChildEntityName)} is not configures");
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
                 return serviceResponse;
             }
-
+            var ecr = aggData.EntityConfigRecord;
             dynamic r = ServiceProvider.GetGenericService(typeof(IRepository<>), ecr.Type);
             if (r == null)
             {

@@ -29,6 +29,7 @@ namespace AnyService.Controllers
         private static Type _mapToType;
         private static Type _mapToTypeEnumerableType;
         private static Type _mapToPageType;
+        private static IEnumerable<string> _aggregatedChildNames;
         private static string _curTypeIdentifier;
 
         private readonly ICrudService<TDomainEntity> _crudService;
@@ -138,7 +139,7 @@ namespace AnyService.Controllers
             if (childNames.HasValue())
             {
                 var aggChildNames = parseChildNames();
-                if (aggChildNames.IsNullOrEmpty())
+                if (aggChildNames.IsNullOrEmpty() || aggChildNames.All(_aggregatedChildNames.Contains))
                     return BadRequest();
                 res = await _crudService.GetAggregated(id, aggChildNames);
             }
@@ -151,8 +152,7 @@ namespace AnyService.Controllers
             if (res.Result == ServiceResult.NotFound) res.Result = ServiceResult.BadOrMissingData;
             return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
 
-            IEnumerable<string> parseChildNames() =>
-                throw new NotImplementedException();// _aggregatedChildNames.Where(c => childNames.Contains(c.Key)).Select(x => x.Value);
+            IEnumerable<string> parseChildNames() => childNames.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(c => c.Trim());
         }
 
 
@@ -268,6 +268,7 @@ namespace AnyService.Controllers
             _mapToType ??= _workContext.CurrentEntityConfigRecord.EndpointSettings?.MapToType;
             _mapToTypeEnumerableType ??= typeof(IEnumerable<>).MakeGenericType(_mapToType);
             _mapToPageType ??= _workContext.CurrentEntityConfigRecord.EndpointSettings.MapToPaginationType;
+            _aggregatedChildNames ??= _workContext.CurrentEntityConfigRecord.AggregationData.Keys;
         }
         private async Task<TDomainEntity> ExctractModelFromStream()
         {
