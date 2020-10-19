@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System;
-using System.Collections.Concurrent;
-using System.Reflection;
 using Microsoft.Extensions.Logging;
 using System.Data;
 using EFCore.BulkExtensions;
@@ -16,11 +14,10 @@ namespace AnyService.EntityFramework
         where TDomainModel : class, IDomainEntity
     {
         #region fields
-        private static readonly ConcurrentDictionary<Type, IEnumerable<PropertyInfo>> TypeProperties = new ConcurrentDictionary<Type, IEnumerable<PropertyInfo>>();
-        private readonly DbContext _dbContext;
-        private readonly IQueryable<TDomainModel> _collection;
-        private readonly ILogger<EfRepository<TDomainModel>> _logger;
 
+        private readonly DbContext _dbContext;
+        private readonly ILogger<EfRepository<TDomainModel>> _logger;
+        private readonly EfRepositoryBridge<TDomainModel> _bridge;
         private static readonly BulkConfig InsertBulkConfig = new BulkConfig
         {
             PreserveInsertOrder = true,
@@ -33,157 +30,42 @@ namespace AnyService.EntityFramework
             _dbContext = dbContext;
             _logger = logger;
 
-            _collection = _dbContext.Set<TDomainModel>().AsNoTracking();
+            _bridge = new EfRepositoryBridge<TDomainModel>(dbContext, logger);
         }
         #endregion
 
-        public Task<IQueryable<TDomainModel>> Collection => Task.FromResult(_collection);
-        public virtual async Task<IEnumerable<TDomainModel>> GetAll(Pagination<TDomainModel> pagination)
+        public Task<IQueryable<TDomainModel>> Collection => Task.FromResult(_bridge.Collection);
+        #region Create
+        public virtual async Task<IEnumerable<TDomainModel>> BulkInsert(IEnumerable<TDomainModel> entities, bool trackIds = false)
         {
-            if (pagination == null || pagination.QueryFunc == null)
-                throw new ArgumentNullException(nameof(pagination));
-            _logger.LogDebug(EfRepositoryEventIds.Read, "Get all with pagination: " + pagination.QueryOrFilter ?? pagination.QueryFunc.ToString());
-            pagination.Total = _collection.Where(pagination.QueryFunc).Count();
-            _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll set total to: " + pagination.Total);
-
-            var q = pagination.IncludeNested ? IncludeNavigations(_collection) : _collection;
-
-            var isDesc = pagination.SortOrder == PaginationSettings.Desc;
-            var orderByPropertyName = GetOrderByProperty(pagination.OrderBy);
-            q = q.OrderBy(orderByPropertyName, isDesc)
-                .Where(pagination.QueryFunc).AsQueryable();
-
-            q = pagination.Offset == 0 ?
-               q.Take(pagination.PageSize) :
-               q.Skip(pagination.Offset).Take(pagination.PageSize);
-
-            var page = q.ToArray();
-            _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll Detaching entities");
-            await DetachEntities(q);
-
-            _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll total entities in page: " + page.Count());
-            return page;
-        }
-
-        private static string GetOrderByProperty(string paginationOrderBy)
-        {
-            return paginationOrderBy != null && GetTypePropertyInfos().Any(x => x.Name == paginationOrderBy) ?
-                paginationOrderBy : nameof(IDomainEntity.Id);
-        }
-
-        public virtual async Task<TDomainModel> GetById(string id)
-        {
-            _logger.LogDebug(EfRepositoryEventIds.Read, $"{nameof(GetById)} with id = {id}");
-            var entity = await GetEntityById_Internal(id);
-            if (entity == null)
-                return null;
-            await DetachEntities(new[] { entity });
-            _logger.LogDebug(EfRepositoryEventIds.Read, $"{nameof(GetById)} result = {entity.ToJsonString()}");
-            return entity;
+            _logger.LogInformation(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} with entity = {entities.ToJsonString()}");
+            return await _bridge.BulkInsert(entities, trackIds);
         }
         public virtual async Task<TDomainModel> Insert(TDomainModel entity)
         {
-            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(Insert)} with entity = {entity.ToJsonString()}");
-            await _dbContext.Set<TDomainModel>().AddAsync(entity);
-            await _dbContext.SaveChangesAsync();
-            await DetachEntities(new[] { entity });
-            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(Insert)} result = {entity.ToJsonString()}");
-            return entity;
+            _logger.LogInformation(EfRepositoryEventIds.Create, $"{nameof(Insert)} with entity = {entity.ToJsonString()}");
+            return await _bridge.Insert(entity);
         }
-        public virtual async Task<IEnumerable<TDomainModel>> BulkInsert(IEnumerable<TDomainModel> entities, bool trackIds = false)
+        #endregion
+        public virtual async Task<IEnumerable<TDomainModel>> GetAll(Pagination<TDomainModel> pagination)
         {
-            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} with entity = {entities.ToJsonString()}");
-            if (trackIds)
-            {
-                await _dbContext.Set<TDomainModel>().AddRangeAsync(entities.ToArray());
-                _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
-                await _dbContext.SaveChangesAsync();
-                _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Bulk operation ended");
-                _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} result = {entities.ToJsonString()}");
-                await DetachEntities(entities);
-                return entities;
-            }
-
-            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
-            await _dbContext.BulkInsertAsync(entities.ToList());
-            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Bulk operation ended");
-            return entities;
+            _logger.LogInformation(EfRepositoryEventIds.Read, "Get all with pagination: " + pagination.QueryOrFilter ?? pagination.QueryFunc.ToString());
+            return await _bridge.GetAll(pagination);
         }
-
+        public virtual async Task<TDomainModel> GetById(string id)
+        {
+            _logger.LogInformation(EfRepositoryEventIds.Read, $"{nameof(GetById)} with id = {id}");
+            return await _bridge.GetById(id);
+        }
         public virtual async Task<TDomainModel> Update(TDomainModel entity)
         {
-            _logger.LogDebug(EfRepositoryEventIds.Update, $"{nameof(Update)} with entity = {entity.ToJsonString()}");
-            var dbEntity = await GetEntityById_Internal(entity.Id);
-
-            if (dbEntity == null)
-                return null;
-
-            foreach (var pInfo in GetTypePropertyInfos())
-            {
-                var value = pInfo.GetValue(entity);
-                pInfo.SetValue(dbEntity, value);
-            }
-            _dbContext.Update(dbEntity);
-            await _dbContext.SaveChangesAsync();
-            await DetachEntities(new[] { dbEntity });
-            _logger.LogDebug(EfRepositoryEventIds.Update, $"{nameof(Update)} result = {entity.ToJsonString()}");
-            return dbEntity;
+            _logger.LogInformation(EfRepositoryEventIds.Update, $"{nameof(Update)} with entity = {entity.ToJsonString()}");
+            return await _bridge.Update(entity);
         }
         public virtual async Task<TDomainModel> Delete(TDomainModel entity)
         {
-            _logger.LogDebug(EfRepositoryEventIds.Delete, $"{nameof(Delete)} with entity = {entity.ToJsonString()}");
-            var dbEntity = await GetEntityById_Internal(entity.Id);
-            if (dbEntity == null)
-                return null;
-            var entry = _dbContext.Remove(dbEntity);
-            await _dbContext.SaveChangesAsync();
-            entry.State = EntityState.Detached;
-            _logger.LogDebug(EfRepositoryEventIds.Delete, $"{nameof(Delete)} result = {entity.ToJsonString()}");
-            return entity;
-        }
-        private async Task<TDomainModel> GetEntityById_Internal(string id)
-        {
-            var query = _collection.Where(x => x.Id.Equals(id));
-            return await IncludeNavigations(query).FirstOrDefaultAsync();
-        }
-        private Task DetachEntities(IEnumerable<TDomainModel> entities)
-        {
-            return Task.Run(() =>
-            {
-                foreach (var e in entities)
-                {
-                    _dbContext.Entry(e).State = EntityState.Detached;
-                    foreach (var col in _dbContext.Entry(e).Collections)
-                        col.EntityEntry.State = EntityState.Detached;
-                }
-            });
-        }
-        private static readonly ConcurrentDictionary<Type, IEnumerable<string>> NavigationPropertyNames
-            = new ConcurrentDictionary<Type, IEnumerable<string>>();
-        private IQueryable<TDomainModel> IncludeNavigations(IEnumerable<TDomainModel> source)
-        {
-            var type = typeof(TDomainModel);
-
-            if (!NavigationPropertyNames.TryGetValue(type, out IEnumerable<string> navigationPropertiesNames))
-            {
-                var allProperties = _dbContext.Model.FindEntityType(typeof(TDomainModel));
-                navigationPropertiesNames = allProperties.GetNavigations().Select(x => x.Name).ToArray();
-                NavigationPropertyNames.TryAdd(type, navigationPropertiesNames);
-            }
-            foreach (var name in navigationPropertiesNames)
-                source = source.AsQueryable().Include(name);
-            return source.AsQueryable();
-        }
-        private static IEnumerable<PropertyInfo> GetTypePropertyInfos()
-        {
-            var type = typeof(TDomainModel);
-            if (!TypeProperties.TryGetValue(type, out IEnumerable<PropertyInfo> pInfos))
-            {
-                pInfos = type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                    .Where(p => p.CanRead && p.CanWrite);
-                TypeProperties.TryAdd(type, pInfos);
-            }
-            return pInfos;
+            _logger.LogInformation(EfRepositoryEventIds.Delete, $"{nameof(Delete)} with entity = {entity.ToJsonString()}");
+            return await _bridge.Delete(entity);
         }
     }
 }

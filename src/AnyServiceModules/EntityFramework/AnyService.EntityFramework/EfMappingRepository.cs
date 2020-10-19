@@ -5,68 +5,90 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System;
 using Microsoft.Extensions.Logging;
-using SQLitePCL;
-using AnyService.Mapping;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 namespace AnyService.EntityFramework
 {
-    public class EfMappingRepository<TDomainModel, TDbModel> : IRepository<TDomainModel>
-        where TDomainModel : class, IDomainEntity
+    public class EfMappingRepository<TDomainEntity, TDbModel> : IRepository<TDomainEntity>
+        where TDomainEntity : class, IDomainEntity
         where TDbModel : class
     {
         private readonly string _mapperName;
-        private readonly DbContext _dbContext;
-        private readonly IQueryable<TDbModel> _collection;
-        private readonly ILogger<EfMappingRepository<TDomainModel, TDbModel>> _logger;
+        private readonly EfRepositoryBridge<TDbModel> _bridge;
+        private readonly ILogger<EfMappingRepository<TDomainEntity, TDbModel>> _logger;
 
         public EfMappingRepository(
             string mapperName,
             DbContext dbContext,
-            ILogger<EfMappingRepository<TDomainModel, TDbModel>> logger)
+            ILogger<EfMappingRepository<TDomainEntity, TDbModel>> logger)
         {
             _mapperName = mapperName;
-            _dbContext = dbContext;
             _logger = logger;
-            _collection = _dbContext.Set<TDbModel>().AsNoTracking();
+            _bridge = new EfRepositoryBridge<TDbModel>(dbContext, logger);
 
         }
-        public Task<IQueryable<TDomainModel>> Collection
+        public Task<IQueryable<TDomainEntity>> Collection
         {
             get
             {
-                var mappedCol = _collection.Map<IEnumerable<TDomainModel>>(_mapperName);
+                var mappedCol = _bridge.Collection.Map<IEnumerable<TDomainEntity>>(_mapperName);
                 return Task.FromResult(mappedCol.AsQueryable());
             }
         }
-
-        public Task<IEnumerable<TDomainModel>> BulkInsert(IEnumerable<TDomainModel> entities, bool track = false)
+        public async Task<IEnumerable<TDomainEntity>> BulkInsert(IEnumerable<TDomainEntity> entities, bool track = false)
         {
-            throw new NotImplementedException();
+            _logger.LogInformation(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} with entity = {entities.ToJsonString()}");
+            var toInsert = entities.Map<IEnumerable<TDbModel>>(_mapperName);
+
+            _logger.LogDebug(EfRepositoryEventIds.Create, $"Entities mapped to {typeof(TDbModel).Name} = {toInsert.ToJsonString()}");
+            var entries = await _bridge.BulkInsert(toInsert, track);
+            var res = entries.Map<IEnumerable<TDomainEntity>>(_mapperName);
+            _logger.LogDebug(EfRepositoryEventIds.Create, $"Db Records mapped to {typeof(TDomainEntity).Name} = {res.ToJsonString()}");
+
+            return res;
         }
-
-        public Task<TDomainModel> Delete(TDomainModel entity)
+        public async Task<TDomainEntity> Insert(TDomainEntity entity)
         {
-            throw new NotImplementedException();
+            _logger.LogInformation(EfRepositoryEventIds.Create, $"{nameof(Insert)} with entity = {entity.ToJsonString()}");
+            return await ExecuteAndMap(entity, e => _bridge.Insert(e), EfRepositoryEventIds.Create);
         }
-
-        public Task<IEnumerable<TDomainModel>> GetAll(Pagination<TDomainModel> paginate)
+        public async Task<IEnumerable<TDomainEntity>> GetAll(Pagination<TDomainEntity> paginate)
         {
-            throw new NotImplementedException();
+            _logger.LogInformation(EfRepositoryEventIds.Read, "Get all with pagination: " + paginate.QueryOrFilter ?? paginate.QueryFunc.ToString());
+            var p = paginate.Map<Pagination<TDbModel>>();
+            var res = await _bridge.GetAll(p);
+            return res.Map<IEnumerable<TDomainEntity>>();
         }
-
-        public Task<TDomainModel> GetById(string id)
+        public virtual async Task<TDomainEntity> GetById(string id)
         {
-            throw new NotImplementedException();
+            _logger.LogInformation(EfRepositoryEventIds.Read, $"{nameof(GetById)} with id = {id}");
+            var entry = await _bridge.GetById(id);
+            var res = entry.Map<TDomainEntity>(_mapperName);
+            _logger.LogDebug(EfRepositoryEventIds.Read, $"Db Record mapped to {typeof(TDomainEntity).Name} = {res.ToJsonString()}");
+            return res;
         }
-
-        public Task<TDomainModel> Insert(TDomainModel entity)
+        public virtual async Task<TDomainEntity> Update(TDomainEntity entity)
         {
-            throw new NotImplementedException();
+            _logger.LogInformation(EfRepositoryEventIds.Update, $"{nameof(Update)} with entity = {entity.ToJsonString()}");
+            return await ExecuteAndMap(entity, e => _bridge.Update(e), EfRepositoryEventIds.Update);
         }
-
-        public Task<TDomainModel> Update(TDomainModel entity)
+        public virtual async Task<TDomainEntity> Delete(TDomainEntity entity)
         {
-            throw new NotImplementedException();
+            _logger.LogInformation(EfRepositoryEventIds.Delete, $"{nameof(Delete)} with entity = {entity.ToJsonString()}");
+            return await ExecuteAndMap(entity, e => _bridge.Delete(e), EfRepositoryEventIds.Delete);
+        }
+        private async Task<TDomainEntity> ExecuteAndMap(
+            TDomainEntity entity,
+            Func<TDbModel, Task<TDbModel>> func,
+            EventId eventId)
+        {
+            var e = entity.Map<TDbModel>(_mapperName);
+            _logger.LogDebug(eventId, $"Entity mapped to {typeof(TDbModel).Name} = {e.ToJsonString()}");
+            var entry = await func(e);
+            var res = entry.Map<TDomainEntity>(_mapperName);
+            _logger.LogDebug(eventId, $"Db Record mapped to {typeof(TDomainEntity).Name} = {res.ToJsonString()}");
+            return res;
         }
     }
 }
