@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System;
 using Microsoft.Extensions.Logging;
-using System.Data;
 using EFCore.BulkExtensions;
 
 namespace AnyService.EntityFramework
@@ -17,7 +16,7 @@ namespace AnyService.EntityFramework
 
         private readonly DbContext _dbContext;
         private readonly ILogger<EfRepository<TDomainModel>> _logger;
-        private readonly EfRepositoryBridge<TDomainModel> _bridge;
+        private readonly DatabaseBridge<TDomainModel> _bridge;
         private static readonly BulkConfig InsertBulkConfig = new BulkConfig
         {
             PreserveInsertOrder = true,
@@ -30,7 +29,7 @@ namespace AnyService.EntityFramework
             _dbContext = dbContext;
             _logger = logger;
 
-            _bridge = new EfRepositoryBridge<TDomainModel>(dbContext, logger);
+            _bridge = new DatabaseBridge<TDomainModel>(dbContext, logger);
         }
         #endregion
 

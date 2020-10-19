@@ -5,8 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
 
 namespace AnyService.EntityFramework
 {
@@ -15,7 +13,7 @@ namespace AnyService.EntityFramework
         where TDbModel : class
     {
         private readonly string _mapperName;
-        private readonly EfRepositoryBridge<TDbModel> _bridge;
+        private readonly DatabaseBridge<TDbModel> _bridge;
         private readonly ILogger<EfMappingRepository<TDomainEntity, TDbModel>> _logger;
 
         public EfMappingRepository(
@@ -25,7 +23,7 @@ namespace AnyService.EntityFramework
         {
             _mapperName = mapperName;
             _logger = logger;
-            _bridge = new EfRepositoryBridge<TDbModel>(dbContext, logger);
+            _bridge = new DatabaseBridge<TDbModel>(dbContext, logger);
 
         }
         public Task<IQueryable<TDomainEntity>> Collection

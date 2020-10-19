@@ -15,12 +15,14 @@ using AnyService.Endpoints;
 using AnyService.SampleApp.Hubs;
 using Microsoft.AspNetCore.Http;
 using AnyService.SampleApp.Configurars;
+using System.Data.Common;
+using Microsoft.Data.Sqlite;
 
 namespace AnyService.SampleApp
 {
     public class Startup
     {
-        public const string DbName = "anyservice-testsapp-db";
+        public const string DbName = "anyservice-testsapp.db";
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -59,10 +61,18 @@ namespace AnyService.SampleApp
             //setup entity framework provider here.
             //this is inmemory provider
             var options = new DbContextOptionsBuilder<SampleAppDbContext>()
-                .UseInMemoryDatabase(databaseName: DbName).Options;
+                .UseSqlite(createInMemoryDatabase()).Options;
             services.AddTransient<DbContext>(sp => new SampleAppDbContext(options));
             services.AddTransient(typeof(IRepository<>), typeof(EfRepository<>));
             services.AddTransient<IFileStoreManager, EfFileStoreManager>();
+
+
+            DbConnection createInMemoryDatabase()
+            {
+                var con = new SqliteConnection("Filename=:memory:");
+                con.Open();
+                return con;
+            }
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

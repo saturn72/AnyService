@@ -11,21 +11,29 @@ using System.Threading.Tasks;
 
 namespace AnyService.EntityFramework
 {
-    internal class EfRepositoryBridge<TDbModel> where TDbModel : class
+    internal class DatabaseBridge<TDbModel> where TDbModel : class
     {
         #region Fields
-        private static readonly ConcurrentDictionary<Type, IEnumerable<string>> NavigationPropertyNames
-        = new ConcurrentDictionary<Type, IEnumerable<string>>();
+        private static string _selectByIdSqlCommandFormat;
+        private static string _pkColumnName;
+        private static readonly ConcurrentDictionary<Type, IEnumerable<string>> NavigationPropertyNames = new ConcurrentDictionary<Type, IEnumerable<string>>();
         private static readonly ConcurrentDictionary<Type, IEnumerable<PropertyInfo>> TypeProperties = new ConcurrentDictionary<Type, IEnumerable<PropertyInfo>>();
 
         private readonly DbContext _dbContext;
         private readonly ILogger _logger;
         #endregion
         #region ctor
-        public EfRepositoryBridge(DbContext dbContext, ILogger logger)
+        public DatabaseBridge(DbContext dbContext, ILogger logger)
         {
             _dbContext = dbContext;
             _logger = logger;
+
+            if (_selectByIdSqlCommandFormat == null)
+            {
+                _pkColumnName = _dbContext.Model.FindEntityType(typeof(TDbModel)).FindPrimaryKey().Properties.First().GetColumnName();
+                var tableName = _dbContext.Model.FindEntityType(typeof(TDbModel)).GetTableName();
+                _selectByIdSqlCommandFormat = $"SELECT * FROM {tableName} WHERE {_pkColumnName} = {{0}}";
+            }
         }
         #endregion
         internal IQueryable<TDbModel> Collection
@@ -99,7 +107,7 @@ namespace AnyService.EntityFramework
         internal async Task<TDbModel> GetById(string id)
         {
             _logger.LogDebug(EfRepositoryEventIds.Read, $"{nameof(GetById)} with id = {id}");
-            var entity = await GetEntityById_Internal(id);
+            var entity = GetEntityById_Internal(id);
             if (entity == null)
                 return null;
             await DetachEntities(new[] { entity });
@@ -111,7 +119,8 @@ namespace AnyService.EntityFramework
         internal async Task<TDbModel> Update(TDbModel entity)
         {
             _logger.LogDebug(EfRepositoryEventIds.EfRepositoryBridge, $"{nameof(Update)} with entity = {entity.ToJsonString()}");
-            var dbEntity = await GetEntityById_Internal(entity.Id);
+            var id = entity.GetPropertyValueByName<object>(_pkColumnName);
+            var dbEntity = GetEntityById_Internal(id);
 
             if (dbEntity == null)
                 return null;
@@ -131,9 +140,10 @@ namespace AnyService.EntityFramework
         #region Delete
         internal async Task<TDbModel> Delete(TDbModel entity)
         {
-
             _logger.LogDebug(EfRepositoryEventIds.EfRepositoryBridge, $"{nameof(Delete)} with entity = {entity.ToJsonString()}");
-            var dbEntity = await GetEntityById_Internal(entity.Id);
+            var id = entity.GetPropertyValueByName<object>(_pkColumnName);
+
+            var dbEntity = GetEntityById_Internal(id);
             if (dbEntity == null)
                 return null;
             var entry = _dbContext.Remove(dbEntity);
@@ -145,10 +155,11 @@ namespace AnyService.EntityFramework
         #endregion
 
         #region Utilities
-        private async Task<TDbModel> GetEntityById_Internal(string id)
+        private TDbModel GetEntityById_Internal(object id)
         {
-            var query = await Collection.FirstOrDefaultAsync(x => x.Id.Equals(id));
-            return IncludeNavigations(new[] { query }).FirstOrDefault();
+            var sql = string.Format(_selectByIdSqlCommandFormat, id);
+            var query = _dbContext.Set<TDbModel>().FromSqlRaw(sql).AsNoTracking();
+            return IncludeNavigations(query).FirstOrDefault();
         }
 
         private Task DetachEntities(IEnumerable<TDbModel> entities)

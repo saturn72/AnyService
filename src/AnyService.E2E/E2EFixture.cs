@@ -26,7 +26,7 @@ namespace AnyService.E2E
                 builder.ConfigureTestServices(services =>
                 {
                     var options = new DbContextOptionsBuilder<SampleAppDbContext>()
-                          .UseInMemoryDatabase(databaseName: DateTime.Now.ToString("yyyy_mm_hh_ss_ff") + ".db").Options;
+                          .UseSqlite("Filename=:memory:").Options;
 
                     DbContext = new SampleAppDbContext(options);
                     services.AddTransient<DbContext>(sp => new SampleAppDbContext(options));

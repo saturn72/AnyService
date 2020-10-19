@@ -8,6 +8,8 @@ using AnyService.Services;
 using System;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Microsoft.Data.Sqlite;
+using System.Data.Common;
 
 namespace AnyService.EntityFramework.Tests
 {
@@ -38,7 +40,7 @@ namespace AnyService.EntityFramework.Tests
             private readonly Mock<ILogger<EfRepository<TestClass>>> _logger;
             private readonly EfRepository<TestClass> _repository;
             private static readonly DbContextOptions<TestDbContext> DbOptions = new DbContextOptionsBuilder<TestDbContext>()
-                .UseInMemoryDatabase(databaseName: "test.db")
+                .UseSqlite(CreateInMemoryDatabase())
                 .Options;
             public EfRepositoryTests()
             {
@@ -46,6 +48,14 @@ namespace AnyService.EntityFramework.Tests
                 _logger = new Mock<ILogger<EfRepository<TestClass>>>();
                 _repository = new EfRepository<TestClass>(_dbContext, _logger.Object);
             }
+
+            private static DbConnection CreateInMemoryDatabase()
+            {
+                var connection = new SqliteConnection("Filename=:memory:");
+                connection.Open();
+                return connection;
+            }
+
             [Fact]
             public async Task Insert()
             {
@@ -63,8 +73,7 @@ namespace AnyService.EntityFramework.Tests
             public async Task InsertBulk()
             {
                 var options = new DbContextOptionsBuilder<TestDbContext>()
-                    .UseSqlite(@"Filename=test.db")
-                    .Options;
+                    .UseSqlite(CreateInMemoryDatabase()).Options;
                 var ctx = new TestDbContext(options);
 
                 var l = new Mock<ILogger<EfRepository<BulkTestClass>>>();
@@ -85,6 +94,7 @@ namespace AnyService.EntityFramework.Tests
                 inserted.Count().ShouldBe(total);
                 for (int i = 0; i < total; i++)
                     inserted.ElementAt(i).Value.ShouldBe(i);
+
             }
             [Fact]
             public async Task GetById_returns_Null_On_NotExists()

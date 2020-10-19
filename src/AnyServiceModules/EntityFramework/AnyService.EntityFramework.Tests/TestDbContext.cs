@@ -25,15 +25,16 @@ namespace AnyService.EntityFramework.Tests
              v => v.ToString(),
              new ConverterMappingHints(valueGeneratorFactory: (p, t) => new GuidStringGenerator()));
 
-            modelBuilder.Entity<FileModel>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
-            modelBuilder.Entity<TestClass>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
-            modelBuilder.Entity<TestNestedClass>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+            modelBuilder.Entity<FileModel>(b => b.HasKey(u => u.Id));//.ValueGeneratedOnAdd());
+            modelBuilder.Entity<TestClass>(b => b.HasKey(u => u.Id));//.ValueGeneratedOnAdd());
+            modelBuilder.Entity<TestNestedClass>(b => b.HasKey(u => u.Id));//.ValueGeneratedOnAdd());
 
             modelBuilder.Entity<BulkTestClass>(b =>
             {
                 b.ToTable("BulkTestClasses");
+                b.HasKey(u => u.Id);
                 b.Property(u => u.Id)
-                   .ValueGeneratedOnAdd()
+                 //  .ValueGeneratedOnAdd()
                    .HasConversion(converter);
             });
         }
