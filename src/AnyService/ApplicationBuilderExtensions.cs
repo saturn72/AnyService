@@ -49,17 +49,18 @@ namespace AnyService
                     eventBus.Subscribe(ek.Delete, handlers.DeleteEventHandler, "domain-object-handler-deleted");
                 }
             }
-            if (usePermissionMiddleware) AddPermissionComponents(app, sp);
-            MappingExtensions.Configure();
+            if (usePermissionMiddleware)
+                AddPermissionComponents(app, sp);
             return app;
         }
         private static void InitializeAndValidateRequiredServices(IServiceProvider serviceProvider)
         {
             ServiceResponseWrapperExtensions.Init(serviceProvider);
             GenericControllerNameConvention.Init(serviceProvider);
+            MappingExtensions.Build(serviceProvider);
             serviceProvider.GetRequiredService<ICacheManager>();
         }
-       
+
         private static void AddPermissionComponents(IApplicationBuilder app, IServiceProvider serviceProvider)
         {
             var config = serviceProvider.GetRequiredService<AnyServiceConfig>();

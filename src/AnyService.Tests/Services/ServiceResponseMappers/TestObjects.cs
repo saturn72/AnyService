@@ -1,3 +1,7 @@
+using AnyService.Internals;
+using Moq;
+using System;
+
 namespace AnyService.Tests.Services.ServiceResponseMappers
 {
     public class TestClass1
@@ -13,11 +17,16 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
     {
         static MappingTest()
         {
+            var mf = new DefaultMapperFactory();
+            var sp = new Mock<IServiceProvider>();
+            sp.Setup(s => s.GetService(typeof(IMapperFactory))).Returns(mf);
             MappingExtensions.Configure(cfg =>
             {
                 cfg.CreateMap<TestClass1, TestClass2>()
                     .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.Id.ToString()));
             });
+
+            MappingExtensions.Build(sp.Object);
         }
     }
 }

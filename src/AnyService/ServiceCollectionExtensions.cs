@@ -18,8 +18,7 @@ using AnyService.Audity;
 using AnyService.Services.Logging;
 using AnyService.Models;
 using AnyService.Logging;
-using AutoMapper;
-using AutoMapper.Configuration.Annotations;
+using AnyService.Internals;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -82,11 +81,13 @@ namespace Microsoft.Extensions.DependencyInjection
 
             // services.
             services.AddSingleton(config.EntityConfigRecords);
-            //mappers
+            //response mappers
             var mappers = config.EntityConfigRecords.Select(t => t.EndpointSettings.ResponseMapperType).ToArray();
             foreach (var m in mappers)
                 services.TryAddSingleton(m);
 
+            //mapper factory
+            services.TryAddSingleton<IMapperFactory, DefaultMapperFactory>();
             //validator factory
             var validatorTypes = config.EntityConfigRecords.Select(t => t.CrudValidatorType).ToArray();
             foreach (var vType in validatorTypes)

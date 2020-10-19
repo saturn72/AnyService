@@ -3,39 +3,44 @@ using AnyService.Models;
 using AnyService.Services;
 using AnyService.Services.Audit;
 using AutoMapper;
+using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Concurrent;
 
 namespace AnyService
 {
     public static class MappingExtensions
     {
-        private static IMapper _mapper;
-        internal static bool WasConfigured;
-        private static MapperConfiguration MapperConfiguration;
-        private static ICollection<Action<IMapperConfigurationExpression>> CreateMapActions =
-            new List<Action<IMapperConfigurationExpression>>
+        private const string DefaultMapperName = "default";
+        private static ConcurrentDictionary<string, Action<IMapperConfigurationExpression>> _mapperConfigurations;
+        private static IMapperFactory _mapperFactory;
+        private static IServiceProvider _serviceProvider;
+
+        static MappingExtensions()
+        {
+            _mapperConfigurations = new ConcurrentDictionary<string, Action<IMapperConfigurationExpression>>();
+            _mapperConfigurations[DefaultMapperName] = AnyServiceMappingConfiguration;
+
+        }
+        public static void Build(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+            _mapperFactory = _serviceProvider.GetRequiredService<IMapperFactory>();
+            foreach (var mc in _mapperConfigurations)
             {
-                AnyServiceMappingConfiguration,
-            };
-
-        public static void AddConfiguration(Action<IMapperConfigurationExpression> configuration) => CreateMapActions.Add(configuration);
-
-        public static void Configure(Action<IMapperConfigurationExpression> configuration)
-        {
-            CreateMapActions.Add(configuration);
-            Configure();
+                var cfg = mc.Value;
+                var mapperConfig = new MapperConfiguration(cfg);
+                _mapperFactory.AddMapper(mc.Key, mapperConfig.CreateMapper());
+            }
         }
-
-        public static void Configure()
+        public static void AddConfiguration(Action<IMapperConfigurationExpression> configuration, string mapperName = DefaultMapperName)
         {
-            var configuration = (Action<IMapperConfigurationExpression>)Delegate.Combine(CreateMapActions.ToArray());
-            MapperConfiguration = new MapperConfiguration(configuration);
-            _mapper = null;
-            WasConfigured = true;
+            if (_mapperConfigurations.ContainsKey(mapperName))
+                configuration = _mapperConfigurations[mapperName] += configuration;
+            Configure(configuration, mapperName);
         }
-
+        public static void Configure(Action<IMapperConfigurationExpression> configuration, string mapperName = DefaultMapperName)
+            => _mapperConfigurations[mapperName] = configuration;
         private static void AnyServiceMappingConfiguration(IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap(typeof(Pagination<>), typeof(PaginationModel<>))
@@ -47,18 +52,17 @@ namespace AnyService
             cfg.CreateMap<AuditRecordModel, AuditRecord>();
             cfg.CreateMap<AuditPagination, AuditPaginationModel>();
         }
-        public static IMapper MapperInstance => _mapper ??= MapperConfiguration.CreateMapper();
-        public static object Map(this object source, Type destination)
+        public static object Map(this object source, Type destination, string mapperName = DefaultMapperName)
         {
-            return MapperInstance.Map(source, source.GetType(), destination);
+            return _mapperFactory.GetMapper(mapperName).Map(source, source.GetType(), destination);
         }
-        public static TDestination Map<TDestination>(this object source)
+        public static TDestination Map<TDestination>(this object source, string mapperName = DefaultMapperName)
         {
-            return (TDestination)Map(source, typeof(TDestination));
+            return (TDestination)Map(source, typeof(TDestination), mapperName);
         }
-        public static TDestination Map<TSource, TDestination>(this TSource source)
+        public static TDestination Map<TSource, TDestination>(this TSource source, string mapperName = DefaultMapperName)
         {
-            return Map<TDestination>(source); ;
+            return Map<TDestination>(source, mapperName);
         }
     }
 }
