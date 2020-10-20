@@ -84,7 +84,7 @@ namespace AnyService.Middlewares
             _logger.LogInformation(LoggingEvents.WorkContext,
                 $"Validate HttpMethod is active for {nameof(EntityConfigRecord)}. {nameof(RequestInfo)}: {workContext.RequestInfo.Method}");
 
-            var key = string.Format(MapKeyFormat, workContext.CurrentEntityConfigRecord.Identifier, workContext.RequestInfo.Method);
+            var key = string.Format(MapKeyFormat, workContext.CurrentEntityConfigRecord.Name, workContext.RequestInfo.Method);
             return ActivationMaps[key];
         }
         private IReadOnlyDictionary<string, EntityConfigRecord> LoadRoutes(IEnumerable<EntityConfigRecord> entityConfigRecords)
@@ -99,7 +99,7 @@ namespace AnyService.Middlewares
             var res = new Dictionary<string, bool>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var ecr in entityConfigRecords)
             {
-                var name = ecr.Identifier;
+                var name = ecr.Name;
                 res[string.Format(MapKeyFormat, name, "post")] = ecr.EndpointSettings.PostSettings.Active;
                 res[string.Format(MapKeyFormat, name, "get")] = ecr.EndpointSettings.GetSettings.Active;
                 res[string.Format(MapKeyFormat, name, "put")] = ecr.EndpointSettings.PutSettings.Active;

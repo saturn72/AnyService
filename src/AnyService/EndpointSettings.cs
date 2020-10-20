@@ -6,6 +6,7 @@ namespace AnyService
 {
     public sealed class EndpointSettings
     {
+        public string Name { get; set; }
         /// <summary>
         /// Gets or sets value indicating whether the get operation is public to all users or just to the creator
         /// </summary>
@@ -25,6 +26,7 @@ namespace AnyService
         public EndpointMethodSettings PutSettings { get; set; }
         public EndpointMethodSettings DeleteSettings { get; set; }
         public bool Active { get; set; } = true;
+
         internal string ControllerName => ControllerType?.FullName;
     }
 }

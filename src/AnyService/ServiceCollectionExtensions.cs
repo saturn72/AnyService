@@ -164,14 +164,6 @@ namespace Microsoft.Extensions.DependencyInjection
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
 
                 ecr.Name = e.Name;
-                ecr.Identifier ??= ecr.EndpointSettings != null && ecr.EndpointSettings.Area.HasValue() ?
-                    $"{ecr.EndpointSettings?.Area}_{ecr.Type.Name}" :
-                    e.Name;
-
-                var hasDuplication = temp.Where(e => e.Identifier == ecr.Identifier);
-                if (hasDuplication.Count() > 1)
-                    throw new InvalidOperationException($"Duplication in {nameof(EntityConfigRecord.Identifier)} field : {ecr.Identifier}. Please provide unique name for the controller. See configured entities where Routes equals {hasDuplication.First().EndpointSettings.Route} and {hasDuplication.Last().EndpointSettings.Route}");
-
                 ecr.EventKeys ??= ekr;
                 ecr.PermissionRecord ??= pr;
                 ecr.EntityKey ??= fn;
@@ -202,38 +194,39 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             foreach (var ecr in entityConfigRecords)
             {
-                var mtType = ecr.EndpointSettings?.MapToType ?? ecr.Type;
-                var aggMtts = mtType.GetProperties()
-                    .Where(pi => !pi.PropertyType.IsSimpleType() && pi.GetCustomAttribute<IgnoreAggregationAttribute>() == null);
-
-                var allTypes = aggMtts.Distinct();
-
-                var aggDataList = new Dictionary<string, AggregationData>();
-                foreach (var t in allTypes)
+                foreach (var es in ecr.EndpointSettings)
                 {
-                    var externalName = t.Name;
-                    var isEnumerable = typeof(IEnumerable).IsAssignableFrom(t.PropertyType);
+
+                    var mtType = es?.MapToType ?? ecr.Type;
+                    var aggMtts = mtType.GetProperties()
+                        .Where(pi => !pi.PropertyType.IsSimpleType() && pi.GetCustomAttribute<IgnoreAggregationAttribute>() == null);
+
+                    var allTypes = aggMtts.Distinct();
+
+                    var aggDataList = new Dictionary<string, AggregationData>();
+                    foreach (var t in allTypes)
+                    {
+                        var externalName = t.Name;
+                        var isEnumerable = typeof(IEnumerable).IsAssignableFrom(t.PropertyType);
 
 
-                    var propertyInnerType = isEnumerable ?
-                        t.PropertyType.GetGenericArguments()[0] :
-                        t.PropertyType;
+                        var propertyInnerType = isEnumerable ?
+                            t.PropertyType.GetGenericArguments()[0] :
+                            t.PropertyType;
 
-                    var aggregationAttribute = t.GetCustomAttribute<AggregationAttribute>();
-                    var matchEcr = aggregationAttribute == null ?
-                        entityConfigRecords.Where(e => e.EndpointSettings?.MapToType == propertyInnerType || e.Type == propertyInnerType) :
-                    entityConfigRecords.Where(e => e.Identifier == aggregationAttribute.EntityConfigRecordIdentifier);
+                        var matchEcr = entityConfigRecords.Where(e => es?.MapToType == propertyInnerType || e.Type == propertyInnerType);
 
-                    if (matchEcr.IsNullOrEmpty())
-                        throw new InvalidOperationException($"Fail to find matched aggregated type for {propertyInnerType.FullName}. Please make sure one was configured");
+                        if (matchEcr.IsNullOrEmpty())
+                            throw new InvalidOperationException($"Fail to find matched aggregated type for {propertyInnerType.FullName}. Please make sure one was configured");
 
-                    if (matchEcr.Count() > 1)
-                        throw new InvalidOperationException($"Multiple matches for aggregated of type {propertyInnerType.FullName}. Please use {nameof(AggregationAttribute)} to explicit bind one to property {externalName}");
+                        if (matchEcr.Count() > 1)
+                            throw new InvalidOperationException($"Multiple matches for aggregated of type {propertyInnerType.FullName}.");
 
-                    var ad = new AggregationData(externalName, matchEcr.First(), isEnumerable);
-                    aggDataList.Add(externalName, ad);
+                        var ad = new AggregationData(externalName, matchEcr.First(), isEnumerable);
+                        aggDataList.Add(externalName, ad);
+                    }
+                    ecr.AggregationData = aggDataList;
                 }
-                ecr.AggregationData = aggDataList;
             }
         }
 
@@ -245,10 +238,13 @@ namespace Microsoft.Extensions.DependencyInjection
                 list.Add(new EntityConfigRecord
                 {
                     Type = typeof(AuditRecord),
-                    EndpointSettings = new EndpointSettings
+                    EndpointSettings = new[]
                     {
-                        Area = "__anyservice",
-                        ControllerType = typeof(AuditController),
+                        new EndpointSettings
+                        {
+                            Area = "__anyservice",
+                            ControllerType = typeof(AuditController),
+                        },
                     }
                 });
             }
@@ -257,43 +253,66 @@ namespace Microsoft.Extensions.DependencyInjection
                 list.Add(new EntityConfigRecord
                 {
                     Type = typeof(LogRecord),
-                    EndpointSettings = new EndpointSettings
+                    EndpointSettings = new[]
+                    {
+                        new EndpointSettings
                     {
                         Area = "__anyservice",
                         ControllerType = typeof(LogRecordController),
-                    }
+                    },}
                 });
             }
             config.EntityConfigRecords = list;
         }
 
-        private static EndpointSettings NormalizeEndpointSettings(EntityConfigRecord ecr, AnyServiceConfig config)
+        private static IEnumerable<EndpointSettings> NormalizeEndpointSettings(EntityConfigRecord ecr, AnyServiceConfig config)
         {
-            var settings = (ecr.EndpointSettings ??= new EndpointSettings());
-            if (settings.Active)
+            if (ecr.EndpointSettings.IsNullOrEmpty() || ecr.EndpointSettings.All(e => !e.Active))
+                return new EndpointSettings[] { };
+
+            var activeSettings = ecr.EndpointSettings.Where(e => e.Active);
+            //duplication on area and route
+            var hasDuplicates =
+                activeSettings.Where(x => x.Area.HasValue()).GroupBy(i => i.Area).Any(g => g.Count() > 1) ||
+                activeSettings.Where(x => x.Route.HasValue || x.Name.HasValue()).GroupBy(i => $"{i.Route}_{i.Name}").Any(g => g.Count() > 1);
+
+
+            if (hasDuplicates)
+                throw new InvalidOperationException($"Duplication in {nameof(EntityConfigRecord.EndpointSettings)}. Duplicated field may be {ecr.Name} or {nameof(EndpointSettings.Area)} and {nameof(EndpointSettings.Route)} combination.");
+
+            var res = new List<EndpointSettings>();
+            foreach (var settings in activeSettings)
+            {
                 BuildControllerMethodSettings(settings, ecr);
 
-            if (!settings.Route.HasValue)
-            {
-                var areaPrefix = settings.Area.HasValue() ? $"{settings.Area}/" : "";
-                settings.Route = new PathString($"/{areaPrefix}{ecr.Type.Name}");
+                if (!settings.Route.HasValue)
+                {
+                    var areaPrefix = settings.Area.HasValue() ? $"{settings.Area}/" : "";
+                    settings.Route = new PathString($"/{areaPrefix}{ecr.Type.Name}");
+                }
+
+                var route = settings.Route;
+                if (route.Value.EndsWith("/"))
+                    settings.Route = new PathString(route.Value[0..^1]);
+
+                settings.ResponseMapperType ??= config.ServiceResponseMapperType;
+                ValidateType<IServiceResponseMapper>(settings.ResponseMapperType);
+                ValidateType<ControllerBase>(settings.ControllerType);
+                SetAuthorization(settings);
+
+                settings.MapToType ??= ecr.Type;
+                settings.MapToPaginationType ??= typeof(PaginationModel<>).MakeGenericType(settings.MapToType);
+
+                settings.ControllerType ??= BuildController(ecr.Type, settings);
+
+                //name
+                settings.Name ??= settings.Area.HasValue() ?
+                   $"{settings.Area}_{ecr.Type.Name}" :
+                   settings.Route.Value.Replace("/", "_")[1..];
+
+                res.Add(settings);
             }
-
-            var route = settings.Route;
-            if (route.Value.EndsWith("/"))
-                settings.Route = new PathString(route.Value[0..^1]);
-
-            settings.ResponseMapperType ??= config.ServiceResponseMapperType;
-            ValidateType<IServiceResponseMapper>(settings.ResponseMapperType);
-            ValidateType<ControllerBase>(settings.ControllerType);
-            SetAuthorization(settings);
-
-            settings.MapToType ??= ecr.Type;
-            settings.MapToPaginationType ??= typeof(PaginationModel<>).MakeGenericType(settings.MapToType);
-
-            settings.ControllerType ??= BuildController(ecr.Type, settings);
-
-            return settings;
+            return res;
         }
 
         private static void BuildControllerMethodSettings(EndpointSettings settings, EntityConfigRecord ecr)
@@ -309,7 +328,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 !settings.GetSettings.Active &&
                 !settings.PutSettings.Active &&
                 !settings.DeleteSettings.Active)
-                throw new ArgumentException($"Invalid operation: {nameof(EntityConfigRecord)} named {ecr.Identifier} has all httpMethods deactivated");
+                throw new ArgumentException($"Invalid operation: {nameof(EntityConfigRecord)} named {ecr.Name} has all httpMethods deactivated");
         }
 
         private static Type BuildController(Type entityType, EndpointSettings settings)

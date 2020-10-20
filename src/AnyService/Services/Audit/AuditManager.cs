@@ -132,7 +132,7 @@ namespace AnyService.Services.Audit
             if (EntityTypesNames.TryGetValue(entityType, out string value))
                 return value;
 
-            EntityTypesNames.TryAdd(entityType, _entityConfigRecords.First(entityType).Identifier);
+            EntityTypesNames.TryAdd(entityType, _entityConfigRecords.First(entityType).Name);
             return EntityTypesNames[entityType];
         }
     }

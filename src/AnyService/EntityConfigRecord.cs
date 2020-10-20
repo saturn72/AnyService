@@ -17,10 +17,6 @@ namespace AnyService
         /// </summary>
         public string Name { get; set; }
         /// <summary>
-        /// Unique identifier for the entity
-        /// </summary>
-        public string Identifier { get; set; }
-        /// <summary>
         /// 
         /// Gets or sets entity type 
         /// </summary>
@@ -62,9 +58,9 @@ namespace AnyService
         /// </summary>
         public string EntityKey { get; set; }
         /// <summary>
-        /// Gets or sets the object that sets up entity controller's behavior
+        /// Gets or sets collection contains endpoint behavior
         /// </summary>
-        public EndpointSettings EndpointSettings { get; set; }
+        public IEnumerable<EndpointSettings> EndpointSettings { get; set; }
         public Type CrudValidatorType { get; set; }
         /// <summary>
         /// Gets or sets paginate default settings

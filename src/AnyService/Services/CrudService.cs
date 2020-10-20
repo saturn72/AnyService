@@ -270,7 +270,7 @@ namespace AnyService.Services
 
             foreach (var gm in groupMaps)
             {
-                var ecr = AggregationData.FirstOrDefault(e => e.Value.Name.ToLower() == gm.Key.ToLower());.Value.EntityConfigRecord;
+                var ecr = AggregationData.Values.FirstOrDefault(e => e.EntityConfigRecord.Name == gm.Key)?.EntityConfigRecord;
                 if (ecr == default)
                     continue;
 

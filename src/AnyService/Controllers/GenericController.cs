@@ -262,7 +262,7 @@ namespace AnyService.Controllers
         #region Utilities
         private void InitStaticMembers()
         {
-            _curTypeIdentifier ??= _workContext.CurrentEntityConfigRecord.Identifier;
+            _curTypeIdentifier ??= _workContext.CurrentEntityConfigRecord.Name;
             _curType ??= _workContext.CurrentEntityConfigRecord.Type;
             _curEnumerableType ??= typeof(IEnumerable<>).MakeGenericType(_curType);
             _mapToType ??= _workContext.CurrentEntityConfigRecord.EndpointSettings?.MapToType;

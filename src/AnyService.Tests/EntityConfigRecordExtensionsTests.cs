@@ -13,11 +13,11 @@ namespace AnyService.Tests
             {
                 new EntityConfigRecord
                 {
-                    Identifier = "name-1",
+                    Name = "name-1",
                     Type = typeof(string),
                 },new EntityConfigRecord
                 {
-                    Identifier = "name-2",
+                    Name = "name-2",
                     Type = typeof(string),
                 }
             };
@@ -29,7 +29,7 @@ namespace AnyService.Tests
         [Fact]
         public void FirstOrDefault_ReturnsInstance()
         {
-            _records.FirstOrDefault(typeof(string)).Identifier.ShouldBe("name-1");
+            _records.FirstOrDefault(typeof(string)).Name.ShouldBe("name-1");
         }
 
         [Fact]
@@ -40,7 +40,7 @@ namespace AnyService.Tests
         [Fact]
         public void First_ReturnsInstance()
         {
-            _records.First(typeof(string)).Identifier.ShouldBe("name-1");
+            _records.First(typeof(string)).Name.ShouldBe("name-1");
         }
         [Fact]
         public void All_returnsEmptyArray()
@@ -52,8 +52,8 @@ namespace AnyService.Tests
         {
             var a = _records.All(typeof(string ));
             a.Count().ShouldBe(2);
-            a.ElementAt(0).Identifier.ShouldBe("name-1");
-            a.ElementAt(1).Identifier.ShouldBe("name-2");
+            a.ElementAt(0).Name.ShouldBe("name-1");
+            a.ElementAt(1).Name.ShouldBe("name-2");
         }
     }
 }

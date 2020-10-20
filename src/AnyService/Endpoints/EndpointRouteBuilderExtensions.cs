@@ -17,11 +17,11 @@ namespace AnyService.Endpoints
                 var es = ecr.EndpointSettings;
                 if (es.Area.HasValue())
                 {
-                    builder.MapAreaControllerRoute(ecr.Identifier, es.Area, es.Route);
+                    builder.MapAreaControllerRoute(ecr.Name, es.Area, es.Route);
                 }
                 else
                 {
-                    builder.MapControllerRoute(ecr.Identifier, es.Route);
+                    builder.MapControllerRoute(ecr.Name, es.Route);
                 }
             }
             return builder;

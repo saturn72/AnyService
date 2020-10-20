@@ -82,12 +82,12 @@ namespace AnyService.SampleApp.Configurars
                       new EntityConfigRecord
                     {
                         Type = typeof(CustomEntity),
-                        Identifier = "area2_cutomModel"
+                        Name = "area2_cutomModel"
                     },
                       new EntityConfigRecord
                     {
                         Type = typeof(CustomEntity),
-                        Identifier = "method_not_allowed",
+                        Name = "method_not_allowed",
                         EndpointSettings = new EndpointSettings
                         {
                             Route = "/api/na",

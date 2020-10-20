@@ -46,7 +46,7 @@ namespace AnyService.Tests.Controllers
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
-                    Identifier = t.Name,
+                    Name = t.Name,
                     Type = t,
                     EndpointSettings = new EndpointSettings
                     {
@@ -73,7 +73,7 @@ namespace AnyService.Tests.Controllers
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord
                 {
-                    Identifier = t.Name,
+                    Name = t.Name,
                     Type = t,
                     EndpointSettings = new EndpointSettings
                     {
@@ -114,7 +114,7 @@ namespace AnyService.Tests.Controllers
                 {
                     Type = typeof(MyClass),
                     Name = typeof(MyClass).Name,
-                    Identifier = typeof(MyClass).Name,
+                    Name = typeof(MyClass).Name,
                     EndpointSettings = new EndpointSettings
                     {
                         MapToType = typeof(MyClass),
