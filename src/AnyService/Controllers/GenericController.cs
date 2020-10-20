@@ -30,7 +30,7 @@ namespace AnyService.Controllers
         private static Type _mapToTypeEnumerableType;
         private static Type _mapToPageType;
         private static IEnumerable<string> _aggregatedChildNames;
-        private static string _curTypeIdentifier;
+        private static string _curEndpointName;
 
         private readonly ICrudService<TDomainEntity> _crudService;
         private readonly IServiceResponseMapper _serviceResponseMapper;
@@ -53,14 +53,15 @@ namespace AnyService.Controllers
             _workContext = workContext;
             _logger = logger;
 
-            InitStaticMembers();
+            if (_curEndpointName == null)
+                InitStaticMembers();
         }
         #endregion
         #region POST
         [HttpPost]
         public virtual async Task<IActionResult> Post([FromBody] TModel model)
         {
-            _logger.LogInformation(LoggingEvents.Controller, $"{_curTypeIdentifier}: Start Post flow");
+            _logger.LogInformation(LoggingEvents.Controller, $"{_curEndpointName}: Start Post flow");
 
             if (!ModelState.IsValid || model.Equals(default))
                 return new BadRequestObjectResult(new
@@ -70,9 +71,9 @@ namespace AnyService.Controllers
                 });
 
             var entity = model.Map<TDomainEntity>();
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeIdentifier}: Call service with value: " + model);
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Call service with value: " + model);
             var res = await _crudService.Create(entity);
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeIdentifier}: Post service response value: " + res);
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Post service response value: " + res);
 
             return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
         }
@@ -80,7 +81,7 @@ namespace AnyService.Controllers
         [HttpPost(Consts.MultipartSuffix)]
         public async Task<IActionResult> PostMultipart()
         {
-            _logger.LogInformation(LoggingEvents.Controller, $"{_curTypeIdentifier}: Start Post for multipart flow");
+            _logger.LogInformation(LoggingEvents.Controller, $"{_curEndpointName}: Start Post for multipart flow");
 
             if (!Request.HasFormContentType) return BadRequest();
             var form = Request.Form;
@@ -106,21 +107,21 @@ namespace AnyService.Controllers
             var filesPropertyInfo = GetFilesProperty(_curType);
             filesPropertyInfo.SetValue(model, fileList);
 
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeIdentifier}: Call service with value: " + model);
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Call service with value: " + model);
             var res = await _crudService.Create(model);
 
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeIdentifier}: Post service response value: " + res);
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Post service response value: " + res);
             return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
         }
         [DisableFormValueModelBinding]
         [HttpPost(Consts.StreamSuffix)]
         public async Task<IActionResult> PostMultipartStream()
         {
-            _logger.LogInformation(LoggingEvents.Controller, $"{_curTypeIdentifier}: Start Post for multipart flow stream");
+            _logger.LogInformation(LoggingEvents.Controller, $"{_curEndpointName}: Start Post for multipart flow stream");
             var model = await ExctractModelFromStream();
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeIdentifier}: Call service with value: " + model);
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Call service with value: " + model);
             var res = await _crudService.Create(model);
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeIdentifier}: Post service response value: " + res);
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Post service response value: " + res);
 
             return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
         }
@@ -132,7 +133,7 @@ namespace AnyService.Controllers
             [FromQuery] string childNames = null
             )
         {
-            _logger.LogInformation(LoggingEvents.Controller, $"{_curTypeIdentifier}: Start Get by id flow with id " + id);
+            _logger.LogInformation(LoggingEvents.Controller, $"{_curEndpointName}: Start Get by id flow with id " + id);
 
             ServiceResponse res = null;
 
@@ -147,7 +148,7 @@ namespace AnyService.Controllers
             {
                 res = await _crudService.GetById(id);
             }
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeIdentifier}: Get all service response value: " + res);
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Get all service response value: " + res);
 
             if (res.Result == ServiceResult.NotFound) res.Result = ServiceResult.BadOrMissingData;
             return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
@@ -168,7 +169,7 @@ namespace AnyService.Controllers
             )
         {
             _logger.LogInformation(LoggingEvents.Controller,
-                $"{_curTypeIdentifier}: Start Get all flow. With values: " +
+                $"{_curEndpointName}: Start Get all flow. With values: " +
                 $"\'{nameof(offset)}\' = \'{offset}\', " +
                 $"\'{nameof(pageSize)}\' = \'{pageSize}\', " +
                 $"\'{nameof(orderBy)}\' = \'{orderBy}\', " +
@@ -205,7 +206,7 @@ namespace AnyService.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(string id, [FromBody] TModel model)
         {
-            _logger.LogInformation(LoggingEvents.Controller, $"{_curTypeIdentifier}: Start Put flow");
+            _logger.LogInformation(LoggingEvents.Controller, $"{_curEndpointName}: Start Put flow");
 
             if (!ModelState.IsValid || model.Equals(default))
                 return new BadRequestObjectResult(new
@@ -215,9 +216,9 @@ namespace AnyService.Controllers
                 });
 
             var entity = model.Map<TDomainEntity>();
-            _logger.LogDebug($"{_curTypeIdentifier}: Start update flow with id {id} and model {model}");
+            _logger.LogDebug($"{_curEndpointName}: Start update flow with id {id} and model {model}");
             var res = await _crudService.Update(id, entity);
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeIdentifier}: Update service response value: " + res);
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Update service response value: " + res);
 
             return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
         }
@@ -225,11 +226,11 @@ namespace AnyService.Controllers
         [HttpPut(Consts.StreamSuffix + "/{id}")]
         public async Task<IActionResult> PutMultipartStream()
         {
-            _logger.LogInformation(LoggingEvents.Controller, $"{_curTypeIdentifier}: Start Put for multipart flow stream");
+            _logger.LogInformation(LoggingEvents.Controller, $"{_curEndpointName}: Start Put for multipart flow stream");
             var model = await ExctractModelFromStream();
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeIdentifier}: Call service with value: " + model);
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Call service with value: " + model);
             var res = await _crudService.Update(_workContext.RequestInfo.RequesteeId, model);
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeIdentifier}: Put service response value: " + res);
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Put service response value: " + res);
 
             return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
         }
@@ -241,7 +242,7 @@ namespace AnyService.Controllers
                 return BadRequest();
 
             request.ParentId = id;
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeIdentifier}: Call service with value: " + request);
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Call service with value: " + request);
 
             var srvRes = await _crudService.UpdateMappings(request);
             return _serviceResponseMapper.MapServiceResponse(srvRes);
@@ -252,9 +253,9 @@ namespace AnyService.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
-            _logger.LogInformation(LoggingEvents.Controller, $"{_curTypeIdentifier}: Start Delete flow with id " + id);
+            _logger.LogInformation(LoggingEvents.Controller, $"{_curEndpointName}: Start Delete flow with id " + id);
             var res = await _crudService.Delete(id);
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeIdentifier}: Delete service response value: " + res);
+            _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Delete service response value: " + res);
 
             return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
         }
@@ -262,13 +263,14 @@ namespace AnyService.Controllers
         #region Utilities
         private void InitStaticMembers()
         {
-            _curTypeIdentifier ??= _workContext.CurrentEntityConfigRecord.Name;
-            _curType ??= _workContext.CurrentEntityConfigRecord.Type;
+            var es = _workContext.CurrentEndpointSettings;
+            _curEndpointName ??= es.Name;
+            _curType ??= es.EntityConfigRecord.Type;
             _curEnumerableType ??= typeof(IEnumerable<>).MakeGenericType(_curType);
-            _mapToType ??= _workContext.CurrentEndpointSettings?.MapToType;
+            _mapToType ??= es?.MapToType;
             _mapToTypeEnumerableType ??= typeof(IEnumerable<>).MakeGenericType(_mapToType);
-            _mapToPageType ??= _workContext.CurrentEndpointSettings.MapToPaginationType;
-            _aggregatedChildNames ??= _workContext.CurrentEntityConfigRecord.AggregationData.Keys;
+            _mapToPageType ??= es.MapToPaginationType;
+            _aggregatedChildNames ??= es.AggregationData?.Keys;
         }
         private async Task<TDomainEntity> ExctractModelFromStream()
         {

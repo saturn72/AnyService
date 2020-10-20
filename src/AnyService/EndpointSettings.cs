@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AnyService.Services.Internals;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Collections.Generic;
 
 namespace AnyService
 {
@@ -19,6 +21,10 @@ namespace AnyService
         /// Gets or sets route for entity.
         /// </summary>
         public PathString Route { get; set; }
+        /// <summary>
+        /// Gets or sets value indicating whether ISoftDeleted entities that were deleted should be exposed
+        /// </summary>
+        public bool ShowSoftDeleted { get; set; }
         public Type MapToType { get; set; }
         public Type MapToPaginationType { get; set; }
         public EndpointMethodSettings PostSettings { get; set; }
@@ -28,5 +34,6 @@ namespace AnyService
         public bool Active { get; set; } = true;
         internal string ControllerName => ControllerType?.FullName;
         public EntityConfigRecord EntityConfigRecord { get; set; }
+        internal IReadOnlyDictionary<string, AggregationData> AggregationData { get; set; }
     }
 }

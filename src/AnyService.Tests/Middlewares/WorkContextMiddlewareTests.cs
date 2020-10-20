@@ -21,23 +21,20 @@ namespace AnyService.Tests.Middlewares
         public async Task UserIdIsNull_ReturnUnauthroized()
         {
             var logger = new Mock<ILogger<WorkContextMiddleware>>();
-            var ecr = new EntityConfigRecord
+            var es = new EndpointSettings
             {
-                EndpointSettings = new[]
+                Route = "/some-resource",
+                PostSettings = new EndpointMethodSettings { Active = true },
+                GetSettings = new EndpointMethodSettings { Active = false },
+                PutSettings = new EndpointMethodSettings { Active = false },
+                DeleteSettings = new EndpointMethodSettings { Active = true },
+                EntityConfigRecord = new EntityConfigRecord
                 {
-                    new EndpointSettings
-                {
-                    Route = "/some-resource",
-                    PostSettings = new EndpointMethodSettings { Active = true },
-                    GetSettings = new EndpointMethodSettings { Active = false },
-                    PutSettings = new EndpointMethodSettings { Active = false },
-                    DeleteSettings = new EndpointMethodSettings { Active = true },
+                    Type = typeof(string),
                 },
-                },
-                Type = typeof(string),
             };
-            var entityConfigRecords = new[] { ecr };
-            var wcm = new WorkContextMiddleware(null, entityConfigRecords, logger.Object);
+            var endpointSettings = new[] { es };
+            var wcm = new WorkContextMiddleware(null, endpointSettings, logger.Object);
 
             var user = new Mock<ClaimsPrincipal>();
             user.Setup(u => u.Claims).Returns(new Claim[] { });
@@ -62,24 +59,21 @@ namespace AnyService.Tests.Middlewares
                 expPath = $"{route}/__public/{expRequesteeId}",
                 expMethod = "get";
 
-            var ecr = new EntityConfigRecord
+            var es = new EndpointSettings
             {
-                Name = typeof(MyClass).Name,
-                EndpointSettings = new[]
+                Name = "name",
+                Route = route,
+                PostSettings = new EndpointMethodSettings { Active = true },
+                GetSettings = new EndpointMethodSettings { Active = true },
+                PutSettings = new EndpointMethodSettings { Active = true },
+                DeleteSettings = new EndpointMethodSettings { Active = true },
+                EntityConfigRecord = new EntityConfigRecord
                 {
-                    new EndpointSettings
-                    {
-                        Name = "name",
-                        Route = route,
-                        PostSettings = new EndpointMethodSettings { Active = true },
-                        GetSettings = new EndpointMethodSettings { Active = true },
-                        PutSettings = new EndpointMethodSettings { Active = true },
-                        DeleteSettings = new EndpointMethodSettings { Active = true },
-                    },
+                    Name = typeof(MyClass).Name,
+                    Type = typeof(string),
                 },
-                Type = typeof(string),
             };
-            var entityConfigRecords = new[] { ecr };
+            var entityConfigRecords = new[] { es };
             RequestDelegate reqDel = hc =>
             {
                 i = expI;
@@ -103,7 +97,7 @@ namespace AnyService.Tests.Middlewares
             var wcm = new WorkContextMiddleware(reqDel, entityConfigRecords, logger.Object);
             await wcm.InvokeAsync(ctx.Object, wc);
             i.ShouldBe(expI);
-            wc.CurrentEntityConfigRecord.ShouldBe(ecr);
+            wc.CurrentEndpointSettings.ShouldBe(es);
             wc.RequestInfo.Path.ShouldBe(expPath);
             wc.RequestInfo.Method.ShouldBe(expMethod);
             wc.RequestInfo.RequesteeId.ShouldBe(expRequesteeId);
@@ -112,21 +106,16 @@ namespace AnyService.Tests.Middlewares
         public void BuildActivationMap()
         {
             var expPrefix = "name";
-            var e = new EntityConfigRecord
+            var es = new EndpointSettings
             {
-                EndpointSettings = new[]
-                {
-                    new EndpointSettings
-                    {
-                        Name = expPrefix,
-                        PostSettings = new EndpointMethodSettings { Active = true },
-                        GetSettings = new EndpointMethodSettings { Active = false },
-                        PutSettings = new EndpointMethodSettings { Active = false },
-                        DeleteSettings = new EndpointMethodSettings { Active = true },
-                    },
-                }
+                Name = expPrefix,
+                PostSettings = new EndpointMethodSettings { Active = true },
+                GetSettings = new EndpointMethodSettings { Active = false },
+                PutSettings = new EndpointMethodSettings { Active = false },
+                DeleteSettings = new EndpointMethodSettings { Active = true },
+                EntityConfigRecord = new EntityConfigRecord { }
             };
-            var wcmt = new WorkContextMiddleware_ForTests(new[] { e });
+            var wcmt = new WorkContextMiddleware_ForTests(new[] { es });
             wcmt.ActiveMap[$"{expPrefix}_post"].ShouldBeTrue();
             wcmt.ActiveMap[$"{expPrefix}_get"].ShouldBeFalse();
             wcmt.ActiveMap[$"{expPrefix}_put"].ShouldBeFalse();
@@ -159,7 +148,7 @@ namespace AnyService.Tests.Middlewares
             ctx.Setup(h => h.User).Returns(user);
             ctx.Setup(h => h.Request).Returns(req.Object);
 
-            var mw = new WorkContextMiddleware_ForTests(new EntityConfigRecord[] { });
+            var mw = new WorkContextMiddleware_ForTests(new EndpointSettings[] { });
 
             var wc = new WorkContext();
             var res = await mw.ExtractHttpContext(ctx.Object, wc);
@@ -173,8 +162,8 @@ namespace AnyService.Tests.Middlewares
 
         public class WorkContextMiddleware_ForTests : WorkContextMiddleware
         {
-            public WorkContextMiddleware_ForTests(IEnumerable<EntityConfigRecord> entityConfigRecords)
-                : base(null, entityConfigRecords, new Mock<ILogger<WorkContextMiddleware_ForTests>>().Object, null)
+            public WorkContextMiddleware_ForTests(IEnumerable<EndpointSettings> endpointSettings)
+                : base(null, endpointSettings, new Mock<ILogger<WorkContextMiddleware_ForTests>>().Object, null)
             {
             }
             public Task<bool> ExtractHttpContext(HttpContext ctx, WorkContext wc) => HttpContextToWorkContext(ctx, wc);

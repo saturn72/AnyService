@@ -38,7 +38,10 @@ namespace Microsoft.Extensions.DependencyInjection
         }
         public static IServiceCollection AddAnyService(this IServiceCollection services, AnyServiceConfig config)
         {
-            var d = config.EntityConfigRecords.Select(s => s.Type).GroupBy(x => x).Where(g => g.Count() > 1);
+            var d = config.EntityConfigRecords
+                .Select(s => s.Type.FullName)
+                .GroupBy(x => x)
+                .Where(g => g.Count() > 1);
             if (d.Any())
                 throw new InvalidOperationException($"Multiple entity configurations for same type. see types: {d.ToJsonString()}");
             NormalizeConfiguration(config);
@@ -230,7 +233,7 @@ namespace Microsoft.Extensions.DependencyInjection
                         var ad = new AggregationData(externalName, matchEcr.First(), isEnumerable);
                         aggDataList.Add(externalName, ad);
                     }
-                    ecr.AggregationData = aggDataList;
+                    es.AggregationData = aggDataList;
                 }
             }
         }

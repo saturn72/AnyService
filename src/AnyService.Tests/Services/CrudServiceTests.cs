@@ -91,7 +91,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestEntity>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
                 .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
-            var ekr = new EventKeyRecord("create", null, null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -123,13 +123,15 @@ namespace AnyService.Tests.Services
         {
             var repo = new Mock<IRepository<AuditableTestEntity>>();
             var ex = new Exception();
-            repo.Setup(r => r.Insert(It.IsAny<AuditableTestEntity>())).ThrowsAsync(ex); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
+            repo.Setup(r => r.Insert(It.IsAny<AuditableTestEntity>())).ThrowsAsync(ex);
+            var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestEntity>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
-                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>();
+                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
+            var eb = new Mock<IEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>(); var exId = "exId" as object;
             var gn = new Mock<IIdGenerator>();
             gn.Setup(g => g.GetNext()).Returns(exId);
-            var ekr = new EventKeyRecord("create", null, null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -153,13 +155,15 @@ namespace AnyService.Tests.Services
             sp.Setup(s => s.GetService(typeof(IIdGenerator))).Returns(gn.Object); var cSrv = new CrudService<AuditableTestEntity>(sp.Object, logger.Object);
             var model = new AuditableTestEntity();
             var res = await cSrv.Create(model);
-            res.Result.ShouldBe(ServiceResult.Error); eb.Verify(e => e.Publish(
-     It.Is<string>(s => s == ekr.Create),
-     It.Is<DomainEventData>(ed =>
-          ed.Data.GetPropertyValueByName<object>("incomingObject") == model &&
-          ed.Data.GetPropertyValueByName<object>("exceptionId") == exId &&
-          ed.PerformedByUserId == wc.CurrentUserId)),
-     Times.Once); mp.Verify(a => a.PrepareForCreate(It.Is<AuditableTestEntity>(e => e == model)), Times.Once);
+            res.Result.ShouldBe(ServiceResult.Error);
+            eb.Verify(e => e.Publish(
+                 It.Is<string>(s => s == ekr.Create),
+                 It.Is<DomainEventData>(ed =>
+                      ed.Data.GetPropertyValueByName<object>("incomingObject") == model &&
+                      ed.Data.GetPropertyValueByName<object>("exceptionId") == exId &&
+                      ed.PerformedByUserId == wc.CurrentUserId)),
+                 Times.Once);
+            mp.Verify(a => a.PrepareForCreate(It.Is<AuditableTestEntity>(e => e == model)), Times.Once);
         }
         [Fact]
         public async Task Create_Pass()
@@ -171,7 +175,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
             var am = new Mock<IAuditManager>();
             var eb = new Mock<IEventBus>();
-            var ekr = new EventKeyRecord("create", null, null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -220,7 +224,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(true); var mp = new Mock<IModelPreparar<TestFileContainer>>();
             var am = new Mock<IAuditManager>();
             var eb = new Mock<IEventBus>();
-            var ekr = new EventKeyRecord("create", null, null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -298,7 +302,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
                 .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
-            var ekr = new EventKeyRecord("create", null, null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -334,7 +338,7 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>(); var exId = "exId" as object;
             var gn = new Mock<IIdGenerator>();
             gn.Setup(g => g.GetNext()).Returns(exId);
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -377,7 +381,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(true);
             var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
             var eb = new Mock<IEventBus>();
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -429,11 +433,11 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEndpointSettings = new EndpointSettings
                 {
+                    ShowSoftDeleted = true,
                     EntityConfigRecord = new EntityConfigRecord
                     {
                         Type = typeof(SoftDeleteEntity),
-                        EventKeys = new EventKeyRecord(null, "read", null, null),
-                        ShowSoftDelete = true,
+                        EventKeys = new EventKeyRecord("create", "read", "update", "delete"),
                     }
                 },
             };
@@ -472,7 +476,7 @@ namespace AnyService.Tests.Services
                     EntityConfigRecord = new EntityConfigRecord
                     {
                         Type = typeof(SoftDeleteEntity),
-                        EventKeys = new EventKeyRecord(null, "read", null, null),
+                        EventKeys = new EventKeyRecord("create", "read", "update", "delete"),
                     }
                 },
             };
@@ -506,7 +510,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestEntity>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestEntity>>>()))
                 .ReturnsAsync(true);
             var eb = new Mock<IEventBus>();
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -577,7 +581,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestEntity>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestEntity>>>()))
                 .ReturnsAsync(true);
             var eb = new Mock<IEventBus>();
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -619,7 +623,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(dbRes); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestEntity>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestEntity>>>()))
                 .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>();
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -666,7 +670,7 @@ namespace AnyService.Tests.Services
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>(); var exId = "exId" as object;
             var gn = new Mock<IIdGenerator>();
             gn.Setup(g => g.GetNext()).Returns(exId);
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -711,7 +715,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetAll(It.Is<Pagination<AuditableTestEntity>>(d => d == paginate)))
                 .ReturnsAsync(dbRes); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestEntity>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestEntity>>>()))
-                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>(); var ekr = new EventKeyRecord(null, "read", null, null);
+                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>(); var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -774,12 +778,12 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEndpointSettings = new EndpointSettings
                 {
+                    ShowSoftDeleted = true,
                     EntityConfigRecord = new EntityConfigRecord
                     {
                         Type = typeof(SoftDeleteEntity),
-                        EventKeys = new EventKeyRecord(null, "read", null, null),
+                        EventKeys = new EventKeyRecord("create", "read", "update", "delete"),
                         PaginationSettings = new PaginationSettings { DefaultOffset = 100 },
-                        ShowSoftDelete = true,
                     }
                 },
             };
@@ -832,7 +836,7 @@ namespace AnyService.Tests.Services
                     EntityConfigRecord = new EntityConfigRecord
                     {
                         Type = typeof(SoftDeleteEntity),
-                        EventKeys = new EventKeyRecord(null, "read", null, null),
+                        EventKeys = new EventKeyRecord("create", "read", "update", "delete"),
                         PaginationSettings = new PaginationSettings { DefaultOffset = 100 }
                     },
                 },
@@ -863,7 +867,7 @@ namespace AnyService.Tests.Services
         {
             var repo = new Mock<IRepository<AuditableTestEntity>>();
             var eb = new Mock<IEventBus>();
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -900,7 +904,7 @@ namespace AnyService.Tests.Services
             var aggToFetch = toAggregate.Split(",");
             var repo = new Mock<IRepository<AggregateRootEntity>>();
             var eb = new Mock<IEventBus>();
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -1012,7 +1016,7 @@ namespace AnyService.Tests.Services
             oeRepo.Setup(oe => oe.Collection).ReturnsAsync(oeCol.AsQueryable());
             sp.Setup(s => s.GetService(typeof(IRepository<OptionEntity>))).Returns(oeRepo.Object);
 
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var arConfigRecord = new EntityConfigRecord
             {
                 Type = typeof(AggregateRootEntity),
@@ -1139,7 +1143,7 @@ namespace AnyService.Tests.Services
             aggRepo.Setup(oe => oe.Collection).ReturnsAsync(aggCol.AsQueryable());
             sp.Setup(s => s.GetService(typeof(IRepository<AggregatedChild>))).Returns(aggRepo.Object);
 
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var arConfigRecord = new EntityConfigRecord
             {
                 Type = typeof(AggregateRootEntity),
@@ -1198,7 +1202,7 @@ namespace AnyService.Tests.Services
         {
             var repo = new Mock<IRepository<AuditableTestEntity>>();
             var eb = new Mock<IEventBus>();
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -1235,7 +1239,7 @@ namespace AnyService.Tests.Services
         {
             var repo = new Mock<IRepository<AuditableTestEntity>>();
             var eb = new Mock<IEventBus>();
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -1270,7 +1274,7 @@ namespace AnyService.Tests.Services
         [Fact]
         public async Task GetAggregatedPage_ParentNotExists()
         {
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -1332,7 +1336,7 @@ namespace AnyService.Tests.Services
         public async Task GetAggregatedPage_MissingRepositoryDefintionReturnsError()
         {
             var parentId = "p-id";
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -1400,7 +1404,7 @@ namespace AnyService.Tests.Services
         public async Task GetAggregatedPage_GetPage()
         {
             var parentId = "p-id";
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -1484,7 +1488,7 @@ namespace AnyService.Tests.Services
         [Fact]
         public async Task UpdateMappings_NullRequest_ReturnsBadOrMissingData()
         {
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -1541,7 +1545,7 @@ namespace AnyService.Tests.Services
         public async Task UpdateMappings_NamedChildTypeNotConfigured()
         {
             var parentId = "p-id";
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -1604,7 +1608,7 @@ namespace AnyService.Tests.Services
         public async Task UpdateMappings_NotAllChildEntitiesExists_ReturnsBadResult()
         {
             var parentId = "p-id";
-            var ekr = new EventKeyRecord(null, "read", null, null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -1815,7 +1819,7 @@ namespace AnyService.Tests.Services
             var repo = new Mock<IRepository<AuditableTestEntity>>();
             repo.Setup(r => r.GetById(It.IsAny<string>()))
                 .ReturnsAsync(null as AuditableTestEntity); var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
-            var ekr = new EventKeyRecord(null, null, "update", null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -1854,7 +1858,7 @@ namespace AnyService.Tests.Services
                 .ThrowsAsync(ex); var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
             var eb = new Mock<IEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
-            var ekr = new EventKeyRecord(null, null, "update", null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -1904,7 +1908,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Update(It.IsAny<AuditableTestEntity>()))
                 .ReturnsAsync(null as AuditableTestEntity); var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
             var eb = new Mock<IEventBus>();
-            var ekr = new EventKeyRecord(null, null, "update", null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -1948,7 +1952,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Update(It.IsAny<AuditableTestEntity>()))
                 .ThrowsAsync(ex); var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
             var eb = new Mock<IEventBus>();
-            var ekr = new EventKeyRecord(null, null, "update", null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -2000,7 +2004,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Update(It.IsAny<AuditableTestEntity>()))
                 .ReturnsAsync(entity); var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
             var eb = new Mock<IEventBus>();
-            var ekr = new EventKeyRecord(null, null, "update", null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -2048,7 +2052,7 @@ namespace AnyService.Tests.Services
             var repo = new Mock<IRepository<AuditableTestEntity>>();
             repo.Setup(r => r.GetById(It.IsAny<string>()))
                 .ReturnsAsync(dbModel); var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
-            var ekr = new EventKeyRecord(null, null, "update", null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -2101,7 +2105,7 @@ namespace AnyService.Tests.Services
                 File  = file,
                 Status = FileStoreState.Uploaded
             }});
-            var ekr = new EventKeyRecord(null, null, "update", null);
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -2170,7 +2174,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(null as AuditableTestEntity); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
                 .ReturnsAsync(true);
-            var ekr = new EventKeyRecord(null, null, null, "delete");
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -2204,7 +2208,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
                 .ReturnsAsync(true);
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
-            var ekr = new EventKeyRecord(null, null, null, "delete");
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -2246,7 +2250,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Update(It.IsAny<AuditableTestEntity>()))
                 .ThrowsAsync(ex); var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
             var eb = new Mock<IEventBus>();
-            var ekr = new EventKeyRecord(null, null, null, "delete");
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -2290,7 +2294,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse<TestModel>>()))
                 .ReturnsAsync(true); var mp = new Mock<IModelPreparar<TestModel>>();
             var logger = new Mock<ILogger<CrudService<TestModel>>>();
-            var ekr = new EventKeyRecord(null, null, null, "delete");
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -2327,7 +2331,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(true);
             var mp = new Mock<IModelPreparar<TestModel>>();
             var logger = new Mock<ILogger<CrudService<TestModel>>>();
-            var ekr = new EventKeyRecord(null, null, null, "delete");
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -2374,7 +2378,7 @@ namespace AnyService.Tests.Services
      .ReturnsAsync(dbModel); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
                 .ReturnsAsync(true);
-            var ekr = new EventKeyRecord(null, null, null, "delete");
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -2417,7 +2421,7 @@ namespace AnyService.Tests.Services
      .ReturnsAsync(dbModel); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
                 .ReturnsAsync(true);
-            var ekr = new EventKeyRecord(null, null, null, "delete");
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
@@ -2462,7 +2466,7 @@ namespace AnyService.Tests.Services
      .ReturnsAsync(dbModel); var v = new Mock<CrudValidatorBase<TestModel>>();
             v.Setup(i => i.ValidateForDelete(It.IsAny<string>(), It.IsAny<ServiceResponse<TestModel>>()))
                 .ReturnsAsync(true);
-            var ekr = new EventKeyRecord(null, null, null, "delete");
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",

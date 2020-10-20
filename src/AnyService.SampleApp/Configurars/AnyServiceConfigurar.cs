@@ -24,16 +24,9 @@ namespace AnyService.SampleApp.Configurars
                             {
                                 Area = "admin"
                             },
-                        }
-                    },
-                    new EntityConfigRecord
-                    {
-                        Type = typeof(Category),
-                        ShowSoftDelete = false,
-                        EndpointSettings = new []
-                        {
                             new EndpointSettings
                             {
+                        ShowSoftDeleted = false,
                                 MapToType = typeof(CategoryModel)
                             },
                         }
@@ -87,29 +80,21 @@ namespace AnyService.SampleApp.Configurars
                     },
                     new EntityConfigRecord
                     {
+                        Type = typeof(CustomEntity),
                         EndpointSettings = new []
                         {
+                            new EndpointSettings
+                            {
+                                Name = "area2_cutomModel",
+                            },
                             new EndpointSettings
                             {
                                 Route = "/v1/my-great-route",
                                 ControllerType = typeof(CustomController),
                             },
-                        },
-                        Type = typeof(CustomEntity),
-                    },
-                      new EntityConfigRecord
-                    {
-                        Type = typeof(CustomEntity),
-                        Name = "area2_cutomModel"
-                    },
-                      new EntityConfigRecord
-                    {
-                        Type = typeof(CustomEntity),
-                        Name = "method_not_allowed",
-                        EndpointSettings = new []
-                        {
                             new EndpointSettings
                             {
+                                Name = "method_not_allowed",
                                 Route = "/api/na",
                                 PostSettings = new EndpointMethodSettings{Active = false },
                                 PutSettings = new EndpointMethodSettings{Active = false },

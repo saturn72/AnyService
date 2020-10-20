@@ -57,9 +57,19 @@ namespace AnyService.Services
             PermissionManager = serviceProvider.GetService<IPermissionManager>();
             AuditManager = serviceProvider.GetService<IAuditManager>();
 
-            EventKeys ??= WorkContext?.CurrentEntityConfigRecord?.EventKeys;
-            EntityMetadata ??= WorkContext?.CurrentEntityConfigRecord?.Metadata;
-            AggregationData ??= new Dictionary<string, AggregationData>(WorkContext?.CurrentEntityConfigRecord.AggregationData, StringComparer.InvariantCultureIgnoreCase);
+            if (EventKeys == default)
+                InitStaticMembers(WorkContext);
+        }
+        private void InitStaticMembers(WorkContext wc)
+        {
+            var ecr = wc.CurrentEntityConfigRecord;
+            EventKeys ??= ecr?.EventKeys;
+            EntityMetadata ??= ecr?.Metadata;
+
+            var ad = wc.CurrentEndpointSettings.AggregationData;
+            AggregationData ??= ad.IsNullOrEmpty() ?
+                new Dictionary<string, AggregationData>(StringComparer.InvariantCultureIgnoreCase) :
+                new Dictionary<string, AggregationData>(ad, StringComparer.InvariantCultureIgnoreCase);
         }
 
         #endregion
@@ -130,7 +140,7 @@ namespace AnyService.Services
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Read, id))
                 return serviceResponse;
-            if (!EntityMetadata.ShowSoftDeleted && EntityMetadata.IsSoftDeleted && (data as ISoftDelete).Deleted)
+            if (EntityMetadata.IsSoftDeleted && !WorkContext.CurrentEndpointSettings.ShowSoftDeleted && (data as ISoftDelete).Deleted)
             {
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
                 return serviceResponse;
@@ -230,7 +240,7 @@ namespace AnyService.Services
             }
 
             if (p.QueryFunc == null) return null;
-            if (!EntityMetadata.ShowSoftDeleted && EntityMetadata.IsSoftDeleted)
+            if (!WorkContext.CurrentEndpointSettings.ShowSoftDeleted && EntityMetadata.IsSoftDeleted)
                 p.QueryFunc = p.QueryFunc.AndAlso(x => !(x as ISoftDelete).Deleted);
 
             var paginationSettings = WorkContext.CurrentEntityConfigRecord.PaginationSettings;
@@ -447,7 +457,7 @@ namespace AnyService.Services
             };
             return serviceResponse;
         }
-        #endregion 
+        #endregion
         #region Update
         public virtual async Task<ServiceResponse<TDomainEntity>> Update(string id, TDomainEntity entity)
         {

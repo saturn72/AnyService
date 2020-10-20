@@ -22,15 +22,15 @@ namespace AnyService.Middlewares
 
         public WorkContextMiddleware(
             RequestDelegate next,
-            IEnumerable<EntityConfigRecord> entityConfigRecords,
+            IEnumerable<EndpointSettings> endpointSettings,
             ILogger<WorkContextMiddleware> logger,
             Func<HttpContext, WorkContext, ILogger, Task<bool>> onMissingUserIdHandler = null
             )
         {
             _logger = logger;
             _next = next;
-            RouteEndpointSettingsMaps = LoadRoutesEndpointSettingsMap(entityConfigRecords);
-            ActivationMaps = ToActivationMaps(entityConfigRecords);
+            RouteEndpointSettingsMaps = LoadRoutesEndpointSettingsMap(endpointSettings);
+            ActivationMaps = ToActivationMaps(endpointSettings);
             _onMissingUserIdOrClientIdHandler = onMissingUserIdHandler ??= OnMissingUserIdWorkContextMiddlewareHandlers.DefaultOnMissingUserIdHandler;
         }
 
@@ -86,17 +86,17 @@ namespace AnyService.Middlewares
             var key = string.Format(MapKeyFormat, workContext.CurrentEndpointSettings.Name, workContext.RequestInfo.Method);
             return ActivationMaps[key];
         }
-        private IReadOnlyDictionary<string, EndpointSettings> LoadRoutesEndpointSettingsMap(IEnumerable<EntityConfigRecord> entityConfigRecords)
+        private IReadOnlyDictionary<string, EndpointSettings> LoadRoutesEndpointSettingsMap(IEnumerable<EndpointSettings> endpointSettings)
         {
             var res = new Dictionary<string, EndpointSettings>(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var es in entityConfigRecords.SelectMany(e => e.EndpointSettings))
+            foreach (var es in endpointSettings)
                 res[es.Route] = es;
             return res;
         }
-        private IReadOnlyDictionary<string, bool> ToActivationMaps(IEnumerable<EntityConfigRecord> entityConfigRecords)
+        private IReadOnlyDictionary<string, bool> ToActivationMaps(IEnumerable<EndpointSettings> endpointSettings)
         {
             var res = new Dictionary<string, bool>(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var es in entityConfigRecords.SelectMany(e => e.EndpointSettings))
+            foreach (var es in endpointSettings)
             {
                 var name = es.Name;
                 res[string.Format(MapKeyFormat, name, "post")] = es.PostSettings.Active;

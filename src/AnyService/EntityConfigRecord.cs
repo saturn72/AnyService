@@ -9,7 +9,6 @@ namespace AnyService
 {
     public class EntityConfigRecord
     {
-        private bool _showSoftDelete;
         private Type _type;
 
         /// <summary>
@@ -26,7 +25,7 @@ namespace AnyService
             set
             {
                 _type = value;
-                Metadata = new DomainEntityMetadata(_type, _showSoftDelete);
+                Metadata = new DomainEntityMetadata(_type);
             }
         }
         /// <summary>
@@ -34,20 +33,6 @@ namespace AnyService
         /// These keys are used to uniquly identify CRUD operation events on the entity. 
         /// </summary>
         public EventKeyRecord EventKeys { get; set; }
-        /// <summary>
-        /// Gets or sets value to expose/hide ISoftDeleted object when ISoftDeleted.Deleted is true
-        /// Default is false
-        /// </summary>
-        public bool ShowSoftDelete
-        {
-            get => _showSoftDelete;
-            set
-            {
-                _showSoftDelete = value;
-                if (_type != null)
-                    Metadata = new DomainEntityMetadata(_type, _showSoftDelete);
-            }
-        }
         /// <summary>
         /// Gets or sets entity permission record keys
         /// These keys uniqly identify entity's permission record keys, which used durin entity authorization.
@@ -74,6 +59,5 @@ namespace AnyService
         public AuditRules AuditRules { get; set; }
         internal AuditSettings AuditSettings { get; set; }
         internal DomainEntityMetadata Metadata { get; private set; }
-        internal IReadOnlyDictionary<string, AggregationData> AggregationData { get; set; }
     }
 }
