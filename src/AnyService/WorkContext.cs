@@ -5,7 +5,7 @@ namespace AnyService
 {
     public class WorkContext
     {
-        public Type CurrentType => CurrentEndpointSettings.EntityConfigRecord?.Type;
+        public Type CurrentType => CurrentEntityConfigRecord?.Type;
         public EndpointSettings CurrentEndpointSettings { get; set; }
         public EntityConfigRecord CurrentEntityConfigRecord => CurrentEndpointSettings.EntityConfigRecord;
         public string CurrentUserId
