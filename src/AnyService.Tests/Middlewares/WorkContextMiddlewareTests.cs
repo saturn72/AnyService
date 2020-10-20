@@ -13,19 +13,26 @@ namespace AnyService.Tests.Middlewares
 {
     public class WorkContextMiddlewareTests
     {
+        public class MyClass : IDomainEntity
+        {
+            public string Id { get; set; }
+        }
         [Fact]
         public async Task UserIdIsNull_ReturnUnauthroized()
         {
             var logger = new Mock<ILogger<WorkContextMiddleware>>();
             var ecr = new EntityConfigRecord
             {
-                EndpointSettings = new EndpointSettings
+                EndpointSettings = new[]
+                {
+                    new EndpointSettings
                 {
                     Route = "/some-resource",
                     PostSettings = new EndpointMethodSettings { Active = true },
                     GetSettings = new EndpointMethodSettings { Active = false },
                     PutSettings = new EndpointMethodSettings { Active = false },
                     DeleteSettings = new EndpointMethodSettings { Active = true },
+                },
                 },
                 Type = typeof(string),
             };
@@ -57,14 +64,18 @@ namespace AnyService.Tests.Middlewares
 
             var ecr = new EntityConfigRecord
             {
-                Name = "nane",
-                EndpointSettings = new EndpointSettings
+                Name = typeof(MyClass).Name,
+                EndpointSettings = new[]
                 {
-                    Route = route,
-                    PostSettings = new EndpointMethodSettings { Active = true },
-                    GetSettings = new EndpointMethodSettings { Active = true },
-                    PutSettings = new EndpointMethodSettings { Active = true },
-                    DeleteSettings = new EndpointMethodSettings { Active = true },
+                    new EndpointSettings
+                    {
+                        Name = "name",
+                        Route = route,
+                        PostSettings = new EndpointMethodSettings { Active = true },
+                        GetSettings = new EndpointMethodSettings { Active = true },
+                        PutSettings = new EndpointMethodSettings { Active = true },
+                        DeleteSettings = new EndpointMethodSettings { Active = true },
+                    },
                 },
                 Type = typeof(string),
             };
@@ -100,22 +111,26 @@ namespace AnyService.Tests.Middlewares
         [Fact]
         public void BuildActivationMap()
         {
+            var expPrefix = "name";
             var e = new EntityConfigRecord
             {
-                Name = "name",
-                EndpointSettings = new EndpointSettings
+                EndpointSettings = new[]
                 {
-                    PostSettings = new EndpointMethodSettings { Active = true },
-                    GetSettings = new EndpointMethodSettings { Active = false },
-                    PutSettings = new EndpointMethodSettings { Active = false },
-                    DeleteSettings = new EndpointMethodSettings { Active = true },
+                    new EndpointSettings
+                    {
+                        Name = expPrefix,
+                        PostSettings = new EndpointMethodSettings { Active = true },
+                        GetSettings = new EndpointMethodSettings { Active = false },
+                        PutSettings = new EndpointMethodSettings { Active = false },
+                        DeleteSettings = new EndpointMethodSettings { Active = true },
+                    },
                 }
             };
             var wcmt = new WorkContextMiddleware_ForTests(new[] { e });
-            wcmt.ActiveMap[$"{e.Name}_post"].ShouldBeTrue();
-            wcmt.ActiveMap[$"{e.Name}_get"].ShouldBeFalse();
-            wcmt.ActiveMap[$"{e.Name}_put"].ShouldBeFalse();
-            wcmt.ActiveMap[$"{e.Name}_delete"].ShouldBeTrue();
+            wcmt.ActiveMap[$"{expPrefix}_post"].ShouldBeTrue();
+            wcmt.ActiveMap[$"{expPrefix}_get"].ShouldBeFalse();
+            wcmt.ActiveMap[$"{expPrefix}_put"].ShouldBeFalse();
+            wcmt.ActiveMap[$"{expPrefix}_delete"].ShouldBeTrue();
         }
 
         [Fact]

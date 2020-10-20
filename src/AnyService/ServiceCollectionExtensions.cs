@@ -20,7 +20,6 @@ using AnyService.Services.Logging;
 using AnyService.Models;
 using AnyService.Logging;
 using AnyService.ComponentModel;
-using System.Runtime.InteropServices.ComTypes;
 using AnyService.Services.Internals;
 using System.Collections;
 
@@ -39,6 +38,9 @@ namespace Microsoft.Extensions.DependencyInjection
         }
         public static IServiceCollection AddAnyService(this IServiceCollection services, AnyServiceConfig config)
         {
+            var d = config.EntityConfigRecords.Select(s => s.Type).GroupBy(x => x).Where(g => g.Count() > 1);
+            if (d.Any())
+                throw new InvalidOperationException($"Multiple entity configurations for same type. see types: {d.ToJsonString()}");
             NormalizeConfiguration(config);
             RegisterDependencies(services, config);
             AddEntityConfigRecordsMappings(config.EntityConfigRecords);
@@ -52,18 +54,21 @@ namespace Microsoft.Extensions.DependencyInjection
               {
                   foreach (var ecr in entityConfigRecords)
                   {
-                      var mtt = ecr.EndpointSettings.MapToType;
-                      if (mtt != ecr.Type)
+                      foreach (var es in ecr.EndpointSettings)
                       {
-                          cfg.CreateMap(ecr.Type, mtt);
-                          cfg.CreateMap(mtt, ecr.Type);
-                      }
-                      var mtptType = ecr.EndpointSettings.MapToPaginationType;
-                      var pType = typeof(Pagination<>).MakeGenericType(mtt);
-                      if (mtptType != pType || mtptType != typeof(PaginationModel<>).MakeGenericType(mtt))
-                      {
-                          cfg.CreateMap(pType, mtptType);
-                          cfg.CreateMap(mtptType, pType);
+                          var mtt = es.MapToType;
+                          if (mtt != ecr.Type)
+                          {
+                              cfg.CreateMap(ecr.Type, mtt);
+                              cfg.CreateMap(mtt, ecr.Type);
+                          }
+                          var mtptType = es.MapToPaginationType;
+                          var pType = typeof(Pagination<>).MakeGenericType(mtt);
+                          if (mtptType != pType || mtptType != typeof(PaginationModel<>).MakeGenericType(mtt))
+                          {
+                              cfg.CreateMap(pType, mtptType);
+                              cfg.CreateMap(mtptType, pType);
+                          }
                       }
                   }
               });
@@ -83,10 +88,10 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddScoped(sp => sp.GetService<WorkContext>().CurrentEntityConfigRecord?.AuditSettings ?? config.AuditSettings);
             services.TryAddScoped(typeof(ICrudService<>), typeof(CrudService<>));
 
-            // services.
             services.AddSingleton(config.EntityConfigRecords);
-            //mappers
-            var mappers = config.EntityConfigRecords.Select(t => t.EndpointSettings.ResponseMapperType).ToArray();
+            services.AddSingleton(config.EntityConfigRecords.SelectMany(e => e.EndpointSettings));
+            //response mappers
+            var mappers = config.EntityConfigRecords.SelectMany(t => t.EndpointSettings.Select(es => es.ResponseMapperType));
             foreach (var m in mappers)
                 services.TryAddSingleton(m);
 
@@ -137,7 +142,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddScoped(sp =>
             {
                 var wc = sp.GetService<WorkContext>();
-                var mt = wc.CurrentEntityConfigRecord?.EndpointSettings.ResponseMapperType ?? config.ServiceResponseMapperType;
+                var mt = wc.CurrentEndpointSettings?.ResponseMapperType ?? config.ServiceResponseMapperType;
                 return sp.GetService(mt) as IServiceResponseMapper;
             });
 
@@ -276,7 +281,6 @@ namespace Microsoft.Extensions.DependencyInjection
                 activeSettings.Where(x => x.Area.HasValue()).GroupBy(i => i.Area).Any(g => g.Count() > 1) ||
                 activeSettings.Where(x => x.Route.HasValue || x.Name.HasValue()).GroupBy(i => $"{i.Route}_{i.Name}").Any(g => g.Count() > 1);
 
-
             if (hasDuplicates)
                 throw new InvalidOperationException($"Duplication in {nameof(EntityConfigRecord.EndpointSettings)}. Duplicated field may be {ecr.Name} or {nameof(EndpointSettings.Area)} and {nameof(EndpointSettings.Route)} combination.");
 
@@ -305,11 +309,11 @@ namespace Microsoft.Extensions.DependencyInjection
 
                 settings.ControllerType ??= BuildController(ecr.Type, settings);
 
-                //name
                 settings.Name ??= settings.Area.HasValue() ?
                    $"{settings.Area}_{ecr.Type.Name}" :
                    settings.Route.Value.Replace("/", "_")[1..];
 
+                settings.EntityConfigRecord = ecr;
                 res.Add(settings);
             }
             return res;

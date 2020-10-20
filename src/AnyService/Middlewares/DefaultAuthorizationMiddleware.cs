@@ -32,9 +32,9 @@ namespace AnyService.Middlewares
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
         {
             _logger.LogInformation(LoggingEvents.Authorization, $"Start {nameof(DefaultAuthorizationMiddleware)} invokation");
-            var ecr = workContext?.CurrentEntityConfigRecord;
+            var es = workContext?.CurrentEndpointSettings;
 
-            if (ecr == null)
+            if (es == null)
             {
                 _logger.LogDebug(LoggingEvents.Authorization, $"No {nameof(EntityConfigRecord)} found in current {nameof(WorkContext)} - invokes {nameof(_next)}");
 
@@ -43,10 +43,10 @@ namespace AnyService.Middlewares
             }
 
             var currentHttpMethod = httpContext.Request.Method;
-            var key = $"{ecr.EndpointSettings.Route}_{currentHttpMethod}";
+            var key = $"{es.Route}_{currentHttpMethod}";
             if (!AuthorizationWorkers.TryGetValue(key, out Func<ClaimsPrincipal, bool> worker))
             {
-                var aa = HttpMethodToAuthorizeAttribute[currentHttpMethod](ecr.EndpointSettings);
+                var aa = HttpMethodToAuthorizeAttribute[currentHttpMethod](es);
                 worker = BuildAuthorizeLogic(aa);
                 AuthorizationWorkers.TryAdd(key, worker);
             }

@@ -69,10 +69,13 @@ namespace AnyService.Tests.Services
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                    }
+                },
             };
             sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc); sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestEntity>))).Returns(v.Object);
@@ -92,11 +95,14 @@ namespace AnyService.Tests.Services
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var sp = new Mock<IServiceProvider>();
 
@@ -127,11 +133,14 @@ namespace AnyService.Tests.Services
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var sp = new Mock<IServiceProvider>();
 
@@ -166,11 +175,14 @@ namespace AnyService.Tests.Services
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var fsm = new Mock<IFileStoreManager>();
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
@@ -212,11 +224,14 @@ namespace AnyService.Tests.Services
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(TestFileContainer),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(TestFileContainer),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var fsm = new Mock<IFileStoreManager>();
             fsm.Setup(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()))
@@ -259,10 +274,13 @@ namespace AnyService.Tests.Services
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                    }
+                },
             };
             sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc); sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestEntity>))).Returns(v.Object); var cSrv = new CrudService<AuditableTestEntity>(sp.Object, logger.Object); var id = "some-id";
@@ -284,12 +302,16 @@ namespace AnyService.Tests.Services
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
-            }; var sp = new Mock<IServiceProvider>();
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
+            };
+            var sp = new Mock<IServiceProvider>();
 
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestEntity>))).Returns(repo.Object);
@@ -316,12 +338,16 @@ namespace AnyService.Tests.Services
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
-            }; var sp = new Mock<IServiceProvider>();
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
+            };
+            var sp = new Mock<IServiceProvider>();
 
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(IRepository<AuditableTestEntity>))).Returns(repo.Object);
@@ -332,12 +358,12 @@ namespace AnyService.Tests.Services
             sp.Setup(s => s.GetService(typeof(IIdGenerator))).Returns(gn.Object); var cSrv = new CrudService<AuditableTestEntity>(sp.Object, logger.Object);
             var model = new AuditableTestEntity(); var id = "123";
             var res = await cSrv.GetById(id); res.Result.ShouldBe(ServiceResult.Error); eb.Verify(e => e.Publish(
-It.Is<string>(s => s == ekr.Read),
-It.Is<DomainEventData>(ed =>
-ed.Data.GetPropertyValueByName<string>("incomingObject") == id &&
-ed.Data.GetPropertyValueByName<object>("exceptionId") == exId &&
-ed.PerformedByUserId == wc.CurrentUserId)),
-Times.Once);
+    It.Is<string>(s => s == ekr.Read),
+    It.Is<DomainEventData>(ed =>
+    ed.Data.GetPropertyValueByName<string>("incomingObject") == id &&
+    ed.Data.GetPropertyValueByName<object>("exceptionId") == exId &&
+    ed.PerformedByUserId == wc.CurrentUserId)),
+    Times.Once);
         }
         [Fact]
         public async Task GetById_Returns_ResponseFromDB()
@@ -355,11 +381,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
@@ -398,12 +427,15 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(SoftDeleteEntity),
-                    EventKeys = new EventKeyRecord(null, "read", null, null),
-                    ShowSoftDelete = true,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(SoftDeleteEntity),
+                        EventKeys = new EventKeyRecord(null, "read", null, null),
+                        ShowSoftDelete = true,
+                    }
+                },
             };
             sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
 
@@ -435,11 +467,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(SoftDeleteEntity),
-                    EventKeys = new EventKeyRecord(null, "read", null, null),
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(SoftDeleteEntity),
+                        EventKeys = new EventKeyRecord(null, "read", null, null),
+                    }
+                },
             };
             sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
 
@@ -475,13 +510,17 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
-            }; var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
+            };
+            var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
 
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
@@ -508,10 +547,13 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                    }
+                },
             };
             sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc); sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestEntity>))).Returns(v.Object); var cSrv = new CrudService<AuditableTestEntity>(sp.Object, logger.Object);
@@ -539,13 +581,17 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
-            }; var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
+            };
+            var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
 
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
@@ -577,12 +623,15 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
             };
             var ff = new Mock<IFilterFactory>();
             var f = new Func<object, Func<AuditableTestEntity, bool>>(p => (x => x.Id != ""));
@@ -621,13 +670,17 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
-            }; var ff = new Mock<IFilterFactory>();
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
+            };
+            var ff = new Mock<IFilterFactory>();
             var f = new Func<object, Func<AuditableTestEntity, bool>>(p => (x => x.Id != ""));
             ff.Setup(f => f.GetFilter<AuditableTestEntity>(It.IsAny<string>())).ReturnsAsync(f); var sp = new Mock<IServiceProvider>();
 
@@ -662,13 +715,17 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
-            }; var ff = new Mock<IFilterFactory>();
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
+            };
+            var ff = new Mock<IFilterFactory>();
             var f = new Func<object, Func<AuditableTestEntity, bool>>(p => (x => x.Id != ""));
             ff.Setup(f => f.GetFilter<AuditableTestEntity>(It.IsAny<string>())).ReturnsAsync(f); var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
@@ -715,13 +772,16 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(SoftDeleteEntity),
-                    EventKeys = new EventKeyRecord(null, "read", null, null),
-                    PaginationSettings = new PaginationSettings { DefaultOffset = 100 },
-                    ShowSoftDelete = true,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(SoftDeleteEntity),
+                        EventKeys = new EventKeyRecord(null, "read", null, null),
+                        PaginationSettings = new PaginationSettings { DefaultOffset = 100 },
+                        ShowSoftDelete = true,
+                    }
+                },
             };
             sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
 
@@ -734,7 +794,7 @@ Times.Once);
             var res = await cSrv.GetAll(p);
 
             repo.Verify(r => r.GetAll(It.Is<Pagination<SoftDeleteEntity>>(p => data.Where(p.QueryFunc).Count() == data.Length)),
-                Times.Once);
+                    Times.Once);
         }
 
         [Fact]
@@ -767,11 +827,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(SoftDeleteEntity),
-                    EventKeys = new EventKeyRecord(null, "read", null, null),
-                    PaginationSettings = new PaginationSettings { DefaultOffset = 100 }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(SoftDeleteEntity),
+                        EventKeys = new EventKeyRecord(null, "read", null, null),
+                        PaginationSettings = new PaginationSettings { DefaultOffset = 100 }
+                    },
                 },
             };
             sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
@@ -804,12 +867,15 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
             }; var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
 
@@ -838,13 +904,17 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AggregateRootEntity),
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
-            }; var logger = new Mock<ILogger<CrudService<AggregateRootEntity>>>();
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AggregateRootEntity),
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
+            };
+            var logger = new Mock<ILogger<CrudService<AggregateRootEntity>>>();
             var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
 
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
@@ -970,7 +1040,10 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = arConfigRecord,
+                CurrentEndpointSettings = new EndpointSettings
+                {
+                    EntityConfigRecord = arConfigRecord,
+                },
             };
             var logger = new Mock<ILogger<CrudService<AggregateRootEntity>>>();
             var am = new Mock<IAuditManager>();
@@ -1094,7 +1167,10 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = arConfigRecord,
+                CurrentEndpointSettings = new EndpointSettings
+                {
+                    EntityConfigRecord = arConfigRecord,
+                },
             };
             var logger = new Mock<ILogger<CrudService<AggregateRootEntity>>>();
             var am = new Mock<IAuditManager>();
@@ -1126,13 +1202,17 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
-            }; var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
+            };
+            var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
 
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
@@ -1159,13 +1239,17 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
-            }; var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
+            };
+            var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
 
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
@@ -1190,13 +1274,17 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AggregateRootEntity),
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AggregateRootEntity),
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
             };
+
             var sp = new Mock<IServiceProvider>();
 
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig)));
@@ -1248,13 +1336,16 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AggregateRootEntity),
-                    Name = "AggregateRootEntity",
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AggregateRootEntity),
+                        Name = "AggregateRootEntity",
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
             };
             var sp = new Mock<IServiceProvider>();
 
@@ -1313,13 +1404,16 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AggregateRootEntity),
-                    Name = "AggregateRootEntity",
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AggregateRootEntity),
+                        Name = "AggregateRootEntity",
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
             };
             var sp = new Mock<IServiceProvider>();
 
@@ -1394,13 +1488,16 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AggregateRootEntity),
-                    Name = "AggregateRootEntity",
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AggregateRootEntity),
+                        Name = "AggregateRootEntity",
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
             };
             var sp = new Mock<IServiceProvider>();
 
@@ -1448,12 +1545,15 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AggregateRootEntity),
-                    Name = "AggregateRootEntity",
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AggregateRootEntity),
+                        Name = "AggregateRootEntity",
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    },
                 }
             };
             var sp = new Mock<IServiceProvider>();
@@ -1508,13 +1608,16 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AggregateRootEntity),
-                    Name = "AggregateRootEntity",
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AggregateRootEntity),
+                        Name = "AggregateRootEntity",
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
             };
             var sp = new Mock<IServiceProvider>();
 
@@ -1577,13 +1680,16 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AggregateRootEntity),
-                    Name = "AggregateRootEntity",
-                    EventKeys = ekr,
-                    PaginationSettings = new PaginationSettings(),
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AggregateRootEntity),
+                        Name = "AggregateRootEntity",
+                        EventKeys = ekr,
+                        PaginationSettings = new PaginationSettings(),
+                    }
+                },
             };
             var sp = new Mock<IServiceProvider>();
 
@@ -1630,7 +1736,7 @@ Times.Once);
             mapRepo.Setup(mr => mr.Collection).ReturnsAsync(mapData.AsQueryable());
             sp.Setup(s => s.GetService(typeof(IRepository<EntityMapping>))).Returns(mapRepo.Object);
             var addChData = new[]
-{
+    {
                 new AggregatedChild { Id = "a" },
                 new AggregatedChild { Id = "b" },
                 new AggregatedChild { Id = "c" },
@@ -1685,10 +1791,13 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                    }
+                },
             };
             sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc); sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestEntity>))).Returns(v.Object); var cSrv = new CrudService<AuditableTestEntity>(sp.Object, logger.Object);
@@ -1710,11 +1819,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
             }; var sp = new Mock<IServiceProvider>();
 
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
@@ -1746,10 +1858,13 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    },
                 },
             };
             var gn = new Mock<IIdGenerator>();
@@ -1793,11 +1908,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>(); var sp = new Mock<IServiceProvider>();
 
@@ -1834,11 +1952,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var gn = new Mock<IIdGenerator>();
             var exId = "ex-id";
@@ -1883,11 +2004,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
@@ -1928,11 +2052,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var sp = new Mock<IServiceProvider>();
 
@@ -1978,11 +2105,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(TestFileContainer),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(TestFileContainer),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
 
@@ -2017,10 +2147,13 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                    }
+                },
             };
             sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc); sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
             sp.Setup(s => s.GetService(typeof(CrudValidatorBase<AuditableTestEntity>))).Returns(v.Object); var cSrv = new CrudService<AuditableTestEntity>(sp.Object, logger.Object);
@@ -2041,11 +2174,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>(); var sp = new Mock<IServiceProvider>();
 
@@ -2072,11 +2208,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
             }; var sp = new Mock<IServiceProvider>();
 
             sp.Setup(s => s.GetService(typeof(AnyServiceConfig))).Returns(_config);
@@ -2111,11 +2250,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var gn = new Mock<IIdGenerator>();
             var exId = "ex-id";
@@ -2152,11 +2294,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(TestModel),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(TestModel),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var sp = new Mock<IServiceProvider>();
 
@@ -2186,11 +2331,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(TestModel),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(TestModel),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var eb = new Mock<IEventBus>();
             var gn = new Mock<IIdGenerator>();
@@ -2230,11 +2378,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
@@ -2270,11 +2421,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(AuditableTestEntity),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(AuditableTestEntity),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var am = new Mock<IAuditManager>(); var sp = new Mock<IServiceProvider>();
@@ -2312,11 +2466,14 @@ Times.Once);
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(TestModel),
-                    EventKeys = ekr,
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(TestModel),
+                        EventKeys = ekr,
+                    }
+                },
             };
             var mp = new Mock<IModelPreparar<TestModel>>();
             var logger = new Mock<ILogger<CrudService<TestModel>>>(); var sp = new Mock<IServiceProvider>();

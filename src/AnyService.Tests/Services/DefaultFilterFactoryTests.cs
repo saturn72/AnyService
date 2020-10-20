@@ -53,12 +53,15 @@ namespace AnyService.Tests.Services
             var wc = new WorkContext
             {
                 CurrentUserId = userId,
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(MyClass),
-                    EntityKey = ek,
-                    PermissionRecord = new PermissionRecord(null, pk, null, null)
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(MyClass),
+                        EntityKey = ek,
+                        PermissionRecord = new PermissionRecord(null, pk, null, null)
+                    },
+                },
             };
             var up = new UserPermissions
             {
@@ -96,12 +99,15 @@ namespace AnyService.Tests.Services
             var wc = new WorkContext
             {
                 CurrentUserId = userId,
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(MyClass),
-                    EntityKey = ek,
-                    PermissionRecord = new PermissionRecord(null, null, pk, null)
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(MyClass),
+                        EntityKey = ek,
+                        PermissionRecord = new PermissionRecord(null, null, pk, null)
+                    }
+                },
             };
             var up = new UserPermissions
             {
@@ -136,12 +142,15 @@ namespace AnyService.Tests.Services
             var wc = new WorkContext
             {
                 CurrentUserId = userId,
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(MyClass),
-                    EntityKey = ek,
-                    PermissionRecord = new PermissionRecord(null, null, null, pk)
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(MyClass),
+                        EntityKey = ek,
+                        PermissionRecord = new PermissionRecord(null, null, null, pk)
+                    }
+                },
             };
             var up = new UserPermissions
             {
@@ -186,12 +195,15 @@ namespace AnyService.Tests.Services
             var wc = new WorkContext
             {
                 CurrentUserId = userId,
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(MyClass),
-                    EntityKey = ek,
-                    PermissionRecord = new PermissionRecord(null, null, null, pk)
-                }
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(MyClass),
+                        EntityKey = ek,
+                        PermissionRecord = new PermissionRecord(null, null, null, pk)
+                    }
+                },
             };
             var up = new UserPermissions
             {

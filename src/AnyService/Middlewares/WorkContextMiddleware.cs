@@ -17,7 +17,7 @@ namespace AnyService.Middlewares
         private readonly ILogger<WorkContextMiddleware> _logger;
         private readonly Func<HttpContext, WorkContext, ILogger, Task<bool>> _onMissingUserIdOrClientIdHandler;
         private readonly RequestDelegate _next;
-        protected readonly IReadOnlyDictionary<string, EntityConfigRecord> RouteMaps;
+        protected readonly IReadOnlyDictionary<string, EndpointSettings> RouteEndpointSettingsMaps;
         protected readonly IReadOnlyDictionary<string, bool> ActivationMaps;
 
         public WorkContextMiddleware(
@@ -29,10 +29,9 @@ namespace AnyService.Middlewares
         {
             _logger = logger;
             _next = next;
-            RouteMaps = LoadRoutes(entityConfigRecords);
+            RouteEndpointSettingsMaps = LoadRoutesEndpointSettingsMap(entityConfigRecords);
             ActivationMaps = ToActivationMaps(entityConfigRecords);
             _onMissingUserIdOrClientIdHandler = onMissingUserIdHandler ??= OnMissingUserIdWorkContextMiddlewareHandlers.DefaultOnMissingUserIdHandler;
-
         }
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
@@ -41,11 +40,11 @@ namespace AnyService.Middlewares
             if (!await HttpContextToWorkContext(httpContext, workContext))
                 return;
 
-            var ecr = GetEntityConfigRecordByRoute(httpContext.Request.Path);
-            if (ecr != null && !ecr.Equals(default))
+            var es = GetEndpointSettingsByRoute(httpContext.Request.Path);
+            if (es != null)
             {
-                workContext.CurrentEntityConfigRecord = ecr;
-                workContext.RequestInfo = ToRequestInfo(httpContext, ecr);
+                workContext.CurrentEndpointSettings = es;
+                workContext.RequestInfo = ToRequestInfo(httpContext, es);
                 if (!MethodActive(workContext))
                 {
                     httpContext.Response.StatusCode = StatusCodes.Status405MethodNotAllowed;
@@ -84,41 +83,41 @@ namespace AnyService.Middlewares
             _logger.LogInformation(LoggingEvents.WorkContext,
                 $"Validate HttpMethod is active for {nameof(EntityConfigRecord)}. {nameof(RequestInfo)}: {workContext.RequestInfo.Method}");
 
-            var key = string.Format(MapKeyFormat, workContext.CurrentEntityConfigRecord.Name, workContext.RequestInfo.Method);
+            var key = string.Format(MapKeyFormat, workContext.CurrentEndpointSettings.Name, workContext.RequestInfo.Method);
             return ActivationMaps[key];
         }
-        private IReadOnlyDictionary<string, EntityConfigRecord> LoadRoutes(IEnumerable<EntityConfigRecord> entityConfigRecords)
+        private IReadOnlyDictionary<string, EndpointSettings> LoadRoutesEndpointSettingsMap(IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
-            var res = new Dictionary<string, EntityConfigRecord>(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var ecr in entityConfigRecords)
-                res[ecr.EndpointSettings.Route] = ecr;
+            var res = new Dictionary<string, EndpointSettings>(StringComparer.InvariantCultureIgnoreCase);
+            foreach (var es in entityConfigRecords.SelectMany(e => e.EndpointSettings))
+                res[es.Route] = es;
             return res;
         }
         private IReadOnlyDictionary<string, bool> ToActivationMaps(IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
             var res = new Dictionary<string, bool>(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var ecr in entityConfigRecords)
+            foreach (var es in entityConfigRecords.SelectMany(e => e.EndpointSettings))
             {
-                var name = ecr.Name;
-                res[string.Format(MapKeyFormat, name, "post")] = ecr.EndpointSettings.PostSettings.Active;
-                res[string.Format(MapKeyFormat, name, "get")] = ecr.EndpointSettings.GetSettings.Active;
-                res[string.Format(MapKeyFormat, name, "put")] = ecr.EndpointSettings.PutSettings.Active;
-                res[string.Format(MapKeyFormat, name, "delete")] = ecr.EndpointSettings.DeleteSettings.Active;
+                var name = es.Name;
+                res[string.Format(MapKeyFormat, name, "post")] = es.PostSettings.Active;
+                res[string.Format(MapKeyFormat, name, "get")] = es.GetSettings.Active;
+                res[string.Format(MapKeyFormat, name, "put")] = es.PutSettings.Active;
+                res[string.Format(MapKeyFormat, name, "delete")] = es.DeleteSettings.Active;
             }
             return res;
         }
-        private EntityConfigRecord GetEntityConfigRecordByRoute(PathString path)
+        private EndpointSettings GetEndpointSettingsByRoute(PathString path)
         {
-            var ecrRoute = RouteMaps.FirstOrDefault(rm => path.StartsWithSegments(rm.Key));
+            var esRoute = RouteEndpointSettingsMaps.FirstOrDefault(rm => path.StartsWithSegments(rm.Key));
 
-            var res = (ecrRoute.Equals(default)) ? null : ecrRoute.Value;
+            var res = (esRoute.Equals(default)) ? null : esRoute.Value;
             _logger.LogDebug(LoggingEvents.WorkContext,
                 res != null ?
-                    $"Entity found: {res.Type.Name}. using path: {path}" :
-                    $"Entity is not found in anyservice's configured {nameof(RouteMaps)}. Path used: {path}. If this is not expected, please verify entity was configured when calling {nameof(ServiceCollectionExtensions.AddAnyService)} method.");
+                    $"{nameof(EndpointSettings)} found: {res.Name}. using path: {path}" :
+                    $"Entity is not found in anyservice's configured {nameof(RouteEndpointSettingsMaps)}. Path used: {path}. If this is not expected, please verify entity was configured when calling {nameof(ServiceCollectionExtensions.AddAnyService)} method.");
             return res;
         }
-        private RequestInfo ToRequestInfo(HttpContext httpContext, EntityConfigRecord ecr)
+        private RequestInfo ToRequestInfo(HttpContext httpContext, EndpointSettings es)
         {
             var path = httpContext.Request.Path.ToString();
             _logger.LogDebug(LoggingEvents.WorkContext, $"Parse httpRequestInfo from route: {path}");
@@ -126,7 +125,7 @@ namespace AnyService.Middlewares
             {
                 Path = path,
                 Method = httpContext.Request.Method,
-                RequesteeId = GetRequesteeId(ecr.EndpointSettings.Route, path),
+                RequesteeId = GetRequesteeId(es.Route, path),
                 Parameters = httpContext.Request.Query?.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)).ToArray()
             };
             _logger.LogDebug(LoggingEvents.WorkContext, $"Parsed requestInfo: {reqInfo.ToJsonString()}");

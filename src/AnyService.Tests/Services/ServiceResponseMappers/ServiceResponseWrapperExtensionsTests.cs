@@ -28,7 +28,10 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
 
             var wc = new WorkContext
             {
-                CurrentEntityConfigRecord = new EntityConfigRecord { EventKeys = new EventKeyRecord("create", null, null, null) },
+                CurrentEndpointSettings = new EndpointSettings
+                {
+                    EntityConfigRecord = new EntityConfigRecord { EventKeys = new EventKeyRecord("create", null, null, null) },
+                },
             };
 
             var sp = new Mock<IServiceProvider>();

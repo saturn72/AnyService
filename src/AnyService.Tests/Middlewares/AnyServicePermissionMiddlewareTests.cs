@@ -24,13 +24,13 @@ namespace AnyService.Tests.Middlewares
             var mw = new AnyServicePermissionMiddleware(reqDel, logger.Object);
             var wc = new WorkContext
             {
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(TestModel),
-                    EndpointSettings = new EndpointSettings
+                    PublicGet = true,
+                    EntityConfigRecord = new EntityConfigRecord
                     {
-                        PublicGet = true,
-                    }
+                        Type = typeof(TestModel),
+                    },
                 },
                 RequestInfo = new RequestInfo
                 {
@@ -59,10 +59,13 @@ namespace AnyService.Tests.Middlewares
             var createPermissionKey = "create-key";
             var wc = new WorkContext
             {
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(TestModel),
-                    PermissionRecord = new PermissionRecord(createPermissionKey, null, null, null),
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(TestModel),
+                        PermissionRecord = new PermissionRecord(createPermissionKey, null, null, null),
+                    },
                 },
                 RequestInfo = new RequestInfo
                 {
@@ -101,11 +104,14 @@ namespace AnyService.Tests.Middlewares
 
             var wc = new WorkContext
             {
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(TestModel),
-                    PermissionRecord = new PermissionRecord(null, null, updateKey, deleteKey),
-                    EntityKey = entityKey
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(TestModel),
+                        PermissionRecord = new PermissionRecord(null, null, updateKey, deleteKey),
+                        EntityKey = entityKey,
+                    },
                 },
                 RequestInfo = new RequestInfo
                 {
@@ -131,9 +137,12 @@ namespace AnyService.Tests.Middlewares
             var mw = new AnyServicePermissionMiddleware(null, logger.Object);
             var wc = new WorkContext
             {
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(TestModel),
+                    EntityConfigRecord = new EntityConfigRecord
+                    {
+                        Type = typeof(TestModel),
+                    },
                 },
                 RequestInfo = new RequestInfo
                 {
@@ -157,12 +166,12 @@ namespace AnyService.Tests.Middlewares
             var mw = new TestAnyServicePermissionware(null, logger.Object);
             var wc = new WorkContext
             {
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    EndpointSettings = new EndpointSettings
+                    PublicGet = true,
+                    EntityConfigRecord = new EntityConfigRecord
                     {
-                        PublicGet = true,
-                    }
+                    },
                 },
                 RequestInfo = new RequestInfo
                 {
@@ -188,14 +197,14 @@ namespace AnyService.Tests.Middlewares
         [InlineData("delete", "diff-entity-id", true, false)]
         public async Task CRUD_ReturnsExpResult(string method, string requesteeId, bool excluded, bool expGrantResult)
         {
-            var ecr = new EntityConfigRecord
+            var ecr = new EndpointSettings
             {
-                EntityKey = nameof(TestModel),
-                Type = typeof(TestModel),
-                PermissionRecord = new PermissionRecord("create", "read", "update", "delete"),
-                EndpointSettings = new EndpointSettings
+                PublicGet = true,
+                EntityConfigRecord = new EntityConfigRecord
                 {
-                    PublicGet = true,
+                    EntityKey = nameof(TestModel),
+                    Type = typeof(TestModel),
+                    PermissionRecord = new PermissionRecord("create", "read", "update", "delete"),
                 },
             };
             var userPermissions = new UserPermissions
@@ -220,7 +229,7 @@ namespace AnyService.Tests.Middlewares
             var wc = new WorkContext
             {
                 CurrentUserId = "userId",
-                CurrentEntityConfigRecord = ecr,
+                CurrentEndpointSettings = ecr,
                 RequestInfo = new RequestInfo
                 {
                     Method = method,

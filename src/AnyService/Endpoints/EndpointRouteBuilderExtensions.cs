@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AnyService.Endpoints
 {
@@ -12,16 +13,15 @@ namespace AnyService.Endpoints
         {
             var entityConfigRecords = builder.ServiceProvider.GetRequiredService<IEnumerable<EntityConfigRecord>>();
 
-            foreach (var ecr in entityConfigRecords)
+            foreach (var es in entityConfigRecords.SelectMany(e => e.EndpointSettings))
             {
-                var es = ecr.EndpointSettings;
                 if (es.Area.HasValue())
                 {
-                    builder.MapAreaControllerRoute(ecr.Name, es.Area, es.Route);
+                    builder.MapAreaControllerRoute(es.Name, es.Area, es.Route);
                 }
                 else
                 {
-                    builder.MapControllerRoute(ecr.Name, es.Route);
+                    builder.MapControllerRoute(es.Name, es.Route);
                 }
             }
             return builder;

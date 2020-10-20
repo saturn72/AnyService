@@ -50,7 +50,13 @@ namespace AnyService.Tests.Services.Security
             {
                 Data = data,
                 PerformedByUserId = userId,
-                WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
+                WorkContext = new WorkContext
+                {
+                    CurrentEndpointSettings = new EndpointSettings
+                    {
+                        EntityConfigRecord = ecr
+                    },
+                },
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
             ph.EntityCreatedHandler(ed);
@@ -91,7 +97,13 @@ namespace AnyService.Tests.Services.Security
             {
                 Data = data,
                 PerformedByUserId = userId,
-                WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
+                WorkContext = new WorkContext
+                {
+                    CurrentEndpointSettings = new EndpointSettings
+                    {
+                        EntityConfigRecord = ecr
+                    },
+                },
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
             ph.EntityCreatedHandler(ed);
@@ -139,7 +151,13 @@ namespace AnyService.Tests.Services.Security
             {
                 Data = data,
                 PerformedByUserId = userId,
-                WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
+                WorkContext = new WorkContext
+                {
+                    CurrentEndpointSettings = new EndpointSettings
+                    {
+                        EntityConfigRecord = ecr
+                    },
+                },
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
             ph.EntityCreatedHandler(ed);
@@ -274,7 +292,13 @@ namespace AnyService.Tests.Services.Security
             {
                 Data = data,
                 PerformedByUserId = userId,
-                WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
+                WorkContext = new WorkContext
+                {
+                    CurrentEndpointSettings = new EndpointSettings
+                    {
+                        EntityConfigRecord = ecr
+                    },
+                },
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
             ph.EntityDeletedHandler(ed);

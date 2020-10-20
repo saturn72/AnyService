@@ -44,13 +44,13 @@ namespace AnyService.Tests.Controllers
             var t = typeof(Category);
             var wc = new WorkContext
             {
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Name = t.Name,
-                    Type = t,
-                    EndpointSettings = new EndpointSettings
+                    MapToType = typeof(CategoryModel),
+                    EntityConfigRecord = new EntityConfigRecord
                     {
-                        MapToType = typeof(CategoryModel),
+                        Name = t.Name,
+                        Type = t,
                     }
                 }
             };
@@ -71,13 +71,13 @@ namespace AnyService.Tests.Controllers
             var t = typeof(Category);
             var wc = new WorkContext
             {
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Name = t.Name,
-                    Type = t,
-                    EndpointSettings = new EndpointSettings
+                    MapToType = t,
+                    EntityConfigRecord = new EntityConfigRecord
                     {
-                        MapToType = t,
+                        Name = t.Name,
+                        Type = t,
                     }
                 }
             };
@@ -110,15 +110,14 @@ namespace AnyService.Tests.Controllers
         {
             var wc = new WorkContext
             {
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    Type = typeof(MyClass),
-                    Name = typeof(MyClass).Name,
-                    Name = typeof(MyClass).Name,
-                    EndpointSettings = new EndpointSettings
+                    MapToType = typeof(MyClass),
+                    MapToPaginationType = typeof(Pagination<MyClass>),
+                    EntityConfigRecord = new EntityConfigRecord
                     {
-                        MapToType = typeof(MyClass),
-                        MapToPaginationType = typeof(Pagination<MyClass>)
+                        Type = typeof(MyClass),
+                        Name = typeof(MyClass).Name,
                     }
                 }
             };

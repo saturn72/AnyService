@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
 
@@ -7,7 +6,8 @@ namespace AnyService
     public class WorkContext
     {
         public Type CurrentType => CurrentEntityConfigRecord?.Type;
-        public EntityConfigRecord CurrentEntityConfigRecord { get; set; }
+        public EndpointSettings CurrentEndpointSettings { get; set; }
+        public EntityConfigRecord CurrentEntityConfigRecord => CurrentEndpointSettings.EntityConfigRecord;
         public string CurrentUserId
         {
             get => GetParameterOrDefault<string>(nameof(CurrentUserId));

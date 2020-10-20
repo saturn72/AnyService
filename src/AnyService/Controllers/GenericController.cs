@@ -265,9 +265,9 @@ namespace AnyService.Controllers
             _curTypeIdentifier ??= _workContext.CurrentEntityConfigRecord.Name;
             _curType ??= _workContext.CurrentEntityConfigRecord.Type;
             _curEnumerableType ??= typeof(IEnumerable<>).MakeGenericType(_curType);
-            _mapToType ??= _workContext.CurrentEntityConfigRecord.EndpointSettings?.MapToType;
+            _mapToType ??= _workContext.CurrentEndpointSettings?.MapToType;
             _mapToTypeEnumerableType ??= typeof(IEnumerable<>).MakeGenericType(_mapToType);
-            _mapToPageType ??= _workContext.CurrentEntityConfigRecord.EndpointSettings.MapToPaginationType;
+            _mapToPageType ??= _workContext.CurrentEndpointSettings.MapToPaginationType;
             _aggregatedChildNames ??= _workContext.CurrentEntityConfigRecord.AggregationData.Keys;
         }
         private async Task<TDomainEntity> ExctractModelFromStream()

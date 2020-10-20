@@ -19,18 +19,17 @@ namespace AnyService.Conventions
         }
         public void Apply(ControllerModel controller)
         {
-            var allEcrs = _serviceProvider.GetService<IEnumerable<EntityConfigRecord>>();
+            var allEcrs = _serviceProvider.GetService<IEnumerable<EndpointSettings>>();
 
             var p = controller.Application.Properties;
             var genericTypeDefinition = controller.ControllerType.GetGenericTypeDefinition();
             if (typeof(GenericController<,>) != genericTypeDefinition)
                 return;
 
-            var currentEcrs = allEcrs.Where(e =>
-                e.EndpointSettings.ControllerType == controller.ControllerType);
-            controller.ControllerName = allEcrs.First().EndpointSettings.ControllerName;
+            var currentEcrs = allEcrs.Where(es => es.ControllerType == controller.ControllerType);
+            controller.ControllerName = allEcrs.First().ControllerName;
 
-            var routeAtts = currentEcrs.Select(e => new RouteAttribute(e.EndpointSettings.Route)).ToArray();
+            var routeAtts = currentEcrs.Select(es => new RouteAttribute(es.Route)).ToArray();
 
             foreach (var ra in routeAtts)
             {

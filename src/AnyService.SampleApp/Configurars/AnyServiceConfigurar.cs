@@ -18,26 +18,35 @@ namespace AnyService.SampleApp.Configurars
                     new EntityConfigRecord
                     {
                         Type = typeof(Category),
-                        EndpointSettings = new EndpointSettings
+                        EndpointSettings = new []
                         {
-                            Area = "admin"
+                            new EndpointSettings
+                            {
+                                Area = "admin"
+                            },
                         }
                     },
                     new EntityConfigRecord
                     {
                         Type = typeof(Category),
                         ShowSoftDelete = false,
-                        EndpointSettings = new EndpointSettings
+                        EndpointSettings = new []
                         {
-                            MapToType = typeof(CategoryModel)
+                            new EndpointSettings
+                            {
+                                MapToType = typeof(CategoryModel)
+                            },
                         }
                     },
                     new EntityConfigRecord
                     {
                         Type = typeof(Product),
-                        EndpointSettings = new EndpointSettings
+                        EndpointSettings = new []
                         {
-                            MapToType = typeof(ProductModel)
+                            new EndpointSettings
+                            {
+                                MapToType = typeof(ProductModel)
+                            }
                         }
                     },
                     new EntityConfigRecord
@@ -51,17 +60,23 @@ namespace AnyService.SampleApp.Configurars
                     new EntityConfigRecord
                     {
                         Type =   typeof(Stock),
-                        EndpointSettings = new EndpointSettings
+                        EndpointSettings =  new []
                         {
-                            Authorization = new AuthorizeAttribute{Roles = "some-role"}
+                            new EndpointSettings
+                            {
+                                Authorization = new AuthorizeAttribute{Roles = "some-role"}
+                            }
                         }
                     },
                     new EntityConfigRecord
                     {
                         Type = typeof(Dependent2),
-                        EndpointSettings = new EndpointSettings
+                        EndpointSettings = new[]
                         {
-                            Route = "/api/d/",
+                            new EndpointSettings
+                            {
+                             Route = "/api/d/",
+                            }
                         },
                         CrudValidatorType = typeof(Dependent2AlwaysTrueCrudValidator)
                     },
@@ -72,10 +87,13 @@ namespace AnyService.SampleApp.Configurars
                     },
                     new EntityConfigRecord
                     {
-                        EndpointSettings = new EndpointSettings
+                        EndpointSettings = new []
                         {
-                            Route = "/v1/my-great-route",
-                            ControllerType = typeof(CustomController),
+                            new EndpointSettings
+                            {
+                                Route = "/v1/my-great-route",
+                                ControllerType = typeof(CustomController),
+                            },
                         },
                         Type = typeof(CustomEntity),
                     },
@@ -88,12 +106,15 @@ namespace AnyService.SampleApp.Configurars
                     {
                         Type = typeof(CustomEntity),
                         Name = "method_not_allowed",
-                        EndpointSettings = new EndpointSettings
+                        EndpointSettings = new []
                         {
-                            Route = "/api/na",
-                            PostSettings = new EndpointMethodSettings{Active = false },
-                            PutSettings = new EndpointMethodSettings{Active = false },
-                            DeleteSettings = new EndpointMethodSettings{Active = false },
+                            new EndpointSettings
+                            {
+                                Route = "/api/na",
+                                PostSettings = new EndpointMethodSettings{Active = false },
+                                PutSettings = new EndpointMethodSettings{Active = false },
+                                DeleteSettings = new EndpointMethodSettings{Active = false },
+                            },
                         }
                     },
                 }

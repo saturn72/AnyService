@@ -48,13 +48,10 @@ namespace AnyService.Tests.Middlewares
             };
             var wc = new WorkContext
             {
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    EndpointSettings = new EndpointSettings
-                    {
-                        Route = "/test",
-                        GetSettings = new EndpointMethodSettings { Authorization = an }
-                    }
+                    Route = "/test",
+                    GetSettings = new EndpointMethodSettings { Authorization = an }
                 }
             };
 
@@ -93,13 +90,10 @@ namespace AnyService.Tests.Middlewares
             };
             var wc = new WorkContext
             {
-                CurrentEntityConfigRecord = new EntityConfigRecord
+                CurrentEndpointSettings = new EndpointSettings
                 {
-                    EndpointSettings = new EndpointSettings
-                    {
-                        Route = "/test",
-                        GetSettings = new EndpointMethodSettings { Authorization = an }
-                    }
+                    Route = "/test",
+                    GetSettings = new EndpointMethodSettings { Authorization = an }
                 }
             };
 
