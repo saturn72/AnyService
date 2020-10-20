@@ -10,7 +10,11 @@ namespace AnyService
         private bool _showSoftDelete;
         private Type _type;
         /// <summary>
-        /// Name
+        /// Gets or sets entity config identifier
+        /// </summary>
+        public string Identifier { get; set; }
+        /// <summary>
+        /// Gets or sets entity config identifier
         /// </summary>
         public string Name { get; set; }
         /// <summary>

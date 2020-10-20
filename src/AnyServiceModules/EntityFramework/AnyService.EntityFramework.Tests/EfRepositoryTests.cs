@@ -8,6 +8,7 @@ using AnyService.Services;
 using System;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.IO;
 using Microsoft.Data.Sqlite;
 using System.Data.Common;
 
@@ -40,20 +41,21 @@ namespace AnyService.EntityFramework.Tests
             private readonly Mock<ILogger<EfRepository<TestClass>>> _logger;
             private readonly EfRepository<TestClass> _repository;
             private static readonly DbContextOptions<TestDbContext> DbOptions = new DbContextOptionsBuilder<TestDbContext>()
-                .UseSqlite(CreateInMemoryDatabase())
+                .UseSqlite(CreateDbConnection())
                 .Options;
+
+            private static DbConnection CreateDbConnection()
+            {
+                var c = new SqliteConnection("Filename=:memory:");
+                c.Open();
+                return c;
+            }
             public EfRepositoryTests()
             {
-                _dbContext = new TestDbContext(DbOptions);
                 _logger = new Mock<ILogger<EfRepository<TestClass>>>();
-                _repository = new EfRepository<TestClass>(_dbContext, _logger.Object);
-            }
+                _dbContext = new TestDbContext(DbOptions);
 
-            private static DbConnection CreateInMemoryDatabase()
-            {
-                var connection = new SqliteConnection("Filename=:memory:");
-                connection.Open();
-                return connection;
+                _repository = new EfRepository<TestClass>(_dbContext, _logger.Object);
             }
 
             [Fact]
@@ -64,6 +66,7 @@ namespace AnyService.EntityFramework.Tests
                     Value = "Some-value"
                 };
                 var inserted = await _repository.Insert(entity);
+                _dbContext.Entry(inserted).State = EntityState.Detached;
 
                 inserted.Id.ShouldNotBeEmpty();
                 inserted.Value.ShouldBe(entity.Value);
@@ -73,7 +76,9 @@ namespace AnyService.EntityFramework.Tests
             public async Task InsertBulk()
             {
                 var options = new DbContextOptionsBuilder<TestDbContext>()
-                    .UseSqlite(CreateInMemoryDatabase()).Options;
+                    .UseSqlite(CreateDbConnection())
+                    .Options;
+
                 var ctx = new TestDbContext(options);
 
                 var l = new Mock<ILogger<EfRepository<BulkTestClass>>>();
@@ -105,18 +110,14 @@ namespace AnyService.EntityFramework.Tests
             [Fact]
             public async Task GetById()
             {
-                var dbEntity = new TestClass
+                _dbContext.Set<TestClass>().Add(new TestClass
                 {
-                    Id = "123",
-                    Value = "this-is-value"
-                };
-
-                await _dbContext.Set<TestClass>().AddAsync(dbEntity);
+                    Id = "abcd",
+                    Value = "value-abcd"
+                });
                 await _dbContext.SaveChangesAsync();
-
-                var e = await _repository.GetById(dbEntity.Id);
-                e.Id.ShouldBe(dbEntity.Id);
-                e.Value.ShouldBe(dbEntity.Value);
+                var e = await _repository.GetById("abcd");
+                e.Value.ShouldBe("value-abcd");
             }
             [Theory]
             [MemberData(nameof(GetAll_NullFilter_DATA))]
@@ -333,22 +334,20 @@ namespace AnyService.EntityFramework.Tests
             [Fact]
             public async Task Delete()
             {
-                var orig = new TestClass
+                var id = "todelete";
+                var e = new TestClass
                 {
-                    Value = "orig-value"
+                    Id = id,
+                    Value = "value-abcd"
                 };
-                await _dbContext.Set<TestClass>().AddAsync(orig);
+                await _dbContext.Set<TestClass>().AddAsync(e);
                 await _dbContext.SaveChangesAsync();
-                _dbContext.Entry(orig).State = EntityState.Detached;
+                _dbContext.Entry(e).State = EntityState.Detached;
 
-                var toDelete = new TestClass
-                {
-                    Id = orig.Id,
-                };
-                await _repository.Delete(toDelete);
+                await _repository.Delete(e);
 
-                var dbEntity = await _dbContext.Set<TestClass>().FindAsync(toDelete.Id);
-                dbEntity.ShouldBeNull();
+                var entity = await _dbContext.Set<TestClass>().FindAsync(e.Id);
+                entity.ShouldBeNull();
             }
         }
     }

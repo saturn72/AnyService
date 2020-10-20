@@ -32,6 +32,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Sql\Scripts\" />
+    <None Update="Sql\SqliteCreateDb.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Sql\SqlCreateDb.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

@@ -26,8 +26,8 @@ namespace AnyService.EntityFramework.Tests
              new ConverterMappingHints(valueGeneratorFactory: (p, t) => new GuidStringGenerator()));
 
             modelBuilder.Entity<FileModel>(b => b.HasKey(u => u.Id));//.ValueGeneratedOnAdd());
-            modelBuilder.Entity<TestClass>(b => b.HasKey(u => u.Id));//.ValueGeneratedOnAdd());
-            modelBuilder.Entity<TestNestedClass>(b => b.HasKey(u => u.Id));//.ValueGeneratedOnAdd());
+            modelBuilder.Entity<TestClass>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+            modelBuilder.Entity<TestNestedClass>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
 
             modelBuilder.Entity<BulkTestClass>(b =>
             {

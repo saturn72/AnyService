@@ -17,11 +17,11 @@ namespace AnyService.Endpoints
                 var cs = cr.EndpointSettings;
                 if (cs.Area.HasValue())
                 {
-                    builder.MapAreaControllerRoute(cr.Name, cs.Area, cs.Route);
+                    builder.MapAreaControllerRoute(cr.Identifier, cs.Area, cs.Route);
                 }
                 else
                 {
-                    builder.MapControllerRoute(cr.Name, cs.Route);
+                    builder.MapControllerRoute(cr.Identifier, cs.Route);
                 }
             }
             return builder;

@@ -57,7 +57,7 @@ namespace AnyService.Tests.Middlewares
 
             var ecr = new EntityConfigRecord
             {
-                Name = "nane",
+                Identifier = "nane",
                 EndpointSettings = new EndpointSettings
                 {
                     Route = route,
@@ -102,7 +102,7 @@ namespace AnyService.Tests.Middlewares
         {
             var e = new EntityConfigRecord
             {
-                Name = "name",
+                Identifier = "name",
                 EndpointSettings = new EndpointSettings
                 {
                     PostSettings = new EndpointMethodSettings { Active = true },
@@ -112,10 +112,10 @@ namespace AnyService.Tests.Middlewares
                 }
             };
             var wcmt = new WorkContextMiddleware_ForTests(new[] { e });
-            wcmt.ActiveMap[$"{e.Name}_post"].ShouldBeTrue();
-            wcmt.ActiveMap[$"{e.Name}_get"].ShouldBeFalse();
-            wcmt.ActiveMap[$"{e.Name}_put"].ShouldBeFalse();
-            wcmt.ActiveMap[$"{e.Name}_delete"].ShouldBeTrue();
+            wcmt.ActiveMap[$"{e.Identifier}_post"].ShouldBeTrue();
+            wcmt.ActiveMap[$"{e.Identifier}_get"].ShouldBeFalse();
+            wcmt.ActiveMap[$"{e.Identifier}_put"].ShouldBeFalse();
+            wcmt.ActiveMap[$"{e.Identifier}_delete"].ShouldBeTrue();
         }
 
         [Fact]

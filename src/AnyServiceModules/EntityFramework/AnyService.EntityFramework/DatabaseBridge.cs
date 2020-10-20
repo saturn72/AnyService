@@ -32,7 +32,7 @@ namespace AnyService.EntityFramework
             {
                 _pkColumnName = _dbContext.Model.FindEntityType(typeof(TDbModel)).FindPrimaryKey().Properties.First().GetColumnName();
                 var tableName = _dbContext.Model.FindEntityType(typeof(TDbModel)).GetTableName();
-                _selectByIdSqlCommandFormat = $"SELECT * FROM {tableName} WHERE {_pkColumnName} = {{0}}";
+                _selectByIdSqlCommandFormat = $"SELECT * FROM {tableName} WHERE {_pkColumnName} = '{{0}}'";
             }
         }
         #endregion
@@ -158,7 +158,7 @@ namespace AnyService.EntityFramework
         private TDbModel GetEntityById_Internal(object id)
         {
             var sql = string.Format(_selectByIdSqlCommandFormat, id);
-            var query = _dbContext.Set<TDbModel>().FromSqlRaw(sql).AsNoTracking();
+            var query = _dbContext.Set<TDbModel>().FromSqlRaw(sql).AsNoTracking().ToArray();
             return IncludeNavigations(query).FirstOrDefault();
         }
 

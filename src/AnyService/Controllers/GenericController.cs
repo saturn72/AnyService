@@ -50,7 +50,7 @@ namespace AnyService.Controllers
             _workContext = workContext;
             _logger = logger;
 
-            _curTypeName = _workContext.CurrentEntityConfigRecord.Name;
+            _curTypeName = _workContext.CurrentEntityConfigRecord.Identifier;
             _curType = _workContext.CurrentEntityConfigRecord.Type;
             _mapToType = _workContext.CurrentEntityConfigRecord.EndpointSettings.MapToType;
             _mapToPageType = _workContext.CurrentEntityConfigRecord.EndpointSettings.MapToPaginationType;
