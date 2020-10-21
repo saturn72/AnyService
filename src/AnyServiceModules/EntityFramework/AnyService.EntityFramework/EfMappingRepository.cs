@@ -48,7 +48,7 @@ namespace AnyService.EntityFramework
         }
         public async Task<TDomainEntity> Insert(TDomainEntity entity)
         {
-            _logger.LogInformation(EfRepositoryEventIds.Create, $"{nameof(Insert)} with entity = {entity.ToJsonString()}");
+            _logger.LogInformation(EfRepositoryEventIds.Create, $"{nameof(Insert)} with entity = {entity?.ToJsonString()}");
             return await ExecuteAndMap(entity, e => _bridge.Insert(e), EfRepositoryEventIds.Create);
         }
         public async Task<IEnumerable<TDomainEntity>> GetAll(Pagination<TDomainEntity> paginate)
@@ -84,6 +84,9 @@ namespace AnyService.EntityFramework
             var e = entity.Map<TDbModel>(_mapperName);
             _logger.LogDebug(eventId, $"Entity mapped to {typeof(TDbModel).Name} = {e.ToJsonString()}");
             var entry = await func(e);
+            _logger.LogDebug(eventId, $"Db returned {typeof(TDbModel).Name} = {entry?.ToJsonString()}");
+            if (entry == null)
+                return default;
             var res = entry.Map<TDomainEntity>(_mapperName);
             _logger.LogDebug(eventId, $"Db Record mapped to {typeof(TDomainEntity).Name} = {res.ToJsonString()}");
             return res;

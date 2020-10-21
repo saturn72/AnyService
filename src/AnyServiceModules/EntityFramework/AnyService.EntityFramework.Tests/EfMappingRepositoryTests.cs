@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Microsoft.Data.Sqlite;
 using System.Data.Common;
+using AnyService.Mapping;
 
 namespace AnyService.EntityFramework.Tests
 {
@@ -69,6 +70,23 @@ namespace AnyService.EntityFramework.Tests
             c.Open();
             return c;
         }
+        static EfMappingRepositoryTests()
+        {
+            var mf = new DefaultMapperFactory();
+            var sp = new Mock<IServiceProvider>();
+            sp.Setup(s => s.GetService(typeof(IMapperFactory))).Returns(mf);
+            MappingExtensions.Configure(
+                MapperName,
+                cfg =>
+                {
+                    cfg.CreateMap<TestEntity, TestDbModel>();
+                    cfg.CreateMap<TestDbModel, TestEntity>();
+                    cfg.CreateMap<BulkTestEntity, BulkTestDbModel>();
+                    cfg.CreateMap<BulkTestDbModel, BulkTestEntity>();
+                });
+
+            MappingExtensions.Build(sp.Object, "default");
+        }
         public EfMappingRepositoryTests()
         {
             _logger = new Mock<ILogger<EfMappingRepository<TestEntity, TestDbModel>>>();
@@ -85,7 +103,6 @@ namespace AnyService.EntityFramework.Tests
                 Value = "Some-value"
             };
             var inserted = await _repository.Insert(entity);
-            _dbContext.Entry(inserted).State = EntityState.Detached;
 
             inserted.Id.ShouldNotBeEmpty();
             inserted.Value.ShouldBe(entity.Value);
@@ -107,17 +124,15 @@ namespace AnyService.EntityFramework.Tests
             for (int i = 0; i < total; i++)
                 entities.Add(new BulkTestEntity
                 {
-                    Id = Guid.NewGuid().ToString(),
                     Value = i,
                     TestNestedClasses = new[] { new TestNestedClass { Value = i.ToString() } }
                 });
 
             var inserted = await r.BulkInsert(entities);
 
-            inserted.GetHashCode().ShouldBe(entities.GetHashCode());
             inserted.Count().ShouldBe(total);
             for (int i = 0; i < total; i++)
-                inserted.ElementAt(i).Value.ShouldBe(i);
+                inserted.ShouldContain(s => s.Value == i);
 
         }
         [Fact]
@@ -293,7 +308,7 @@ namespace AnyService.EntityFramework.Tests
         {
             var updated = new TestEntity
             {
-                Id = "id-not-exists",
+                Id = int.MaxValue.ToString(),
                 Value = "new-value"
             };
             var res = await _repository.Update(updated);
@@ -325,7 +340,6 @@ namespace AnyService.EntityFramework.Tests
         {
             var updated = new TestEntity
             {
-                Id = "id-not-exists",
                 Value = "new-value"
             };
             var res = await _repository.Delete(updated);

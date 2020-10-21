@@ -34,9 +34,13 @@ namespace AnyService.EntityFramework.Tests
                 b.ToTable("BulkTestClasses");
                 b.HasKey(u => u.Id);
                 b.Property(u => u.Id)
-                 //  .ValueGeneratedOnAdd()
+                   //  .ValueGeneratedOnAdd()
                    .HasConversion(converter);
             });
+
+            //ef mapping repository
+            modelBuilder.Entity<EfMappingRepositoryTests.TestDbModel>(b => b.HasKey(u => u.Id));
+            modelBuilder.Entity<EfMappingRepositoryTests.BulkTestDbModel>(b => b.HasKey(u => u.Id));
         }
     }
 }
