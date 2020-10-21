@@ -311,7 +311,6 @@ namespace AnyService.EntityFramework.Tests
                 var res = await _repository.Delete(updated);
                 res.ShouldBeNull();
             }
-
             [Fact]
             public async Task Delete()
             {

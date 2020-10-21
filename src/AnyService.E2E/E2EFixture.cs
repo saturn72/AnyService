@@ -1,14 +1,13 @@
 using System.Net.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using AnyService.SampleApp;
-using System;
 using Xunit;
 using Xunit.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Data.Sqlite;
+using System;
 
 namespace AnyService.E2E
 {
@@ -26,10 +25,8 @@ namespace AnyService.E2E
             {
                 builder.ConfigureTestServices(services =>
                 {
-                    var con = new SqliteConnection("Filename=:memory:");
-                    con.Open();
                     var options = new DbContextOptionsBuilder<SampleAppDbContext>()
-                          .UseSqlite(con).Options;
+                         .UseInMemoryDatabase(databaseName: DateTime.Now.ToString("yyyy_mm_hh_ss_ff") + ".db").Options;
 
                     DbContext = new SampleAppDbContext(options);
                     services.AddTransient<DbContext>(sp => new SampleAppDbContext(options));

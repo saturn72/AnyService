@@ -153,7 +153,6 @@ namespace AnyService.EntityFramework
             return entity;
         }
         #endregion
-
         #region Utilities
         private TDbModel GetEntityById_Internal(object id)
         {
@@ -161,7 +160,6 @@ namespace AnyService.EntityFramework
             var query = _dbContext.Set<TDbModel>().FromSqlRaw(sql).AsNoTracking().ToArray();
             return IncludeNavigations(query).FirstOrDefault();
         }
-
         private Task DetachEntities(IEnumerable<TDbModel> entities)
         {
             return Task.Run(() =>
