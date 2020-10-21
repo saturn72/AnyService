@@ -48,7 +48,7 @@ namespace AnyService.EntityFramework
         #endregion
         public virtual async Task<IEnumerable<TDomainModel>> GetAll(Pagination<TDomainModel> pagination)
         {
-            _logger.LogInformation(EfRepositoryEventIds.Read, "Get all with pagination: " + pagination.QueryOrFilter ?? pagination.QueryFunc.ToString());
+            _logger.LogInformation(EfRepositoryEventIds.Read, "Get all with pagination filter: " + pagination?.QueryOrFilter ?? pagination?.QueryFunc?.ToString());
             return await _bridge.GetAll(pagination);
         }
         public virtual async Task<TDomainModel> GetById(string id)

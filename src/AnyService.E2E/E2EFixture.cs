@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Data.Sqlite;
 
 namespace AnyService.E2E
 {
@@ -25,8 +26,10 @@ namespace AnyService.E2E
             {
                 builder.ConfigureTestServices(services =>
                 {
+                    var con = new SqliteConnection("Filename=:memory:");
+                    con.Open();
                     var options = new DbContextOptionsBuilder<SampleAppDbContext>()
-                          .UseSqlite("Filename=:memory:").Options;
+                          .UseSqlite(con).Options;
 
                     DbContext = new SampleAppDbContext(options);
                     services.AddTransient<DbContext>(sp => new SampleAppDbContext(options));

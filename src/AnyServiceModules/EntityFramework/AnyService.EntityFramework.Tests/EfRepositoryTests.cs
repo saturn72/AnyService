@@ -24,7 +24,6 @@ namespace AnyService.EntityFramework.Tests
         public string Id { get; set; }
         public bool Flag { get; set; }
         public string Value { get; set; }
-        public IEnumerable<TestNestedClass> NestedClasses { get; set; }
         public int Number { get; set; }
     }
     public class BulkTestClass : IDomainEntity
@@ -141,17 +140,6 @@ namespace AnyService.EntityFramework.Tests
                     tc.Add(new TestClass
                     {
                         Value = i % 2 == 0 ? a : "b",
-                        NestedClasses = new[]
-                        {
-                        new TestNestedClass
-                        {
-                            Value = "v1_" + i%2,
-                        },
-                        new TestNestedClass
-                        {
-                            Value = "v2_" + i%2,
-                        },
-                    },
                     });
 
                 await _dbContext.Set<TestClass>().AddRangeAsync(tc);
@@ -170,9 +158,6 @@ namespace AnyService.EntityFramework.Tests
                 {
                     e.Any(x => x.Id != null && x.Value == a).ShouldBeTrue();
                     var c = e.ElementAt(i);
-                    c.NestedClasses.Count().ShouldBe(2);
-                    c.NestedClasses.ElementAt(0).Value.ShouldBe("v1_0");
-                    c.NestedClasses.ElementAt(1).Value.ShouldBe("v2_0");
                 }
             }
             [Fact]
@@ -201,7 +186,7 @@ namespace AnyService.EntityFramework.Tests
                 var e = await _repository.GetAll(p);
                 e.Count().ShouldBe(3);
                 for (int i = 0; i < p.PageSize; i++)
-                    e.ElementAt(i).Number.ShouldBe(count - 1 - i);
+                    e.ShouldContain(s => s.Number == i);
 
                 p.Data.ShouldBeNull();
                 p.Total.ShouldBe(count);
@@ -252,17 +237,14 @@ namespace AnyService.EntityFramework.Tests
                         Id = "id-" + i,
                         Flag = (i % 100) == 0,
                         Value = a,
-                        NestedClasses = new[]
-                        {
-                        new TestNestedClass
-                        {
-                            Value = "v1_" + i%2,
-                        },
-                    },
                     }); ;
 
                 await _dbContext.Set<TestClass>().AddRangeAsync(tc);
                 await _dbContext.SaveChangesAsync();
+
+                foreach (var item in tc)
+                    _dbContext.Entry(item).State = EntityState.Detached;
+
                 Func<TestClass, bool> q = x => x.Value == a;
                 var p = new Pagination<TestClass>(x => q(x))
                 {
@@ -283,7 +265,6 @@ namespace AnyService.EntityFramework.Tests
                 {
                     e.Any(x => x.Id != null && x.Value == a).ShouldBeTrue();
                     var c = e.ElementAt(i);
-                    c.NestedClasses.ShouldBeNull();
                 }
             }
 

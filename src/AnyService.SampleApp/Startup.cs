@@ -66,7 +66,6 @@ namespace AnyService.SampleApp
             services.AddTransient(typeof(IRepository<>), typeof(EfRepository<>));
             services.AddTransient<IFileStoreManager, EfFileStoreManager>();
 
-
             DbConnection createInMemoryDatabase()
             {
                 var con = new SqliteConnection("Filename=:memory:");
