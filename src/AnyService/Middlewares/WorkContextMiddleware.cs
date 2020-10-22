@@ -30,7 +30,7 @@ namespace AnyService.Middlewares
             _logger = logger;
             _next = next;
             RouteMaps = LoadRoutes(entityConfigRecords);
-            ActivationMaps = ToActivationMaps(entityConfigRecords);
+            ActivationMaps = ToDisabledMethodsMap(entityConfigRecords);
             _onMissingUserIdOrClientIdHandler = onMissingUserIdHandler ??= OnMissingUserIdWorkContextMiddlewareHandlers.DefaultOnMissingUserIdHandler;
 
         }
@@ -85,7 +85,7 @@ namespace AnyService.Middlewares
                 $"Validate HttpMethod is active for {nameof(EntityConfigRecord)}. {nameof(RequestInfo)}: {workContext.RequestInfo.Method}");
 
             var key = string.Format(MapKeyFormat, workContext.CurrentEntityConfigRecord.Name, workContext.RequestInfo.Method);
-            return ActivationMaps[key];
+            return !ActivationMaps[key];
         }
         private IReadOnlyDictionary<string, EntityConfigRecord> LoadRoutes(IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
@@ -94,16 +94,16 @@ namespace AnyService.Middlewares
                 res[ecr.EndpointSettings.Route] = ecr;
             return res;
         }
-        private IReadOnlyDictionary<string, bool> ToActivationMaps(IEnumerable<EntityConfigRecord> entityConfigRecords)
+        private IReadOnlyDictionary<string, bool> ToDisabledMethodsMap(IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
             var res = new Dictionary<string, bool>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var ecr in entityConfigRecords)
             {
                 var name = ecr.Name;
-                res[string.Format(MapKeyFormat, name, "post")] = ecr.EndpointSettings.PostSettings.Active;
-                res[string.Format(MapKeyFormat, name, "get")] = ecr.EndpointSettings.GetSettings.Active;
-                res[string.Format(MapKeyFormat, name, "put")] = ecr.EndpointSettings.PutSettings.Active;
-                res[string.Format(MapKeyFormat, name, "delete")] = ecr.EndpointSettings.DeleteSettings.Active;
+                res[string.Format(MapKeyFormat, name, "post")] = ecr.EndpointSettings.PostSettings?.Disabled ?? false;
+                res[string.Format(MapKeyFormat, name, "get")] = ecr.EndpointSettings.GetSettings?.Disabled ?? false;
+                res[string.Format(MapKeyFormat, name, "put")] = ecr.EndpointSettings.PutSettings?.Disabled ?? false;
+                res[string.Format(MapKeyFormat, name, "delete")] = ecr.EndpointSettings.DeleteSettings?.Disabled ?? false;
             }
             return res;
         }

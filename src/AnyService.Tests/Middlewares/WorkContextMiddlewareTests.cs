@@ -22,10 +22,8 @@ namespace AnyService.Tests.Middlewares
                 EndpointSettings = new EndpointSettings
                 {
                     Route = "/some-resource",
-                    PostSettings = new EndpointMethodSettings { Active = true },
-                    GetSettings = new EndpointMethodSettings { Active = false },
-                    PutSettings = new EndpointMethodSettings { Active = false },
-                    DeleteSettings = new EndpointMethodSettings { Active = true },
+                    GetSettings = new EndpointMethodSettings { Disabled = true },
+                    PutSettings = new EndpointMethodSettings { Disabled = true },
                 },
                 Type = typeof(string),
             };
@@ -61,10 +59,6 @@ namespace AnyService.Tests.Middlewares
                 EndpointSettings = new EndpointSettings
                 {
                     Route = route,
-                    PostSettings = new EndpointMethodSettings { Active = true },
-                    GetSettings = new EndpointMethodSettings { Active = true },
-                    PutSettings = new EndpointMethodSettings { Active = true },
-                    DeleteSettings = new EndpointMethodSettings { Active = true },
                 },
                 Type = typeof(string),
             };
@@ -98,24 +92,22 @@ namespace AnyService.Tests.Middlewares
             wc.RequestInfo.RequesteeId.ShouldBe(expRequesteeId);
         }
         [Fact]
-        public void BuildActivationMap()
+        public void BuildDisabledMethodMap()
         {
             var e = new EntityConfigRecord
             {
                 Name = "name",
                 EndpointSettings = new EndpointSettings
                 {
-                    PostSettings = new EndpointMethodSettings { Active = true },
-                    GetSettings = new EndpointMethodSettings { Active = false },
-                    PutSettings = new EndpointMethodSettings { Active = false },
-                    DeleteSettings = new EndpointMethodSettings { Active = true },
+                    GetSettings = new EndpointMethodSettings { Disabled = true },
+                    PutSettings = new EndpointMethodSettings { Disabled = true },
                 }
             };
             var wcmt = new WorkContextMiddleware_ForTests(new[] { e });
-            wcmt.ActiveMap[$"{e.Name}_post"].ShouldBeTrue();
-            wcmt.ActiveMap[$"{e.Name}_get"].ShouldBeFalse();
-            wcmt.ActiveMap[$"{e.Name}_put"].ShouldBeFalse();
-            wcmt.ActiveMap[$"{e.Name}_delete"].ShouldBeTrue();
+            wcmt.ActiveMap[$"{e.Name}_post"].ShouldBeFalse();
+            wcmt.ActiveMap[$"{e.Name}_get"].ShouldBeTrue();
+            wcmt.ActiveMap[$"{e.Name}_put"].ShouldBeTrue();
+            wcmt.ActiveMap[$"{e.Name}_delete"].ShouldBeFalse();
         }
 
         [Fact]

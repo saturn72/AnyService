@@ -91,9 +91,9 @@ namespace AnyService.SampleApp.Configurars
                         EndpointSettings = new EndpointSettings
                         {
                             Route = "/api/na",
-                            PostSettings = new EndpointMethodSettings{Active = false },
-                            PutSettings = new EndpointMethodSettings{Active = false },
-                            DeleteSettings = new EndpointMethodSettings{Active = false },
+                            PostSettings = new EndpointMethodSettings{Disabled = true },
+                            PutSettings = new EndpointMethodSettings{Disabled = true },
+                            DeleteSettings = new EndpointMethodSettings{Disabled = true },
                         }
                     },
                 }

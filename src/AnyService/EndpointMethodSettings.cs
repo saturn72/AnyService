@@ -4,7 +4,7 @@ namespace AnyService
 {
     public sealed class EndpointMethodSettings
     {
-        public bool Active { get; set; }
+        public bool Disabled { get; set; }
         public AuthorizeAttribute Authorization { get; set; }
     }
 }

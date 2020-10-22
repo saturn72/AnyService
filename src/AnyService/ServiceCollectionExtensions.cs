@@ -272,17 +272,17 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static void BuildControllerMethodSettings(EndpointSettings settings, EntityConfigRecord ecr)
         {
-            var defaultControllerMethodSettings = new EndpointMethodSettings { Active = true };
+            var defaultControllerMethodSettings = new EndpointMethodSettings();
             settings.PostSettings ??= defaultControllerMethodSettings;
             settings.GetSettings ??= defaultControllerMethodSettings;
             settings.PutSettings ??= defaultControllerMethodSettings;
             settings.DeleteSettings ??= defaultControllerMethodSettings;
 
             if (
-                !settings.PostSettings.Active &&
-                !settings.GetSettings.Active &&
-                !settings.PutSettings.Active &&
-                !settings.DeleteSettings.Active)
+                settings.PostSettings.Disabled &&
+                settings.GetSettings.Disabled &&
+                settings.PutSettings.Disabled &&
+                settings.DeleteSettings.Disabled)
                 throw new ArgumentException($"Invalid operation: {nameof(EntityConfigRecord)} named {ecr.Name} has all httpMethods deactivated");
         }
 
