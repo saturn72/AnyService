@@ -11,12 +11,14 @@ using Moq;
 using Microsoft.Data.Sqlite;
 using System.Data.Common;
 using AnyService.Mapping;
+using AutoMapper.Extensions.ExpressionMapping;
+using System.Linq.Expressions;
 
 namespace AnyService.EntityFramework.Tests
 {
     public class EfMappingRepositoryTests
     {
-        private const string MapperName = "ef-map-repo-tests";
+        private static EfMappingConfiguration config = new EfMappingConfiguration { MapperName = "ef-map-repo-tests" };
 
         #region nested classes
         public class TestNestedClass : IDomainEntity
@@ -75,24 +77,31 @@ namespace AnyService.EntityFramework.Tests
             var mf = new DefaultMapperFactory();
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(IMapperFactory))).Returns(mf);
+
             MappingExtensions.Configure(
-                MapperName,
+                config.MapperName,
                 cfg =>
                 {
-                    cfg.CreateMap<TestEntity, TestDbModel>();
-                    cfg.CreateMap<TestDbModel, TestEntity>();
+                    cfg.AddExpressionMapping();
+
+                    cfg.CreateMap<TestEntity, TestDbModel>()
+                    .ForMember(dest => dest.Id, mo => mo.MapFrom(src => int.Parse(src.Id)));
+                    cfg.CreateMap<Pagination<TestEntity>, Pagination<TestDbModel>>();
+                    cfg.CreateMap<TestDbModel, TestEntity>()
+                    .ForMember(dest => dest.Id, mo => mo.MapFrom(src => src.Id.ToString()));
+                    cfg.CreateMap<Pagination<TestDbModel>, Pagination<TestEntity>>();
                     cfg.CreateMap<BulkTestEntity, BulkTestDbModel>();
                     cfg.CreateMap<BulkTestDbModel, BulkTestEntity>();
                 });
 
-            MappingExtensions.Build(sp.Object, "default");
+            MappingExtensions.Build(sp.Object);
         }
         public EfMappingRepositoryTests()
         {
             _logger = new Mock<ILogger<EfMappingRepository<TestEntity, TestDbModel>>>();
             _dbContext = new TestDbContext(DbOptions);
 
-            _repository = new EfMappingRepository<TestEntity, TestDbModel>(MapperName, _dbContext, _logger.Object);
+            _repository = new EfMappingRepository<TestEntity, TestDbModel>(config, _dbContext, _logger.Object);
         }
 
         [Fact]
@@ -118,7 +127,7 @@ namespace AnyService.EntityFramework.Tests
             var ctx = new TestDbContext(options);
 
             var l = new Mock<ILogger<EfMappingRepository<BulkTestEntity, BulkTestDbModel>>>();
-            var r = new EfMappingRepository<BulkTestEntity, BulkTestDbModel>(MapperName, ctx, l.Object);
+            var r = new EfMappingRepository<BulkTestEntity, BulkTestDbModel>(config, ctx, l.Object);
             var total = 4;
             var entities = new List<BulkTestEntity>();
             for (int i = 0; i < total; i++)
@@ -138,7 +147,7 @@ namespace AnyService.EntityFramework.Tests
         [Fact]
         public async Task GetById_returns_Null_On_NotExists()
         {
-            var e = await _repository.GetById("not-exists");
+            var e = await _repository.GetById(int.MaxValue.ToString());
             e.ShouldBeNull();
         }
         [Fact]
@@ -150,7 +159,7 @@ namespace AnyService.EntityFramework.Tests
                 Value = "value-abcd"
             });
             await _dbContext.SaveChangesAsync();
-            var e = await _repository.GetById("abcd");
+            var e = await _repository.GetById("1");
             e.Value.ShouldBe("value-abcd");
         }
         [Theory]
@@ -179,8 +188,8 @@ namespace AnyService.EntityFramework.Tests
 
             await _dbContext.Set<TestDbModel>().AddRangeAsync(tc);
             await _dbContext.SaveChangesAsync();
-            Func<TestEntity, bool> q = x => x.Value == "a";
-            var p = new Pagination<TestEntity>(x => q(x))
+            Expression<Func<TestEntity, bool>> q = x => x.Value == "a";
+            var p = new Pagination<TestEntity>(q)
             {
                 OrderBy = "Id",
                 IncludeNested = true,
@@ -210,13 +219,12 @@ namespace AnyService.EntityFramework.Tests
 
             await _dbContext.Set<TestDbModel>().AddRangeAsync(tc);
             await _dbContext.SaveChangesAsync();
-            Func<TestEntity, bool> q = x => x.Id.HasValue();
 
-            var p = new Pagination<TestEntity>(x => q(x))
+            Expression<Func<TestEntity, bool>> q = x => x.Id != "0";
+            var p = new Pagination<TestEntity>(q)
             {
                 OrderBy = nameof(TestEntity.Value),
                 PageSize = 3,
-                SortOrder = PaginationSettings.Asc
             };
             var e = await _repository.GetAll(p);
             e.Count().ShouldBe(3);
@@ -241,9 +249,9 @@ namespace AnyService.EntityFramework.Tests
 
             await _dbContext.Set<TestDbModel>().AddRangeAsync(tc);
             await _dbContext.SaveChangesAsync();
-            Func<TestEntity, bool> q = x => x.Id.HasValue();
+            Expression<Func<TestEntity, bool>> q = x => x.Id.HasValue();
 
-            var p = new Pagination<TestEntity>(x => q(x))
+            var p = new Pagination<TestEntity>(q)
             {
                 OrderBy = nameof(TestEntity.Number),
                 PageSize = 3,
@@ -269,7 +277,6 @@ namespace AnyService.EntityFramework.Tests
             for (int i = 0; i < total; i++)
                 tc.Add(new TestDbModel
                 {
-                    Id = i,
                     Flag = (i % 100) == 0,
                     Value = a,
                 }); ;

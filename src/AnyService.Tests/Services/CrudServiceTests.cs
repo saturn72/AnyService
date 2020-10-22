@@ -13,6 +13,7 @@ using AnyService.Utilities;
 using AnyService.Services.Preparars;
 using AnyService.Services.Audit;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace AnyService.Tests.Services
 {
@@ -688,7 +689,8 @@ Times.Once);
             var v = new Mock<CrudValidatorBase<SoftDeleteEntity>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<SoftDeleteEntity>>(), It.IsAny<ServiceResponse<Pagination<SoftDeleteEntity>>>()))
                .ReturnsAsync(true);
-            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<SoftDeleteEntity>))).Returns(v.Object);
+            sp.Setup(s => s.GetService(typeof(CrudValidatorBase<SoftDeleteEntity>)))
+                .Returns(v.Object);
 
             var eb = new Mock<IEventBus>();
             sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
@@ -714,7 +716,7 @@ Times.Once);
             var p = new Pagination<SoftDeleteEntity>(sde => sde.Id.HasValue());
             var res = await cSrv.GetAll(p);
 
-            repo.Verify(r => r.GetAll(It.Is<Pagination<SoftDeleteEntity>>(p => data.Where(p.QueryFunc).Count() == data.Length)),
+            repo.Verify(r => r.GetAll(It.Is<Pagination<SoftDeleteEntity>>(p => data.Where(p.QueryFunc.Compile()).Count() == data.Length)),
                 Times.Once);
         }
 
@@ -734,7 +736,7 @@ Times.Once);
             var repo = new Mock<IRepository<SoftDeleteEntity>>();
             repo.Setup(r => r.GetAll(It.IsAny<Pagination<SoftDeleteEntity>>()))
                 .ReturnsAsync(data)
-                .Callback<Pagination<SoftDeleteEntity>>(p => func = p.QueryFunc);
+                .Callback<Pagination<SoftDeleteEntity>>(p => func = p.QueryFunc.Compile());
             sp.Setup(s => s.GetService(typeof(IRepository<SoftDeleteEntity>))).Returns(repo.Object);
 
             var v = new Mock<CrudValidatorBase<SoftDeleteEntity>>();

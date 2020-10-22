@@ -16,8 +16,7 @@ namespace AnyService.Services
         }
         public Pagination(Expression<Func<TDomainModel, bool>> queryFunc) : this()
         {
-            QueryFunc = queryFunc?.Compile();
-            QueryOrFilter = queryFunc.ToString();
+            QueryFunc = queryFunc;
         }
         /// <summary>
         /// Gets or sets the total number of entities 
@@ -58,7 +57,7 @@ namespace AnyService.Services
         /// gets or sets query func
         /// </summary>
         /// <value></value>
-        public Func<TDomainModel, bool> QueryFunc { get; set; }
+        public Expression<Func<TDomainModel, bool>> QueryFunc { get; set; }
         public bool IncludeNested { get; set; }
     }
 }

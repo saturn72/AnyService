@@ -17,7 +17,7 @@ namespace System
         }
         public static Func<TDestination, TResult> Convert<TSource, TDestination, TResult>(this Func<TSource, TResult> func) where TDestination : TSource
         {
-            return (TDestination x) => func((TDestination)x);
+            return (TDestination x) => func(x);
         }
         public static Expression<Func<TDestination, TResult>> Convert<TSource, TDestination, TResult>(this Expression<Func<TSource, TResult>> exp) where TDestination : TSource
         {

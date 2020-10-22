@@ -17,11 +17,11 @@ namespace AnyService.EntityFramework
         private readonly ILogger<EfMappingRepository<TDomainEntity, TDbModel>> _logger;
 
         public EfMappingRepository(
-            string mapperName,
+            EfMappingConfiguration config,
             DbContext dbContext,
             ILogger<EfMappingRepository<TDomainEntity, TDbModel>> logger)
         {
-            _mapperName = mapperName;
+            _mapperName = config.MapperName;
             _logger = logger;
             _bridge = new DatabaseBridge<TDbModel>(dbContext, logger);
 
@@ -53,15 +53,18 @@ namespace AnyService.EntityFramework
         }
         public async Task<IEnumerable<TDomainEntity>> GetAll(Pagination<TDomainEntity> paginate)
         {
-            _logger.LogInformation(EfRepositoryEventIds.Read, "Get all with pagination: " + paginate.QueryOrFilter ?? paginate.QueryFunc.ToString());
-            var p = paginate.Map<Pagination<TDbModel>>();
+            _logger.LogInformation(EfRepositoryEventIds.Read, "Get all with pagination: " + paginate?.QueryOrFilter ?? paginate?.QueryFunc.ToString());
+            var p = paginate.Map<Pagination<TDbModel>>(_mapperName);
             var res = await _bridge.GetAll(p);
-            return res.Map<IEnumerable<TDomainEntity>>();
+            paginate.Total = p.Total;
+            return res.Map<IEnumerable<TDomainEntity>>(_mapperName);
         }
         public virtual async Task<TDomainEntity> GetById(string id)
         {
             _logger.LogInformation(EfRepositoryEventIds.Read, $"{nameof(GetById)} with id = {id}");
             var entry = await _bridge.GetById(id);
+            if (entry == default) return default;
+
             var res = entry.Map<TDomainEntity>(_mapperName);
             _logger.LogDebug(EfRepositoryEventIds.Read, $"Db Record mapped to {typeof(TDomainEntity).Name} = {res.ToJsonString()}");
             return res;

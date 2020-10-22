@@ -69,7 +69,7 @@ namespace AnyService.Controllers
                     data = model
                 });
 
-            var entity = model.Map<TDomainObject>();
+            var entity = model.Map<TDomainObject>(_config.MapperName);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Call service with value: " + model);
             var res = await _crudService.Create(entity);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Post service response value: " + res);
@@ -195,7 +195,7 @@ namespace AnyService.Controllers
                     data = model
                 });
 
-            var entity = model.Map<TDomainObject>();
+            var entity = model.Map<TDomainObject>(_config.MapperName);
             _logger.LogDebug($"{_curTypeName}: Start update flow with id {id} and model {model}");
             var res = await _crudService.Update(id, entity);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Update service response value: " + res);

@@ -40,7 +40,7 @@ namespace AnyService
 
             UseLogRecordEndpoint = true;
             UseErrorEndpointForExceptionHandling = true;
-            DefaultMapperName = "default";
+            MapperName = "default";
         }
 
         public IEnumerable<EntityConfigRecord> EntityConfigRecords { get; set; }
@@ -80,6 +80,6 @@ namespace AnyService
         /// <summary>
         /// sets the default mapper name
         /// </summary>
-        public string DefaultMapperName { get; set; }
+        public string MapperName { get; set; }
     }
 }

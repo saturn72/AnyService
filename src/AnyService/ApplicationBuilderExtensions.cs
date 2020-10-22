@@ -58,7 +58,7 @@ namespace AnyService
             ServiceResponseWrapperExtensions.Init(serviceProvider);
             GenericControllerNameConvention.Init(serviceProvider);
             var config = serviceProvider.GetRequiredService<AnyServiceConfig>();
-            MappingExtensions.Build(serviceProvider, config.DefaultMapperName);
+            MappingExtensions.Build(serviceProvider, config.MapperName);
             serviceProvider.GetRequiredService<ICacheManager>();
         }
 

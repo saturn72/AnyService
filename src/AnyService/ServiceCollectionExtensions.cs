@@ -32,15 +32,20 @@ namespace Microsoft.Extensions.DependencyInjection
             };
             return AddAnyService(services, config);
         }
+        public static IServiceCollection AddAnyService(this IServiceCollection services, Func<AnyServiceConfig> config)
+        {
+            return AddAnyService(services, config());
+        }
         public static IServiceCollection AddAnyService(this IServiceCollection services, AnyServiceConfig config)
         {
             NormalizeConfiguration(config);
             RegisterDependencies(services, config);
-            AddDefaultMapping(config.DefaultMapperName);
-            AddEntityConfigRecordsMappings(config.DefaultMapperName, config.EntityConfigRecords);
+            AddDefaultMapping(config.MapperName);
+            AddEntityConfigRecordsMappings(config.MapperName, config.EntityConfigRecords);
 
             return services;
         }
+
         private static void AddDefaultMapping(string mapperName)
         {
             MappingExtensions.AddConfiguration(

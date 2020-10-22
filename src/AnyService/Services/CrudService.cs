@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using AnyService.Services.Audit;
 using AnyService.Services.Preparars;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace AnyService.Services
 {
@@ -18,7 +19,7 @@ namespace AnyService.Services
     {
         #region fields
         private static readonly object lockObj = new object();
-        private static readonly Func<TDomainEntity, bool> HideSoftDeletedFunc = x => !(x as ISoftDelete).Deleted;
+        private static readonly Expression<Func<TDomainEntity, bool>> HideSoftDeletedFunc = x => !(x as ISoftDelete).Deleted;
 
         protected readonly AnyServiceConfig Config;
         protected readonly IRepository<TDomainEntity> Repository;
@@ -223,8 +224,11 @@ namespace AnyService.Services
 
             if (p.QueryFunc == null) return null;
             if (!EntityMetadata.ShowSoftDeleted && EntityMetadata.IsSoftDeleted)
-                p.QueryFunc = p.QueryFunc.AndAlso(HideSoftDeletedFunc);
-
+            {
+                var body = Expression.AndAlso(p.QueryFunc.Body, HideSoftDeletedFunc.Body);
+                var func = Expression.Lambda<Func<TDomainEntity, bool>>(body, p.QueryFunc.Parameters[0]);
+                p.QueryFunc = func;
+            }
             var paginationSettings = WorkContext.CurrentEntityConfigRecord.PaginationSettings;
             p.OrderBy ??= paginationSettings.DefaultOrderBy;
             p.Offset = p.Offset != 0 ? p.Offset : paginationSettings.DefaultOffset;

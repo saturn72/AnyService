@@ -28,7 +28,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                     .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.Id.ToString()));
             });
 
-            MappingExtensions.Build(sp.Object, "default");
+            MappingExtensions.Build(sp.Object);
         }
     }
 }
