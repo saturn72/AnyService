@@ -12,7 +12,7 @@ namespace AnyService.Tests.Services
 {
     public class DefaultFilterFactoryTests
     {
-        public class MyClass : IDomainEntity, ISoftDelete, IPublishable
+        public class MyClass : IEntity, ISoftDelete, IPublishable
         {
             public string Id { get; set; }
             public bool Public { get; set; }

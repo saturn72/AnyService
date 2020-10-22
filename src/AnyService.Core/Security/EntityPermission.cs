@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace AnyService.Security
 {
-    public class EntityPermission : IDomainEntity
+    public class EntityPermission : IEntity
     {
         public string Id { get; set; }
         public bool Excluded { get; set; }

@@ -13,7 +13,7 @@ namespace AnyService.Tests.Middlewares
 {
     public class WorkContextMiddlewareTests
     {
-        public class MyClass : IDomainEntity
+        public class MyClass : IEntity
         {
             public string Id { get; set; }
         }

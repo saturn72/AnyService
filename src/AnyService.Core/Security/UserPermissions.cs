@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace AnyService.Security
 {
-    public class UserPermissions : IDomainEntity
+    public class UserPermissions : IEntity
     {
         private IEnumerable<EntityPermission> _entityPermissions;
 

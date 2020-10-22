@@ -15,18 +15,18 @@ using AnyService.Services.Internals;
 
 namespace AnyService.Services
 {
-    public class CrudService<TDomainEntity> : ICrudService<TDomainEntity> where TDomainEntity : IDomainEntity
+    public class CrudService<TEntity> : ICrudService<TEntity> where TEntity : IEntity
     {
         #region fields
         protected readonly IServiceProvider ServiceProvider;
         protected readonly AnyServiceConfig Config;
-        protected readonly IRepository<TDomainEntity> Repository;
+        protected readonly IRepository<TEntity> Repository;
         protected readonly IRepository<EntityMapping> MapRepository;
-        protected readonly CrudValidatorBase<TDomainEntity> Validator;
-        protected readonly IModelPreparar<TDomainEntity> ModelPreparar;
+        protected readonly CrudValidatorBase<TEntity> Validator;
+        protected readonly IModelPreparar<TEntity> ModelPreparar;
         protected readonly WorkContext WorkContext;
         protected readonly IEventBus EventBus;
-        protected readonly ILogger<CrudService<TDomainEntity>> Logger;
+        protected readonly ILogger<CrudService<TEntity>> Logger;
         protected readonly IIdGenerator IdGenerator;
         protected readonly IFilterFactory FilterFactory;
         protected readonly IPermissionManager PermissionManager;
@@ -39,17 +39,17 @@ namespace AnyService.Services
         #region ctor
         public CrudService(
             IServiceProvider serviceProvider,
-            ILogger<CrudService<TDomainEntity>> logger)
+            ILogger<CrudService<TEntity>> logger)
         {
             Logger = logger;
             ServiceProvider = serviceProvider;
             Config = serviceProvider.GetService<AnyServiceConfig>();
-            Repository = serviceProvider.GetService<IRepository<TDomainEntity>>();
+            Repository = serviceProvider.GetService<IRepository<TEntity>>();
             MapRepository = serviceProvider.GetService<IRepository<EntityMapping>>();
 
-            Validator = serviceProvider.GetService<CrudValidatorBase<TDomainEntity>>();
+            Validator = serviceProvider.GetService<CrudValidatorBase<TEntity>>();
             WorkContext = serviceProvider.GetService<WorkContext>();
-            ModelPreparar = serviceProvider.GetService<IModelPreparar<TDomainEntity>>();
+            ModelPreparar = serviceProvider.GetService<IModelPreparar<TEntity>>();
             EventBus = serviceProvider.GetService<IEventBus>();
             FileStorageManager = serviceProvider.GetService<IFileStoreManager>();
             IdGenerator = serviceProvider.GetService<IIdGenerator>();
@@ -74,11 +74,11 @@ namespace AnyService.Services
 
         #endregion
 
-        public virtual async Task<ServiceResponse<TDomainEntity>> Create(TDomainEntity entity)
+        public virtual async Task<ServiceResponse<TEntity>> Create(TEntity entity)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start create flow for entity: {entity}");
 
-            var serviceResponse = new ServiceResponse<TDomainEntity>();
+            var serviceResponse = new ServiceResponse<TEntity>();
             if (!await Validator.ValidateForCreate(entity, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
 
@@ -124,11 +124,11 @@ namespace AnyService.Services
         //    serviceResponse.Data = new { entity = serviceResponse.Data, filesUploadStatus = uploadResponses };
         //}
         #region GetById
-        public virtual async Task<ServiceResponse<TDomainEntity>> GetById(string id)
+        public virtual async Task<ServiceResponse<TEntity>> GetById(string id)
         {
             Logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"Start get by id with {nameof(id)} = {id}");
 
-            var serviceResponse = new ServiceResponse<TDomainEntity>();
+            var serviceResponse = new ServiceResponse<TEntity>();
             if (!await Validator.ValidateForGet(id, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
 
@@ -162,10 +162,10 @@ namespace AnyService.Services
         }
         #endregion
         #region GetAll
-        public virtual async Task<ServiceResponse<Pagination<TDomainEntity>>> GetAll(Pagination<TDomainEntity> pagination)
+        public virtual async Task<ServiceResponse<Pagination<TEntity>>> GetAll(Pagination<TEntity> pagination)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start get all flow");
-            var serviceResponse = new ServiceResponse<Pagination<TDomainEntity>> { Payload = pagination };
+            var serviceResponse = new ServiceResponse<Pagination<TEntity>> { Payload = pagination };
 
             if (!await Validator.ValidateForGet(pagination, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Request did not pass validation");
@@ -174,7 +174,7 @@ namespace AnyService.Services
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Missing query data");
 
             Logger.LogDebug(LoggingEvents.Repository, "Get all from repository using paginate = " + pagination);
-            var wrapper = new ServiceResponseWrapper(new ServiceResponse<IEnumerable<TDomainEntity>>());
+            var wrapper = new ServiceResponseWrapper(new ServiceResponse<IEnumerable<TEntity>>());
             var data = await Repository.Query(r => r.GetAll(pagination), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
 
@@ -187,7 +187,7 @@ namespace AnyService.Services
                 return serviceResponse;
             }
 
-            pagination.Data = data ?? new TDomainEntity[] { };
+            pagination.Data = data ?? new TEntity[] { };
             if (serviceResponse.Result == ServiceResult.NotSet)
             {
                 serviceResponse.Payload = pagination;
@@ -201,15 +201,15 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
         }
-        private async Task<Pagination<TDomainEntity>> NormalizePagination(Pagination<TDomainEntity> pagination)
+        private async Task<Pagination<TEntity>> NormalizePagination(Pagination<TEntity> pagination)
         {
-            var p = pagination ??= new Pagination<TDomainEntity>();
+            var p = pagination ??= new Pagination<TEntity>();
 
             if (!p.QueryOrFilter.HasValue() && p.QueryFunc == null)
                 p.QueryFunc = x => x.Id.HasValue();
 
             var filter = p.QueryOrFilter.HasValue() ?
-                await FilterFactory.GetFilter<TDomainEntity>(p.QueryOrFilter) : null;
+                await FilterFactory.GetFilter<TEntity>(p.QueryOrFilter) : null;
 
             if (filter != null)
             {
@@ -222,14 +222,14 @@ namespace AnyService.Services
             {
                 if (p.QueryFunc == null) //build only if func not exists
                 {
-                    var right = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainEntity>(p.QueryOrFilter)?.Compile();
+                    var right = ExpressionTreeBuilder.BuildBinaryTreeExpression<TEntity>(p.QueryOrFilter)?.Compile();
                     if (right == null) return null;
 
                     var ecr = WorkContext.CurrentEntityConfigRecord;
                     if (Config.ManageEntityPermissions)
                     {
                         var permittedIds = await PermissionManager.GetPermittedIds(WorkContext.CurrentUserId, ecr.EntityKey, ecr.PermissionRecord.ReadKey);
-                        Func<TDomainEntity, bool> left = a => permittedIds.Contains(a.Id);
+                        Func<TEntity, bool> left = a => permittedIds.Contains(a.Id);
                         p.QueryFunc = x => left(x) && right(x);
                     }
                     else
@@ -254,13 +254,13 @@ namespace AnyService.Services
         }
         #endregion
         #region Get Aggregated
-        public async Task<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>> GetAggregated(
+        public async Task<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IEntity>>>> GetAggregated(
             string parentId,
             IEnumerable<string> childEntityNames
             )
         {
             Logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"Start get aggregated with parameters: {nameof(parentId)} = {parentId}, {nameof(childEntityNames)} = {childEntityNames.ToJsonString()}");
-            var serviceResponse = new ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>();
+            var serviceResponse = new ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IEntity>>>();
             if (
                 !parentId.HasValue() ||
                 childEntityNames.IsNullOrEmpty() ||
@@ -272,7 +272,7 @@ namespace AnyService.Services
                 return serviceResponse;
             }
 
-            var res = new Dictionary<string, IEnumerable<IDomainEntity>>();
+            var res = new Dictionary<string, IEnumerable<IEntity>>();
 
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(parentId)} = {parentId}, {nameof(childEntityNames)} = {childEntityNames.ToJsonString()}");
             var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, childEntityNames);
@@ -287,12 +287,12 @@ namespace AnyService.Services
                 dynamic r = ServiceProvider.GetGenericService(typeof(IRepository<>), ecr.Type);
                 if (r == null)
                 {
-                    Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Generic type {nameof(IRepository<object>)} for EntityConfigRecord {nameof(ecr.Name)} not defined");
+                    Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Generic type {nameof(IRepository<TEntity>)} for EntityConfigRecord {nameof(ecr.Name)} not defined");
                     serviceResponse.Result = ServiceResult.Error;
                     return serviceResponse;
                 }
                 var curChildIds = gm.Select(s => s.ChildId);
-                var curCol = (await r.Collection) as IQueryable<IDomainEntity>;
+                var curCol = (await r.Collection) as IQueryable<IEntity>;
                 var aggregated = curCol.Where(c => curChildIds.Contains(c.Id));
                 Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Add to returned collection: {nameof(gm.Key)} = {gm.Key}, Value = {aggregated.ToJsonString()}");
                 res[gm.Key] = aggregated.ToArray();
@@ -315,7 +315,7 @@ namespace AnyService.Services
             }
         }
         public async Task<ServiceResponse<Pagination<TChild>>> GetAggregatedPage<TChild>(string parentId, Pagination<TChild> pagination, string childEntityName = null)
-            where TChild : IDomainEntity
+            where TChild : IEntity
         {
             Logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"Start {nameof(GetAggregatedPage)} with parameters: {nameof(parentId)} = {parentId}, {nameof(pagination)} = {pagination.ToJsonString()}, {nameof(childEntityName)} = {childEntityName}");
 
@@ -348,7 +348,7 @@ namespace AnyService.Services
             dynamic r = ServiceProvider.GetGenericService(typeof(IRepository<>), ecr.Type);
             if (r == null)
             {
-                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Generic type {nameof(IRepository<object>)} for EntityConfigRecord {nameof(ecr.Name)} not defined");
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Generic type {nameof(IRepository<TEntity>)} for EntityConfigRecord {nameof(ecr.Name)} not defined");
                 serviceResponse.Result = ServiceResult.Error;
                 return serviceResponse;
             }
@@ -405,11 +405,11 @@ namespace AnyService.Services
             dynamic r = ServiceProvider.GetGenericService(typeof(IRepository<>), ecr.Type);
             if (r == null)
             {
-                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Generic type {nameof(IRepository<object>)} for EntityConfigRecord {nameof(ecr.Name)} not defined");
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Generic type {nameof(IRepository<TEntity>)} for EntityConfigRecord {nameof(ecr.Name)} not defined");
                 serviceResponse.Result = ServiceResult.Error;
                 return serviceResponse;
             }
-            var curCol = (await r.Collection) as IQueryable<IDomainEntity>;
+            var curCol = (await r.Collection) as IQueryable<IEntity>;
             var entries = curCol.Where(c => request.ChildIdsToAdd.Contains(c.Id));
             if (entries.Count() != request.ChildIdsToAdd.Count())
             {
@@ -429,7 +429,7 @@ namespace AnyService.Services
             if (!toDelete.IsNullOrEmpty())
             {
                 var idsToDelete = toDelete.Select(s => s.Id).ToArray();
-                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<string>.BulkDelete)} entity mapping with Ids: {idsToDelete}");
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<TEntity>.BulkDelete)} entity mapping with Ids: {idsToDelete}");
                 await MapRepository.BulkDelete(toDelete);
                 Publish(EventKeys.Delete, toDelete);
             }
@@ -444,9 +444,9 @@ namespace AnyService.Services
 
             if (!toAdd.IsNullOrEmpty())
             {
-                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<string>.BulkInsert)} insert entity mapping: {toAdd.ToJsonString()}");
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<TEntity>.BulkInsert)} insert entity mapping: {toAdd.ToJsonString()}");
                 await MapRepository.BulkInsert(toAdd, true);
-                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<string>.BulkInsert)} response with collection: {toAdd.ToJsonString()}");
+                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(IRepository<TEntity>.BulkInsert)} response with collection: {toAdd.ToJsonString()}");
                 Publish(EventKeys.Create, toAdd);
             }
             serviceResponse.Result = ServiceResult.Ok;
@@ -459,11 +459,11 @@ namespace AnyService.Services
         }
         #endregion
         #region Update
-        public virtual async Task<ServiceResponse<TDomainEntity>> Update(string id, TDomainEntity entity)
+        public virtual async Task<ServiceResponse<TEntity>> Update(string id, TEntity entity)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start update flow for id: {id}, entity: {entity}");
             entity.Id = id;
-            var serviceResponse = new ServiceResponse<TDomainEntity>();
+            var serviceResponse = new ServiceResponse<TEntity>();
 
             if (!await Validator.ValidateForUpdate(entity, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
@@ -508,10 +508,10 @@ namespace AnyService.Services
         }
         #endregion
         #region Delete
-        public virtual async Task<ServiceResponse<TDomainEntity>> Delete(string id)
+        public virtual async Task<ServiceResponse<TEntity>> Delete(string id)
         {
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start delete flow for id: {id}");
-            var serviceResponse = new ServiceResponse<TDomainEntity>();
+            var serviceResponse = new ServiceResponse<TEntity>();
 
             if (!await Validator.ValidateForDelete(id, serviceResponse))
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.Validation, "Entity did not pass validation");
@@ -532,7 +532,7 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Prepare for deletion");
             await ModelPreparar.PrepareForDelete(dbEntry);
 
-            TDomainEntity deletedModel;
+            TEntity deletedModel;
             if (EntityMetadata.IsSoftDeleted)
             {
                 (dbEntry as ISoftDelete).Deleted = true;

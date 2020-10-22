@@ -241,7 +241,7 @@ namespace AnyService.Tests.Middlewares
         }
 
         #endregion
-        public class TestModel : IDomainEntity
+        public class TestModel : IEntity
         {
             public string Id { get; set; }
             public int Value { get; set; }

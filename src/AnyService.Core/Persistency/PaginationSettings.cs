@@ -7,7 +7,7 @@ namespace AnyService.Services
     {
         public PaginationSettings()
         {
-            DefaultOrderBy = nameof(IDomainEntity.Id);
+            DefaultOrderBy = nameof(IEntity.Id);
         }
         private string _sortOrder;
         private string _orderBy;

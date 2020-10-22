@@ -10,12 +10,12 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
     {
         public string Id { get; set; }
     }
-    public class Product : IDomainEntity
+    public class Product : IEntity
     {
         public string Id { get; set; }
         public string Name { get; set; }
     }
-    public class Category : IDomainEntity
+    public class Category : IEntity
     {
         public string Id { get; set; }
         public string Name { get; set; }

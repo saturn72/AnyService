@@ -20,33 +20,33 @@ namespace AnyService.Services
             _workContext = workContext;
             _permissionManager = permissionManager;
         }
-        public virtual Task<Func<object, Func<TDomainModel, bool>>> GetFilter<TDomainModel>(string filterKey) where TDomainModel : IDomainEntity
+        public virtual Task<Func<object, Func<TEntity, bool>>> GetFilter<TEntity>(string filterKey) where TEntity : IEntity
         {
             return filterKey switch
             {
-                "__canRead" => CanRead<TDomainModel>(),
-                "__canUpdate" => CanUpdate<TDomainModel>(),
-                "__canDelete" => CanDelete<TDomainModel>(),
-                "__public" => IsPublic<TDomainModel>(),
-                _ => Task.FromResult(null as Func<object, Func<TDomainModel, bool>>),
+                "__canRead" => CanRead<TEntity>(),
+                "__canUpdate" => CanUpdate<TEntity>(),
+                "__canDelete" => CanDelete<TEntity>(),
+                "__public" => IsPublic<TEntity>(),
+                _ => Task.FromResult(null as Func<object, Func<TEntity, bool>>),
             };
         }
-        protected virtual Task<Func<object, Func<TDomainModel, bool>>> IsPublic<TDomainModel>()
+        protected virtual Task<Func<object, Func<TEntity, bool>>> IsPublic<TEntity>()
         {
             var isSoftDelete = IsOfType<ISoftDelete>();
             var isPublishable = IsOfType<IPublishable>();
-            Func<object, Func<TDomainModel, bool>> p = payload =>
+            Func<object, Func<TEntity, bool>> p = payload =>
             {
                 if (isPublishable && isSoftDelete)
                     return x => (x as IPublishable).Public && !(x as ISoftDelete).Deleted;
                 return isPublishable ?
-                    new Func<TDomainModel, bool>(x => (x as IPublishable).Public) :
+                    new Func<TEntity, bool>(x => (x as IPublishable).Public) :
                     null;
             };
 
             return Task.FromResult(p);
         }
-        protected virtual async Task<Func<object, Func<TDomainModel, bool>>> CanRead<TDomainModel>() where TDomainModel : IDomainEntity
+        protected virtual async Task<Func<object, Func<TEntity, bool>>> CanRead<TEntity>() where TEntity : IEntity
         {
             var ecr = _workContext.CurrentEntityConfigRecord;
             var permittedIds = await _permissionManager.GetPermittedIds(
@@ -55,7 +55,7 @@ namespace AnyService.Services
                 ecr.PermissionRecord.ReadKey);
             return payload => a => permittedIds.Any(x => x == a.Id);
         }
-        protected virtual async Task<Func<object, Func<TDomainModel, bool>>> CanUpdate<TDomainModel>() where TDomainModel : IDomainEntity
+        protected virtual async Task<Func<object, Func<TEntity, bool>>> CanUpdate<TEntity>() where TEntity : IEntity
         {
             var ecr = _workContext.CurrentEntityConfigRecord;
             var permittedIds = await _permissionManager.GetPermittedIds(
@@ -64,7 +64,7 @@ namespace AnyService.Services
                 ecr.PermissionRecord.UpdateKey);
             return payload => a => permittedIds.Any(x => x == a.Id);
         }
-        protected virtual async Task<Func<object, Func<TDomainModel, bool>>> CanDelete<TDomainModel>() where TDomainModel : IDomainEntity
+        protected virtual async Task<Func<object, Func<TEntity, bool>>> CanDelete<TEntity>() where TEntity : IEntity
         {
             var ecr = _workContext.CurrentEntityConfigRecord;
             var permittedIds = await _permissionManager.GetPermittedIds(

@@ -8,7 +8,7 @@ namespace AnyService.Services
     public static class RepositoryExtensions
     {
         public static async Task<IQueryable<TDomainEntity>> GetBy<TDomainEntity>(this IRepository<TDomainEntity> repo, Expression<Func<TDomainEntity, bool>> predicate)
-           where TDomainEntity : IDomainEntity
+           where TDomainEntity : IEntity
         {
             var col = await repo.Collection;
             return col.Where(predicate);

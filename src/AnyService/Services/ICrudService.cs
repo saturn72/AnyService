@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace AnyService.Services
 {
-    public interface ICrudService<TDomainEntity> where TDomainEntity : IDomainEntity
+    public interface ICrudService<TDomainEntity> where TDomainEntity : IEntity
     {
         Task<ServiceResponse<TDomainEntity>> Create(TDomainEntity entity);
         Task<ServiceResponse<TDomainEntity>> GetById(string id);
@@ -16,7 +16,7 @@ namespace AnyService.Services
         /// <param name="parentId">parent id</param>
         /// <param name="childEntityNames">Unique entity name</param>
         /// <returns></returns>
-        Task<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>> GetAggregated(
+        Task<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IEntity>>>> GetAggregated(
             string parentId,
             IEnumerable<string> childEntityNames);
         /// <summary>
@@ -31,7 +31,7 @@ namespace AnyService.Services
             string parentId,
             Pagination<TChild> pagination,
             string childEntityName = null)
-            where TChild : IDomainEntity;
+            where TChild : IEntity;
         /// <summary>
         /// Update child-parent mapping
         /// </summary>

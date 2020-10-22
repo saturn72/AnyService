@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AnyService.LiteDb.SampleApp
 {
-    public class Stock : IDomainObject
+    public class Stock : IEntity
     {
         public string Id { get; set; }
         public string Value { get; set; }

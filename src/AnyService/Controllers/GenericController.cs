@@ -20,7 +20,7 @@ namespace AnyService.Controllers
     [GenericControllerModelConvention]
     public class GenericController<TModel, TDomainEntity> : ControllerBase
         where TModel : class
-        where TDomainEntity : IDomainEntity
+        where TDomainEntity : IEntity
     {
         #region fields
 

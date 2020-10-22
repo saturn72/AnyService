@@ -10,7 +10,7 @@ using System.Collections.Generic;
 
 namespace AnyService.Tests.Services.Security
 {
-    public class TestClass : IDomainEntity
+    public class TestClass : IEntity
     {
         public string Id { get; set; }
         public int Value { get; set; }
@@ -176,7 +176,7 @@ namespace AnyService.Tests.Services.Security
 
         #region EntityDeletedHandler
         [Fact]
-        public void EntityDeletedHandler_NotDomainModel()
+        public void EntityDeletedHandler_NoTEntity()
         {
             var ed = new DomainEventData
             {

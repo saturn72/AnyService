@@ -2,9 +2,9 @@
 
 namespace AnyService.Models
 {
-    public interface IParentApiModel<TDomainModel> where TDomainModel : IDomainEntity
+    public interface IParentApiModel<TEntity> where TEntity : IEntity
     {
         public string ChildEntityKey { get; }
-        public IEnumerable<TDomainModel> Childs { get; set; }
+        public IEnumerable<TEntity> Childs { get; set; }
     }
 }

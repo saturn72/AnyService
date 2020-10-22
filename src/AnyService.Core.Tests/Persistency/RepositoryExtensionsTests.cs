@@ -9,7 +9,7 @@ namespace AnyService.Core.Tests.Persistency
 {
     public class RepositoryExtensionsTests
     {
-        public class MyClass : IDomainEntity
+        public class MyClass : IEntity
         {
             public string Id { get; set; }
         }

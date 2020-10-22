@@ -12,12 +12,12 @@ namespace AnyService.Tests.Services.Preparar
         [Fact]
         public void AllReturns_TaskComple()
         {
-            var t1 = new Mock<IDomainEntity>();
-            var t2 = new Mock<IDomainEntity>();
+            var t1 = new Mock<IEntity>();
+            var t2 = new Mock<IEntity>();
 
-            var l = new Mock<ILogger<DummyModelPreparar<IDomainEntity>>>();
+            var l = new Mock<ILogger<DummyModelPreparar<IEntity>>>();
 
-            var dmp = new DummyModelPreparar<IDomainEntity>(l.Object);
+            var dmp = new DummyModelPreparar<IEntity>(l.Object);
 
             var res = dmp.PrepareForCreate(t1.Object);
             Verify(t1, res);
@@ -29,14 +29,14 @@ namespace AnyService.Tests.Services.Preparar
             Verify(t1, res);
         }
 
-        private void Verify(Mock<IDomainEntity> d, Task t)
+        private void Verify(Mock<IEntity> d, Task t)
         {
             t.ShouldBe(Task.CompletedTask);
             d.VerifySet(s =>s.Id = It.IsAny<string>(), Times.Never());
             d.Reset();
         }
 
-        public class TestClass : IDomainEntity
+        public class TestClass : IEntity
         {
             public string Id { get; set; }
             public string Value { get; set; }

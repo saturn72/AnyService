@@ -8,7 +8,7 @@ namespace AnyService.Tests
 {
     public class ServiceCollectionExtensionsTests
     {
-        public class MyClass : IDomainEntity
+        public class MyClass : IEntity
         {
             public string Id { get; set; }
             public string Name { get; set; }

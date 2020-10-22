@@ -21,32 +21,32 @@ namespace AnyService.Tests.Services
         public string Value { get; set; }
         public IEnumerable<FileModel> Files { get; set; }
     }
-    public class AuditableTestEntity : IDomainEntity, IFullAudit, ISoftDelete
+    public class AuditableTestEntity : IEntity, IFullAudit, ISoftDelete
     {
         public string Id { get; set; }
         public bool Deleted { get; set; }
     }
-    public class TestModel : IDomainEntity
+    public class TestModel : IEntity
     {
         public string Id { get; set; }
         public string Value { get; set; }
     }
-    public class SoftDeleteEntity : IDomainEntity, ISoftDelete
+    public class SoftDeleteEntity : IEntity, ISoftDelete
     {
         public string Id { get; set; }
         public bool Deleted { get; set; }
     }
-    public class OptionEntity : IDomainEntity
+    public class OptionEntity : IEntity
     {
         public string Id { get; set; }
         public string Name { get; set; }
     }
-    public class AggregatedChild : IDomainEntity
+    public class AggregatedChild : IEntity
     {
         public string Id { get; set; }
         public string Name { get; set; }
     }
-    public class AggregateRootEntity : IDomainEntity
+    public class AggregateRootEntity : IEntity
     {
         public string Id { get; set; }
         public OptionEntity Options { get; set; }
@@ -892,7 +892,7 @@ namespace AnyService.Tests.Services
 
             var cSrv = new CrudService<AuditableTestEntity>(sp.Object, logger.Object);
             var res = await cSrv.GetAggregated(parentId, aggToFetch);
-            var r = res.ShouldBeOfType<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>>();
+            var r = res.ShouldBeOfType<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IEntity>>>>();
             r.Result.ShouldBe(ServiceResult.BadOrMissingData);
             r.Payload.ShouldBeNull();
         }
@@ -930,7 +930,7 @@ namespace AnyService.Tests.Services
 
             var cSrv = new CrudService<AggregateRootEntity>(sp.Object, logger.Object);
             var res = await cSrv.GetAggregated("pId", aggToFetch);
-            var r = res.ShouldBeOfType<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>>();
+            var r = res.ShouldBeOfType<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IEntity>>>>();
             r.Result.ShouldBe(ServiceResult.BadOrMissingData);
             r.Payload.ShouldBeNull();
         }
@@ -1189,7 +1189,7 @@ namespace AnyService.Tests.Services
 
             var cSrv = new CrudService<AggregateRootEntity>(sp.Object, logger.Object);
             var res = await cSrv.GetAggregated(aggregateRootId, aggToFetch);
-            var r = res.ShouldBeOfType<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IDomainEntity>>>>();
+            var r = res.ShouldBeOfType<ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IEntity>>>>();
             r.Result.ShouldBe(ServiceResult.Ok);
             r.Payload.Count().ShouldBe(2);
 
