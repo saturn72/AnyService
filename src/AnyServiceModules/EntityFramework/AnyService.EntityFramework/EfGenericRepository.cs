@@ -1,4 +1,4 @@
-using AnyService.Services;
+﻿using AnyService.Services;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
@@ -12,14 +12,15 @@ using EFCore.BulkExtensions;
 
 namespace AnyService.EntityFramework
 {
-    public class EfRepository<TDomainModel> : IRepository<TDomainModel>
-        where TDomainModel : class, IEntity
+    public class EfGenericRepository<TDbModel, TId> : IGenericRepository<TDbModel, TId>
+    where TDbModel : class, IDbModel<TId>
+
     {
         #region fields
         private static readonly ConcurrentDictionary<Type, IEnumerable<PropertyInfo>> TypeProperties = new ConcurrentDictionary<Type, IEnumerable<PropertyInfo>>();
         private readonly DbContext _dbContext;
-        private readonly ILogger<EfRepository<TDomainModel>> _logger;
-        private readonly IQueryable<TDomainModel> _collection;
+        private readonly ILogger<EfGenericRepository<TDbModel, TId>> _logger;
+        private readonly IQueryable<TDbModel> _collection;
 
         private static readonly BulkConfig InsertBulkConfig = new BulkConfig
         {
@@ -28,16 +29,16 @@ namespace AnyService.EntityFramework
         };
         #endregion
         #region ctor
-        public EfRepository(DbContext dbContext, ILogger<EfRepository<TDomainModel>> logger)
+        public EfGenericRepository(DbContext dbContext, ILogger<EfGenericRepository<TDbModel, TId>> logger)
         {
             _dbContext = dbContext;
             _logger = logger;
-            _collection = _dbContext.Set<TDomainModel>().AsNoTracking();
+            _collection = _dbContext.Set<TDbModel>().AsNoTracking();
         }
         #endregion
 
-        public Task<IQueryable<TDomainModel>> Collection => Task.FromResult(_collection);
-        public virtual async Task<IEnumerable<TDomainModel>> GetAll(Pagination<TDomainModel> pagination)
+        public Task<IQueryable<TDbModel>> Collection => Task.FromResult(_collection);
+        public virtual async Task<IEnumerable<TDbModel>> GetAll(Pagination<TDbModel> pagination)
         {
             if (pagination == null || pagination.QueryFunc == null)
                 throw new ArgumentNullException(nameof(pagination));
@@ -46,14 +47,10 @@ namespace AnyService.EntityFramework
             _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll set total to: " + pagination.Total);
 
             var q = pagination.IncludeNested ? IncludeNavigations(_collection) : _collection;
-<<<<<<< HEAD
-            q = q.OrderBy(pagination.OrderBy ?? nameof(IEntity.Id), pagination.SortOrder == PaginationSettings.Desc)
-=======
 
             var isDesc = pagination.SortOrder == PaginationSettings.Desc;
             var orderByPropertyName = GetOrderByProperty(pagination.OrderBy);
             q = q.OrderBy(orderByPropertyName, isDesc)
->>>>>>> f643b9b245d460baf490c4ca1ba813d7fd34fe8a
                 .Where(pagination.QueryFunc).AsQueryable();
 
             q = pagination.Offset == 0 ?
@@ -71,10 +68,10 @@ namespace AnyService.EntityFramework
         private static string GetOrderByProperty(string paginationOrderBy)
         {
             return paginationOrderBy != null && GetTypePropertyInfos().Any(x => x.Name == paginationOrderBy) ?
-                paginationOrderBy : nameof(IDomainModelBase.Id);
+                paginationOrderBy : nameof(IEntity.Id);
         }
 
-        public virtual async Task<TDomainModel> GetById(string id)
+        public virtual async Task<TDbModel> GetById(TId id)
         {
             _logger.LogDebug(EfRepositoryEventIds.Read, $"{nameof(GetById)} with id = {id}");
             var entity = await GetEntityById_Internal(id);
@@ -84,21 +81,21 @@ namespace AnyService.EntityFramework
             _logger.LogDebug(EfRepositoryEventIds.Read, $"{nameof(GetById)} result = {entity.ToJsonString()}");
             return entity;
         }
-        public virtual async Task<TDomainModel> Insert(TDomainModel entity)
+        public virtual async Task<TDbModel> Insert(TDbModel entity)
         {
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(Insert)} with entity = {entity.ToJsonString()}");
-            await _dbContext.Set<TDomainModel>().AddAsync(entity);
+            await _dbContext.Set<TDbModel>().AddAsync(entity);
             await _dbContext.SaveChangesAsync();
             await DetachEntities(new[] { entity });
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(Insert)} result = {entity.ToJsonString()}");
             return entity;
         }
-        public virtual async Task<IEnumerable<TDomainModel>> BulkInsert(IEnumerable<TDomainModel> entities, bool trackIds = false)
+        public virtual async Task<IEnumerable<TDbModel>> BulkInsert(IEnumerable<TDbModel> entities, bool trackIds = false)
         {
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} with entity = {entities.ToJsonString()}");
             if (trackIds)
             {
-                await _dbContext.Set<TDomainModel>().AddRangeAsync(entities.ToArray());
+                await _dbContext.Set<TDbModel>().AddRangeAsync(entities.ToArray());
                 _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
                 await _dbContext.SaveChangesAsync();
                 _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Bulk operation ended");
@@ -113,7 +110,7 @@ namespace AnyService.EntityFramework
             return entities;
         }
 
-        public virtual async Task<TDomainModel> Update(TDomainModel entity)
+        public virtual async Task<TDbModel> Update(TDbModel entity)
         {
             _logger.LogDebug(EfRepositoryEventIds.Update, $"{nameof(Update)} with entity = {entity.ToJsonString()}");
             var dbEntity = await GetEntityById_Internal(entity.Id);
@@ -132,7 +129,7 @@ namespace AnyService.EntityFramework
             _logger.LogDebug(EfRepositoryEventIds.Update, $"{nameof(Update)} result = {entity.ToJsonString()}");
             return dbEntity;
         }
-        public virtual async Task<TDomainModel> Delete(TDomainModel entity)
+        public virtual async Task<TDbModel> Delete(TDbModel entity)
         {
             _logger.LogDebug(EfRepositoryEventIds.Delete, $"{nameof(Delete)} with entity = {entity.ToJsonString()}");
             var dbEntity = await GetEntityById_Internal(entity.Id);
@@ -144,12 +141,12 @@ namespace AnyService.EntityFramework
             _logger.LogDebug(EfRepositoryEventIds.Delete, $"{nameof(Delete)} result = {entity.ToJsonString()}");
             return entity;
         }
-        private async Task<TDomainModel> GetEntityById_Internal(string id)
+        private async Task<TDbModel> GetEntityById_Internal(TId id)
         {
             var query = _collection.Where(x => x.Id.Equals(id));
             return await IncludeNavigations(query).FirstOrDefaultAsync();
         }
-        private Task DetachEntities(IEnumerable<TDomainModel> entities)
+        private Task DetachEntities(IEnumerable<TDbModel> entities)
         {
             return Task.Run(() =>
             {
@@ -163,13 +160,13 @@ namespace AnyService.EntityFramework
         }
         private static readonly ConcurrentDictionary<Type, IEnumerable<string>> NavigationPropertyNames
             = new ConcurrentDictionary<Type, IEnumerable<string>>();
-        private IQueryable<TDomainModel> IncludeNavigations(IEnumerable<TDomainModel> source)
+        private IQueryable<TDbModel> IncludeNavigations(IEnumerable<TDbModel> source)
         {
-            var type = typeof(TDomainModel);
+            var type = typeof(TDbModel);
 
             if (!NavigationPropertyNames.TryGetValue(type, out IEnumerable<string> navigationPropertiesNames))
             {
-                var allProperties = _dbContext.Model.FindEntityType(typeof(TDomainModel));
+                var allProperties = _dbContext.Model.FindEntityType(typeof(TDbModel));
                 navigationPropertiesNames = allProperties.GetNavigations().Select(x => x.Name).ToArray();
                 NavigationPropertyNames.TryAdd(type, navigationPropertiesNames);
             }
@@ -179,7 +176,7 @@ namespace AnyService.EntityFramework
         }
         private static IEnumerable<PropertyInfo> GetTypePropertyInfos()
         {
-            var type = typeof(TDomainModel);
+            var type = typeof(TDbModel);
             if (!TypeProperties.TryGetValue(type, out IEnumerable<PropertyInfo> pInfos))
             {
                 pInfos = type.GetProperties(BindingFlags.Instance | BindingFlags.Public)

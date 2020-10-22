@@ -12,7 +12,7 @@ namespace AnyService.LiteDb.Tests
 {
     public class LiteDbRepositoryTests
     {
-        public class TestDomainEntity : IDomainEntity
+        public class TestDomainEntity : IEntity
         {
             public string Id { get; set; }
             public string Value { get; set; }
@@ -37,8 +37,8 @@ namespace AnyService.LiteDb.Tests
                 Value = expValue
             };
 
-            var dbRes = (await lr.Insert(data)) as TestDomainEntity;
-            dbRes.Id.ShouldNotBeNullOrEmpty();
+            var dbRes = await lr.Insert(data);
+            dbRes.Id.ToString().ShouldNotBeNullOrEmpty();
             dbRes.Value.ShouldBe(expValue);
             dbRes.ShouldBe(data);
         }
@@ -84,7 +84,7 @@ namespace AnyService.LiteDb.Tests
 
             using (var db = new LiteDatabase(dbName))
             {
-                var e1 = db.GetCollection<TestDomainEntity>().FindById(toUpdate.Id);
+                var e1 = db.GetCollection<TestDomainEntity>().FindById(toUpdate.Id.ToString());
                 e1.Value.ShouldBe(toUpdate.Value);
             }
         }

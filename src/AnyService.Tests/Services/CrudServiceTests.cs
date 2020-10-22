@@ -21,17 +21,17 @@ namespace AnyService.Tests.Services
         public string Value { get; set; }
         public IEnumerable<FileModel> Files { get; set; }
     }
-    public class AuditableTestEntity : IDomainEntity, IFullAudit, ISoftDelete
+    public class AuditableTestEntity : IEntity, IFullAudit, ISoftDelete
     {
         public string Id { get; set; }
         public bool Deleted { get; set; }
     }
-    public class TestModel : IDomainEntity
+    public class TestModel : IEntity
     {
         public string Id { get; set; }
         public string Value { get; set; }
     }
-    public class SoftDeleteEntity : IDomainEntity, ISoftDelete
+    public class SoftDeleteEntity : IEntity, ISoftDelete
     {
         public string Id { get; set; }
         public bool Deleted { get; set; }

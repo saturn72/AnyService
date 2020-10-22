@@ -1,11 +1,13 @@
 namespace AnyService
 {
-    public interface IDomainEntity
+    public interface IEntity : IDbModel<string>
+    { }
+    public interface IDbModel<TId>
     {
-        string Id { get; set; }
+        TId Id { get; set; }
     }
-   
-    public abstract class ChildModelBase : IDomainEntity
+
+    public abstract class ChildModelBase : IEntity
     {
         public string Id { get; set; }
         public string ParentKey { get; set; }

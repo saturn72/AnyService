@@ -10,7 +10,7 @@ namespace AnyService.Tests
         [Fact]
         public void Ctor()
         {
-            new PaginationSettings().DefaultOrderBy.ShouldBe(nameof(IDomainEntity.Id));
+            new PaginationSettings().DefaultOrderBy.ShouldBe(nameof(IEntity.Id));
             var so = "sort-order";
             new PaginationSettings
             {

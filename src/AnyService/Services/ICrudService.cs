@@ -2,13 +2,13 @@
 
 namespace AnyService.Services
 {
-    public interface ICrudService<TDomainModel> where TDomainModel : IDomainEntity
+    public interface ICrudService<TEntity> where TEntity : IEntity
     {
-        Task<ServiceResponse<TDomainModel>> Create(TDomainModel entity);
-        Task<ServiceResponse<TDomainModel>> Delete(string id);
-        Task<ServiceResponse<Pagination<TDomainModel>>> GetAll(Pagination<TDomainModel> pagination);
-        Task<ServiceResponse<TDomainModel>> GetById(string id);
-        Task<ServiceResponse<TDomainModel>> Update(string id, TDomainModel entity);
+        Task<ServiceResponse<TEntity>> Create(TEntity entity);
+        Task<ServiceResponse<TEntity>> Delete(string id);
+        Task<ServiceResponse<Pagination<TEntity>>> GetAll(Pagination<TEntity> pagination);
+        Task<ServiceResponse<TEntity>> GetById(string id);
+        Task<ServiceResponse<TEntity>> Update(string id, TEntity entity);
         //Task UploadFiles(IFileContainer fileContainer, ServiceResponse serviceResponse);
     }
 }

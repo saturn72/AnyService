@@ -22,7 +22,7 @@ namespace AnyService.Controllers
     [GenericControllerNameConvention]
     public class GenericController<TResponseObject, TDomainObject> : ControllerBase
         where TResponseObject : class
-        where TDomainObject : IDomainEntity
+        where TDomainObject : IEntity
     {
         #region fields
         private readonly ICrudService<TDomainObject> _crudService;

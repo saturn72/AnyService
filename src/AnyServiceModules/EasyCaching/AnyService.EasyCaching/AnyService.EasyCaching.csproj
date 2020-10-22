@@ -2,6 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+	  <PackageId>AnyService.Linq2Db</PackageId>
+	  <Version>1.0.0-Preview</Version>
+	  <Authors>roi@saturn72.com</Authors>
+	  <Company>saturn technologies</Company>
   </PropertyGroup>
 
   <PropertyGroup>

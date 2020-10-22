@@ -6,11 +6,11 @@ namespace AnyService.Services
 {
     public static class ServiceRepositoryExtensions
     {
-        public static async Task<TResult> Command<TDomainModel, TResult>(
-            this IRepository<TDomainModel> repository,
-            Func<IRepository<TDomainModel>, Task<TResult>> command,
+        public static async Task<TResult> Command<TEntity, TResult>(
+            this IRepository<TEntity> repository,
+            Func<IRepository<TEntity>, Task<TResult>> command,
             ServiceResponseWrapper wrapper)
-                where TDomainModel : IDomainEntity
+                where TEntity : IEntity
         {
             var data = default(TResult);
             var serviceResponse = wrapper.ServiceResponse;
@@ -36,11 +36,11 @@ namespace AnyService.Services
 
             return data;
         }
-        public static async Task<TResult> Query<TDomainModel, TResult>(
-            this IRepository<TDomainModel> repository,
-            Func<IRepository<TDomainModel>, Task<TResult>> command,
+        public static async Task<TResult> Query<TEntity, TResult>(
+            this IRepository<TEntity> repository,
+            Func<IRepository<TEntity>, Task<TResult>> command,
             ServiceResponseWrapper wrapper)
-            where TDomainModel : IDomainEntity
+            where TEntity : IEntity
         {
             var data = default(TResult);
             var serviceResponse = wrapper.ServiceResponse;

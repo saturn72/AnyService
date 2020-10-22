@@ -1,6 +1,6 @@
 ﻿namespace AnyService.SampleApp.Entities
 {
-    public class Category : IDomainEntity
+    public class Category : IEntity
     {
         public string Id { get; set; }
         public string Name { get; set; }

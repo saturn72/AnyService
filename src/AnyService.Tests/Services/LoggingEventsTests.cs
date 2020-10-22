@@ -22,13 +22,13 @@ namespace AnyService.Tests.Services
             LoggingEvents.Controller.Id.ShouldBe(6);
             LoggingEvents.Controller.Name.ShouldBe("controller");
             LoggingEvents.Permission.Id.ShouldBe(7);
-            LoggingEvents.Permission.Name.ShouldBe("permission");
-            LoggingEvents.WorkContext.Id.ShouldBe(7);
-            LoggingEvents.WorkContext.Name.ShouldBe("workcontext");
-            LoggingEvents.Authorization.Id.ShouldBe(8);
             LoggingEvents.Authorization.Name.ShouldBe("authorization");
             LoggingEvents.UnexpectedException.Id.ShouldBe(9);
             LoggingEvents.UnexpectedException.Name.ShouldBe("unexpected-system-exception");
+            LoggingEvents.Permission.Name.ShouldBe("permission");
+            LoggingEvents.WorkContext.Id.ShouldBe(10);
+            LoggingEvents.WorkContext.Name.ShouldBe("workcontext");
+            LoggingEvents.Authorization.Id.ShouldBe(8);
         }
     }
 }

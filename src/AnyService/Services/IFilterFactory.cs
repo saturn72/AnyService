@@ -5,6 +5,7 @@ namespace AnyService.Services
 {
     public interface IFilterFactory
     {
-        Task<Func<object, Func<TDomainModel, bool>>> GetFilter<TDomainModel>(string filterKey) where TDomainModel : IDomainEntity;
+        Task<Func<object, Func<TEntity, bool>>> GetFilter<TEntity>(string filterKey) 
+            where TEntity : IEntity;
     }
 }

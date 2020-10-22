@@ -37,7 +37,7 @@ namespace AnyService.Tests.Controllers
             att.HttpMethods.First().ShouldBe(expHttpVerb);
             att.Template.ShouldBe(expTemplate);
         }
-        public class MyClass : IDomainEntity
+        public class MyClass : IEntity
         {
             public string Id { get; set; }
         }
@@ -65,7 +65,7 @@ namespace AnyService.Tests.Controllers
             var res = await ctrl.GetAll(fromUtc: fromUtc, toUtc: toUtc);
             res.ShouldBeOfType<BadRequestResult>();
         }
-        public class MyAuditableClass : IDomainEntity, ICreatableAudit
+        public class MyAuditableClass : IEntity, ICreatableAudit
         {
             public string Id { get; set; }
         }
