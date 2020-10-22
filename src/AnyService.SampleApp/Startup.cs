@@ -39,7 +39,7 @@ namespace AnyService.SampleApp
             services.AddAuthorization();
 
             var anyServiceConfig = new AnyServiceConfigurar().Configure(services);
-            new AutoMapperServicesConfigurar().Configure();
+            new AutoMapperServicesConfigurar().Configure(anyServiceConfig);
 
             ConfigureEntityFramework(services);
             ConfigureCaching(services);

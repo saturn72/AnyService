@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using System.Collections.Concurrent;
 
-namespace AnyService.Internals
+namespace AnyService.Infrastructure
 {
     public class DefaultMapperFactory : IMapperFactory
     {

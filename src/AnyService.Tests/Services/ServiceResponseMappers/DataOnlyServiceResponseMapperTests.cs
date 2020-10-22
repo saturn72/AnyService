@@ -27,10 +27,11 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
             var serRes = new ServiceResponse<TestClass1>
             {
                 Result = result,
-                Payload= payload,
+                Payload = payload,
                 Message = message
             };
-            var mapper = new DataOnlyServiceResponseMapper();
+            var c = new AnyServiceConfig { MapperName = "default" };
+            var mapper = new DataOnlyServiceResponseMapper(c);
             var r = mapper.MapServiceResponse<TestClass1, TestClass2>(serRes);
             r.ShouldBeOfType(expectedActionResultType);
 

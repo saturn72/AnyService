@@ -49,7 +49,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Result = ServiceResult.Ok,
                 Payload = new object(),
             };
-            Should.Throw(() => ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(object)), typeof(InvalidOperationException));
+            Should.Throw(() => ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(object), "default"), typeof(InvalidOperationException));
         }
 
         [Theory]
@@ -62,7 +62,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Payload = payload,
                 Message = message
             };
-            var r = ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(TestClass2));
+            var r = ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(TestClass2), "default");
             r.ShouldBeOfType(expectedActionResultType);
         }
         [Fact]
@@ -75,7 +75,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Payload = new TestClass1 { Id = int.Parse(id) },
                 Message = msg
             };
-            var r = ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(TestClass2));
+            var r = ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(TestClass2), "default");
             var ok = r.ShouldBeOfType<OkObjectResult>();
 
             ok.Value.GetPropertyValueByName<string>("message").ShouldBe(msg);

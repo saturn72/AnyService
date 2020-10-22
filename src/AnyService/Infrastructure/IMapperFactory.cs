@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 
-namespace AnyService
+namespace AnyService.Infrastructure
 {
     public interface IMapperFactory
     {

@@ -5,9 +5,9 @@ namespace AnyService.SampleApp.Configurars
 {
     public class AutoMapperServicesConfigurar
     {
-        public void Configure()
+        public void Configure(AnyServiceConfig config)
         {
-            MappingExtensions.AddConfiguration(cfg =>
+            MappingExtensions.AddConfiguration(config.MapperName, cfg =>
             {
                 cfg.CreateMap<CategoryModel, Category>()
                     .ForMember(dest => dest.AdminComment, mo => mo.Ignore());

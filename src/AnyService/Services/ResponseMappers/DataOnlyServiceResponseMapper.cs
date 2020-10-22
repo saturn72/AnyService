@@ -7,8 +7,9 @@ namespace AnyService.Services.ServiceResponseMappers
 {
     public class DataOnlyServiceResponseMapper : IServiceResponseMapper
     {
+        #region fields
         public static readonly IDictionary<string, Func<ServiceResponse, IActionResult>> ConversionFuncs =
-            new Dictionary<string, Func<ServiceResponse, IActionResult>>
+        new Dictionary<string, Func<ServiceResponse, IActionResult>>
             {
                 {
                     ServiceResult.Accepted,
@@ -56,23 +57,27 @@ namespace AnyService.Services.ServiceResponseMappers
                         new UnauthorizedResult() as IActionResult
                 },
             };
+        private readonly AnyServiceConfig _config;
+        #endregion
+        #region ctor
+        public DataOnlyServiceResponseMapper(AnyServiceConfig config)
+        {
+            _config = config;
+        }
+        #endregion
         public IActionResult MapServiceResponse(ServiceResponse serviceResponse) => ConversionFuncs[serviceResponse.Result](serviceResponse);
         public IActionResult MapServiceResponse(Type source, Type destination, ServiceResponse serviceResponse)
         {
             if (serviceResponse.PayloadObject != null)
             {
-                //if (!source.IsAssignableFrom(serviceResponse.PayloadObject.GetType()))
-                //    throw new InvalidOperationException($"Cannot map from {serviceResponse.PayloadObject.GetType()} to {source}");
-
                 var c = new ServiceResponse
                 {
                     ExceptionId = serviceResponse.ExceptionId,
                     Message = serviceResponse.Message,
-                    PayloadObject = serviceResponse.PayloadObject.Map(destination),
+                    PayloadObject = serviceResponse.PayloadObject.Map(destination, _config.MapperName),
                     Result = serviceResponse.Result
                 };
                 return MapServiceResponse(c);
-
             }
             return MapServiceResponse(serviceResponse);
         }
