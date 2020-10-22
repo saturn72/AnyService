@@ -19,6 +19,7 @@ using AnyService.Services.Logging;
 using AnyService.Models;
 using AnyService.Logging;
 using AnyService.Infrastructure;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -244,8 +245,9 @@ namespace Microsoft.Extensions.DependencyInjection
         private static EndpointSettings NormalizeEndpointSettings(EntityConfigRecord ecr, AnyServiceConfig config)
         {
             var settings = (ecr.EndpointSettings ??= new EndpointSettings());
-            if (settings.Active)
-                BuildControllerMethodSettings(settings, ecr);
+            if (settings.Disabled)
+                return null;
+            BuildControllerMethodSettings(settings, ecr);
 
             if (!settings.Route.HasValue)
             {

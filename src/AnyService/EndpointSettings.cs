@@ -24,6 +24,6 @@ namespace AnyService
         public EndpointMethodSettings GetSettings { get; set; }
         public EndpointMethodSettings PutSettings { get; set; }
         public EndpointMethodSettings DeleteSettings { get; set; }
-        public bool Active { get; set; } = true;
+        public bool Disabled { get; set; }
     }
 }
