@@ -20,7 +20,7 @@ namespace AnyService.E2E
         {
             var model = new
             {
-                Value = "ping"TWorkContexrMiddlewa
+                Value = "ping"
             };
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson1);
