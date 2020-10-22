@@ -8,8 +8,8 @@ using LiteDB;
 
 namespace AnyService.LiteDb
 {
-    public class LiteDbRepository<TDomainModel> :
-        IRepository<TDomainModel> where TDomainModel : IDomainObject
+    public class LiteDbRepository<TDomainEntity> :
+        IRepository<TDomainEntity> where TDomainEntity : IDomainEntity
     {
         private readonly string _dbName;
 
@@ -19,9 +19,9 @@ namespace AnyService.LiteDb
 
 
         }
-        public Task<IQueryable<TDomainModel>> Collection => Task.FromResult(LiteDbUtility.Collection<TDomainModel>(_dbName));
+        public Task<IQueryable<TDomainEntity>> Collection => Task.FromResult(LiteDbUtility.Collection<TDomainEntity>(_dbName));
 
-        public async Task<TDomainModel> Insert(TDomainModel entity)
+        public async Task<TDomainEntity> Insert(TDomainEntity entity)
         {
             entity.Id = AssignId();
             await Task.Run(() => LiteDbUtility.Command(_dbName, db =>
@@ -39,7 +39,7 @@ namespace AnyService.LiteDb
                         f.Bytes = null;
                     }
                 }
-                db.GetCollection<TDomainModel>().Insert(entity);
+                db.GetCollection<TDomainEntity>().Insert(entity);
                 if (isFileContainer)
                 {
                     foreach (var f in (entity as IFileContainer).Files)
@@ -52,46 +52,46 @@ namespace AnyService.LiteDb
         {
             return DateTime.UtcNow.ToString("yyyyMMddTHHmmssK") + "-" + Guid.NewGuid().ToString();
         }
-        public async Task<IEnumerable<TDomainModel>> BulkInsert(IEnumerable<TDomainModel> entities, bool trackIds = false)
+        public async Task<IEnumerable<TDomainEntity>> BulkInsert(IEnumerable<TDomainEntity> entities, bool trackIds = false)
         {
             foreach (var e in entities)
                 e.Id = AssignId();
-            await Task.Run(() => LiteDbUtility.Command(_dbName, db => db.GetCollection<TDomainModel>().InsertBulk(entities)));
+            await Task.Run(() => LiteDbUtility.Command(_dbName, db => db.GetCollection<TDomainEntity>().InsertBulk(entities)));
             return entities;
         }
 
-        public Task<IEnumerable<TDomainModel>> GetAll(Pagination<TDomainModel> pagination)
+        public Task<IEnumerable<TDomainEntity>> GetAll(Pagination<TDomainEntity> pagination)
         {
-            var data = LiteDbUtility.Query<IEnumerable<TDomainModel>>(_dbName, db =>
+            var data = LiteDbUtility.Query<IEnumerable<TDomainEntity>>(_dbName, db =>
             {
-                var col = db.GetCollection<TDomainModel>();
+                var col = db.GetCollection<TDomainEntity>();
                 if (pagination == null)
                     return col.FindAll().ToArray();
 
-                var query = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainModel>(pagination.QueryOrFilter);
+                var query = ExpressionTreeBuilder.BuildBinaryTreeExpression<TDomainEntity>(pagination.QueryOrFilter);
                 if (query == null)
                     return null;
                 return col.Find(query).ToArray();
             });
             return Task.FromResult(data);
         }
-        public async Task<TDomainModel> GetById(string id)
+        public async Task<TDomainEntity> GetById(string id)
         {
-            return await Task.Run(() => LiteDbUtility.Query(_dbName, db => db.GetCollection<TDomainModel>().FindById(id)));
+            return await Task.Run(() => LiteDbUtility.Query(_dbName, db => db.GetCollection<TDomainEntity>().FindById(id)));
         }
-        public async Task<TDomainModel> Update(TDomainModel entity)
+        public async Task<TDomainEntity> Update(TDomainEntity entity)
         {
-            await Task.Run(() => LiteDbUtility.Command(_dbName, db => db.GetCollection<TDomainModel>().Update(entity)));
+            await Task.Run(() => LiteDbUtility.Command(_dbName, db => db.GetCollection<TDomainEntity>().Update(entity)));
             return entity;
         }
-        public async Task<TDomainModel> Delete(TDomainModel entity)
+        public async Task<TDomainEntity> Delete(TDomainEntity entity)
         {
             await Task.Run(() =>
                 LiteDbUtility.Command(_dbName, db =>
                 {
-                    var col = db.GetCollection<TDomainModel>();
+                    var col = db.GetCollection<TDomainEntity>();
                     if (!col.Delete(entity.Id))
-                        entity = default(TDomainModel);
+                        entity = default(TDomainEntity);
                 }));
             return entity;
         }
