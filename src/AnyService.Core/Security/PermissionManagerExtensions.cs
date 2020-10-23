@@ -17,7 +17,7 @@ namespace AnyService.Security
                     && p.EntityKey.Equals(entityKey, StringComparison.InvariantCultureIgnoreCase));
             return !hasPermission?.Excluded ?? false;
         }
-        public static async Task<IEnumerable<string>> GetPermittedIds(this IPermissionManager manager, string userId, string entityKey, string permissionKey)
+        public static async Task<IEnumerable<string>> GetPermittedEntitiesIds(this IPermissionManager manager, string userId, string entityKey, string permissionKey)
         {
             var ups = await manager.GetUserPermissions(userId);
             return ups?.EntityPermissions?

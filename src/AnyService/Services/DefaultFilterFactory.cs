@@ -49,7 +49,7 @@ namespace AnyService.Services
         protected virtual async Task<Func<object, Func<TEntity, bool>>> CanRead<TEntity>() where TEntity : IEntity
         {
             var ecr = _workContext.CurrentEntityConfigRecord;
-            var permittedIds = await _permissionManager.GetPermittedIds(
+            var permittedIds = await _permissionManager.GetPermittedEntitiesIds(
                 _workContext.CurrentUserId,
                 ecr.EntityKey,
                 ecr.PermissionRecord.ReadKey);
@@ -58,7 +58,7 @@ namespace AnyService.Services
         protected virtual async Task<Func<object, Func<TEntity, bool>>> CanUpdate<TEntity>() where TEntity : IEntity
         {
             var ecr = _workContext.CurrentEntityConfigRecord;
-            var permittedIds = await _permissionManager.GetPermittedIds(
+            var permittedIds = await _permissionManager.GetPermittedEntitiesIds(
                 _workContext.CurrentUserId,
                 ecr.EntityKey,
                 ecr.PermissionRecord.UpdateKey);
@@ -67,7 +67,7 @@ namespace AnyService.Services
         protected virtual async Task<Func<object, Func<TEntity, bool>>> CanDelete<TEntity>() where TEntity : IEntity
         {
             var ecr = _workContext.CurrentEntityConfigRecord;
-            var permittedIds = await _permissionManager.GetPermittedIds(
+            var permittedIds = await _permissionManager.GetPermittedEntitiesIds(
                 _workContext.CurrentUserId,
                 ecr.EntityKey,
                 ecr.PermissionRecord.DeleteKey);

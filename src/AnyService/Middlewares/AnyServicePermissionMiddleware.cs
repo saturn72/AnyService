@@ -67,7 +67,7 @@ namespace AnyService.Middlewares
             var permissionKey = permissionFunc(cfgRecord);
             _logger.LogDebug($"Request requires permission key valued: {permissionKey}");
 
-            return await permissionManager.UserHasPermissionOnEntity(userId, entityKey, permissionKey, reqInfo.RequesteeId);
+            return await permissionManager.UserHasPermissionOnEntity(userId ?? workContext.CurrentClientId, entityKey, permissionKey, reqInfo.RequesteeId);
         }
     }
 }

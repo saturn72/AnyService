@@ -1,14 +1,14 @@
 ﻿namespace AnyService.Services.Internals
 {
-    internal class AggregationData
+    public class AggregationData
     {
-        public AggregationData(string name, EntityConfigRecord entityConfigRecord, bool isEnumerable)
+        public AggregationData(string externalName, EntityConfigRecord entityConfigRecord, bool isEnumerable)
         {
-            Name = name;
+            ExternalName = externalName;
             EntityConfigRecord = entityConfigRecord;
             IsEnumerable = isEnumerable;
         }
-        public string Name { get; }
+        public string ExternalName { get; }
         public EntityConfigRecord EntityConfigRecord { get; }
         public bool IsEnumerable { get; }
     }

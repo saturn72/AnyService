@@ -7,7 +7,7 @@ namespace AnyService
     {
         public Type CurrentType => CurrentEntityConfigRecord?.Type;
         public EndpointSettings CurrentEndpointSettings { get; set; }
-        public EntityConfigRecord CurrentEntityConfigRecord => CurrentEndpointSettings.EntityConfigRecord;
+        public EntityConfigRecord CurrentEntityConfigRecord => CurrentEndpointSettings?.EntityConfigRecord;
         public string CurrentUserId
         {
             get => GetParameterOrDefault<string>(nameof(CurrentUserId));

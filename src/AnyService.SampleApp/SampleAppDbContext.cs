@@ -17,7 +17,7 @@ namespace AnyService.SampleApp
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<EntityMapping>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+            modelBuilder.Entity<EntityMappingRecord>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
             modelBuilder.Entity<UserPermissions>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
             modelBuilder.Entity<EntityPermission>(b =>
             {

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace AnyService
 {
-    public sealed class EndpointSettings
+    public class EndpointSettings
     {
         public string Name { get; set; }
         /// <summary>
@@ -31,9 +31,8 @@ namespace AnyService
         public EndpointMethodSettings GetSettings { get; set; }
         public EndpointMethodSettings PutSettings { get; set; }
         public EndpointMethodSettings DeleteSettings { get; set; }
-        public bool Active { get; set; } = true;
+        public bool Disabled { get; set; }
         internal string ControllerName => ControllerType?.FullName;
         public EntityConfigRecord EntityConfigRecord { get; set; }
-        internal IReadOnlyDictionary<string, AggregationData> AggregationData { get; set; }
     }
 }

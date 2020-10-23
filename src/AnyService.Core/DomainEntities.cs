@@ -5,7 +5,7 @@ namespace AnyService
     {
         TId Id { get; set; }
     }
-    public sealed class EntityMapping : IEntity
+    public sealed class EntityMappingRecord : IEntity
     {
         public string Id { get; set; }
         public string ParentEntityName { get; set; }

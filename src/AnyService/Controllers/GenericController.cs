@@ -155,8 +155,6 @@ namespace AnyService.Controllers
 
             IEnumerable<string> parseChildNames() => childNames.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(c => c.Trim());
         }
-
-
         [HttpGet]
         public async Task<IActionResult> GetAll(
             [FromQuery] int offset,
@@ -233,20 +231,6 @@ namespace AnyService.Controllers
             _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Put service response value: " + res);
 
             return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
-        }
-        [HttpPut("__map/{id}")]
-        public async Task<IActionResult> UpdateEntityMappings(string id, [FromBody] EntityMappingRequest request)
-        {
-            _logger.LogInformation(LoggingEvents.Controller, $"Start {nameof(UpdateEntityMappings)} Flow with parameters: {nameof(id)} = {id}, request = {request?.ToJsonString()}");
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            request.ParentId = id;
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Call service with value: " + request);
-
-            var srvRes = await _crudService.UpdateMappings(request);
-            return _serviceResponseMapper.MapServiceResponse(srvRes);
-
         }
         #endregion
         #region DELETE

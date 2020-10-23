@@ -11,7 +11,7 @@ namespace AnyService.Tests.Validators
         public void AllRules()
         {
             var model = new EntityMappingRequest();
-            var v = new EntityMappingRequestValidator();
+            var v = new EntityMappingRequestModelValidator();
             var result = v.TestValidate(model);
             result.ShouldHaveValidationErrorFor(w => w.ChildEntityName);
         }

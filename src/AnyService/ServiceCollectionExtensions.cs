@@ -22,6 +22,7 @@ using AnyService.Logging;
 using AnyService.ComponentModel;
 using AnyService.Services.Internals;
 using System.Collections;
+using AnyService.Services.EntityMapping;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -171,7 +172,8 @@ namespace Microsoft.Extensions.DependencyInjection
                 var ekr = new EventKeyRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
                 var pr = new PermissionRecord(fn + "_created", fn + "_read", fn + "_update", fn + "_delete");
 
-                ecr.Name = e.Name;
+                ecr.Name ??= e.Name;
+                ecr.ExternalName ??= e.Name;
                 ecr.EventKeys ??= ekr;
                 ecr.PermissionRecord ??= pr;
                 ecr.EntityKey ??= fn;
@@ -181,6 +183,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
                 ecr.AuditSettings = NormalizeAudity(ecr, config.AuditSettings);
                 ecr.EndpointSettings = NormalizeEndpointSettings(ecr, config);
+                ecr.EntityMappingSettings ??= new EntityMappingSettings();
 
                 if (ecr.CrudValidatorType != null)
                 {
@@ -195,6 +198,11 @@ namespace Microsoft.Extensions.DependencyInjection
                 }
             }
             NormalizeAggregation(temp);
+
+            //check invlaid records configurations
+            var duplicatedNames = temp.GroupBy(x => x.Name).Where(g => g.Skip(1).Any()).Select(d => d);
+            if (!duplicatedNames.IsNullOrEmpty())
+                throw new InvalidOperationException($"Multiple names of same entity. Please remove duplication of {duplicatedNames.ToJsonString()}");
             config.EntityConfigRecords = temp;
         }
 
@@ -275,10 +283,15 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static IEnumerable<EndpointSettings> NormalizeEndpointSettings(EntityConfigRecord ecr, AnyServiceConfig config)
         {
-            if (ecr.EndpointSettings.IsNullOrEmpty() || ecr.EndpointSettings.All(e => !e.Active))
+            //set empty settings for nulls
+            if (ecr.EndpointSettings == null)
+                ecr.EndpointSettings = new[] { new EndpointSettings() };
+
+            //return if all disabled
+            if (ecr.EndpointSettings.All(e => e.Disabled))
                 return new EndpointSettings[] { };
 
-            var activeSettings = ecr.EndpointSettings.Where(e => e.Active);
+            var activeSettings = ecr.EndpointSettings.Where(e => !e.Disabled);
             //duplication on area and route
             var hasDuplicates =
                 activeSettings.Where(x => x.Area.HasValue()).GroupBy(i => i.Area).Any(g => g.Count() > 1) ||

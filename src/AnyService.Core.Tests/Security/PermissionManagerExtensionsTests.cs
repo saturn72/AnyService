@@ -18,7 +18,7 @@ namespace AnyService.Conventions.Security
         {
             var pm = new Mock<IPermissionManager>();
             pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(userPermissions);
-            var res = await PermissionManagerExtensions.GetPermittedIds(pm.Object, "uId", "ek", "pk");
+            var res = await PermissionManagerExtensions.GetPermittedEntitiesIds(pm.Object, "uId", "ek", "pk");
             res.ShouldBeEmpty();
         }
         public static IEnumerable<object[]> GetPermittedIds_HasUserPermissions_ReturnsEmpty_DATA => new[]
@@ -54,7 +54,7 @@ namespace AnyService.Conventions.Security
             };
             var pm = new Mock<IPermissionManager>();
             pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(up);
-            var res = await PermissionManagerExtensions.GetPermittedIds(pm.Object, "some-user-id", "ek", "pk");
+            var res = await PermissionManagerExtensions.GetPermittedEntitiesIds(pm.Object, "some-user-id", "ek", "pk");
             res.ShouldBeEmpty();
         }
         [Fact]
@@ -72,7 +72,7 @@ namespace AnyService.Conventions.Security
             };
             var pm = new Mock<IPermissionManager>();
             pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(up);
-            var res = await PermissionManagerExtensions.GetPermittedIds(pm.Object, "some-user-id", "ek", "pk");
+            var res = await PermissionManagerExtensions.GetPermittedEntitiesIds(pm.Object, "some-user-id", "ek", "pk");
             res.Count().ShouldBe(2);
             res.Contains(eId1);
             res.Contains(eId2);

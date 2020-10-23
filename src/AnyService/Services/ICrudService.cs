@@ -32,13 +32,6 @@ namespace AnyService.Services
             Pagination<TChild> pagination,
             string childEntityName = null)
             where TChild : IEntity;
-        /// <summary>
-        /// Update child-parent mapping
-        /// </summary>
-        /// <param name="request">Mapping request details</param>
-        /// <returns></returns>
-        Task<ServiceResponse<EntityMappingResponse>> UpdateMappings(EntityMappingRequest request);
-
         //Task UploadFiles(IFileContainer fileContainer, ServiceResponse serviceResponse);
     }
 }

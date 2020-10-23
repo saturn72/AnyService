@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AnyService.Audity;
 using AnyService.Security;
 using AnyService.Services;
+using AnyService.Services.EntityMapping;
 using AnyService.Services.Internals;
 
 namespace AnyService
@@ -15,6 +16,10 @@ namespace AnyService
         /// Gets or sets entity name
         /// </summary>
         public string Name { get; set; }
+        /// <summary>
+        /// Gets or sets entity external name
+        /// </summary>
+        public string ExternalName { get; set; }
         /// <summary>
         /// 
         /// Gets or sets entity type 
@@ -57,6 +62,7 @@ namespace AnyService
         /// Gets or sets the audit rules for the entity
         /// </summary>
         public AuditRules AuditRules { get; set; }
+        public EntityMappingSettings EntityMappingSettings { get; set; }
         internal AuditSettings AuditSettings { get; set; }
         internal DomainEntityMetadata Metadata { get; private set; }
     }
