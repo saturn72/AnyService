@@ -8,6 +8,7 @@ using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -23,7 +24,7 @@ namespace AnyService.Tests.Services.EntityMapping
             var sp = new Mock<IServiceProvider>();
             var ecrs = new[]
             {
-                new EntityConfigRecord{EntityKey = "exists" },
+                new EntityConfigRecord{EntityKey = "exists", EntityMappingSettings = new EntityMappingSettings()},
             };
             sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(ecrs);
             var log = new Mock<ILogger<EntityMappingRecordManager>>();
@@ -58,21 +59,32 @@ namespace AnyService.Tests.Services.EntityMapping
         [Fact]
         public async Task UpdateMapping_NoUpdatePermissionsOnParent_ReturnsBadRequest()
         {
+            string parentKey = "e1",
+                childKey = "e2",
+                parentId = "p-id",
+                updatePermissionKey = "update";
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var sp = new Mock<IServiceProvider>();
             var ecrs = new[]
-            {
-                new EntityConfigRecord{EntityKey = "e1",  },
-                new EntityConfigRecord{EntityKey = "e2", },
+           {
+                new EntityConfigRecord
+                {
+                    EntityKey = parentKey,
+                    EntityMappingSettings = new EntityMappingSettings(),
+                    PermissionRecord = new PermissionRecord("c", "r", updatePermissionKey, "d"),
+                    EventKeys = ekr,
+                },
+                new EntityConfigRecord{ EntityKey = childKey, EntityMappingSettings = new EntityMappingSettings(), PermissionRecord = new PermissionRecord("c", "r", updatePermissionKey, "d")},
             };
             sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(ecrs);
             var wc = new WorkContext { CurrentUserId = "uId" };
             sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
             var pm = new Mock<IPermissionManager>();
             pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(new UserPermissions { });
-            sp.Setup(s => s.GetService(typeof(IPermissionManager))).Returns(pm);
+            sp.Setup(s => s.GetService(typeof(IPermissionManager))).Returns(pm.Object);
             var log = new Mock<ILogger<EntityMappingRecordManager>>();
             var mgr = new EntityMappingRecordManager(sp.Object, log.Object);
-            var request = new EntityMappingRequest { ParentEntityKey = "e1", ChildEntityKey = "e2" };
+            var request = new EntityMappingRequest { ParentEntityKey = parentKey, ParentId = parentId, ChildEntityKey = childKey, Add = new[] { "a" } };
             var res = await mgr.UpdateMapping(request);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
         }
@@ -80,14 +92,22 @@ namespace AnyService.Tests.Services.EntityMapping
         public async Task UpdateMapping_NoUpdatePermissionsOnChilds_ReturnsBadRequest()
         {
             string parentKey = "e1",
+                childKey = "e2",
                 parentId = "p-id",
                 updatePermissionKey = "update";
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
             var sp = new Mock<IServiceProvider>();
 
             var ecrs = new[]
             {
-                new EntityConfigRecord{ EntityKey = parentKey },
-                new EntityConfigRecord{ EntityKey = "e2" },
+                new EntityConfigRecord
+                {
+                    EntityKey = parentKey,
+                    EntityMappingSettings = new EntityMappingSettings(),
+                    PermissionRecord = new PermissionRecord("c", "r", updatePermissionKey, "d"),
+                    EventKeys = ekr,
+                },
+                new EntityConfigRecord{ EntityKey = childKey, EntityMappingSettings = new EntityMappingSettings(), PermissionRecord = new PermissionRecord("c", "r", updatePermissionKey, "d")},
             };
             sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(ecrs);
             var wc = new WorkContext { CurrentUserId = "uId" };
@@ -98,22 +118,98 @@ namespace AnyService.Tests.Services.EntityMapping
                 UserId = wc.CurrentUserId,
                 EntityPermissions = new[]
                 {
-                    new EntityPermission { EntityKey = parentKey, EntityId = parentId, PermissionKeys = new[] { updatePermissionKey }
-                    }
+                    new EntityPermission
+                    {
+                        EntityKey = parentKey, EntityId = parentId, PermissionKeys = new[] { updatePermissionKey }
+                    },
+                    new EntityPermission
+                    {
+                        EntityKey = parentKey, EntityId = parentId, PermissionKeys = new[] { "c" }
+                    },
                 },
             };
             pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(up);
-            sp.Setup(s => s.GetService(typeof(IPermissionManager))).Returns(pm);
+            sp.Setup(s => s.GetService(typeof(IPermissionManager))).Returns(pm.Object);
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(null as IEventBus);
             var log = new Mock<ILogger<EntityMappingRecordManager>>();
             var mgr = new EntityMappingRecordManager(sp.Object, log.Object);
-            var request = new EntityMappingRequest { ParentEntityKey = "e1", ParentId = parentId, ChildEntityKey = "e2" };
+            var request = new EntityMappingRequest { ParentEntityKey = "e1", ParentId = parentId, ChildEntityKey = "e2", Add = new[] { "a" } };
             var res = await mgr.UpdateMapping(request);
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
         }
         [Fact]
         public async Task UpdateMapping_UpdateSuccess()
         {
-            throw new NotImplementedException();
+            string parentKey = "e1",
+                 childKey = "e2",
+                 parentId = "p-id",
+                 childIdToAdd = "to-add",
+                 childIdToRemove = "to-remove",
+                 updatePermissionKey = "update";
+            var ekr = new EventKeyRecord("create", "read", "update", "delete");
+            var sp = new Mock<IServiceProvider>();
+
+            var ecrs = new[]
+            {
+                new EntityConfigRecord
+                {
+                    EntityKey = parentKey,
+                    EntityMappingSettings = new EntityMappingSettings(),
+                    PermissionRecord = new PermissionRecord(null, null, updatePermissionKey, null),
+                    EventKeys = ekr,
+                },
+                new EntityConfigRecord
+                {
+                    EntityKey = childKey,
+                    EntityMappingSettings = new EntityMappingSettings(),
+                    PermissionRecord =
+                    new PermissionRecord(null, null, updatePermissionKey, null)
+                },
+            };
+            sp.Setup(s => s.GetService(typeof(IEnumerable<EntityConfigRecord>))).Returns(ecrs);
+            var wc = new WorkContext { CurrentUserId = "uId" };
+            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            var pm = new Mock<IPermissionManager>();
+            var up = new UserPermissions
+            {
+                UserId = wc.CurrentUserId,
+                EntityPermissions = new[]
+                {
+                    new EntityPermission
+                    {
+                        EntityKey = parentKey, EntityId = parentId, PermissionKeys = new[] { updatePermissionKey }
+                    },
+                    new EntityPermission
+                    {
+                        EntityKey = childKey, EntityId = childIdToAdd, PermissionKeys = new[] { updatePermissionKey }
+                    },
+                    new EntityPermission
+                    {
+                        EntityKey = childKey, EntityId = childIdToRemove, PermissionKeys = new[] { updatePermissionKey }
+                    },
+                },
+            };
+            pm.Setup(p => p.GetUserPermissions(It.IsAny<string>())).ReturnsAsync(up);
+            sp.Setup(s => s.GetService(typeof(IPermissionManager))).Returns(pm.Object);
+            var eb = new Mock<IEventBus>();
+            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+            var repo = new Mock<IRepository<EntityMappingRecord>>();
+            sp.Setup(s => s.GetService(typeof(IRepository<EntityMappingRecord>))).Returns(repo.Object);
+            var log = new Mock<ILogger<EntityMappingRecordManager>>();
+            var mgr = new EntityMappingRecordManager(sp.Object, log.Object);
+            var request = new EntityMappingRequest
+            {
+                ParentEntityKey = parentKey,
+                ParentId = parentId,
+                ChildEntityKey = childKey,
+                Add = new[] { childIdToAdd },
+                Remove = new[] { childIdToRemove }
+            };
+            var res = await mgr.UpdateMapping(request);
+            res.Result.ShouldBe(ServiceResult.Ok);
+
+            repo.Verify(r => r.BulkDelete(It.Is<IEnumerable<EntityMappingRecord>>(e => e.ElementAt(0).ChildId == childIdToRemove), It.IsAny<bool>()), Times.Once);
+            repo.Verify(r => r.BulkInsert(It.Is<IEnumerable<EntityMappingRecord>>(e => e.ElementAt(0).ChildId == childIdToAdd), It.IsAny<bool>()), Times.Once);
         }
 
         //    //[Theory]

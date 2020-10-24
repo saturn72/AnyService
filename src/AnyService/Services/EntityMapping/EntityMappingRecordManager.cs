@@ -72,12 +72,15 @@ namespace AnyService.Services.EntityMapping
                 return serviceResponse;
             }
 
-            var toRemove = request.Remove ?? new string[] { };
-            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Delete exists mapping using ids {toRemove?.ToJsonString()}");
-            if (!toRemove.IsNullOrEmpty())
+            var idsToRemove = request.Remove ?? new string[] { };
+            _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Delete exists mapping using ids {idsToRemove?.ToJsonString()}");
+            if (!idsToRemove.IsNullOrEmpty())
             {
+                _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Call {nameof(_repository.GetAll)} with Ids: {idsToRemove}");
+                var p = new Pagination<EntityMappingRecord>(x => idsToRemove.Contains(x.Id));
+                var toRemove = await  _repository.GetAll(p);
                 _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Call {nameof(_repository.BulkDelete)} entity mapping with Ids: {toRemove}");
-                var deleted = await _repository.BulkDelete(toRemove.Select(c => new EntityMappingRecord { Id = c }).ToArray());
+                var deleted = await _repository.BulkDelete(toRemove);
                 _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(_repository.BulkDelete)} response with collection: {deleted.ToJsonString()}");
             }
 

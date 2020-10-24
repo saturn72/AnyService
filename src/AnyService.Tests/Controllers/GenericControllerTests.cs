@@ -28,7 +28,7 @@ namespace AnyService.Tests.Controllers
         [InlineData(nameof(GenericController<MyClass, MyClass>.GetById), "GET", "{id}")]
         [InlineData(nameof(GenericController<MyClass, MyClass>.Put), "PUT", "{id}")]
 
-        [InlineData(nameof(EntityMappingRecordController.UpdateEntityMappings), "PUT", "__map/{id}")]
+        [InlineData(nameof(EntityMappingRecordController.UpdateEntityMappings), "PUT", "__map/{parentId}")]
         public void ValidateVerbs(string methodName, string expHttpVerb, string expTemplate)
         {
             var type = typeof(GenericController<,>);
