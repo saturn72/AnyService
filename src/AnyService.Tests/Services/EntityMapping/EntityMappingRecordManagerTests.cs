@@ -194,6 +194,7 @@ namespace AnyService.Tests.Services.EntityMapping
             var eb = new Mock<IEventBus>();
             sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
             var repo = new Mock<IRepository<EntityMappingRecord>>();
+            repo.Setup(r => r.GetAll(It.IsAny<Pagination<EntityMappingRecord>>())).ReturnsAsync(new[] { new EntityMappingRecord { ChildId = childIdToRemove } });
             sp.Setup(s => s.GetService(typeof(IRepository<EntityMappingRecord>))).Returns(repo.Object);
             var log = new Mock<ILogger<EntityMappingRecordManager>>();
             var mgr = new EntityMappingRecordManager(sp.Object, log.Object);
