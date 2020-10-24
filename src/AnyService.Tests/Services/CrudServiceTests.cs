@@ -1350,10 +1350,6 @@ namespace AnyService.Tests.Services
             };
             var es = new EndpointSettings
             {
-                AggregationData = new Dictionary<string, AggregationData>
-                {
-                    {aggChildName, new AggregationData(aggChildExternalName, childEcr, true) }
-                },
                 EntityConfigRecord = new EntityConfigRecord
                 {
                     Type = typeof(AggregateRootEntity),

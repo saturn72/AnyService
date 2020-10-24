@@ -197,7 +197,6 @@ namespace Microsoft.Extensions.DependencyInjection
                     ecr.CrudValidatorType = typeof(AlwaysTrueCrudValidator<>).MakeGenericType(e);
                 }
             }
-            NormalizeAggregation(temp);
 
             //check invlaid records configurations
             var duplicatedNames = temp.GroupBy(x => x.Name).Where(g => g.Skip(1).Any()).Select(d => d);
@@ -205,47 +204,6 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new InvalidOperationException($"Multiple names of same entity. Please remove duplication of {duplicatedNames.ToJsonString()}");
             config.EntityConfigRecords = temp;
         }
-
-        private static void NormalizeAggregation(IEnumerable<EntityConfigRecord> entityConfigRecords)
-        {
-            foreach (var ecr in entityConfigRecords)
-            {
-                foreach (var es in ecr.EndpointSettings)
-                {
-
-                    var mtType = es?.MapToType ?? ecr.Type;
-                    var aggMtts = mtType.GetProperties()
-                        .Where(pi => !pi.PropertyType.IsSimpleType() && pi.GetCustomAttribute<IgnoreAggregationAttribute>() == null);
-
-                    var allTypes = aggMtts.Distinct();
-
-                    var aggDataList = new Dictionary<string, AggregationData>();
-                    foreach (var t in allTypes)
-                    {
-                        var externalName = t.Name;
-                        var isEnumerable = typeof(IEnumerable).IsAssignableFrom(t.PropertyType);
-
-
-                        var propertyInnerType = isEnumerable ?
-                            t.PropertyType.GetGenericArguments()[0] :
-                            t.PropertyType;
-
-                        var matchEcr = entityConfigRecords.Where(e => es?.MapToType == propertyInnerType || e.Type == propertyInnerType);
-
-                        if (matchEcr.IsNullOrEmpty())
-                            throw new InvalidOperationException($"Fail to find matched aggregated type for {propertyInnerType.FullName}. Please make sure one was configured");
-
-                        if (matchEcr.Count() > 1)
-                            throw new InvalidOperationException($"Multiple matches for aggregated of type {propertyInnerType.FullName}.");
-
-                        var ad = new AggregationData(externalName, matchEcr.First(), isEnumerable);
-                        aggDataList.Add(externalName, ad);
-                    }
-                    es.AggregationData = aggDataList;
-                }
-            }
-        }
-
         private static void AddAnyServiceControllers(AnyServiceConfig config)
         {
             var list = new List<EntityConfigRecord>(config.EntityConfigRecords);

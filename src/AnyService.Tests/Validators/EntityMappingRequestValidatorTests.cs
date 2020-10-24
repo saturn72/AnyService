@@ -1,4 +1,4 @@
-﻿using AnyService.Services;
+﻿using AnyService.Models;
 using AnyService.Validators;
 using FluentValidation.TestHelper;
 using Xunit;
@@ -10,10 +10,10 @@ namespace AnyService.Tests.Validators
         [Fact]
         public void AllRules()
         {
-            var model = new EntityMappingRequest();
+            var model = new EntityMappingRequestModel();
             var v = new EntityMappingRequestModelValidator();
             var result = v.TestValidate(model);
-            result.ShouldHaveValidationErrorFor(w => w.ChildEntityName);
+            result.ShouldHaveValidationErrorFor(w => w.ChildEntityKey);
         }
     }
 }

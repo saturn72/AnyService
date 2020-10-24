@@ -252,52 +252,53 @@ namespace AnyService.Services
             IEnumerable<string> childEntityNames
             )
         {
-            Logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"Start get aggregated with parameters: {nameof(parentId)} = {parentId}, {nameof(childEntityNames)} = {childEntityNames.ToJsonString()}");
-            var serviceResponse = new ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IEntity>>>();
-            if (
-                !parentId.HasValue() ||
-                childEntityNames.IsNullOrEmpty() ||
-                !AllAggregatedExists())
-            {
-                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Invalid parameters");
+            throw new NotImplementedException();
+            //Logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"Start get aggregated with parameters: {nameof(parentId)} = {parentId}, {nameof(childEntityNames)} = {childEntityNames.ToJsonString()}");
+            //var serviceResponse = new ServiceResponse<IReadOnlyDictionary<string, IEnumerable<IEntity>>>();
+            //if (
+            //    !parentId.HasValue() ||
+            //    childEntityNames.IsNullOrEmpty() ||
+            //    !AllAggregatedExists())
+            //{
+            //    Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Invalid parameters");
 
-                serviceResponse.Result = ServiceResult.BadOrMissingData;
-                return serviceResponse;
-            }
+            //    serviceResponse.Result = ServiceResult.BadOrMissingData;
+            //    return serviceResponse;
+            //}
 
-            var res = new Dictionary<string, IEnumerable<IEntity>>();
+            //var res = new Dictionary<string, IEnumerable<IEntity>>();
 
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(parentId)} = {parentId}, {nameof(childEntityNames)} = {childEntityNames.ToJsonString()}");
-            var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, childEntityNames);
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Returns mapping: {groupMaps}");
+            //Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(parentId)} = {parentId}, {nameof(childEntityNames)} = {childEntityNames.ToJsonString()}");
+            //var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, childEntityNames);
+            //Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Returns mapping: {groupMaps}");
 
-            foreach (var gm in groupMaps)
-            {
-                var ecr = AggregationData.Values.FirstOrDefault(e => e.EntityConfigRecord.Name == gm.Key)?.EntityConfigRecord;
-                if (ecr == default)
-                    continue;
+            //foreach (var gm in groupMaps)
+            //{
+            //    var ecr = AggregationData.Values.FirstOrDefault(e => e.EntityConfigRecord.Name == gm.Key)?.EntityConfigRecord;
+            //    if (ecr == default)
+            //        continue;
 
-                dynamic r = ServiceProvider.GetGenericService(typeof(IRepository<>), ecr.Type);
-                if (r == null)
-                {
-                    Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Generic type {nameof(IRepository<TEntity>)} for EntityConfigRecord {nameof(ecr.Name)} not defined");
-                    serviceResponse.Result = ServiceResult.Error;
-                    return serviceResponse;
-                }
-                var curChildIds = gm.Select(s => s.ChildId);
-                var curCol = (await r.Collection) as IQueryable<IEntity>;
-                var aggregated = curCol.Where(c => curChildIds.Contains(c.Id));
-                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Add to returned collection: {nameof(gm.Key)} = {gm.Key}, Value = {aggregated.ToJsonString()}");
-                res[gm.Key] = aggregated.ToArray();
-            }
+            //    dynamic r = ServiceProvider.GetGenericService(typeof(IRepository<>), ecr.Type);
+            //    if (r == null)
+            //    {
+            //        Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Generic type {nameof(IRepository<TEntity>)} for EntityConfigRecord {nameof(ecr.Name)} not defined");
+            //        serviceResponse.Result = ServiceResult.Error;
+            //        return serviceResponse;
+            //    }
+            //    var curChildIds = gm.Select(s => s.ChildId);
+            //    var curCol = (await r.Collection) as IQueryable<IEntity>;
+            //    var aggregated = curCol.Where(c => curChildIds.Contains(c.Id));
+            //    Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Add to returned collection: {nameof(gm.Key)} = {gm.Key}, Value = {aggregated.ToJsonString()}");
+            //    res[gm.Key] = aggregated.ToArray();
+            //}
 
-            serviceResponse.Result = ServiceResult.Ok;
-            serviceResponse.Payload = res;
+            //serviceResponse.Result = ServiceResult.Ok;
+            //serviceResponse.Payload = res;
 
-            Publish(EventKeys.Read, serviceResponse.Payload);
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(ServiceResponse)} = {serviceResponse.ToJsonString()}");
+            //Publish(EventKeys.Read, serviceResponse.Payload);
+            //Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(ServiceResponse)} = {serviceResponse.ToJsonString()}");
 
-            return serviceResponse;
+            //return serviceResponse;
 
             bool AllAggregatedExists()
             {
@@ -326,35 +327,35 @@ namespace AnyService.Services
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
                 return serviceResponse;
             }
+            throw new NotImplementedException();
+            //Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(parentId)} = {parentId}, {nameof(childEntityName)} = {ecr.Name}");
+            //var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, new[] { ecr.Name });
+            //Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Returns mapping: {groupMaps}");
+            //if (groupMaps.IsNullOrEmpty())
+            //{
+            //    Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{ServiceResult.BadOrMissingData} - no mappings found");
+            //    serviceResponse.Result = ServiceResult.BadOrMissingData;
+            //    return serviceResponse;
+            //}
 
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get all exists mappings: parent entity name: {WorkContext.CurrentEntityConfigRecord.Name}, {nameof(parentId)} = {parentId}, {nameof(childEntityName)} = {ecr.Name}");
-            var groupMaps = await GetGroupedMappingByParentIdAndChildEntityNames(parentId, new[] { ecr.Name });
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Returns mapping: {groupMaps}");
-            if (groupMaps.IsNullOrEmpty())
-            {
-                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{ServiceResult.BadOrMissingData} - no mappings found");
-                serviceResponse.Result = ServiceResult.BadOrMissingData;
-                return serviceResponse;
-            }
+            //var childIds = groupMaps.First().Select(s => s.ChildId);
+            //dynamic r = ServiceProvider.GetGenericService(typeof(IRepository<>), ecr.Type);
+            //if (r == null)
+            //{
+            //    Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Generic type {nameof(IRepository<TEntity>)} for EntityConfigRecord {nameof(ecr.Name)} not defined");
+            //    serviceResponse.Result = ServiceResult.Error;
+            //    return serviceResponse;
+            //}
 
-            var childIds = groupMaps.First().Select(s => s.ChildId);
-            dynamic r = ServiceProvider.GetGenericService(typeof(IRepository<>), ecr.Type);
-            if (r == null)
-            {
-                Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Generic type {nameof(IRepository<TEntity>)} for EntityConfigRecord {nameof(ecr.Name)} not defined");
-                serviceResponse.Result = ServiceResult.Error;
-                return serviceResponse;
-            }
+            //pagination.QueryFunc = new Func<TChild, bool>(s => childIds.Contains(s.Id));
+            //var data = await r.GetAll(pagination) as IEnumerable<TChild>;
+            //pagination.Data = data;
+            //Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get paged data = {data.ToJsonString()}");
+            //serviceResponse.Result = ServiceResult.Ok;
 
-            pagination.QueryFunc = new Func<TChild, bool>(s => childIds.Contains(s.Id));
-            var data = await r.GetAll(pagination) as IEnumerable<TChild>;
-            pagination.Data = data;
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Get paged data = {data.ToJsonString()}");
-            serviceResponse.Result = ServiceResult.Ok;
-
-            Publish(EventKeys.Read, pagination);
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(ServiceResponse)} = {serviceResponse}");
-            return serviceResponse;
+            //Publish(EventKeys.Read, pagination);
+            //Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"{nameof(ServiceResponse)} = {serviceResponse}");
+            //return serviceResponse;
         }
         #endregion
         #region Update

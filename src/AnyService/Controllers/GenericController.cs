@@ -29,7 +29,6 @@ namespace AnyService.Controllers
         private static Type _mapToType;
         private static Type _mapToTypeEnumerableType;
         private static Type _mapToPageType;
-        private static IEnumerable<string> _aggregatedChildNames;
         private static string _curEndpointName;
 
         private readonly ICrudService<TDomainEntity> _crudService;
@@ -129,31 +128,16 @@ namespace AnyService.Controllers
         #region GET
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(
-            string id,
-            [FromQuery] string childNames = null
+            string id
             )
         {
             _logger.LogInformation(LoggingEvents.Controller, $"{_curEndpointName}: Start Get by id flow with id " + id);
 
-            ServiceResponse res = null;
-
-            if (childNames.HasValue())
-            {
-                var aggChildNames = parseChildNames();
-                if (aggChildNames.IsNullOrEmpty() || aggChildNames.All(_aggregatedChildNames.Contains))
-                    return BadRequest();
-                res = await _crudService.GetAggregated(id, aggChildNames);
-            }
-            else
-            {
-                res = await _crudService.GetById(id);
-            }
+            var res = await _crudService.GetById(id);
             _logger.LogDebug(LoggingEvents.Controller, $"{_curEndpointName}: Get all service response value: " + res);
 
             if (res.Result == ServiceResult.NotFound) res.Result = ServiceResult.BadOrMissingData;
             return _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
-
-            IEnumerable<string> parseChildNames() => childNames.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(c => c.Trim());
         }
         [HttpGet]
         public async Task<IActionResult> GetAll(
@@ -254,7 +238,6 @@ namespace AnyService.Controllers
             _mapToType ??= es?.MapToType;
             _mapToTypeEnumerableType ??= typeof(IEnumerable<>).MakeGenericType(_mapToType);
             _mapToPageType ??= es.MapToPaginationType;
-            _aggregatedChildNames ??= es.AggregationData?.Keys;
         }
         private async Task<TDomainEntity> ExctractModelFromStream()
         {
