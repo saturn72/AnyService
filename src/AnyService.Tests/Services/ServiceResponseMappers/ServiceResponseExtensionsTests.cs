@@ -40,17 +40,6 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 ServiceResponseExtensions.ConversionFuncs.ContainsKey(sr);
         }
 
-        [Fact]
-        public void ToActionResult_InvalidCastThrows()
-        {
-            var serRes = new ServiceResponse<object>
-            {
-                Result = ServiceResult.Ok,
-                Payload = new object(),
-            };
-            Should.Throw(() => ServiceResponseExtensions.ToActionResult(serRes, typeof(object), "default"), typeof(InvalidOperationException));
-        }
-
         [Theory]
         [MemberData(nameof(ReturnExpectedActionResultMember_DATA))]
         public void ReturnExpectedActionResult(string result, TestClass1 payload, string message, Type expectedActionResultType)

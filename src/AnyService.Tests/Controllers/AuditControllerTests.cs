@@ -93,7 +93,7 @@ namespace AnyService.Tests.Controllers
                 It.Is<Type>(t => t == typeof(AuditPaginationModel)),
                 It.IsAny<ServiceResponse>()))
                 .Returns(new OkResult())
-                .Callback<Type, Type, ServiceResponse>((t1, t2, s) => srvRes = s as ServiceResponse<AuditPagination>);
+                .Callback<Type, ServiceResponse>((t2, s) => srvRes = s as ServiceResponse<AuditPagination>);
             var wc = new WorkContext { CurrentClientId = "1232" };
             var ctrl = new AuditController(aSrv.Object, l.Object, wc, rm.Object);
 
