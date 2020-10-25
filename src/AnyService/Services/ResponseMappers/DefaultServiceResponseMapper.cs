@@ -16,6 +16,6 @@ namespace AnyService.Services.ServiceResponseMappers
         #endregion
         public IActionResult MapServiceResponse(ServiceResponse serviceResponse) => serviceResponse.ToActionResult();
 
-        public IActionResult MapServiceResponse(Type source, Type destination, ServiceResponse serviceResponse) => serviceResponse.ToActionResult(source, destination, _config.MapperName);
+        public IActionResult MapServiceResponse(Type destination, ServiceResponse serviceResponse) => serviceResponse.ToActionResult(destination, _config.MapperName);
     }
 }

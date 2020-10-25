@@ -83,7 +83,7 @@ namespace AnyService.Controllers
             var srvRes = await _auditManager.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller,
                 $"Get all audit service result: '{srvRes.Result}', message: '{srvRes.Message}', exceptionId: '{srvRes.ExceptionId}', data: '{pagination.Data.ToJsonString()}'");
-            return _serviceResponseMapper.MapServiceResponse<AuditPagination, AuditPaginationModel>(srvRes);
+            return _serviceResponseMapper.MapServiceResponse<AuditPaginationModel>(srvRes);
 
         }
         private AuditPagination QueryParamsToPagination(

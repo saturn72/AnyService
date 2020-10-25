@@ -32,7 +32,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
             };
             var c = new AnyServiceConfig { MapperName = "default" };
             var mapper = new DataOnlyServiceResponseMapper(c);
-            var r = mapper.MapServiceResponse<TestClass1, TestClass2>(serRes);
+            var r = mapper.MapServiceResponse<TestClass2>(serRes);
             r.ShouldBeOfType(expectedActionResultType);
 
             if (result == ServiceResult.Ok && payload != null)

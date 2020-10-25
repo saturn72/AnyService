@@ -23,9 +23,8 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Payload = new object(),
             };
             var srm = new Mock<IServiceResponseMapper>();
-            ServiceResponseMapperExtensions.MapServiceResponse<TestClass1, object>(srm.Object, serRes);
+            ServiceResponseMapperExtensions.MapServiceResponse<object>(srm.Object, serRes);
             srm.Verify(s => s.MapServiceResponse(
-                It.Is<Type>(t => t == typeof(TestClass1)),
                 It.Is<Type>(t => t == typeof(object)),
                 It.Is<ServiceResponse>(sr => serRes == sr)),
                 Times.Once);
@@ -49,7 +48,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Result = ServiceResult.Ok,
                 Payload = new object(),
             };
-            Should.Throw(() => ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(object), "default"), typeof(InvalidOperationException));
+            Should.Throw(() => ServiceResponseExtensions.ToActionResult(serRes, typeof(object), "default"), typeof(InvalidOperationException));
         }
 
         [Theory]
@@ -62,7 +61,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Payload = payload,
                 Message = message
             };
-            var r = ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(TestClass2), "default");
+            var r = ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass2), "default");
             r.ShouldBeOfType(expectedActionResultType);
         }
         [Fact]
@@ -75,7 +74,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 Payload = new TestClass1 { Id = int.Parse(id) },
                 Message = msg
             };
-            var r = ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass1), typeof(TestClass2), "default");
+            var r = ServiceResponseExtensions.ToActionResult(serRes, typeof(TestClass2), "default");
             var ok = r.ShouldBeOfType<OkObjectResult>();
 
             ok.Value.GetPropertyValueByName<string>("message").ShouldBe(msg);

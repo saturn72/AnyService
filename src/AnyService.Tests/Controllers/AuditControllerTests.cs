@@ -90,7 +90,6 @@ namespace AnyService.Tests.Controllers
             var rm = new Mock<IServiceResponseMapper>();
             ServiceResponse<AuditPagination> srvRes = null;
             rm.Setup(r => r.MapServiceResponse(
-                It.Is<Type>(t => t == typeof(AuditPagination)),
                 It.Is<Type>(t => t == typeof(AuditPaginationModel)),
                 It.IsAny<ServiceResponse>()))
                 .Returns(new OkResult())

@@ -66,7 +66,7 @@ namespace AnyService.Services.ServiceResponseMappers
         }
         #endregion
         public IActionResult MapServiceResponse(ServiceResponse serviceResponse) => ConversionFuncs[serviceResponse.Result](serviceResponse);
-        public IActionResult MapServiceResponse(Type source, Type destination, ServiceResponse serviceResponse)
+        public IActionResult MapServiceResponse(Type destination, ServiceResponse serviceResponse)
         {
             if (serviceResponse.PayloadObject != null)
             {

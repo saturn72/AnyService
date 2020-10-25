@@ -57,20 +57,15 @@ namespace Microsoft.AspNetCore.Mvc
                         new UnauthorizedResult() as IActionResult
                 },
             };
-        public static IActionResult ToActionResult<TSource, TDestination>(
+        public static IActionResult ToActionResult<TDestination>(
             this ServiceResponse serviceResponse,
             string mapperName)
-          where TSource : class
-          where TDestination : class => ToActionResult(serviceResponse, typeof(TSource), typeof(TDestination), mapperName);
+          where TDestination : class => ToActionResult(serviceResponse, typeof(TDestination), mapperName);
 
-        public static IActionResult ToActionResult(this ServiceResponse serviceResponse, Type source, Type destination, string mapperName)
+        public static IActionResult ToActionResult(this ServiceResponse serviceResponse, Type destination, string mapperName)
         {
             if (serviceResponse.PayloadObject != null)
-            {
-                if (!source.IsAssignableFrom(serviceResponse.PayloadObject.GetType()))
-                    throw new InvalidOperationException($"Cannot map from {serviceResponse.PayloadObject.GetType()} to {source}");
                 serviceResponse.PayloadObject = serviceResponse.PayloadObject.Map(destination, mapperName);
-            }
 
             return ToActionResult(serviceResponse);
         }

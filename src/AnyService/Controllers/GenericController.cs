@@ -164,7 +164,7 @@ namespace AnyService.Controllers
             _logger.LogDebug(LoggingEvents.Controller,
                 $"Get all public service result: '{srvRes.Result}', message: '{srvRes.Message}', exceptionId: '{srvRes.ExceptionId}', data: '{pagination.Data.ToJsonString()}'");
 
-            return _serviceResponseMapper.MapServiceResponse(typeof(Pagination<TDomainObject>), _mapToPageType, srvRes);
+            return _serviceResponseMapper.MapServiceResponse(_mapToPageType, srvRes);
         }
 
         private Pagination<TDomainObject> GetPagination(string orderBy, int offset, int pageSize, bool withNavProps, string sortOrder, string query)
@@ -217,7 +217,7 @@ namespace AnyService.Controllers
         private IActionResult MapServiceResponseIfRequired(ServiceResponse<TDomainObject> res) =>
            _shouldMap ?
                   _serviceResponseMapper.MapServiceResponse(res) :
-                  _serviceResponseMapper.MapServiceResponse(_curType, _mapToType, res);
+                  _serviceResponseMapper.MapServiceResponse(_mapToType, res);
         private async Task<TDomainObject> ExctractModelFromStream()
         {
             // Used to accumulate all the form url encoded key value pairs in the 
