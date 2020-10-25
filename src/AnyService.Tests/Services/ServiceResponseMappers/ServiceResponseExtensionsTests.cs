@@ -119,6 +119,24 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         #endregion
         #region ValidateServiceResponse
         [Theory]
+        [MemberData(nameof(ValidateGenericServiceResponse_ReturnsFalse_DATA))]
+        public void ValidateGenericServiceResponse_ReturnsFalse(ServiceResponse<string> serviceResponse)
+        {
+            serviceResponse.ValidateServiceResponse<int>().ShouldBeFalse();
+        }
+        public static IEnumerable<object[]> ValidateGenericServiceResponse_ReturnsFalse_DATA => new[]
+        {
+            new object[] { null},
+            new object[] { new ServiceResponse<string>{Result = ServiceResult.Error}},
+        };
+        [Theory]
+        [MemberData(nameof(ValidateServiceResponse_ReturnsTrue_DATA))]
+        public void ValidateGenericServiceResponse_ReturnsTrue(ServiceResponse<string> serviceResponse)
+        {
+            serviceResponse.ValidateServiceResponse().ShouldBeTrue();
+        }
+
+        [Theory]
         [MemberData(nameof(ValidateServiceResponse_ReturnsFalse_DATA))]
         public void ValidateServiceResponse_ReturnsFalse(ServiceResponse serviceResponse)
         {
@@ -128,7 +146,6 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         {
             new object[] { null},
             new object[] { new ServiceResponse{Result = ServiceResult.Error}},
-            new object[] { new ServiceResponse<string>{Result = ServiceResult.Ok, Payload = "this is data"}},
         };
         [Theory]
         [MemberData(nameof(ValidateServiceResponse_ReturnsTrue_DATA))]
@@ -139,7 +156,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         public static IEnumerable<object[]> ValidateServiceResponse_ReturnsTrue_DATA => new[]
         {
             new object[] { new ServiceResponse<string>{Result = ServiceResult.Ok, Payload = "this is data"}},
-            new object[] { new ServiceResponse{Result = ServiceResult.Accepted}},
+            new object[] { new ServiceResponse<string>{Result = ServiceResult.Accepted}},
         };
     }
     #endregion

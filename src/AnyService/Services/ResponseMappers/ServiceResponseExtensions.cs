@@ -86,6 +86,8 @@ namespace Microsoft.AspNetCore.Mvc
             return ToStatusCodes.TryGetValue(serviceResponse.Result, out int value) ?
                 value : StatusCodes.Status500InternalServerError;
         }
+        public static bool ValidateServiceResponse<T>(this ServiceResponse<T> serviceResponse) =>
+           serviceResponse?.Result == ServiceResult.Ok || serviceResponse?.Result == ServiceResult.Accepted;
         public static bool ValidateServiceResponse<T>(this ServiceResponse serviceResponse) =>
            (serviceResponse?.Result == ServiceResult.Ok && serviceResponse.PayloadObject is T) || serviceResponse?.Result == ServiceResult.Accepted;
     }
