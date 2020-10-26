@@ -62,6 +62,10 @@ namespace Microsoft.Extensions.DependencyInjection
                     cfg.CreateMap<AuditRecord, AuditRecordModel>();
                     cfg.CreateMap<AuditRecordModel, AuditRecord>();
                     cfg.CreateMap<AuditPagination, AuditPaginationModel>();
+
+                    cfg.CreateMap(typeof(Pagination<>), typeof(Pagination<>));
+                    cfg.CreateMap(typeof(PaginationModel<>), typeof(PaginationModel<>));
+                    cfg.CreateMap(typeof(ServiceResponse<>), typeof(ServiceResponse<>));
                 });
         }
         private static void AddEntityConfigRecordsMappings(string mapperName, IEnumerable<EntityConfigRecord> entityConfigRecords)
