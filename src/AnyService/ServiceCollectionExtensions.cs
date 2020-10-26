@@ -55,6 +55,10 @@ namespace Microsoft.Extensions.DependencyInjection
                                 nameof(PaginationModel<IEntity>.Query),
                                 opts => opts.MapFrom(nameof(Pagination<IEntity>.QueryOrFilter)));
 
+                    cfg.CreateMap(typeof(PaginationModel<>), typeof(Pagination<>))
+                            .ForMember(nameof(Pagination<IEntity>.QueryFunc), opts => opts.Ignore())
+                            .ForMember(nameof(Pagination<IEntity>.QueryOrFilter), opts => opts.MapFrom(nameof(PaginationModel<IEntity>.Query)));
+
                     cfg.CreateMap<AuditRecord, AuditRecordModel>();
                     cfg.CreateMap<AuditRecordModel, AuditRecord>();
                     cfg.CreateMap<AuditPagination, AuditPaginationModel>();

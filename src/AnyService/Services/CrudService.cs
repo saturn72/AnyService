@@ -54,14 +54,14 @@ namespace AnyService.Services
             AuditManager = serviceProvider.GetService<IAuditManager>();
 
             EventKeys = WorkContext?.CurrentEntityConfigRecord?.EventKeys;
-            EntityMetadata = WorkContext?.CurrentEntityConfigRecord?.Metadata;
+            EntityMetadata = serviceProvider.GetService<IEnumerable<EntityConfigRecord>>().First(typeof(TEntity)).Metadata;
         }
 
         #endregion
 
         public virtual async Task<ServiceResponse<TEntity>> Create(TEntity entity)
         {
-            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Start create flow for entity: {entity}");
+            Logger.LogInformation(LoggingEvents.BusinessLogicFlow, $"Start create flow for entity: {entity}");
 
             var serviceResponse = new ServiceResponse<TEntity>();
             if (!await Validator.ValidateForCreate(entity, serviceResponse))
