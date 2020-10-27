@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AnyService.Events;
 using AnyService.Logging;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AnyService.Services.Logging
 {
@@ -12,26 +13,30 @@ namespace AnyService.Services.Logging
     {
         private static readonly object lockObj = new object();
         private static IDictionary<string, int> _eventIndexes = new Dictionary<string, int>();
-        private readonly ILogger _logger;
+        private readonly IServiceProvider _serviceProvider;
 
-        public ExceptionsLoggingEventHandlers(ILogger logger)
+        public ExceptionsLoggingEventHandlers(IServiceProvider serviceProvider)
         {
-            _logger = logger;
+            _serviceProvider = serviceProvider;
         }
-        public Func<DomainEventData, Task> CreateEventHandler => LogErrorOnException;
-        public Func<DomainEventData, Task> ReadEventHandler => LogErrorOnException;
-        public Func<DomainEventData, Task> UpdateEventHandler => LogErrorOnException;
-        public Func<DomainEventData, Task> DeleteEventHandler => LogErrorOnException;
+        public Func<DomainEvent, Task> CreateEventHandler => LogErrorOnException;
+        public Func<DomainEvent, Task> ReadEventHandler => LogErrorOnException;
+        public Func<DomainEvent, Task> UpdateEventHandler => LogErrorOnException;
+        public Func<DomainEvent, Task> DeleteEventHandler => LogErrorOnException;
         #region Utilties
-        private Func<DomainEventData, Task> LogErrorOnException => ed =>
+        private Func<DomainEvent, Task> LogErrorOnException => ed =>
         {
-            var lr = ed.Data.GetPropertyValueOrDefaultByName<LogRecord>("logRecord");
-            var exceptionId = lr?.TraceId;
-            if (!exceptionId.HasValue())
-                return Task.CompletedTask;
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var logger = scope.ServiceProvider.GetService<ILogger<ExceptionsLoggingEventHandlers>>();
+                var lr = ed.Data.GetPropertyValueOrDefaultByName<LogRecord>("logRecord");
+                var traceId = lr?.TraceId;
+                if (!traceId.HasValue())
+                    return Task.CompletedTask;
 
-            _logger.LogError(GetEventId(), ed.Data.GetPropertyValueByName<Exception>("exception"), exceptionId);
-            return Task.CompletedTask;
+                logger.LogError(GetEventId(), ed.Data.GetPropertyValueByName<Exception>("exception"), traceId);
+                return Task.CompletedTask;
+            }
         };
         private static EventId GetEventId()
         {

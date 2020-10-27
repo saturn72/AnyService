@@ -17,13 +17,13 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         public void ValidateServiceResponseAndPublishException_PublishException()
         {
             var eventPublished = false;
-            string exId = "exId",
+            string traceId = "exId",
                 eventKey = "ek";
             var ig = new Mock<IIdGenerator>();
-            ig.Setup(i => i.GetNext()).Returns(exId);
+            ig.Setup(i => i.GetNext()).Returns(traceId);
 
             var eb = new Mock<IEventBus>();
-            eb.Setup(e => e.Publish(It.Is<string>(s => s == eventKey), It.Is<DomainEventData>(d => d.Data.GetPropertyValueByName<string>("exceptionId") == exId)))
+            eb.Setup(e => e.Publish(It.Is<string>(s => s == eventKey), It.Is<DomainEvent>(d => d.Data.GetPropertyValueByName<string>("TraceId") == traceId)))
                 .Callback(() => eventPublished = true);
 
             var wc = new WorkContext
@@ -31,12 +31,10 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 CurrentEntityConfigRecord = new EntityConfigRecord { EventKeys = new EventKeyRecord("create", null, null, null) },
             };
 
-            var sp = new Mock<IServiceProvider>();
-            sp.Setup(s => s.GetService(typeof(IIdGenerator))).Returns(ig.Object);
-            sp.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
-            sp.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
+            ServiceProviderMock.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+            ServiceProviderMock.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
 
-            ServiceResponseWrapperExtensions.Init(sp.Object);
+            ServiceResponseWrapperExtensions.Init(ServiceProviderMock.Object);
 
             var serviceResponse = new ServiceResponse<object>();
             var w = new ServiceResponseWrapper(serviceResponse);
@@ -45,7 +43,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
 
             ServiceResponseWrapperExtensions.ValidateServiceResponseAndPublishException<object>(w, eventKey, "ddd");
             eventPublished.ShouldBeTrue();
-            serviceResponse.ExceptionId.ShouldBe(exId);
+            serviceResponse.TraceId.ShouldBe(traceId);
         }
         [Fact]
         public void ValidateServiceResponseAndPublishException_ReturnServiceResponse_False()

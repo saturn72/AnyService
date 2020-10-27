@@ -162,7 +162,7 @@ namespace AnyService.Controllers
             var pagination = GetPagination(orderBy, offset, pageSize, withNavProps, sortOrder, query);
             var srvRes = await _crudService.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller,
-                $"Get all public service result: '{srvRes.Result}', message: '{srvRes.Message}', exceptionId: '{srvRes.ExceptionId}', data: '{pagination.Data.ToJsonString()}'");
+                $"Get all public service result: '{srvRes.Result}', message: '{srvRes.Message}', {nameof(ServiceResponse.TraceId)}: '{srvRes.TraceId}', data: '{pagination.Data.ToJsonString()}'");
 
             return _serviceResponseMapper.MapServiceResponse(_mapToPageType, srvRes);
         }

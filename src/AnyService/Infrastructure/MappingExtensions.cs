@@ -1,5 +1,6 @@
 ﻿using AnyService.Infrastructure;
 using AutoMapper;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Concurrent;
 
@@ -9,7 +10,6 @@ namespace AnyService
     {
         private static ConcurrentDictionary<string, Action<IMapperConfigurationExpression>> _mapperConfigurations;
         private static IMapperFactory _mapperFactory;
-        private static IServiceProvider _serviceProvider;
 
         static MappingExtensions()
         {
@@ -18,9 +18,8 @@ namespace AnyService
         }
         public static void Build(IServiceProvider serviceProvider)
         {
-            _serviceProvider = serviceProvider;
-            _mapperFactory = _serviceProvider.GetService(typeof(IMapperFactory)) as IMapperFactory;
-
+            using var scope = serviceProvider.CreateScope();
+            _mapperFactory = scope.ServiceProvider.GetService(typeof(IMapperFactory)) as IMapperFactory;
             foreach (var mc in _mapperConfigurations)
             {
                 var mapperConfig = new MapperConfiguration(mc.Value);

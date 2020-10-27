@@ -5,8 +5,6 @@ using AnyService.Audity;
 using AnyService.Security;
 using AnyService.Events;
 using AnyService.Services.FileStorage;
-using AnyService.Utilities;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using AnyService.Services.Audit;
 using AnyService.Services.Preparars;
@@ -26,35 +24,37 @@ namespace AnyService.Services
         protected readonly IModelPreparar<TEntity> ModelPreparar;
         protected readonly WorkContext WorkContext;
         protected readonly IEventBus EventBus;
-        protected readonly EventKeyRecord EventKeys;
         protected readonly IFileStoreManager FileStorageManager;
         protected readonly ILogger<CrudService<TEntity>> Logger;
-        protected readonly IIdGenerator IdGenerator;
         protected readonly IFilterFactory FilterFactory;
         protected readonly IPermissionManager PermissionManager;
-        protected readonly IAuditManager AuditManager;
-        private readonly DomainEntityMetadata EntityMetadata;
+        private readonly EntityConfigRecord CurrentEntityConfigRecord;
         #endregion
         #region ctor
         public CrudService(
-            IServiceProvider serviceProvider,
+            AnyServiceConfig config,
+            IRepository<TEntity> repository,
+            CrudValidatorBase<TEntity> validator,
+            WorkContext workContext,
+            IModelPreparar<TEntity> modelPreparar,
+            IEventBus eventBus,
+            IFileStoreManager fileStoreManager,
+            IFilterFactory filterFactory,
+            IPermissionManager permissionManager,
+            IEnumerable<EntityConfigRecord> entityConfigRecords,
             ILogger<CrudService<TEntity>> logger)
         {
             Logger = logger;
-            Config = serviceProvider.GetService<AnyServiceConfig>();
-            Repository = serviceProvider.GetService<IRepository<TEntity>>();
-            Validator = serviceProvider.GetService<CrudValidatorBase<TEntity>>();
-            WorkContext = serviceProvider.GetService<WorkContext>();
-            ModelPreparar = serviceProvider.GetService<IModelPreparar<TEntity>>();
-            EventBus = serviceProvider.GetService<IEventBus>();
-            FileStorageManager = serviceProvider.GetService<IFileStoreManager>();
-            IdGenerator = serviceProvider.GetService<IIdGenerator>();
-            FilterFactory = serviceProvider.GetService<IFilterFactory>();
-            PermissionManager = serviceProvider.GetService<IPermissionManager>();
-            AuditManager = serviceProvider.GetService<IAuditManager>();
-
-            EventKeys = WorkContext?.CurrentEntityConfigRecord?.EventKeys;
-            EntityMetadata = serviceProvider.GetService<IEnumerable<EntityConfigRecord>>().First(typeof(TEntity)).Metadata;
+            Config = config;
+            Repository = repository;
+            Validator = validator;
+            WorkContext = workContext;
+            ModelPreparar = modelPreparar;
+            EventBus = eventBus;
+            FileStorageManager = fileStoreManager;
+            FilterFactory = filterFactory;
+            PermissionManager = permissionManager;
+            CurrentEntityConfigRecord = entityConfigRecords.First(typeof(TEntity));
         }
 
         #endregion
@@ -71,18 +71,16 @@ namespace AnyService.Services
             await ModelPreparar.PrepareForCreate(entity);
 
             Logger.LogDebug(LoggingEvents.Repository, $"Insert entity to repository");
-            if (EntityMetadata.IsSoftDeleted) (entity as ISoftDelete).Deleted = false;
+            if (CurrentEntityConfigRecord.Metadata.IsSoftDeleted) (entity as ISoftDelete).Deleted = false;
 
             var wrapper = new ServiceResponseWrapper(serviceResponse);
             var dbData = await Repository.Command(r => r.Insert(entity), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository insert response: {dbData}");
 
-            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Create, entity))
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, CurrentEntityConfigRecord.EventKeys.Create, entity))
                 return serviceResponse;
-            if (EntityMetadata.IsCreatableAudit)
-                await AuditManager.InsertCreateRecord(entity);
 
-            Publish(EventKeys.Create, serviceResponse.Payload);
+            Publish(CurrentEntityConfigRecord.EventKeys.Create, serviceResponse.Payload);
             serviceResponse.Result = ServiceResult.Ok;
 
             //if (entity is IFileContainer)
@@ -122,9 +120,9 @@ namespace AnyService.Services
             var data = await Repository.Query(r => r.GetById(id), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
 
-            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Read, id))
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, CurrentEntityConfigRecord.EventKeys.Read, id))
                 return serviceResponse;
-            if (!EntityMetadata.ShowSoftDeleted && EntityMetadata.IsSoftDeleted && (data as ISoftDelete).Deleted)
+            if (!CurrentEntityConfigRecord.Metadata.ShowSoftDeleted && CurrentEntityConfigRecord.Metadata.IsSoftDeleted && (data as ISoftDelete).Deleted)
             {
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
                 return serviceResponse;
@@ -135,10 +133,7 @@ namespace AnyService.Services
                 serviceResponse.Payload = data;
                 serviceResponse.Result = ServiceResult.Ok;
 
-                if (EntityMetadata.IsReadableAudit)
-                    await AuditManager.InsertReadRecord(data);
-
-                Publish(EventKeys.Read, serviceResponse.Payload);
+                Publish(CurrentEntityConfigRecord.EventKeys.Read, serviceResponse.Payload);
             }
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
@@ -159,11 +154,11 @@ namespace AnyService.Services
             var data = await Repository.Query(r => r.GetAll(pagination), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
 
-            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Read, pagination))
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, CurrentEntityConfigRecord.EventKeys.Read, pagination))
             {
                 var wSrvRes = wrapper.ServiceResponse;
                 serviceResponse.Message = wSrvRes.Message;
-                serviceResponse.ExceptionId = wSrvRes.ExceptionId;
+                serviceResponse.TraceId = wSrvRes.TraceId;
                 serviceResponse.Result = wSrvRes.Result;
                 return serviceResponse;
             }
@@ -174,10 +169,7 @@ namespace AnyService.Services
                 serviceResponse.Payload = pagination;
                 serviceResponse.Result = ServiceResult.Ok;
 
-                if (EntityMetadata.IsReadableAudit)
-                    await AuditManager.InsertReadRecord(pagination);
-
-                Publish(EventKeys.Read, serviceResponse.Payload);
+                Publish(CurrentEntityConfigRecord.EventKeys.Read, serviceResponse.Payload);
             }
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
@@ -222,7 +214,7 @@ namespace AnyService.Services
             }
 
             if (p.QueryFunc == null) return null;
-            if (!EntityMetadata.ShowSoftDeleted && EntityMetadata.IsSoftDeleted)
+            if (!CurrentEntityConfigRecord.Metadata.ShowSoftDeleted && CurrentEntityConfigRecord.Metadata.IsSoftDeleted)
                 p.QueryFunc = p.QueryFunc.AndAlso(HideSoftDeletedFunc);
 
             var paginationSettings = WorkContext.CurrentEntityConfigRecord.PaginationSettings;
@@ -248,10 +240,10 @@ namespace AnyService.Services
             var wrapper = new ServiceResponseWrapper(serviceResponse);
 
             var dbEntry = await Repository.Query(async r => await r.GetById(id), wrapper);
-            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Update, id))
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, CurrentEntityConfigRecord.EventKeys.Update, id))
                 return serviceResponse;
 
-            if (EntityMetadata.IsSoftDeleted && (dbEntry as ISoftDelete).Deleted)
+            if (CurrentEntityConfigRecord.Metadata.IsSoftDeleted && (dbEntry as ISoftDelete).Deleted)
             {
                 Logger.LogDebug(LoggingEvents.Audity, "entity already deleted");
                 serviceResponse.Result = ServiceResult.BadOrMissingData;
@@ -262,7 +254,7 @@ namespace AnyService.Services
             Logger.LogDebug(LoggingEvents.Repository, $"Update entity in repository");
             var updateResponse = await Repository.Command(r => r.Update(entity), wrapper);
             Logger.LogDebug(LoggingEvents.Repository, $"Repository update response: {updateResponse}");
-            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Update, entity))
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, CurrentEntityConfigRecord.EventKeys.Update, entity))
                 return serviceResponse;
 
             //if (entity is IFileContainer)
@@ -273,11 +265,7 @@ namespace AnyService.Services
             //    Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start file uploads");
             //    await UploadFiles(fileContainer, serviceResponse);
             //}
-
-            if (EntityMetadata.IsUpdatableAudit)
-                await AuditManager.InsertUpdatedRecord(dbEntry, entity);
-
-            Publish(EventKeys.Update, serviceResponse.Payload);
+            Publish(CurrentEntityConfigRecord.EventKeys.Update, new EntityUpdatedDomainEvent<TEntity>.EntityUpdatedEventData { Before = dbEntry, After = entity });
             serviceResponse.Result = ServiceResult.Ok;
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
@@ -297,17 +285,17 @@ namespace AnyService.Services
             if (dbEntry == null)
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Entity not exists");
 
-            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Delete, id))
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, CurrentEntityConfigRecord.EventKeys.Delete, id))
                 return serviceResponse;
 
-            if (EntityMetadata.IsSoftDeleted && (dbEntry as ISoftDelete).Deleted)
+            if (CurrentEntityConfigRecord.Metadata.IsSoftDeleted && (dbEntry as ISoftDelete).Deleted)
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Entity already deleted");
 
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Prepare for deletion");
             await ModelPreparar.PrepareForDelete(dbEntry);
 
             TEntity deletedModel;
-            if (EntityMetadata.IsSoftDeleted)
+            if (CurrentEntityConfigRecord.Metadata.IsSoftDeleted)
             {
                 (dbEntry as ISoftDelete).Deleted = true;
                 Logger.LogDebug(LoggingEvents.Repository, $"Repository - soft deletion (update) {nameof(ISoftDelete)} entity");
@@ -319,13 +307,10 @@ namespace AnyService.Services
                 deletedModel = await Repository.Command(r => r.Delete(dbEntry), wrapper);
             }
 
-            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, EventKeys.Delete, id))
+            if (IsNotFoundOrBadOrMissingDataOrError(wrapper, CurrentEntityConfigRecord.EventKeys.Delete, id))
                 return serviceResponse;
 
-            if (EntityMetadata.IsDeletableAudit)
-                await AuditManager.InsertDeletedRecord(dbEntry);
-
-            Publish(EventKeys.Delete, serviceResponse.Payload);
+            Publish(CurrentEntityConfigRecord.EventKeys.Delete, serviceResponse.Payload);
             serviceResponse.Result = ServiceResult.Ok;
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
@@ -349,7 +334,11 @@ namespace AnyService.Services
             if (wrapper.Exception != null || serviceResponse.Result == ServiceResult.Error)
             {
                 Logger.LogDebug(LoggingEvents.Repository, "Repository response is null");
-                PublishException(serviceResponse, eventKey, requestData, wrapper.Exception);
+                Logger.LogDebug(LoggingEvents.Repository, $"Repository returned with exception. {nameof(ServiceResponse.TraceId)}: {serviceResponse.TraceId}");
+                serviceResponse.TraceId = WorkContext.TraceId;
+
+                EventBus.PublishException(eventKey, wrapper.Exception, requestData, WorkContext);
+
                 return true;
             }
             return false;
@@ -358,25 +347,12 @@ namespace AnyService.Services
         private void Publish(string eventKey, object data)
         {
             Logger.LogDebug(LoggingEvents.EventPublishing, $"Publish event using {eventKey} key");
-            EventBus.Publish(eventKey, new DomainEventData
+            EventBus.Publish(eventKey, new DomainEvent
             {
                 Data = data,
                 PerformedByUserId = WorkContext.CurrentUserId,
                 WorkContext = WorkContext
             });
-        }
-        private void PublishException(ServiceResponse serviceResponse, string eventKey, object data, Exception exception)
-        {
-            serviceResponse.ExceptionId = IdGenerator.GetNext();
-            Logger.LogDebug(LoggingEvents.Repository, $"Repository returned with exception. exceptionId: {serviceResponse.ExceptionId}");
-
-            var exceptionData = new
-            {
-                incomingObject = data,
-                exceptionId = serviceResponse.ExceptionId,
-                exception = exception
-            };
-            Publish(eventKey, exceptionData);
         }
         #endregion
     }

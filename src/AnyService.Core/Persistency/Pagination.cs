@@ -4,21 +4,17 @@ using System.Linq.Expressions;
 
 namespace AnyService.Services
 {
-    public class Pagination<TDomainModel>
+    public class Pagination
     {
-        public Pagination()
+        public Pagination(Type type)
         {
-            SortOrder = PaginationSettings.Asc;
+            Type = type;
         }
-        public Pagination(string queryOrFilter) : this()
-        {
-            QueryOrFilter = queryOrFilter;
-        }
-        public Pagination(Expression<Func<TDomainModel, bool>> queryFunc) : this()
-        {
-            QueryFunc = queryFunc?.Compile();
-            QueryOrFilter = queryFunc.ToString();
-        }
+        /// <summary>
+        /// Gets or sets the type of data collection
+        /// </summary>
+        public Type Type { get; }
+
         /// <summary>
         /// Gets or sets the total number of entities 
         /// </summary>
@@ -44,21 +40,45 @@ namespace AnyService.Services
         /// <value></value>
         public string OrderBy { get; set; } = nameof(IEntity.Id);
         /// <summary>
-        /// Gets or sets current page data
-        /// </summary>
-        /// <value>ulong</value>
-        public IEnumerable<TDomainModel> Data { get; set; }
-
-        /// <summary>
         /// gets or sets query string value
         /// </summary>
         /// <value></value>
         public string QueryOrFilter { get; set; }
+
+        public bool IncludeNested { get; set; }
+        /// <summary>
+        /// Sets or gets the data for internal usage
+        /// </summary>
+        internal object DataObject { get; set; }
+    }
+    public class Pagination<TEntity> : Pagination
+    {
+        public Pagination() : base(typeof(TEntity))
+        {
+            SortOrder = PaginationSettings.Asc;
+        }
+        public Pagination(string queryOrFilter) : this()
+        {
+            QueryOrFilter = queryOrFilter;
+        }
+        public Pagination(Expression<Func<TEntity, bool>> queryFunc) : this()
+        {
+            QueryFunc = queryFunc?.Compile();
+            QueryOrFilter = queryFunc.ToString();
+        }
         /// <summary>
         /// gets or sets query func
         /// </summary>
         /// <value></value>
-        public Func<TDomainModel, bool> QueryFunc { get; set; }
-        public bool IncludeNested { get; set; }
+        public Func<TEntity, bool> QueryFunc { get; set; }
+        /// <summary>
+        /// Gets or sets current page data
+        /// </summary>
+        /// <value>ulong</value>
+        public IEnumerable<TEntity> Data
+        {
+            get { return (IEnumerable<TEntity>)DataObject; }
+            set { DataObject = value; }
+        }
     }
 }

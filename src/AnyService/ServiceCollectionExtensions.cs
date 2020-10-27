@@ -63,8 +63,6 @@ namespace Microsoft.Extensions.DependencyInjection
                     cfg.CreateMap<AuditRecordModel, AuditRecord>();
                     cfg.CreateMap<AuditPagination, AuditPaginationModel>();
 
-                    cfg.CreateMap(typeof(Pagination<>), typeof(Pagination<>));
-                    cfg.CreateMap(typeof(PaginationModel<>), typeof(PaginationModel<>));
                     cfg.CreateMap(typeof(ServiceResponse<>), typeof(ServiceResponse<>));
                 });
         }
@@ -165,9 +163,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 return sp.GetService(mt) as IServiceResponseMapper;
             });
 
-            var auditManagerType = config.AuditSettings.Active ?
-                typeof(AuditManager) :
-                typeof(DummyAuditManager);
+            var auditManagerType = config.AuditSettings.Disabled ?
+                typeof(DummyAuditManager) :
+                typeof(AuditManager);
 
             services.TryAddTransient(typeof(IAuditManager), auditManagerType);
             services.TryAddSingleton<IEventBus, DefaultEventsBus>();
@@ -223,7 +221,7 @@ namespace Microsoft.Extensions.DependencyInjection
         private static void AddAnyServiceControllers(AnyServiceConfig config)
         {
             var list = new List<EntityConfigRecord>(config.EntityConfigRecords);
-            if (config.AuditSettings.Active)
+            if (!config.AuditSettings.Disabled)
             {
                 list.Add(new EntityConfigRecord
                 {
@@ -309,9 +307,10 @@ namespace Microsoft.Extensions.DependencyInjection
         }
         private static AuditSettings NormalizeAudity(EntityConfigRecord ecr, AuditSettings auditSettings)
         {
-            if (!auditSettings.Active)
+            if (auditSettings.Disabled)
                 return new AuditSettings
                 {
+                    Disabled = true,
                     AuditRules = new AuditRules()
                 };
 
@@ -319,7 +318,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 auditSettings :
                 new AuditSettings
                 {
-                    Active = auditSettings.Active,
+                    Disabled = auditSettings.Disabled,
                     AuditRules = ecr.AuditRules,
                 };
         }

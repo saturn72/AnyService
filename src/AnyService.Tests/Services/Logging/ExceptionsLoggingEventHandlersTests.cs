@@ -2,6 +2,7 @@ using System;
 using AnyService.Events;
 using AnyService.Logging;
 using AnyService.Services.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -13,10 +14,11 @@ namespace AnyService.Tests.Services.Logging
         [Fact]
         public void AllHandlersReturnsOnMissingInfo()
         {
-            var logger = new Mock<ILogger>();
-            var h = new ExceptionsLoggingEventHandlers(logger.Object);
+            var logger = new Mock<ILogger<ExceptionsLoggingEventHandlers>>();
+            var sp = MockServiceProvider(logger);
+            var h = new ExceptionsLoggingEventHandlers(sp.Object);
 
-            var e = new DomainEventData();
+            var e = new DomainEvent();
             h.CreateEventHandler(e);
             h.ReadEventHandler(e);
             h.UpdateEventHandler(e);
@@ -33,11 +35,14 @@ namespace AnyService.Tests.Services.Logging
         [Fact]
         public void AllHandlersLogErrorOnException()
         {
-            var logger = new Mock<ILogger>();
-            var h = new ExceptionsLoggingEventHandlers(logger.Object);
+            var logger = new Mock<ILogger<ExceptionsLoggingEventHandlers>>();
+            var sp = MockServiceProvider(logger);
+
+
+            var h = new ExceptionsLoggingEventHandlers(sp.Object);
 
             var expEx = new Exception();
-            var e = new DomainEventData
+            var e = new DomainEvent
             {
                 Data = new
                 {
@@ -65,6 +70,24 @@ namespace AnyService.Tests.Services.Logging
                     Times.Once);
                 logger.Reset();
             }
+        }
+
+        private Mock<IServiceProvider> MockServiceProvider(Mock<ILogger<ExceptionsLoggingEventHandlers>> logger)
+        {
+            var sp = new Mock<IServiceProvider>();
+            sp.Setup(s => s.GetService(typeof(ILogger<ExceptionsLoggingEventHandlers>))).Returns(logger.Object);
+            var serviceScope = new Mock<IServiceScope>();
+            serviceScope.Setup(x => x.ServiceProvider).Returns(sp.Object);
+
+            var serviceScopeFactory = new Mock<IServiceScopeFactory>();
+            serviceScopeFactory
+                .Setup(x => x.CreateScope())
+                .Returns(serviceScope.Object);
+
+            sp.Setup(x => x.GetService(typeof(IServiceScopeFactory)))
+                .Returns(serviceScopeFactory.Object);
+
+            return sp;
         }
     }
 }

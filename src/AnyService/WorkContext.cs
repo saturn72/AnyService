@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
 
@@ -8,6 +7,16 @@ namespace AnyService
     {
         public Type CurrentType => CurrentEntityConfigRecord?.Type;
         public EntityConfigRecord CurrentEntityConfigRecord { get; set; }
+        public string TraceId
+        {
+            get => GetParameterOrDefault<string>(nameof(TraceId));
+            set => SetParameter(nameof(TraceId), value);
+        }
+        public string SpanId
+        {
+            get => GetParameterOrDefault<string>(nameof(SpanId));
+            set => SetParameter(nameof(SpanId), value);
+        }
         public string CurrentUserId
         {
             get => GetParameterOrDefault<string>(nameof(CurrentUserId));

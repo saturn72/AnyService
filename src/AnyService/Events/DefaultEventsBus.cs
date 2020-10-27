@@ -16,7 +16,7 @@ namespace AnyService.Events
             _logger = logger;
             _handlers = new Dictionary<string, ICollection<HandlerData>>();
         }
-        public void Publish(string eventKey, DomainEventData eventData)
+        public void Publish(string eventKey, DomainEvent eventData)
         {
             _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event with key: {eventKey}");
             if (_handlers.TryGetValue(eventKey, out ICollection<HandlerData> handlerDatas))
@@ -29,7 +29,7 @@ namespace AnyService.Events
                 }
             }
         }
-        public string Subscribe(string eventKey, Func<DomainEventData, Task> handler, string name)
+        public string Subscribe(string eventKey, Func<DomainEvent, Task> handler, string name)
         {
             var handlerId = Convert
                 .ToBase64String(Guid.NewGuid().ToByteArray())
@@ -64,7 +64,7 @@ namespace AnyService.Events
         {
             public string HandlerId { get; set; }
             public string Name { get; set; }
-            public Func<DomainEventData, Task> Handler { get; set; }
+            public Func<DomainEvent, Task> Handler { get; set; }
         }
         #endregion
     }

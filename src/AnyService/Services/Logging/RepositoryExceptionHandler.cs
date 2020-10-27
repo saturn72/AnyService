@@ -17,7 +17,7 @@ namespace AnyService.Services.Logging
             _serviceProvider = serviceProvider;
         }
         #endregion
-        public Func<DomainEventData, Task> InsertRecord => ded =>
+        public Func<DomainEvent, Task> InsertRecord => ded =>
         {
             var lr = ded.Data.GetPropertyValueByName<LogRecord>("logRecord");
             if (lr == null) return Task.CompletedTask;

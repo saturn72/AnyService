@@ -2,7 +2,6 @@
 using AnyService;
 using AnyService.Events;
 using AnyService.Services;
-using AnyService.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.AspNetCore.Mvc
@@ -27,18 +26,13 @@ namespace Microsoft.AspNetCore.Mvc
         }
         private static void PublishException(ServiceResponse serviceResponse, string eventKey, object data, Exception exception)
         {
-            serviceResponse.ExceptionId = _serviceProvider.GetService<IIdGenerator>().GetNext();
+            using var scope = _serviceProvider.CreateScope();
+            var wc = scope.ServiceProvider.GetService<WorkContext>();
+            serviceResponse.TraceId = wc.TraceId;
+            serviceResponse.SpanId = wc.SpanId;
 
-            _serviceProvider.GetService<IEventBus>().Publish(eventKey, new DomainEventData
-            {
-                Data = new
-                {
-                    incomingObject = data,
-                    exceptionId = serviceResponse.ExceptionId,
-                    exception = exception
-                },
-                PerformedByUserId = _serviceProvider.GetService<WorkContext>().CurrentUserId
-            });
+            var eb = scope.ServiceProvider.GetService<IEventBus>();
+            eb.PublishException(eventKey, exception, data, wc);
         }
     }
 }

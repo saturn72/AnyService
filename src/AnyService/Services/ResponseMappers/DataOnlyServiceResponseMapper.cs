@@ -72,7 +72,7 @@ namespace AnyService.Services.ServiceResponseMappers
             {
                 var c = new ServiceResponse
                 {
-                    ExceptionId = serviceResponse.ExceptionId,
+                    TraceId = serviceResponse.TraceId,
                     Message = serviceResponse.Message,
                     PayloadObject = serviceResponse.PayloadObject.Map(destination, _config.MapperName),
                     Result = serviceResponse.Result

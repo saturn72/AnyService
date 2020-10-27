@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace AnyService.Audity
+﻿namespace AnyService.Audity
 {
     public class AuditSettings
     {
-        public bool Active { get; set; }
+        public bool Disabled { get; set; }
         public AuditRules AuditRules { get; set; }
     }
 }

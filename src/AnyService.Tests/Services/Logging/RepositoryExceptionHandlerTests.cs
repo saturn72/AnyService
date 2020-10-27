@@ -23,7 +23,7 @@ namespace AnyService.Tests.Services.Logging
                 CurrentClientId = "cur-client-id",
                 IpAddress = "this is ip-address",
             };
-            const string exceptionId = "exeption-id",
+            const string traceId = "exeption-id",
                 exMsg = "msg-1",
                 exRuntimeType = "ex-runtime-type",
                 path = "this-is-path",
@@ -52,7 +52,7 @@ namespace AnyService.Tests.Services.Logging
                 Level = LogRecordLevel.Error,
                 ClientId = wc.CurrentClientId,
                 UserId = wc.CurrentUserId,
-                TraceId = exceptionId,
+                TraceId = traceId,
                 ExceptionRuntimeType = exRuntimeType,
                 ExceptionRuntimeMessage = exMsg,
                 Message = "some-clevermessage",
@@ -62,7 +62,7 @@ namespace AnyService.Tests.Services.Logging
                 HttpMethod = method,
                 Request = expRequest.ToJsonString(),
             };
-            var ded = new DomainEventData
+            var ded = new DomainEvent
             {
                 Data = new
                 {
@@ -84,7 +84,7 @@ namespace AnyService.Tests.Services.Logging
                 lRec.Level == LogRecordLevel.Error &&
                 lRec.ClientId == wc.CurrentClientId &&
                 lRec.UserId == wc.CurrentUserId &&
-                lRec.TraceId == exceptionId &&
+                lRec.TraceId == traceId &&
                 lRec.ExceptionRuntimeType == exRuntimeType &&
                 lRec.ExceptionRuntimeMessage == exMsg &&
                 lRec.Message.HasValue() &&

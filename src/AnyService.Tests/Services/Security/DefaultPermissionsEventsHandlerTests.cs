@@ -21,13 +21,13 @@ namespace AnyService.Tests.Services.Security
         [Fact]
         public void EntityCreatedHandler_DataIsNotDominModel_DoesNothing()
         {
-            var ed = new DomainEventData
+            var ed = new DomainEvent
             {
                 Data = "some=string",
                 PerformedByUserId = "uId",
             };
             var ph = new DefaultPermissionsEventsHandler(null);
-            ph.EntityCreatedHandler(ed);
+            ph.PermissionCreatedHandler(ed);
         }
         [Fact]
         public void EntityCreatedHandler_CreatesNewUserPermissions_WhenNotExistsInDatabase()
@@ -46,14 +46,14 @@ namespace AnyService.Tests.Services.Security
                 Value = 123
             };
 
-            var ed = new DomainEventData
+            var ed = new DomainEvent
             {
                 Data = data,
                 PerformedByUserId = userId,
                 WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
-            ph.EntityCreatedHandler(ed);
+            ph.PermissionCreatedHandler(ed);
             Thread.Sleep(50);
 
             pm.Verify(p => p.CreateUserPermissions(It.Is<UserPermissions>(
@@ -87,14 +87,14 @@ namespace AnyService.Tests.Services.Security
                 Value = 123
             };
 
-            var ed = new DomainEventData
+            var ed = new DomainEvent
             {
                 Data = data,
                 PerformedByUserId = userId,
                 WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
-            ph.EntityCreatedHandler(ed);
+            ph.PermissionCreatedHandler(ed);
             Thread.Sleep(50);
 
             pm.Verify(p => p.UpdateUserPermissions(It.Is<UserPermissions>(
@@ -135,14 +135,14 @@ namespace AnyService.Tests.Services.Security
                 Value = 123
             };
 
-            var ed = new DomainEventData
+            var ed = new DomainEvent
             {
                 Data = data,
                 PerformedByUserId = userId,
                 WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
-            ph.EntityCreatedHandler(ed);
+            ph.PermissionCreatedHandler(ed);
             Thread.Sleep(250);
 
             pm.Verify(p => p.UpdateUserPermissions(It.Is<UserPermissions>(
@@ -160,13 +160,13 @@ namespace AnyService.Tests.Services.Security
         [Fact]
         public void EntityDeletedHandler_NotDomainModel()
         {
-            var ed = new DomainEventData
+            var ed = new DomainEvent
             {
                 Data = "some=string",
                 PerformedByUserId = "uId"
             };
             var ph = new DefaultPermissionsEventsHandler(null);
-            ph.EntityDeletedHandler(ed);
+            ph.PermissionDeletedHandler(ed);
             Thread.Sleep(50);
 
         }
@@ -186,13 +186,13 @@ namespace AnyService.Tests.Services.Security
                 Value = 123
             };
 
-            var ed = new DomainEventData
+            var ed = new DomainEvent
             {
                 Data = data,
                 PerformedByUserId = userId
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
-            ph.EntityDeletedHandler(ed);
+            ph.PermissionDeletedHandler(ed);
             Thread.Sleep(100);
 
             pm.Verify(p => p.UpdateUserPermissions(It.IsAny<UserPermissions>()), Times.Never);
@@ -216,13 +216,13 @@ namespace AnyService.Tests.Services.Security
                 Value = 123
             };
 
-            var ed = new DomainEventData
+            var ed = new DomainEvent
             {
                 Data = data,
                 PerformedByUserId = userId
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
-            ph.EntityDeletedHandler(ed);
+            ph.PermissionDeletedHandler(ed);
             Thread.Sleep(50);
 
             pm.Verify(p => p.UpdateUserPermissions(It.IsAny<UserPermissions>()), Times.Never);
@@ -270,14 +270,14 @@ namespace AnyService.Tests.Services.Security
                 Value = 123
             };
 
-            var ed = new DomainEventData
+            var ed = new DomainEvent
             {
                 Data = data,
                 PerformedByUserId = userId,
                 WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
             };
             var ph = new DefaultPermissionsEventsHandler(sp.Object);
-            ph.EntityDeletedHandler(ed);
+            ph.PermissionDeletedHandler(ed);
             Thread.Sleep(150);
 
             pm.Verify(p => p.UpdateUserPermissions(It.Is<UserPermissions>(

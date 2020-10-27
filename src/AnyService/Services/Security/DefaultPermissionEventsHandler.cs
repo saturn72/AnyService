@@ -17,7 +17,7 @@ namespace AnyService.Services.Security
         {
             _serviceProvider = serviceProvider;
         }
-        public Func<DomainEventData, Task> EntityCreatedHandler => async (eventData) =>
+        public Func<DomainEvent, Task> PermissionCreatedHandler => async (eventData) =>
           {
               if (!(eventData.Data is IEntity createdEntity))
                   return;
@@ -59,7 +59,7 @@ namespace AnyService.Services.Security
           };
 
 
-        public Func<DomainEventData, Task> EntityDeletedHandler => async (eventData) =>
+        public Func<DomainEvent, Task> PermissionDeletedHandler => async (eventData) =>
       {
           var deletedEntity = eventData.Data as IEntity;
           if (deletedEntity == null)

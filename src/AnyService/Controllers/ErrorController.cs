@@ -51,7 +51,7 @@ namespace AnyService.Controllers
 
             _logger.LogError(LoggingEvents.UnexpectedException, ehpf.Error, $"{nameof(HttpContext.TraceIdentifier)}: {HttpContext.TraceIdentifier}");
             _logger.LogInformation(LoggingEvents.UnexpectedException, $"Publish event using {ErrorEventKey} key. Event Data: {record.ToJsonString()}");
-            _eventBus.Publish(ErrorEventKey, new DomainEventData
+            _eventBus.Publish(ErrorEventKey, new DomainEvent
             {
                 Data = new
                 {

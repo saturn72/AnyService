@@ -56,7 +56,7 @@ namespace AnyService.Services.Audit
             {
                 Payload = pagination,
                 Message = wSrvRes.Message,
-                ExceptionId = wSrvRes.ExceptionId,
+                TraceId = wSrvRes.TraceId,
                 Result = isFault ? wSrvRes.Result : ServiceResult.Ok
             };
             _logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
@@ -99,7 +99,6 @@ namespace AnyService.Services.Audit
                     new Func<AuditRecord, bool>(c => collection.Contains(propertyValue(c)));
             }
         }
-
         public async virtual Task<AuditRecord> InsertAuditRecord(Type entityType, string entityId, string auditRecordType, object data)
         {
             if (!ShouldAudit(auditRecordType))

@@ -28,7 +28,6 @@ namespace AnyService
             ServiceResponseMapperType = typeof(DataOnlyServiceResponseMapper);
             AuditSettings = new AuditSettings
             {
-                Active = true,
                 AuditRules = new AuditRules
                 {
                     AuditCreate = true,

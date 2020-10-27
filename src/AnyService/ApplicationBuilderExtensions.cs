@@ -6,12 +6,12 @@ using AnyService.Events;
 using AnyService.Middlewares;
 using AnyService.Services.Security;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using AnyService.Services.Logging;
+using AnyService.Audity;
+using AnyService.Services.Audit;
 
 namespace AnyService
 {
@@ -26,42 +26,64 @@ namespace AnyService
             bool usePermissionMiddleware = true)
         {
             var sp = app.ApplicationServices;
-            InitializeAndValidateRequiredServices(sp);
-
-            var apm = sp.GetRequiredService<ApplicationPartManager>();
-            apm.FeatureProviders.Add(new GenericControllerFeatureProvider(sp));
+            using var scope = sp.CreateScope();
+            InitializeServices(sp);
+            var cm = scope.ServiceProvider.GetRequiredService<ICacheManager>();
+            var entityConfigRecords = sp.GetRequiredService<IEnumerable<EntityConfigRecord>>();
+            var eventBus = sp.GetRequiredService<IEventBus>();
 
             if (useWorkContextMiddleware) app.UseMiddleware<WorkContextMiddleware>();
             if (useAuthorizationMiddleware) app.UseMiddleware<DefaultAuthorizationMiddleware>();
 
-            if (logExceptions)
-            {
-                var entityConfigRecords = sp.GetRequiredService<IEnumerable<EntityConfigRecord>>();
-                var eventKeys = entityConfigRecords.Select(e => e.EventKeys).ToArray();
-                var eventBus = sp.GetRequiredService<IEventBus>();
-                var exLogger = sp.GetRequiredService<ILogger<ExceptionsLoggingEventHandlers>>();
-                var handlers = new ExceptionsLoggingEventHandlers(exLogger);
-                foreach (var ek in eventKeys)
-                {
-                    eventBus.Subscribe(ek.Create, handlers.CreateEventHandler, "domain-object-handler-created");
-                    eventBus.Subscribe(ek.Read, handlers.ReadEventHandler, "domain-object-handler-read");
-                    eventBus.Subscribe(ek.Update, handlers.UpdateEventHandler, "domain-object-handler-updated");
-                    eventBus.Subscribe(ek.Delete, handlers.DeleteEventHandler, "domain-object-handler-deleted");
-                }
-            }
+            if (logExceptions) SubscribeLogExceptionHandler(eventBus, sp, entityConfigRecords);
+            SubscribeAuditHandler(sp, eventBus, entityConfigRecords);
+
             if (usePermissionMiddleware)
-                AddPermissionComponents(app, sp);
+                AddPermissionComponents(app, sp, eventBus, entityConfigRecords);
             return app;
         }
-        private static void InitializeAndValidateRequiredServices(IServiceProvider serviceProvider)
+
+        private static void SubscribeAuditHandler(IServiceProvider sp, IEventBus eventBus, IEnumerable<EntityConfigRecord> entityConfigRecords)
+        {
+            var auditHandler = new AuditHandler(sp);
+
+            var creatables = entityConfigRecords.Where(ecr => ecr.Type.IsOfType<ICreatableAudit>() && !ecr.AuditSettings.Disabled && ecr.AuditSettings.AuditRules.AuditCreate).ToArray(); ;
+            foreach (var ca in creatables)
+                eventBus.Subscribe(ca.EventKeys.Create, auditHandler.CreateEventHandler, $"{ca.Name.ToLower()}-creatable-audit-handler");
+
+            var readables = entityConfigRecords.Where(ecr => ecr.Type.IsOfType<IReadableAudit>() && !ecr.AuditSettings.Disabled && ecr.AuditSettings.AuditRules.AuditRead);
+            foreach (var ca in readables)
+                eventBus.Subscribe(ca.EventKeys.Read, auditHandler.ReadEventHandler, $"{ca.Name.ToLower()}-read-audit-handler");
+
+            var updatables = entityConfigRecords.Where(ecr => ecr.Type.IsOfType<IUpdatableAudit>() && !ecr.AuditSettings.Disabled && ecr.AuditSettings.AuditRules.AuditUpdate);
+            foreach (var ca in updatables)
+                eventBus.Subscribe(ca.EventKeys.Update, auditHandler.UpdateEventHandler, $"{ca.Name.ToLower()}-updatable-audit-handler");
+
+            var deletables = entityConfigRecords.Where(ecr => ecr.Type.IsOfType<IDeletableAudit>() && !ecr.AuditSettings.Disabled && ecr.AuditSettings.AuditRules.AuditDelete);
+            foreach (var ca in deletables)
+                eventBus.Subscribe(ca.EventKeys.Delete, auditHandler.DeleteEventHandler, $"{ca.Name.ToLower()}-deletable-audit-handler");
+        }
+
+        private static void SubscribeLogExceptionHandler(IEventBus eventBus, IServiceProvider sp, IEnumerable<EntityConfigRecord> entityConfigRecords)
+        {
+            var handlers = new ExceptionsLoggingEventHandlers(sp);
+            foreach (var ecr in entityConfigRecords)
+            {
+                eventBus.Subscribe(ecr.EventKeys.Create, handlers.CreateEventHandler, $"{ecr.Name.ToLower()}-domain-entity-handler-created");
+                eventBus.Subscribe(ecr.EventKeys.Read, handlers.ReadEventHandler, $"{ecr.Name.ToLower()}-domain-entity-handler-read");
+                eventBus.Subscribe(ecr.EventKeys.Update, handlers.UpdateEventHandler, $"{ecr.Name.ToLower()}-domain-entity-handler-updated");
+                eventBus.Subscribe(ecr.EventKeys.Delete, handlers.DeleteEventHandler, $"{ecr.Name.ToLower()}-domain-entity-handler-deleted");
+            }
+        }
+
+        private static void InitializeServices(IServiceProvider serviceProvider)
         {
             ServiceResponseWrapperExtensions.Init(serviceProvider);
             GenericControllerNameConvention.Init(serviceProvider);
             MappingExtensions.Build(serviceProvider);
-            serviceProvider.GetRequiredService<ICacheManager>();
         }
 
-        private static void AddPermissionComponents(IApplicationBuilder app, IServiceProvider serviceProvider)
+        private static void AddPermissionComponents(IApplicationBuilder app, IServiceProvider serviceProvider, IEventBus eventBus, IEnumerable<EntityConfigRecord> ecrs)
         {
             var config = serviceProvider.GetRequiredService<AnyServiceConfig>();
             if (!config.ManageEntityPermissions)
@@ -70,14 +92,12 @@ namespace AnyService
             app.UseMiddleware<AnyServicePermissionMiddleware>();
 
             //subscribe to events event listener
-            var eventBus = serviceProvider.GetRequiredService<IEventBus>();
-            var ecrm = serviceProvider.GetRequiredService<IEnumerable<EntityConfigRecord>>();
-            var ekr = ecrm.Select(e => e.EventKeys);
+            var ekr = ecrs.Select(e => e.EventKeys);
             var peh = serviceProvider.GetRequiredService<IPermissionEventsHandler>();
             foreach (var e in ekr)
             {
-                eventBus.Subscribe(e.Create, peh.EntityCreatedHandler, "entity-created-permission-handler");
-                eventBus.Subscribe(e.Delete, peh.EntityDeletedHandler, "entity-deleted-permission-handler");
+                eventBus.Subscribe(e.Create, peh.PermissionCreatedHandler, "entity-created-permission-handler");
+                eventBus.Subscribe(e.Delete, peh.PermissionDeletedHandler, "entity-deleted-permission-handler");
             }
         }
     }

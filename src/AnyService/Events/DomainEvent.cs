@@ -2,7 +2,7 @@ using System;
 
 namespace AnyService.Events
 {
-    public sealed class DomainEventData
+    public class DomainEvent
     {
         public string PerformedByUserId { get; set; }
         public DateTime PublishedOnUtc { get; set; }

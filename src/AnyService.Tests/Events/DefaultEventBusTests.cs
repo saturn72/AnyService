@@ -15,7 +15,7 @@ namespace AnyService.Tests.Events
         public void PublishWithoutSubscription()
         {
             var ek = "event-key";
-            var ed = new DomainEventData
+            var ed = new DomainEvent
             {
                 Data = "this is data"
             };
@@ -31,11 +31,11 @@ namespace AnyService.Tests.Events
         {
             var handleCounter = 0;
             var ek = "event-key";
-            var ed = new DomainEventData
+            var ed = new DomainEvent
             {
                 Data = "thjis is data"
             };
-            var handler = new Func<DomainEventData, Task>(d =>
+            var handler = new Func<DomainEvent, Task>(d =>
             {
                 handleCounter++;
                 return Task.CompletedTask;
