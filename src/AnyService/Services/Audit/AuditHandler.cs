@@ -17,9 +17,8 @@ namespace AnyService.Services.Audit
         public Func<DomainEvent, Task> CreateEventHandler => ded =>
         {
             var entity = ded.Data as IEntity;
-            return InsertAuditRecord(a => a.InsertCreateRecord(entity, ded.WorkContext), entity);
+            return InsertAuditRecord(a => a.InsertCreateRecord(entity, ded.WorkContext), entity.ToJsonString());
         };
-
         public Func<DomainEvent, Task> ReadEventHandler => ded =>
         {
             var entity = ded.Data as IEntity;
@@ -27,7 +26,8 @@ namespace AnyService.Services.Audit
 
             var type = data?.Type ?? ded.Data.GetType();
             var entityId = entity?.Id;
-            return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.READ, ded.WorkContext, ded.Data), ded.Data);
+            var entityJson = data?.GetType().Name ?? entity.ToJsonString();
+            return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.READ, ded.WorkContext, ded.Data), entityJson);
         };
         public Func<DomainEvent, Task> UpdateEventHandler => ded =>
         {
@@ -37,21 +37,20 @@ namespace AnyService.Services.Audit
             var type = data?.Before.GetType() ?? ded.Data.GetType();
             var entityId = data?.Before?.Id ?? entity?.Id;
 
-            return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.UPDATE, ded.WorkContext, ded.Data), ded.Data);
+            return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.UPDATE, ded.WorkContext, ded.Data), entity.ToJsonString());
         };
 
         public Func<DomainEvent, Task> DeleteEventHandler => ded =>
          {
              var entity = ded.Data as IEntity;
-             return InsertAuditRecord(a => a.InsertDeletedRecord(entity, ded.WorkContext), entity);
+             return InsertAuditRecord(a => a.InsertDeletedRecord(entity, ded.WorkContext), entity.ToJsonString());
          };
 
-        private async Task InsertAuditRecord(Func<IAuditManager, Task> action, object data)
+        private async Task InsertAuditRecord(Func<IAuditManager, Task> action, string entityJson)
         {
-            var json = data is Pagination ? data.GetType().Name : data.ToJsonString();
             using var scope = _serviceProvider.CreateScope();
             var logger = scope.ServiceProvider.GetService<ILogger<AuditHandler>>();
-            logger.LogInformation($"Start insertion of audit record. entity = {json}");
+            logger.LogInformation($"Start insertion of audit record. entity = {entityJson}");
             var am = scope.ServiceProvider.GetService<IAuditManager>();
             await action(am);
             logger.LogDebug($"End insertion of audit record.");
