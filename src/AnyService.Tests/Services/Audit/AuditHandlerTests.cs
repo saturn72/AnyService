@@ -202,22 +202,22 @@ namespace AnyService.Tests.Services.Audit
 
             var ded = new DomainEvent
             {
-                Data = new EntityUpdatedDomainEvent<EventDataObject>(before,after),
+                Data = new EntityUpdatedDomainEvent(before, after),
                 PerformedByUserId = uId,
                 WorkContext = wc
             };
             await h.UpdateEventHandler(ded);
             am.Verify(a => a.InsertAuditRecord(
-                It.Is<Type>(t => t == typeof(EntityUpdatedDomainEvent<EventDataObject>)),
-                It.IsAny<string>(),//i => i == before.Id),
+                It.Is<Type>(t => t == typeof(EventDataObject)),
+                It.Is<string>(i => i == before.Id),
                 It.Is<string>(art => art == AuditRecordTypes.UPDATE),
-                It.IsAny<object>()),//obj => VerifyPayload(obj, before, after))),
+                It.Is<object>(obj => VerifyPayload(obj, before, after))),
                 Times.Once);
         }
 
         private bool VerifyPayload(object obj, EventDataObject before, EventDataObject after)
         {
-            var o = (obj as EntityUpdatedDomainEvent<EventDataObject>.EntityUpdatedEventData);
+            var o = (obj as EntityUpdatedDomainEvent).Data as EntityUpdatedDomainEvent.EntityUpdatedEventData;
             return o.Before == before && o.After == after;
         }
 

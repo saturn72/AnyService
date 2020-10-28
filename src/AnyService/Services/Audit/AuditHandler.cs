@@ -29,11 +29,11 @@ namespace AnyService.Services.Audit
         };
         public Func<DomainEvent, Task> UpdateEventHandler => ded =>
         {
+            var data = (ded.Data as EntityUpdatedDomainEvent)?.Data as EntityUpdatedDomainEvent.EntityUpdatedEventData;
             var entity = ded.Data as IEntity;
-            var data = ded.Data as EntityUpdatedDomainEvent<IEntity>.EntityUpdatedEventData;
 
-            var type = ded.Data.GetType();
-            var entityId = entity?.Id ?? data?.Before?.Id;
+            var type = data?.Before.GetType() ?? ded.Data.GetType();
+            var entityId = data?.Before?.Id ?? entity?.Id;
 
             return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.UPDATE, ded.Data), ded.Data);
         };

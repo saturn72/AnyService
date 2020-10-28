@@ -265,7 +265,7 @@ namespace AnyService.Services
             //    Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Start file uploads");
             //    await UploadFiles(fileContainer, serviceResponse);
             //}
-            Publish(CurrentEntityConfigRecord.EventKeys.Update, new EntityUpdatedDomainEvent<TEntity>.EntityUpdatedEventData { Before = dbEntry, After = entity });
+            Publish(CurrentEntityConfigRecord.EventKeys.Update, new EntityUpdatedDomainEvent(dbEntry, entity));
             serviceResponse.Result = ServiceResult.Ok;
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;

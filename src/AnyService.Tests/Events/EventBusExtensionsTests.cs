@@ -7,11 +7,20 @@ namespace AnyService.Tests.Events
 {
     public class EventBusExtensionsTests
     {
+        public class TestClass : IEntity
+        {
+            public string Id { get; set; }
+            public string Value { get; set; }
+        }
         [Fact]
         public void PublishCreated()
         {
             var key = "ek";
-            var data = "data";
+            var data = new TestClass
+            {
+                Id = "123",
+                Value = "data"
+            };
             var wc = new WorkContext
             {
                 CurrentUserId = "userid",
@@ -21,16 +30,24 @@ namespace AnyService.Tests.Events
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == key),
                 It.Is<DomainEvent>(ded =>
-                    ded.Data.ToString() == data &&
+                    ded.Data == data &&
                     ded.PerformedByUserId == wc.CurrentUserId &&
                     ded.WorkContext == wc)), Times.Once);
         }
         [Fact]
         public void PublishUpdated()
         {
-            string key = "ek",
-                before = "b",
-                after = "a";
+            var key = "ek";
+            TestClass before = new TestClass
+            {
+                Id = "123",
+                Value = "b"
+            },
+            after = new TestClass
+            {
+                Id = "123",
+                Value = "a",
+            };
 
             var wc = new WorkContext
             {
@@ -41,8 +58,8 @@ namespace AnyService.Tests.Events
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == key),
                 It.Is<DomainEvent>(ded =>
-                    (ded.Data as EntityUpdatedDomainEvent<string>.EntityUpdatedEventData).Before == before &&
-                    (ded.Data as EntityUpdatedDomainEvent<string>.EntityUpdatedEventData).After == after &&
+                    (ded.Data as EntityUpdatedDomainEvent.EntityUpdatedEventData).Before == before &&
+                    (ded.Data as EntityUpdatedDomainEvent.EntityUpdatedEventData).After == after &&
                     ded.PerformedByUserId == wc.CurrentUserId &&
                     ded.WorkContext == wc)), Times.Once);
         }

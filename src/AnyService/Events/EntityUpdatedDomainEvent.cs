@@ -1,8 +1,8 @@
 ﻿namespace AnyService.Events
 {
-    public sealed class EntityUpdatedDomainEvent<T> : DomainEvent
+    public sealed class EntityUpdatedDomainEvent : DomainEvent
     {
-        public EntityUpdatedDomainEvent(T before, T after)
+        public EntityUpdatedDomainEvent(IEntity before, IEntity after)
         {
             Data = new EntityUpdatedEventData
             {
@@ -13,8 +13,8 @@
 
         public class EntityUpdatedEventData
         {
-            public T Before { get; set; }
-            public T After { get; set; }
+            public IEntity Before { get; set; }
+            public IEntity After { get; set; }
         }
     }
 }
