@@ -29,9 +29,9 @@ namespace AnyService.SampleApp
         public IConfiguration Configuration { get; }
         public void ConfigureServices(IServiceCollection services)
         {
-            var builder = services
-                .AddMvcCore(o => o.EnableEndpointRouting = false)
-                .AddAuthorization();
+            services.AddMvc();
+                //.AddMvcCore(o => o.EnableEndpointRouting = false)
+                //.AddAuthorization();
 
             services.AddSignalR();
             services.AddAuthentication(ManagedAuthenticationHandler.Schema)

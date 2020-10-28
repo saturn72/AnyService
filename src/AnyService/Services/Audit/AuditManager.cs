@@ -12,7 +12,6 @@ namespace AnyService.Services.Audit
     {
         #region Fields
         private static readonly ConcurrentDictionary<Type, string> EntityTypesNames = new ConcurrentDictionary<Type, string>();
-        private readonly WorkContext _workContext;
         private readonly IRepository<AuditRecord> _repository;
         private readonly AuditSettings _auditSettings;
         private readonly IEnumerable<EntityConfigRecord> _entityConfigRecords;
@@ -22,14 +21,12 @@ namespace AnyService.Services.Audit
 
         #region ctor
         public AuditManager(
-            WorkContext workContext,
             IRepository<AuditRecord> repository,
             AuditSettings auditConfig,
             IEnumerable<EntityConfigRecord> entityConfigRecords,
             ILogger<AuditManager> logger
             )
         {
-            _workContext = workContext;
             _repository = repository;
             _auditSettings = auditConfig;
             _entityConfigRecords = entityConfigRecords;
@@ -99,7 +96,7 @@ namespace AnyService.Services.Audit
                     new Func<AuditRecord, bool>(c => collection.Contains(propertyValue(c)));
             }
         }
-        public async virtual Task<AuditRecord> InsertAuditRecord(Type entityType, string entityId, string auditRecordType, object data)
+        public async virtual Task<AuditRecord> InsertAuditRecord(Type entityType, string entityId, string auditRecordType, WorkContext workContext, object data)
         {
             if (!ShouldAudit(auditRecordType))
                 return null;
@@ -109,9 +106,9 @@ namespace AnyService.Services.Audit
                 EntityId = entityId,
                 AuditRecordType = auditRecordType,
                 Data = data.ToJsonString(),
-                WorkContext = _workContext.Parameters.ToJsonString(),
-                UserId = _workContext.CurrentUserId,
-                ClientId = _workContext.CurrentClientId,
+                WorkContext = workContext.Parameters?.ToJsonString(),
+                UserId = workContext.CurrentUserId,
+                ClientId = workContext.CurrentClientId,
                 CreatedOnUtc = DateTime.UtcNow.ToIso8601(),
             };
             return await _repository.Insert(record);

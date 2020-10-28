@@ -17,7 +17,7 @@ namespace AnyService.Services.Audit
         public Func<DomainEvent, Task> CreateEventHandler => ded =>
         {
             var entity = ded.Data as IEntity;
-            return InsertAuditRecord(a => a.InsertCreateRecord(entity), entity);
+            return InsertAuditRecord(a => a.InsertCreateRecord(entity, ded.WorkContext), entity);
         };
 
         public Func<DomainEvent, Task> ReadEventHandler => ded =>
@@ -25,7 +25,7 @@ namespace AnyService.Services.Audit
             var entity = ded.Data as IEntity;
             var type = ded.Data.GetType();
             var entityId = entity?.Id;
-            return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.READ, ded.Data), ded.Data);
+            return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.READ, ded.WorkContext, ded.Data), ded.Data);
         };
         public Func<DomainEvent, Task> UpdateEventHandler => ded =>
         {
@@ -35,13 +35,13 @@ namespace AnyService.Services.Audit
             var type = data?.Before.GetType() ?? ded.Data.GetType();
             var entityId = data?.Before?.Id ?? entity?.Id;
 
-            return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.UPDATE, ded.Data), ded.Data);
+            return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.UPDATE, ded.WorkContext, ded.Data), ded.Data);
         };
 
         public Func<DomainEvent, Task> DeleteEventHandler => ded =>
          {
              var entity = ded.Data as IEntity;
-             return InsertAuditRecord(a => a.InsertDeletedRecord(entity), entity);
+             return InsertAuditRecord(a => a.InsertDeletedRecord(entity, ded.WorkContext), entity);
          };
 
         private async Task InsertAuditRecord(Func<IAuditManager, Task> action, object data)

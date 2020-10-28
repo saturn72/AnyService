@@ -57,7 +57,7 @@ namespace AnyService.Controllers
             [FromQuery] int offset = 0,
             [FromQuery] int pageSize = 100,
             [FromQuery] string orderBy = null,
-            [FromQuery] string sortOrder = "desc"
+            [FromQuery] string sortOrder = PaginationSettings.Asc
             )
         {
             _logger.LogDebug(LoggingEvents.Controller, $"Start Get all audit flow. With values: " +

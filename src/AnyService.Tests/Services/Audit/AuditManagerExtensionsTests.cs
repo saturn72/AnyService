@@ -18,12 +18,14 @@ namespace AnyService.Tests.Services.Audit
         {
             var ah = new Mock<IAuditManager>();
             var t = new TestClass { Id = "a" };
-            await AuditManagerExtensions.InsertCreateRecord(ah.Object, t);
+            var wc = new WorkContext();
+
+            await AuditManagerExtensions.InsertCreateRecord(ah.Object, t, wc);
             ah.Verify(a => a.InsertAuditRecord(
                 It.Is<Type>(x => x == typeof(TestClass)),
                 It.Is<string>(i => i == t.Id),
                 It.Is<string>(i => i == AuditRecordTypes.CREATE),
-                It.Is<TestClass>(x => x == t)),
+                It.Is<WorkContext>(w => w == wc), It.Is<TestClass>(x => x == t)),
 
                 Times.Once);
         }
@@ -33,12 +35,14 @@ namespace AnyService.Tests.Services.Audit
         {
             var ah = new Mock<IAuditManager>();
             var read = new TestClass { Id = "b" };
-            await AuditManagerExtensions.InsertReadRecord(ah.Object, read);
+            var wc = new WorkContext();
+
+            await AuditManagerExtensions.InsertReadRecord(ah.Object, read, wc);
             ah.Verify(a => a.InsertAuditRecord(
                 It.Is<Type>(x => x == typeof(TestClass)),
                 It.Is<string>(i => i == read.Id),
                 It.Is<string>(i => i == AuditRecordTypes.READ),
-                It.Is<object>(x => x == read)),
+               It.Is<WorkContext>(w => w == wc), It.Is<object>(x => x == read)),
                 Times.Once);
         }
         [Fact]
@@ -50,12 +54,14 @@ namespace AnyService.Tests.Services.Audit
                 Total = 123,
                 Data = new[] { new TestClass { Id = "b" } }
             };
-            await AuditManagerExtensions.InsertReadRecord(ah.Object, page);
+            var wc = new WorkContext();
+            
+            await AuditManagerExtensions.InsertReadRecord(ah.Object, page, wc);
             ah.Verify(a => a.InsertAuditRecord(
                 It.Is<Type>(x => x == typeof(TestClass)),
                 It.Is<string>(i => i == null),
                 It.Is<string>(i => i == AuditRecordTypes.READ),
-                It.Is<object>(x => x.GetPropertyValueByName<int>("total") == page.Total)),
+               It.Is<WorkContext>(w => w == wc), It.Is<object>(x => x.GetPropertyValueByName<int>("total") == page.Total)),
                 Times.Once);
         }
 
@@ -65,14 +71,18 @@ namespace AnyService.Tests.Services.Audit
             var ah = new Mock<IAuditManager>();
             var after = new TestClass { Id = "a" };
             var before = new TestClass { Id = "b" };
-            await AuditManagerExtensions.InsertUpdatedRecord(ah.Object, after, before);
+            var wc = new WorkContext();
+
+            await AuditManagerExtensions.InsertUpdatedRecord(ah.Object, after, before, wc);
             ah.Verify(a => a.InsertAuditRecord(
                 It.Is<Type>(x => x == typeof(TestClass)),
                 It.Is<string>(i => i == after.Id),
                 It.Is<string>(i => i == AuditRecordTypes.UPDATE),
+                It.Is<WorkContext>(w => w == wc),
                 It.Is<object>(x =>
                     x.GetPropertyValueByName<TestClass>("before") != null &&
                     x.GetPropertyValueByName<TestClass>("after") != null)),
+
                 Times.Once);
         }
         [Fact]
@@ -80,13 +90,15 @@ namespace AnyService.Tests.Services.Audit
         {
             var ah = new Mock<IAuditManager>();
             var t = new TestClass { Id = "a" };
-            await AuditManagerExtensions.InsertDeletedRecord(ah.Object, t);
+            var wc = new WorkContext();
+            
+            await AuditManagerExtensions.InsertDeletedRecord(ah.Object, t, wc);
             ah.Verify(a => a.InsertAuditRecord(
                 It.Is<Type>(x => x == typeof(TestClass)),
                 It.Is<string>(i => i == t.Id),
                 It.Is<string>(i => i == AuditRecordTypes.DELETE),
+                It.Is<WorkContext>(w => w == wc), 
                 It.Is<TestClass>(x => x == t)),
-
                 Times.Once);
         }
     }

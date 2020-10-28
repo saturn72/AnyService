@@ -12,10 +12,10 @@ using System.Linq;
 using AnyService.Services.Logging;
 using AnyService.Audity;
 using AnyService.Services.Audit;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 
 namespace AnyService
 {
-
     public static class ApplicationBuilderExtensions
     {
         public static IApplicationBuilder UseAnyService(
@@ -27,6 +27,9 @@ namespace AnyService
         {
             var sp = app.ApplicationServices;
             using var scope = sp.CreateScope();
+            var apm = scope.ServiceProvider.GetRequiredService<ApplicationPartManager>();
+            apm.FeatureProviders.Add(new GenericControllerFeatureProvider(sp));
+
             InitializeServices(sp);
             var cm = scope.ServiceProvider.GetRequiredService<ICacheManager>();
             var entityConfigRecords = sp.GetRequiredService<IEnumerable<EntityConfigRecord>>();

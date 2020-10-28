@@ -10,11 +10,14 @@ namespace AnyService.Controllers
     public class GenericControllerNameConvention : Attribute, IControllerModelConvention
     {
         private static IEnumerable<Type> GenericControllerTypes = new[] { typeof(GenericController<,>), typeof(GenericParentController<>) };
-        private static IServiceProvider _serviceProvider;
-
+        private static Func<IEnumerable<EntityConfigRecord>> _entityConfigRecordsResolver;
         public static void Init(IServiceProvider serviceProvider)
         {
-            _serviceProvider = serviceProvider;
+            _entityConfigRecordsResolver = () =>
+            {
+                using var scope = serviceProvider.CreateScope();
+                return scope.ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
+            };
         }
         public void Apply(ControllerModel controller)
         {
@@ -23,9 +26,7 @@ namespace AnyService.Controllers
                 return;
 
             var controllerModelType = controller.ControllerType.GenericTypeArguments[0];
-            using var scope = _serviceProvider.CreateScope();
-            var ecrs = scope.ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
-
+            var ecrs = _entityConfigRecordsResolver();
             var matchEcrs = ecrs.Where(e =>
                 controllerModelType == e.EndpointSettings.MapToType &&
                 e.EndpointSettings.ControllerType == controller.ControllerType);
