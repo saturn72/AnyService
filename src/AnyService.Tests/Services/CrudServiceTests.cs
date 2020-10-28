@@ -101,9 +101,9 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Insert(It.IsAny<AuditableTestEntity>())).ThrowsAsync(ex); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestEntity>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
                 .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>();
-            var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>(); var exId = "exId" as object;
-            var gn = new Mock<IIdGenerator>();
-            gn.Setup(g => g.GetNext()).Returns(exId);
+            var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>(); 
+            var traceId = "traceId";
+            
             var ekr = new EventKeyRecord("create", null, null, null);
 
             var ecr = new EntityConfigRecord
@@ -116,7 +116,8 @@ namespace AnyService.Tests.Services
             var wc = new WorkContext
             {
                 CurrentUserId = "some-user-id",
-                CurrentEntityConfigRecord = ecr
+                CurrentEntityConfigRecord = ecr,
+                TraceId = traceId
             };
 
             var cSrv = new CrudService<AuditableTestEntity>(null, null, v.Object, wc, null, null, null, null, null, ecrs, logger.Object);
@@ -126,7 +127,7 @@ namespace AnyService.Tests.Services
      It.Is<string>(s => s == ekr.Create),
      It.Is<DomainEvent>(ed =>
           ed.Data.GetPropertyValueByName<object>("Data") == model &&
-          ed.Data.GetPropertyValueByName<object>("TraceId") == exId &&
+          ed.Data.GetPropertyValueByName<object>("TraceId") == traceId &&
           ed.PerformedByUserId == wc.CurrentUserId)),
      Times.Once); mp.Verify(a => a.PrepareForCreate(It.Is<AuditableTestEntity>(e => e == model)), Times.Once);
         }
@@ -283,8 +284,8 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
                 .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>(); var exId = "exId" as object;
-            var gn = new Mock<IIdGenerator>();
-            gn.Setup(g => g.GetNext()).Returns(exId);
+            
+            
             var ekr = new EventKeyRecord(null, "read", null, null);
             var ecr = new EntityConfigRecord
             {
@@ -583,8 +584,8 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestEntity>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestEntity>>>()))
                 .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>(); var exId = "exId" as object;
-            var gn = new Mock<IIdGenerator>();
-            gn.Setup(g => g.GetNext()).Returns(exId);
+            
+            
             var ekr = new EventKeyRecord(null, "read", null, null);
 
             var ecr = new EntityConfigRecord
@@ -841,9 +842,9 @@ namespace AnyService.Tests.Services
                 CurrentEntityConfigRecord = ecr
             };
 
-            var gn = new Mock<IIdGenerator>();
+            
             var exId = "ex-id";
-            gn.Setup(g => g.GetNext()).Returns(exId);
+            
 
             var cSrv = new CrudService<AuditableTestEntity>(null, null, v.Object, wc, null, null, null, null, null, ecrs, logger.Object); var res = await cSrv.Update(id, entity); res.Result.ShouldBe(ServiceResult.Error); v.Verify(x => x.ValidateForUpdate(It.Is<AuditableTestEntity>(ep => ep.Id == id), It.IsAny<ServiceResponse<AuditableTestEntity>>()));
             eb.Verify(e => e.Publish(
@@ -930,9 +931,9 @@ namespace AnyService.Tests.Services
                 CurrentEntityConfigRecord = ecr
             };
 
-            var gn = new Mock<IIdGenerator>();
+            
             var exId = "ex-id";
-            gn.Setup(g => g.GetNext()).Returns(exId);
+            
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
 
             var cSrv = new CrudService<AuditableTestEntity>(null, null, v.Object, wc, null, null, null, null, null, ecrs, logger.Object);
@@ -1210,9 +1211,9 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = ecr
             };
-            var gn = new Mock<IIdGenerator>();
+            
             var exId = "ex-id";
-            gn.Setup(g => g.GetNext()).Returns(exId);
+            
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
 
             var cSrv = new CrudService<AuditableTestEntity>(null, null, v.Object, wc, null, null, null, null, null, ecrs, logger.Object);
@@ -1282,9 +1283,9 @@ namespace AnyService.Tests.Services
                 CurrentEntityConfigRecord = ecr
             };
             var eb = new Mock<IEventBus>();
-            var gn = new Mock<IIdGenerator>();
+            
             var exId = "ex-id";
-            gn.Setup(g => g.GetNext()).Returns(exId);
+            
 
             var cSrv = new CrudService<TestEntity>(null, null, v.Object, wc, null, null, null, null, null, ecrs, logger.Object);
             var id = "some-id";

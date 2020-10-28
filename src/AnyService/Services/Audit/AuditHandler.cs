@@ -23,8 +23,6 @@ namespace AnyService.Services.Audit
         public Func<DomainEvent, Task> ReadEventHandler => ded =>
         {
             var entity = ded.Data as IEntity;
-            var p = ded.Data as Pagination;
-
             var type = ded.Data.GetType();
             var entityId = entity?.Id;
             return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.READ, ded.Data), ded.Data);
@@ -35,7 +33,7 @@ namespace AnyService.Services.Audit
             var data = ded.Data as EntityUpdatedDomainEvent<IEntity>.EntityUpdatedEventData;
 
             var type = ded.Data.GetType();
-            var entityId = entity?.Id ?? data.Before?.Id;
+            var entityId = entity?.Id ?? data?.Before?.Id;
 
             return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.UPDATE, ded.Data), ded.Data);
         };
@@ -48,9 +46,10 @@ namespace AnyService.Services.Audit
 
         private async Task InsertAuditRecord(Func<IAuditManager, Task> action, object data)
         {
+            var json = data is Pagination ? data.GetType().Name : data.ToJsonString();
             using var scope = _serviceProvider.CreateScope();
             var logger = scope.ServiceProvider.GetService<ILogger<AuditHandler>>();
-            logger.LogInformation($"Start insertion of audit record. entity = {data.ToJsonString()}");
+            logger.LogInformation($"Start insertion of audit record. entity = {json}");
             var am = scope.ServiceProvider.GetService<IAuditManager>();
             await action(am);
             logger.LogDebug($"End insertion of audit record.");

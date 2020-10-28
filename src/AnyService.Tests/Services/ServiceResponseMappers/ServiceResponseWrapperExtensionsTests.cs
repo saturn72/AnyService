@@ -19,17 +19,14 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
             var eventPublished = false;
             string traceId = "exId",
                 eventKey = "ek";
-            var ig = new Mock<IIdGenerator>();
-            ig.Setup(i => i.GetNext()).Returns(traceId);
-
-            var eb = new Mock<IEventBus>();
-            eb.Setup(e => e.Publish(It.Is<string>(s => s == eventKey), It.Is<DomainEvent>(d => d.Data.GetPropertyValueByName<string>("TraceId") == traceId)))
-                .Callback(() => eventPublished = true);
-
             var wc = new WorkContext
             {
                 CurrentEntityConfigRecord = new EntityConfigRecord { EventKeys = new EventKeyRecord("create", null, null, null) },
+                TraceId = traceId
             };
+            var eb = new Mock<IEventBus>();
+            eb.Setup(e => e.Publish(It.Is<string>(s => s == eventKey), It.Is<DomainEvent>(d => d.Data.GetPropertyValueByName<string>("TraceId") == traceId)))
+                .Callback(() => eventPublished = true);
 
             ServiceProviderMock.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
             ServiceProviderMock.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
