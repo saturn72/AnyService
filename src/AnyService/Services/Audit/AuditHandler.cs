@@ -23,7 +23,9 @@ namespace AnyService.Services.Audit
         public Func<DomainEvent, Task> ReadEventHandler => ded =>
         {
             var entity = ded.Data as IEntity;
-            var type = ded.Data.GetType();
+            var data = ded.Data as Pagination;
+
+            var type = data?.Type ?? ded.Data.GetType();
             var entityId = entity?.Id;
             return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.READ, ded.WorkContext, ded.Data), ded.Data);
         };

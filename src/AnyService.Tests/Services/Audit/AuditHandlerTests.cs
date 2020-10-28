@@ -80,7 +80,7 @@ namespace AnyService.Tests.Services.Audit
                 It.Is<Type>(t => t == typeof(EventDataObject)),
                 It.Is<string>(i => i == o.Id),
                 It.Is<string>(art => art == AuditRecordTypes.READ),
-                It.Is<WorkContext>(w => w == wc), 
+                It.Is<WorkContext>(w => w == wc),
                 It.Is<object>(obj => obj == o)),
                 Times.Once);
         }
@@ -109,10 +109,10 @@ namespace AnyService.Tests.Services.Audit
             };
             await h.ReadEventHandler(ded);
             am.Verify(a => a.InsertAuditRecord(
-                It.Is<Type>(t => t == o.GetType()),
+                It.Is<Type>(t => t == typeof(string)),
                 It.Is<string>(i => i == null),
                 It.Is<string>(art => art == AuditRecordTypes.READ),
-                It.Is<WorkContext>(w => w == wc), 
+                It.Is<WorkContext>(w => w == wc),
                 It.Is<object>(obj => obj == o)),
                 Times.Once);
         }
@@ -145,7 +145,7 @@ namespace AnyService.Tests.Services.Audit
                 It.Is<Type>(t => t == typeof(EventDataObject)),
                 It.Is<string>(i => i == before.Id),
                 It.Is<string>(art => art == AuditRecordTypes.UPDATE),
-                It.Is<WorkContext>(w => w == wc), 
+                It.Is<WorkContext>(w => w == wc),
                 It.Is<object>(obj => obj == before)),
                 Times.Once);
         }
@@ -178,7 +178,7 @@ namespace AnyService.Tests.Services.Audit
                 It.Is<Type>(t => t == o.GetType()),
                 It.Is<string>(i => i == null),
                 It.Is<string>(art => art == AuditRecordTypes.UPDATE),
-                It.Is<WorkContext>(w => w == wc), 
+                It.Is<WorkContext>(w => w == wc),
                 It.Is<object>(obj => obj == o)),
                 Times.Once);
         }
@@ -216,7 +216,7 @@ namespace AnyService.Tests.Services.Audit
                 It.Is<Type>(t => t == typeof(EventDataObject)),
                 It.Is<string>(i => i == before.Id),
                 It.Is<string>(art => art == AuditRecordTypes.UPDATE),
-                It.Is<WorkContext>(w => w == wc), 
+                It.Is<WorkContext>(w => w == wc),
                 It.Is<object>(obj => VerifyPayload(obj, before, after))),
                 Times.Once);
         }
@@ -256,7 +256,7 @@ namespace AnyService.Tests.Services.Audit
                 It.Is<Type>(t => t == typeof(EventDataObject)),
                 It.Is<string>(i => i == o.Id),
                 It.Is<string>(art => art == AuditRecordTypes.DELETE),
-                It.Is<WorkContext>(w => w == wc), 
+                It.Is<WorkContext>(w => w == wc),
                 It.Is<object>(obj => obj == o)),
                 Times.Once);
         }
