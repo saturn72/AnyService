@@ -19,7 +19,7 @@ namespace AnyService.Tests.Services.Audit
             var ah = new Mock<IAuditManager>();
             var t = new TestClass { Id = "a" };
             var wc = new WorkContext();
-
+            
             await AuditManagerExtensions.InsertCreateRecord(ah.Object, t, wc);
             ah.Verify(a => a.InsertAuditRecord(
                 It.Is<Type>(x => x == typeof(TestClass)),

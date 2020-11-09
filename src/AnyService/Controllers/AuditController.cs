@@ -60,7 +60,7 @@ namespace AnyService.Controllers
             [FromQuery] string sortOrder = PaginationSettings.Asc
             )
         {
-            _logger.LogDebug(LoggingEvents.Controller, $"Start Get all audit flow. With values: " +
+            _logger.LogInformation(LoggingEvents.Controller, $"Start Get all audit flow. With values: " +
                 $"\'{nameof(auditRecordTypes)}\' = \'{auditRecordTypes}\'," +
                 $"\'{nameof(entityNames)}\' = \'{entityNames}\'," +
                 $"\'{nameof(entityIds)}\' = \'{entityIds}\'," +

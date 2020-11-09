@@ -6,7 +6,6 @@ using AnyService.Security;
 using AnyService.Events;
 using AnyService.Services.FileStorage;
 using Microsoft.Extensions.Logging;
-using AnyService.Services.Audit;
 using AnyService.Services.Preparars;
 using System.Collections.Generic;
 
@@ -169,7 +168,7 @@ namespace AnyService.Services
                 serviceResponse.Payload = pagination;
                 serviceResponse.Result = ServiceResult.Ok;
 
-                Publish(CurrentEntityConfigRecord.EventKeys.Read, serviceResponse.Payload);
+                Publish(CurrentEntityConfigRecord.EventKeys.Read, serviceResponse.Payload as Pagination);
             }
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;

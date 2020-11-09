@@ -26,7 +26,7 @@ namespace AnyService.Services.Audit
 
             var type = data?.Type ?? ded.Data.GetType();
             var entityId = entity?.Id;
-            var entityJson = data?.GetType().Name ?? entity.ToJsonString();
+            var entityJson = data?.Type.Name ?? entity.ToJsonString();
             return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.READ, ded.WorkContext, ded.Data), entityJson);
         };
         public Func<DomainEvent, Task> UpdateEventHandler => ded =>
