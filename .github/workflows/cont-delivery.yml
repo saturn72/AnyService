@@ -60,12 +60,12 @@ jobs:
       # - name: Pack anyservice.easycaching nuget package
       #   working-directory: ./src
       #   run: dotnet pack ./AnyServiceModules/EasyCaching/AnyService.EasyCaching/AnyService.EasyCaching.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
-      - name: Pack anyservice.entityframework nuget package
-        working-directory: ./src
-        run: dotnet pack ./AnyServiceModules/EntityFramework/AnyService.EntityFramework/AnyService.EntityFramework.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
-      # - name: Pack anyservice.litedb nuget package
+      # - name: Pack anyservice.entityframework nuget package
       #   working-directory: ./src
-      #   run: dotnet pack ./AnyServiceModules/LiteDb/AnyService.LiteDb/AnyService.LiteDb.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
+      #   run: dotnet pack ./AnyServiceModules/EntityFramework/AnyService.EntityFramework/AnyService.EntityFramework.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
+      - name: Pack anyservice.litedb nuget package
+        working-directory: ./src
+        run: dotnet pack ./AnyServiceModules/LiteDb/AnyService.LiteDb/AnyService.LiteDb.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       - name: Push packages to nuget
         working-directory: ./src/nupkg
         run: dotnet nuget push *.nupkg --api-key $nuget_api_key --source https://api.nuget.org/v3/index.json
