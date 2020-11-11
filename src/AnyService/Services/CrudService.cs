@@ -8,6 +8,7 @@ using AnyService.Services.FileStorage;
 using Microsoft.Extensions.Logging;
 using AnyService.Services.Preparars;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace AnyService.Services
 {
@@ -167,8 +168,9 @@ namespace AnyService.Services
             {
                 serviceResponse.Payload = pagination;
                 serviceResponse.Result = ServiceResult.Ok;
-
-                Publish(CurrentEntityConfigRecord.EventKeys.Read, serviceResponse.Payload as Pagination);
+                Expression<Func<TEntity, bool>> exp = x => pagination.QueryFunc(x);
+                pagination.QueryOrFilter = exp.ToString();
+                Publish(CurrentEntityConfigRecord.EventKeys.Read, new Pagination(pagination));
             }
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;

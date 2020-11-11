@@ -14,6 +14,7 @@ using AnyService.Services.Preparars;
 using AnyService.Services.Audit;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using System.Reflection;
 
 namespace AnyService.Tests.Services
 {
@@ -616,7 +617,8 @@ namespace AnyService.Tests.Services
             data.ShouldBeOfType<AuditableTestEntity[]>().Length.ShouldBe(0);
             eb.Verify(e => e.Publish(
                     It.Is<string>(k => k == ekr.Read),
-                    It.Is<DomainEvent>(ed => ed.Data == p && ed.PerformedByUserId == wc.CurrentUserId)),
+                    It.Is<DomainEvent>(ed => VerifyDomainEventDataPaginationData(ed, p.Data) 
+                        && ed.PerformedByUserId == wc.CurrentUserId)),
                 Times.Once);
         }
         [Fact]
@@ -706,8 +708,17 @@ namespace AnyService.Tests.Services
             res.Payload.ShouldBe(paginate);
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == ekr.Read),
-                It.Is<DomainEvent>(ed => ed.Data == paginate && ed.PerformedByUserId == wc.CurrentUserId)), Times.Once);
+                It.Is<DomainEvent>(ed => VerifyDomainEventDataPaginationData(ed, paginate.Data) && ed.PerformedByUserId == wc.CurrentUserId)), Times.Once);
         }
+
+        private bool VerifyDomainEventDataPaginationData(DomainEvent ed, IEnumerable<AuditableTestEntity> expData)
+        {
+            var pi = ed.Data.GetType().GetProperty("DataObject", BindingFlags.Instance | BindingFlags.NonPublic);
+            var pData =(IEnumerable<AuditableTestEntity>)pi.GetValue(ed.Data); 
+
+            return pData == expData;
+        }
+
         [Fact]
         public async Task GetAll_ReturnsDeletedByConfiguration_DoShowDeleted_QueryRepository_With_Deleted()
         {
@@ -915,7 +926,7 @@ namespace AnyService.Tests.Services
                wc, mp.Object, eb.Object,
                null, null, null,
                ecrs, logger.Object);
-            
+
             var res = await cSrv.Update(id, entity); res.Result.ShouldBe(ServiceResult.Error);
             res.TraceId.ShouldBe(wc.TraceId);
             v.Verify(x => x.ValidateForUpdate(It.Is<AuditableTestEntity>(ep => ep.Id == id), It.IsAny<ServiceResponse<AuditableTestEntity>>()));

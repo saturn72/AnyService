@@ -10,6 +10,18 @@ namespace AnyService.Services
         {
             Type = type;
         }
+        public Pagination(Pagination pagination) : this(pagination.Type)
+        {
+            IncludeNested = pagination.IncludeNested;
+            DataObject = pagination.DataObject;
+            Offset = pagination.Offset;
+            OrderBy = pagination.OrderBy;
+            PageSize = pagination.PageSize;
+            QueryOrFilter = pagination.QueryOrFilter;
+            SortOrder = pagination.SortOrder;
+            Total = pagination.Total;
+        }
+
         /// <summary>
         /// Gets or sets the type of data collection
         /// </summary>
