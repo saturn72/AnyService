@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace AnyService.Services.Audit
@@ -27,7 +28,24 @@ namespace AnyService.Services.Audit
             var type = data?.Type ?? ded.Data.GetType();
             var entityId = entity?.Id;
             var entityJson = data?.Type.Name ?? entity.ToJsonString();
-            return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.READ, ded.WorkContext, ded.Data), entityJson);
+            return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.READ, ded.WorkContext, ToAuditPagination(data) ?? entity), entityJson);
+
+            object ToAuditPagination(Pagination p)
+            {
+                return p == null ?
+                    null :
+                new
+                {
+                    p.IncludeNested,
+                    p.Offset,
+                    p.OrderBy,
+                    p.PageSize,
+                    p.QueryOrFilter,
+                    p.SortOrder,
+                    p.Total,
+                    Type = p.Type.FullName,
+                };
+            }
         };
         public Func<DomainEvent, Task> UpdateEventHandler => ded =>
         {

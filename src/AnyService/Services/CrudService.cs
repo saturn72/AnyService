@@ -170,7 +170,8 @@ namespace AnyService.Services
                 serviceResponse.Result = ServiceResult.Ok;
                 Expression<Func<TEntity, bool>> exp = x => pagination.QueryFunc(x);
                 pagination.QueryOrFilter = exp.ToString();
-                Publish(CurrentEntityConfigRecord.EventKeys.Read, new Pagination(pagination));
+
+                Publish(CurrentEntityConfigRecord.EventKeys.Read, pagination);
             }
             Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Service Response: {serviceResponse}");
             return serviceResponse;
