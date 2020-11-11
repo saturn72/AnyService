@@ -34,17 +34,18 @@ namespace AnyService.Services.Audit
             {
                 return p == null ?
                     null :
-                new
-                {
-                    p.IncludeNested,
-                    p.Offset,
-                    p.OrderBy,
-                    p.PageSize,
-                    p.QueryOrFilter,
-                    p.SortOrder,
-                    p.Total,
-                    Type = p.Type.FullName,
-                };
+                    new
+                    {
+                        Data = p.DataObject,
+                        p.IncludeNested,
+                        p.Offset,
+                        p.OrderBy,
+                        p.PageSize,
+                        p.QueryOrFilter,
+                        p.SortOrder,
+                        p.Total,
+                        Type = p.Type.FullName,
+                    };
             }
         };
         public Func<DomainEvent, Task> UpdateEventHandler => ded =>

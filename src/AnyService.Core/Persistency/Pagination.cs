@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Net;
 
 namespace AnyService.Services
 {
@@ -49,7 +50,7 @@ namespace AnyService.Services
         /// <summary>
         /// Sets or gets the data for internal usage
         /// </summary>
-        internal object DataObject { get; set; }
+        public object DataObject { get; internal set; }
     }
     public class Pagination<TEntity> : Pagination
     {

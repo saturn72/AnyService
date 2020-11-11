@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -113,7 +114,7 @@ namespace AnyService.Tests.Services.Audit
                 It.Is<string>(i => i == null),
                 It.Is<string>(art => art == AuditRecordTypes.READ),
                 It.Is<WorkContext>(w => w == wc),
-                It.Is<object>(obj => obj == o)),
+                It.Is<object>(obj => obj.GetPropertyValueByName<IEnumerable<string>>("Data") == o.Data)),
                 Times.Once);
         }
         [Fact]
