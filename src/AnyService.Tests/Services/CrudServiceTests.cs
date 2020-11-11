@@ -617,7 +617,7 @@ namespace AnyService.Tests.Services
             data.ShouldBeOfType<AuditableTestEntity[]>().Length.ShouldBe(0);
             eb.Verify(e => e.Publish(
                     It.Is<string>(k => k == ekr.Read),
-                    It.Is<DomainEvent>(ed => VerifyDomainEventDataPaginationData(ed, p.Data) 
+                    It.Is<DomainEvent>(ed => ed.Data.GetPropertyValueByName<IEnumerable<AuditableTestEntity>>("DataObject") == p.Data
                         && ed.PerformedByUserId == wc.CurrentUserId)),
                 Times.Once);
         }
@@ -708,17 +708,11 @@ namespace AnyService.Tests.Services
             res.Payload.ShouldBe(paginate);
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == ekr.Read),
-                It.Is<DomainEvent>(ed => VerifyDomainEventDataPaginationData(ed, paginate.Data) && ed.PerformedByUserId == wc.CurrentUserId)), Times.Once);
+                It.Is<DomainEvent>(ed =>
+                ed.Data.GetPropertyValueByName<IEnumerable<AuditableTestEntity>>("DataObject") == paginate.Data && ed.PerformedByUserId == wc.CurrentUserId)), Times.Once);
         }
 
-        private bool VerifyDomainEventDataPaginationData(DomainEvent ed, IEnumerable<AuditableTestEntity> expData)
-        {
-            var pi = ed.Data.GetType().GetProperty("DataObject", BindingFlags.Instance | BindingFlags.NonPublic);
-            var pData =(IEnumerable<AuditableTestEntity>)pi.GetValue(ed.Data); 
-
-            return pData == expData;
-        }
-
+        
         [Fact]
         public async Task GetAll_ReturnsDeletedByConfiguration_DoShowDeleted_QueryRepository_With_Deleted()
         {
