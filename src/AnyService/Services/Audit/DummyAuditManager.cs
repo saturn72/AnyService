@@ -1,4 +1,5 @@
 ﻿using AnyService.Audity;
+using AnyService.Events;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,14 @@ namespace AnyService.Services.Audit
             IRepository<AuditRecord> repository,
             AuditSettings auditConfig,
             IEnumerable<EntityConfigRecord> entityConfigRecords,
-            ILogger<AuditManager> logger) : base(repository, auditConfig, entityConfigRecords, logger)
+            IEventBus eventBus,
+            ILogger<AuditManager> logger)
+            : base(
+                  repository,
+                  auditConfig,
+                  entityConfigRecords,
+                  eventBus,
+                  logger)
         {
         }
 

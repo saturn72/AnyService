@@ -1,4 +1,5 @@
 ﻿using AnyService.Audity;
+using AnyService.Events;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
@@ -15,8 +16,11 @@ namespace AnyService.Services.Audit
         private readonly IRepository<AuditRecord> _repository;
         private readonly AuditSettings _auditSettings;
         private readonly IEnumerable<EntityConfigRecord> _entityConfigRecords;
+        private readonly IEventBus _eventBus;
         private readonly ILogger<AuditManager> _logger;
         private static readonly IEnumerable<string> FaultedServiceResult = new[] { ServiceResult.BadOrMissingData, ServiceResult.Error, ServiceResult.NotFound };
+        private static EventKeyRecord EventKeys;
+
         #endregion
 
         #region ctor
@@ -24,13 +28,17 @@ namespace AnyService.Services.Audit
             IRepository<AuditRecord> repository,
             AuditSettings auditConfig,
             IEnumerable<EntityConfigRecord> entityConfigRecords,
+            IEventBus eventBus,
             ILogger<AuditManager> logger
             )
         {
             _repository = repository;
             _auditSettings = auditConfig;
             _entityConfigRecords = entityConfigRecords;
+            _eventBus = eventBus;
             _logger = logger;
+
+            EventKeys ??= _entityConfigRecords.First(typeof(AuditRecord)).EventKeys;
         }
         #endregion
         public async virtual Task<ServiceResponse<AuditPagination>> GetAll(AuditPagination pagination)
@@ -111,7 +119,9 @@ namespace AnyService.Services.Audit
                 ClientId = workContext.CurrentClientId,
                 CreatedOnUtc = DateTime.UtcNow.ToIso8601(),
             };
-            return await _repository.Insert(record);
+            var res = await _repository.Insert(record);
+            _eventBus.Publish(EventKeys.Create, res, workContext);
+            return res;
         }
 
         private bool ShouldAudit(string auditRecordType)

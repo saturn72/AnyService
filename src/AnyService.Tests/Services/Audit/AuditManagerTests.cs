@@ -1,4 +1,5 @@
 ﻿using AnyService.Audity;
+using AnyService.Events;
 using AnyService.Services;
 using AnyService.Services.Audit;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,12 @@ namespace AnyService.Tests.Services.Audit
 {
     public class AuditManagerTests
     {
+        #region InsertRecord
+
+        public class TestClass : IEntity, IFullAudit
+        {
+            public string Id { get; set; }
+        }
         [Theory]
         [InlineData(AuditRecordTypes.CREATE)]
         [InlineData(AuditRecordTypes.READ)]
@@ -25,10 +32,48 @@ namespace AnyService.Tests.Services.Audit
             {
                 AuditRules = new AuditRules()
             };
-            var am = new AuditManager(null, aSettings, null, null);
+            var ecrs = new[]
+            {
+                new EntityConfigRecord{Type = typeof(AuditRecord), EventKeys = new EventKeyRecord("c", "r", "u", "d")}
+            };
+            var am = new AuditManager(null, aSettings, ecrs, null, null);
             var res = await am.InsertAuditRecord(null, null, art, null, null);
             res.ShouldBeNull();
         }
+        [Fact]
+        public async Task CreatesNewRecord()
+        {
+            var aSettings = new AuditSettings
+            {
+                AuditRules = new AuditRules
+                {
+                    AuditCreate = true
+                }
+            };
+            string eId = "entity-id",
+                createdKey = "c";
+            var data = new TestClass();
+            var dbData = new AuditRecord();
+            var wc = new WorkContext
+            {
+
+            };
+            var ecrs = new[]
+            {
+                new EntityConfigRecord{Type = typeof(AuditRecord), EntityKey = eId, EventKeys = new EventKeyRecord(createdKey, "r", "u", "d")},
+                new EntityConfigRecord{Type = typeof(TestClass), Name = "name", EntityKey = "test-class", EventKeys = new EventKeyRecord("ccc", "r", "u", "d")}
+            };
+            var repo = new Mock<IRepository<AuditRecord>>();
+            repo.Setup(r => r.Insert(It.IsAny<AuditRecord>())).ReturnsAsync(dbData);
+            var eb = new Mock<IEventBus>();
+            var logger = new Mock<ILogger<AuditManager>>();
+
+            var am = new AuditManager(repo.Object, aSettings, ecrs, eb.Object, logger.Object);
+            var res = await am.InsertAuditRecord(typeof(TestClass), eId, AuditRecordTypes.CREATE, wc, data);
+            res.ShouldNotBeNull();
+            eb.Verify(e => e.Publish(It.Is<string>(s => s == createdKey), It.Is<DomainEvent>(ded => ded.Data == dbData)), Times.Once);
+        }
+        #endregion
         #region Get All
         [Fact]
         public async Task GetAll_ReturnsErrorOn_RepositoryException()
@@ -37,9 +82,12 @@ namespace AnyService.Tests.Services.Audit
             repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>()))
                 .ThrowsAsync(new Exception());
             var aConfig = new AuditSettings();
-
+            var ecrs = new[]
+            {
+                new EntityConfigRecord{Type = typeof(AuditRecord), EventKeys = new EventKeyRecord("c", "r", "u", "d")}
+            };
             var logger = new Mock<ILogger<AuditManager>>();
-            var aSrv = new AuditManager(repo.Object, aConfig, null, logger.Object);
+            var aSrv = new AuditManager(repo.Object, aConfig, ecrs, null, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Error);
         }
@@ -50,9 +98,12 @@ namespace AnyService.Tests.Services.Audit
             repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>()))
                 .ReturnsAsync(null as IEnumerable<AuditRecord>);
             var aConfig = new AuditSettings();
-
+            var ecrs = new[]
+            {
+                new EntityConfigRecord{Type = typeof(AuditRecord), EventKeys = new EventKeyRecord("c", "r", "u", "d")}
+            };
             var logger = new Mock<ILogger<AuditManager>>();
-            var aSrv = new AuditManager(repo.Object, aConfig, null, logger.Object);
+            var aSrv = new AuditManager(repo.Object, aConfig, ecrs, null, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Ok);
             srvRes.Payload.Data.ShouldBeEmpty();
@@ -69,9 +120,12 @@ namespace AnyService.Tests.Services.Audit
             };
             repo.Setup(x => x.GetAll(It.IsAny<Pagination<AuditRecord>>())).ReturnsAsync(repoData);
             var aConfig = new AuditSettings();
-
+            var ecrs = new[]
+            {
+                new EntityConfigRecord{Type = typeof(AuditRecord), EventKeys = new EventKeyRecord("c", "r", "u", "d")}
+            };
             var logger = new Mock<ILogger<AuditManager>>();
-            var aSrv = new AuditManager(repo.Object, aConfig, null, logger.Object);
+            var aSrv = new AuditManager(repo.Object, aConfig, ecrs, null, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Ok);
             srvRes.Payload.Data.ShouldBe(repoData);
@@ -212,7 +266,11 @@ namespace AnyService.Tests.Services.Audit
 
         public class TestAuditManager : AuditManager
         {
-            public TestAuditManager() : base(null, null, null, null)
+            static IEnumerable<EntityConfigRecord> ecrs = new[]
+            {
+                new EntityConfigRecord{Type = typeof(AuditRecord), EventKeys = new EventKeyRecord("c", "r", "u", "d")}
+            };
+            public TestAuditManager() : base(null, null, ecrs, null, null)
             {
             }
             public Func<AuditRecord, bool> QueryBuilder(AuditPagination pagination) => BuildAuditPaginationQuery(pagination);

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
-		<TargetFramework>netcoreapp3.0</TargetFramework>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<IsPackable>true</IsPackable>
 		<PackageId>anyservice</PackageId>
 		<Version>1.1.102-Preview</Version>
