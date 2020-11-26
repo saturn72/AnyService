@@ -25,23 +25,26 @@ namespace AnyService.Controllers
         };
 
         private readonly IAuditManager _auditManager;
-        private readonly ILogger<AuditController> _logger;
+        private readonly AnyServiceConfig _config;
         private readonly WorkContext _workContext;
         private readonly IServiceResponseMapper _serviceResponseMapper;
+        private readonly ILogger<AuditController> _logger;
         #endregion
 
         #region ctor
         public AuditController(
             IAuditManager auditManager,
-            ILogger<AuditController> logger,
+            AnyServiceConfig config,
             WorkContext workContext,
-            IServiceResponseMapper serviceResponseMapper
+            IServiceResponseMapper serviceResponseMapper,
+            ILogger<AuditController> logger
             )
         {
             _auditManager = auditManager;
-            _logger = logger;
+            _config = config;
             _workContext = workContext;
             _serviceResponseMapper = serviceResponseMapper;
+            _logger = logger;
         }
         #endregion
 
@@ -54,10 +57,12 @@ namespace AnyService.Controllers
             [FromQuery] string clientIds = "",
             [FromQuery] string fromUtc = "",
             [FromQuery] string toUtc = "",
+            [FromQuery] string projectedFields = "",
             [FromQuery] int offset = 0,
             [FromQuery] int pageSize = 100,
             [FromQuery] string orderBy = null,
-            [FromQuery] string sortOrder = PaginationSettings.Asc
+            [FromQuery] string sortOrder = PaginationSettings.Asc,
+            [FromQuery] bool dataOnly = true
             )
         {
             _logger.LogInformation(LoggingEvents.Controller, $"Start Get all audit flow. With values: " +
@@ -68,14 +73,20 @@ namespace AnyService.Controllers
                 $"\'{nameof(clientIds)}\' = \'{clientIds}\'," +
                 $"\'{nameof(fromUtc)}\' = \'{fromUtc}\'," +
                 $"\'{nameof(toUtc)}\' = \'{toUtc}\'," +
+                $" \'{nameof(projectedFields)}\' = \'{projectedFields}\', " +
                 $" \'{nameof(orderBy)}\' = \'{orderBy}\', " +
                 $"\'{nameof(offset)}\' = \'{offset}\', " +
                 $"\'{nameof(pageSize)}\' = \'{pageSize}\', " +
                 $"\'{nameof(sortOrder)}\' = \'{sortOrder}\'");
 
             var pagination = QueryParamsToPagination(
-                auditRecordTypes, entityNames, entityIds, userIds, clientIds,
-                fromUtc, toUtc, offset, pageSize, orderBy, sortOrder);
+                auditRecordTypes, entityNames,
+                entityIds, userIds,
+                clientIds,
+                fromUtc, toUtc,
+                projectedFields,
+                offset, pageSize,
+                orderBy, sortOrder);
 
             if (!IsValidRequest(pagination))
                 return BadRequest();
@@ -83,9 +94,16 @@ namespace AnyService.Controllers
             var srvRes = await _auditManager.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller,
                 $"Get all audit service result: '{srvRes.Result}', message: '{srvRes.Message}', {nameof(ServiceResponse.TraceId)}: '{srvRes.TraceId}', data: '{pagination.Data.ToJsonString()}'");
-            return _serviceResponseMapper.MapServiceResponse<AuditPaginationModel>(srvRes);
 
+            return ToPaginationActionResult(srvRes, dataOnly);
         }
+        private IActionResult ToPaginationActionResult(ServiceResponse<AuditPagination> serviceResponse, bool dataOnly)
+        {
+            return dataOnly && serviceResponse.ValidateServiceResponse() ?
+                new OkObjectResult(serviceResponse.Payload.Data.Map<IEnumerable<AuditRecordModel>>(_config.MapperName)) :
+                _serviceResponseMapper.MapServiceResponse<AuditPaginationModel>(serviceResponse);
+        }
+
         private AuditPagination QueryParamsToPagination(
             string auditRecordTypes,
             string entityNames,
@@ -94,6 +112,7 @@ namespace AnyService.Controllers
             string clientIds,
             string fromUtc,
             string toUtc,
+            string projectedFields,
             int offset,
             int pageSize,
             string orderBy,
@@ -115,18 +134,15 @@ namespace AnyService.Controllers
                 ClientIds = getClientIdsOrNull(clientIds),
                 FromUtc = fromDate,
                 ToUtc = toDate,
+                ProjectedFields = splitOrNull(projectedFields),
                 Offset = offset,
                 PageSize = pageSize,
                 OrderBy = orderBy,
                 SortOrder = sortOrder
             };
 
-            static IEnumerable<string> splitOrNull(string source)
-            {
-                return source.HasValue() ?
-                    source.Split(",", StringSplitOptions.RemoveEmptyEntries)
-                    : null;
-            }
+            static IEnumerable<string> splitOrNull(string source) =>
+                source?.Split(",", StringSplitOptions.RemoveEmptyEntries);
 
             IEnumerable<string> getUserIdsOrNull(string userIds)
             {

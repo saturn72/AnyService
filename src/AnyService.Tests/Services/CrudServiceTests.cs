@@ -525,6 +525,37 @@ namespace AnyService.Tests.Services
             res.Result.ShouldBe(ServiceResult.BadOrMissingData);
             res.Payload.ShouldBeNull();
         }
+        [Fact]
+        public async Task GetAll_BadRequest_OnInvalidProjectedFields()
+        {
+            var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
+            v.Setup(i => i.ValidateForGet(
+                It.IsAny<Pagination<AuditableTestEntity>>(),
+                It.IsAny<ServiceResponse<Pagination<AuditableTestEntity>>>()))
+                .ReturnsAsync(true);
+            var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
+
+            var ecr = new EntityConfigRecord
+            {
+                Type = typeof(AuditableTestEntity),
+            };
+            var ecrs = new[] { ecr };
+
+            var wc = new WorkContext
+            {
+                CurrentUserId = "some-user-id",
+                CurrentEntityConfigRecord = ecr
+            };
+            var p = new Pagination<AuditableTestEntity>
+            {
+                ProjectedFields = new[] { "rrrrrr" }
+            };
+            var cSrv = new CrudService<AuditableTestEntity>(null, null, v.Object, wc, null, null, null, null, null, ecrs, logger.Object);
+            var res = await cSrv.GetAll(p);
+            res.Result.ShouldBe(ServiceResult.BadOrMissingData);
+            res.Payload.ShouldBe(p);
+        }
+
         [Theory]
         [MemberData(nameof(GetAll_EmptyQuery_DATA))]
         public async Task GetAll_EmptyQuery(Pagination<AuditableTestEntity> pagination)
@@ -670,7 +701,10 @@ namespace AnyService.Tests.Services
         public async Task GetAll_ReturnesResponseFromDB()
         {
             var model = new AuditableTestEntity();
-            var paginate = new Pagination<AuditableTestEntity>("id > 0");
+            var paginate = new Pagination<AuditableTestEntity>("id > 0")
+            {
+                ProjectedFields = new[] { nameof(AuditableTestEntity.Deleted) }
+            };
             var dbRes = new[] { model };
             var repo = new Mock<IRepository<AuditableTestEntity>>();
             repo.Setup(r => r.GetAll(It.Is<Pagination<AuditableTestEntity>>(d => d == paginate)))
@@ -706,13 +740,12 @@ namespace AnyService.Tests.Services
             res.Result.ShouldBe(ServiceResult.Ok);
             paginate.Data.ShouldBe(dbRes);
             res.Payload.ShouldBe(paginate);
+            repo.Verify(r => r.GetAll(It.Is<Pagination<AuditableTestEntity>>(p => p.ProjectedFields.Count() == 1 && p.ProjectedFields.Contains(nameof(AuditableTestEntity.Deleted)))), Times.Once);
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == ekr.Read),
                 It.Is<DomainEvent>(ed =>
                 ed.Data.GetPropertyValueByName<IEnumerable<AuditableTestEntity>>("DataObject") == paginate.Data && ed.PerformedByUserId == wc.CurrentUserId)), Times.Once);
         }
-
-        
         [Fact]
         public async Task GetAll_ReturnsDeletedByConfiguration_DoShowDeleted_QueryRepository_With_Deleted()
         {

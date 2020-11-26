@@ -39,8 +39,7 @@ namespace AnyService.E2E
             var res = await HttpClient.GetAsync($"dependentmodel?query=__public");
             res.EnsureSuccessStatusCode();
             var content = await res.Content.ReadAsStringAsync();
-            var jObj = JObject.Parse(content);
-            var jArr = jObj["data"] as JArray;
+            var jArr = JArray.Parse(content);
             jArr.Count.ShouldBe(totalEntities / 2);
             #endregion
             #region canRead
@@ -48,14 +47,12 @@ namespace AnyService.E2E
             res = await HttpClient.GetAsync($"dependentmodel?query=__canRead");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
+            jArr = JArray.Parse(content);
             jArr.Count.ShouldBe(totalEntities);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
             content = await HttpClient.GetStringAsync($"dependentmodel?query=__canRead");
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
+            jArr = JArray.Parse(content);
             jArr.Count.ShouldBe(0);
             #endregion
 
@@ -64,14 +61,12 @@ namespace AnyService.E2E
             res = await HttpClient.GetAsync($"dependentmodel?query=__canUpdate");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
+            jArr = JArray.Parse(content);
             jArr.Count.ShouldBe(totalEntities);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
             content = await HttpClient.GetStringAsync($"dependentmodel?query=__canUpdate");
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
+            jArr = JArray.Parse(content);
             jArr.Count.ShouldBe(0);
             #endregion
             #region canUpdate
@@ -79,14 +74,12 @@ namespace AnyService.E2E
             res = await HttpClient.GetAsync($"dependentmodel?query=__canDelete");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
+            jArr = JArray.Parse(content);
             jArr.Count.ShouldBe(totalEntities);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
             content = await HttpClient.GetStringAsync($"dependentmodel?query=__canDelete");
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
+            jArr = JArray.Parse(content);
             jArr.Count.ShouldBe(0);
             #endregion
         }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Net;
 
 namespace AnyService.Services
 {
@@ -15,7 +14,10 @@ namespace AnyService.Services
         /// Gets or sets the type of data collection
         /// </summary>
         public Type Type { get; }
-
+        /// <summary>
+        /// Gets or sets the projected Fields
+        /// </summary>
+        public IEnumerable<string> ProjectedFields { get; set; }
         /// <summary>
         /// Gets or sets the total number of entities 
         /// </summary>

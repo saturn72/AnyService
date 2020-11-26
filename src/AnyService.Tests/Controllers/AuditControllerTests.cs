@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -48,7 +49,7 @@ namespace AnyService.Tests.Controllers
         {
             var l = new Mock<ILogger<AuditController>>();
             var wc = new WorkContext { CurrentClientId = "1232" };
-            var ctrl = new AuditController(null, l.Object, wc, null);
+            var ctrl = new AuditController(null, null, wc, null, l.Object);
 
             var res = await ctrl.GetAll(auditRecordTypes: auditRecordTypes);
             res.ShouldBeOfType<BadRequestResult>();
@@ -60,7 +61,7 @@ namespace AnyService.Tests.Controllers
         public async Task GetAll_InvalidFrom_Todates_ReturnsBadRequest(string fromUtc, string toUtc)
         {
             var l = new Mock<ILogger<AuditController>>();
-            var ctrl = new AuditController(null, l.Object, null, null);
+            var ctrl = new AuditController(null, null, null, null, l.Object);
 
             var res = await ctrl.GetAll(fromUtc: fromUtc, toUtc: toUtc);
             res.ShouldBeOfType<BadRequestResult>();
@@ -95,9 +96,46 @@ namespace AnyService.Tests.Controllers
                 .Returns(new OkResult())
                 .Callback<Type, ServiceResponse>((t2, s) => srvRes = s as ServiceResponse<AuditPagination>);
             var wc = new WorkContext { CurrentClientId = "1232" };
-            var ctrl = new AuditController(aSrv.Object, l.Object, wc, rm.Object);
+            var c = new AnyServiceConfig { MapperName = "default" };
+            var ctrl = new AuditController(aSrv.Object, c, wc, rm.Object, l.Object);
 
             var res = await ctrl.GetAll(auditRecordTypes: AuditRecordTypes.CREATE);
+            var ok = res.ShouldBeOfType<OkObjectResult>();
+            var v = ok.Value.ShouldBeOfType<List<AuditRecordModel>>();
+
+            v.Count().ShouldBe(page.Data.Count());
+            v.ShouldAllBe(x => page.Data.Any(d => d.Id == x.Id));
+        }
+        [Fact]
+        public async Task GetAll_ReturnsPage_Pagination()
+        {
+            var page = new AuditPagination
+            {
+                Data = new[]
+                {
+                    new AuditRecord{Id = "a"},
+                    new AuditRecord{Id = "b"},
+                    new AuditRecord{Id = "c"},
+                    new AuditRecord{Id = "d"},
+                }
+            };
+            var aSrv = new Mock<IAuditManager>();
+            aSrv.Setup(c => c.GetAll(It.IsAny<AuditPagination>()))
+                .ReturnsAsync(new ServiceResponse<AuditPagination> { Payload = page, Result = ServiceResult.Ok });
+
+            var l = new Mock<ILogger<AuditController>>();
+            var rm = new Mock<IServiceResponseMapper>();
+            ServiceResponse<AuditPagination> srvRes = null;
+            rm.Setup(r => r.MapServiceResponse(
+                It.Is<Type>(t => t == typeof(AuditPaginationModel)),
+                It.IsAny<ServiceResponse>()))
+                .Returns(new OkResult())
+                .Callback<Type, ServiceResponse>((t2, s) => srvRes = s as ServiceResponse<AuditPagination>);
+            var wc = new WorkContext { CurrentClientId = "1232" };
+            var c = new AnyServiceConfig { MapperName = "default" };
+            var ctrl = new AuditController(aSrv.Object, c, wc, rm.Object, l.Object);
+
+            var res = await ctrl.GetAll(dataOnly: false, auditRecordTypes: AuditRecordTypes.CREATE);
 
             srvRes.Payload.ShouldBe(page);
         }

@@ -45,8 +45,7 @@ namespace AnyService.E2E
             var res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.CREATE}&entityNames=Stock");
             res.EnsureSuccessStatusCode();
             var content = await res.Content.ReadAsStringAsync();
-            var jObj = JObject.Parse(content);
-            var jArr = jObj["data"] as JArray;
+            var jArr = JArray.Parse(content);
             _output.WriteLine(jArr.ToString());
             jArr.Count.ShouldBe(totalEntities);
 
@@ -56,8 +55,7 @@ namespace AnyService.E2E
             res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.CREATE}&entityNames=Stock");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
+            jArr = JArray.Parse(content);
             jArr.Count.ShouldBe(0);
             #endregion
             #region updated
@@ -74,16 +72,14 @@ namespace AnyService.E2E
             res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.UPDATE}&entityNames=Stock");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
+            jArr = JArray.Parse(content);
             jArr.Count.ShouldBe(1);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
             res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.UPDATE}&entityNames=Stock");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
+            jArr = JArray.Parse(content);
             jArr.Count.ShouldBe(0);
             #endregion
             #region delete
@@ -96,16 +92,14 @@ namespace AnyService.E2E
             res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.DELETE}&entityNames=Stock");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
+            jArr = JArray.Parse(content);
             jArr.Count.ShouldBe(2);
 
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
             res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.DELETE}&entityNames=Stock");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            jArr = jObj["data"] as JArray;
+            jArr = JArray.Parse(content);
             jArr.Count.ShouldBe(0);
             #endregion
         }

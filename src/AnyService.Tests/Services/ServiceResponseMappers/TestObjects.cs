@@ -1,4 +1,7 @@
+using AnyService.Audity;
 using AnyService.Infrastructure;
+using AnyService.Models;
+using AnyService.Services.Audit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System;
@@ -39,6 +42,8 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
             {
                 cfg.CreateMap<TestClass1, TestClass2>()
                     .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.Id.ToString()));
+                cfg.CreateMap<AuditRecord, AuditRecordModel>();
+                cfg.CreateMap<AuditPagination, AuditPaginationModel>();
             });
 
             MappingExtensions.Build(sp.Object);

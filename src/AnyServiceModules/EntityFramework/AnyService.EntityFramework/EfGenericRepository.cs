@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System;
 using System.Collections.Concurrent;
 using System.Reflection;
@@ -55,6 +56,13 @@ namespace AnyService.EntityFramework
             q = pagination.Offset == 0 ?
                q.Take(pagination.PageSize) :
                q.Skip(pagination.Offset).Take(pagination.PageSize);
+
+            if (!pagination.ProjectedFields.IsNullOrEmpty())
+            {
+                var toProject = pagination.ProjectedFields.Aggregate((f, s) => $"{f}, {s}");
+                var selector = $"new {{ {toProject} }}";
+                q = q.Select<TDbModel>(selector).ToDynamicArray<TDbModel>().AsQueryable();
+            }
 
             var page = q.ToArray();
             _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll Detaching entities");

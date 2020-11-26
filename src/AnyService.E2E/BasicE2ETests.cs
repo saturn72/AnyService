@@ -43,7 +43,7 @@ namespace AnyService.E2E
                     r.EnsureSuccessStatusCode();
                 }
             }
-            var c = await HttpClient.GetStringAsync($"dependentmodel?query=value ==\"" + model.Value + "\"");
+            var c = await HttpClient.GetStringAsync($"dependentmodel?dataOnly=false&query=value ==\"" + model.Value + "\"");
             var jObj = JObject.Parse(c);
             var jArr = jObj["data"] as JArray;
             jArr.Count.ShouldBe(totalEntitiesPerUser);
@@ -80,12 +80,15 @@ namespace AnyService.E2E
             //no query provided
             res = await HttpClient.GetAsync("dependentmodel/");
             res.StatusCode.ShouldBe(HttpStatusCode.OK);
+            //get all with projection
+            res = await HttpClient.GetAsync("dependentmodel?projectedFields=id, value");
+            res.StatusCode.ShouldBe(HttpStatusCode.OK);
+            content = await res.Content.ReadAsStringAsync();
 
             res = await HttpClient.GetAsync($"dependentmodel?query=id==\"{id}\"");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            var jArr = jObj["data"] as JArray;
+            var jArr = JArray.Parse(content);
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
             #endregion

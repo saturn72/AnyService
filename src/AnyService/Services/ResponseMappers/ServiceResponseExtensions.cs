@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using AnyService;
 using AnyService.Services;
-using AnyService.Utilities;
 using Microsoft.AspNetCore.Http;
 
 namespace Microsoft.AspNetCore.Mvc
@@ -90,5 +89,6 @@ namespace Microsoft.AspNetCore.Mvc
            serviceResponse?.Result == ServiceResult.Ok || serviceResponse?.Result == ServiceResult.Accepted;
         public static bool ValidateServiceResponse<T>(this ServiceResponse serviceResponse) =>
            (serviceResponse?.Result == ServiceResult.Ok && serviceResponse.PayloadObject is T) || serviceResponse?.Result == ServiceResult.Accepted;
+
     }
 }

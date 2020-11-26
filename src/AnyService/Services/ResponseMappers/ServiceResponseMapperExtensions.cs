@@ -4,10 +4,10 @@ namespace AnyService.Services.ServiceResponseMappers
 {
     public static class ServiceResponseMapperExtensions
     {
-        public static IActionResult MapServiceResponse<TDestination>(this IServiceResponseMapper mapper, ServiceResponse serviceResponse)
+        public static IActionResult MapServiceResponse<TDestination>(this IServiceResponseMapper serviceResponseMapper, ServiceResponse serviceResponse)
             where TDestination : class
         {
-            return mapper.MapServiceResponse(typeof(TDestination), serviceResponse);
+            return serviceResponseMapper.MapServiceResponse(typeof(TDestination), serviceResponse);
         }
     }
 }

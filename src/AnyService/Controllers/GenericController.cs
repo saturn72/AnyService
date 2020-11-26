@@ -20,7 +20,7 @@ namespace AnyService.Controllers
     [ApiController]
     [Route("[controller]")]
     [GenericControllerNameConvention]
-    public class GenericController<TResponseObject, TDomainObject> : ControllerBase
+    public class GenericController<TResponseObject, TDomainObject> : AnyServiceControllerBase<TDomainObject>
         where TResponseObject : class
         where TDomainObject : IEntity
     {
@@ -150,29 +150,41 @@ namespace AnyService.Controllers
         public async Task<IActionResult> GetAll(
             [FromQuery] int offset,
             [FromQuery] int pageSize,
+            [FromQuery] string projectedFields = null,
             [FromQuery] string orderBy = null,
             [FromQuery] bool withNavProps = true,
             [FromQuery] string sortOrder = "desc",
-            [FromQuery] string query = "")
+            [FromQuery] string query = "",
+            [FromQuery] bool dataOnly = true)
         {
-            _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Start Get all flow. With values: " +
-                $"\'{nameof(orderBy)}\' = \'{orderBy}\', \'{nameof(offset)}\' = \'{offset}\', \'{nameof(pageSize)}\' = \'{pageSize}\', " +
-                $"\'{nameof(withNavProps)}\' = \'{withNavProps}\', \'{nameof(sortOrder)}\' = \'{sortOrder}\', \'{nameof(query)}\' = \'{query}\'");
+            _logger.LogInformation(LoggingEvents.Controller, $"{_curTypeName}: Start Get all flow. With values: " +
+                $"\'{nameof(offset)}\' = \'{offset}\', \'{nameof(pageSize)}\' = \'{pageSize}\', " +
+                $"\'{nameof(projectedFields)}\' = \'{projectedFields}\', \'{nameof(orderBy)}\' = \'{orderBy}\', " +
+                $"\'{nameof(withNavProps)}\' = \'{withNavProps}\', \'{nameof(sortOrder)}\' = \'{sortOrder}\', " +
+                $"\'{nameof(query)}\' = \'{query}\'");
 
-            var pagination = GetPagination(orderBy, offset, pageSize, withNavProps, sortOrder, query);
+            var pagination = ToPagination(orderBy, offset, projectedFields, pageSize, withNavProps, sortOrder, query);
             var srvRes = await _crudService.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller,
                 $"Get all public service result: '{srvRes.Result}', message: '{srvRes.Message}', {nameof(ServiceResponse.TraceId)}: '{srvRes.TraceId}', data: '{pagination.Data.ToJsonString()}'");
 
-            return _serviceResponseMapper.MapServiceResponse(_mapToPageType, srvRes);
+            return ToPaginationActionResult(srvRes, dataOnly);
         }
 
-        private Pagination<TDomainObject> GetPagination(string orderBy, int offset, int pageSize, bool withNavProps, string sortOrder, string query)
+        private IActionResult ToPaginationActionResult(ServiceResponse<Pagination<TDomainObject>> serviceResponse, bool dataOnly)
+        {
+            return dataOnly && serviceResponse.ValidateServiceResponse() ?
+                new OkObjectResult(serviceResponse.Payload.Data.Map<IEnumerable<TResponseObject>>(_config.MapperName)) :
+                _serviceResponseMapper.MapServiceResponse(_mapToPageType, serviceResponse);
+        }
+
+        private Pagination<TDomainObject> ToPagination(string orderBy, int offset, string projectedFields, int pageSize, bool withNavProps, string sortOrder, string query)
         {
             return new Pagination<TDomainObject>
             {
                 OrderBy = orderBy,
                 Offset = offset,
+                ProjectedFields = projectedFields?.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray(),
                 PageSize = pageSize,
                 IncludeNested = withNavProps,
                 SortOrder = sortOrder,

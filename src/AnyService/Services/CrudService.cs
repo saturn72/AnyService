@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using AnyService.Services.Preparars;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Collections.ObjectModel;
 
 namespace AnyService.Services
 {
@@ -29,6 +30,7 @@ namespace AnyService.Services
         protected readonly IFilterFactory FilterFactory;
         protected readonly IPermissionManager PermissionManager;
         private readonly EntityConfigRecord CurrentEntityConfigRecord;
+        private IEnumerable<string> _propertyNames;
         #endregion
         #region ctor
         public CrudService(
@@ -186,6 +188,21 @@ namespace AnyService.Services
 
             var filter = p.QueryOrFilter.HasValue() ?
                 await FilterFactory.GetFilter<TEntity>(p.QueryOrFilter) : null;
+
+            if (!p.ProjectedFields.IsNullOrEmpty())
+            {
+                _propertyNames ??= new ReadOnlyCollection<string>(CurrentEntityConfigRecord.Type.GetProperties().Select(p => p.Name).ToList());
+
+                var normalizedProjectedFileds = new List<string>();
+                foreach (var pf in p.ProjectedFields)
+                {
+                    var x = _propertyNames.FirstOrDefault(x => x.Equals(pf.Trim(), StringComparison.InvariantCultureIgnoreCase));
+                    if (x == null)
+                        return null;
+                    normalizedProjectedFileds.Add(x);
+                }
+                p.ProjectedFields = normalizedProjectedFileds;
+            }
 
             if (filter != null)
             {

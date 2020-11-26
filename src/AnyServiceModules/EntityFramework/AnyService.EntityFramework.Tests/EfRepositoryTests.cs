@@ -108,6 +108,7 @@ namespace AnyService.EntityFramework.Tests
                 e.Id.ShouldBe(dbEntity.Id);
                 e.Value.ShouldBe(dbEntity.Value);
             }
+            #region GetAll
             [Theory]
             [MemberData(nameof(GetAll_NullFilter_DATA))]
             public async Task GetAll_MissingFilter(Pagination<TestClass> filter)
@@ -275,6 +276,40 @@ namespace AnyService.EntityFramework.Tests
                     c.NestedClasses.ShouldBeNull();
                 }
             }
+            [Fact]
+            public async Task GetAll_WithProjection()
+            {
+                _dbContext.Set<TestClass>().RemoveRange(_dbContext.Set<TestClass>());
+                await _dbContext.SaveChangesAsync();
+                var tc = new TestClass
+                {
+                    Id = "proj-123",
+                    Flag = true,
+                    Value = "this is my value",
+                };
+
+                await _dbContext.Set<TestClass>().AddRangeAsync(tc);
+                await _dbContext.SaveChangesAsync();
+                Func<TestClass, bool> q = x => x.Id == tc.Id;
+                var p = new Pagination<TestClass>(x => q(x))
+                {
+                    OrderBy = nameof(TestClass.Flag),
+                    SortOrder = PaginationSettings.Desc,
+                    IncludeNested = false,
+                    ProjectedFields = new[] { nameof(TestClass.Flag), nameof(TestClass.Value) }
+                };
+                var e = await _repository.GetAll(p);
+
+                p.Data.ShouldBeNull();
+                p.Total.ShouldBe(1);
+
+                var c = e.ElementAt(0);
+                c.Id.ShouldBe(default);
+                c.Flag.ShouldBeTrue();
+                c.Value.ShouldBe(tc.Value);
+                c.NestedClasses.ShouldBe(default);
+            }
+            #endregion
 
             [Fact]
             public async Task Update_returnsNullOnEntityNotExists()

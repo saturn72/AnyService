@@ -52,8 +52,7 @@ namespace AnyService.E2E
             res = await HttpClient.GetAsync($"api/d?query=id==\"{id}\"");
             res.EnsureSuccessStatusCode();
             content = await res.Content.ReadAsStringAsync();
-            jObj = JObject.Parse(content);
-            var jArr = jObj["data"] as JArray;
+            var jArr = JArray.Parse(content);
             jArr.Count.ShouldBeGreaterThanOrEqualTo(1);
             jArr.Any(x => x["id"].Value<string>() == id).ShouldBeTrue();
             #endregion
