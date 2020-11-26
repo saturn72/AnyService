@@ -25,6 +25,7 @@ namespace AnyService.Controllers
         where TDomainObject : IEntity
     {
         #region fields
+        private static readonly KeyValuePair<string, string> DefaultKeyValuePair = default(KeyValuePair<string, string>);
         private readonly ICrudService<TDomainObject> _crudService;
         private readonly IServiceResponseMapper _serviceResponseMapper;
         private readonly ILogger<GenericController<TResponseObject, TDomainObject>> _logger;
@@ -163,34 +164,64 @@ namespace AnyService.Controllers
                 $"\'{nameof(withNavProps)}\' = \'{withNavProps}\', \'{nameof(sortOrder)}\' = \'{sortOrder}\', " +
                 $"\'{nameof(query)}\' = \'{query}\'");
 
-            var pagination = ToPagination(orderBy, offset, projectedFields, pageSize, withNavProps, sortOrder, query);
+            var toBeProject = projectedFields?.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
+
+            var pagination = ToPagination(orderBy, offset, toBeProject, pageSize, withNavProps, sortOrder, query);
             var srvRes = await _crudService.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller,
                 $"Get all public service result: '{srvRes.Result}', message: '{srvRes.Message}', {nameof(ServiceResponse.TraceId)}: '{srvRes.TraceId}', data: '{pagination.Data.ToJsonString()}'");
 
-            return ToPaginationActionResult(srvRes, dataOnly);
+            return ToPaginationActionResult(srvRes, dataOnly, toBeProject);
         }
 
-        private IActionResult ToPaginationActionResult(ServiceResponse<Pagination<TDomainObject>> serviceResponse, bool dataOnly)
+        private IActionResult ToPaginationActionResult(ServiceResponse<Pagination<TDomainObject>> serviceResponse, bool dataOnly, IEnumerable<string> toProject)
         {
-            return dataOnly && serviceResponse.ValidateServiceResponse() ?
-                new OkObjectResult(serviceResponse.Payload.Data.Map<IEnumerable<TResponseObject>>(_config.MapperName)) :
-                _serviceResponseMapper.MapServiceResponse(_mapToPageType, serviceResponse);
+            if (dataOnly && serviceResponse.ValidateServiceResponse())
+            {
+                var d = serviceResponse.Payload.Data.Map<IEnumerable<TResponseObject>>(_config.MapperName);
+                return toProject.IsNullOrEmpty() ?
+                        new OkObjectResult(d) :
+                        new OkObjectResult(d.Select(x => x.ToDynamic(toProject)).ToArray());
+            }
+
+            if (toProject.IsNullOrEmpty())
+                return _serviceResponseMapper.MapServiceResponse(_mapToPageType, serviceResponse);
+            var projSrvRes = new ServiceResponse(serviceResponse);
+            projSrvRes.PayloadObject = serviceResponse.Payload.Data.Select(x => x.ToDynamic(toProject)).ToArray();
+
+            return _serviceResponseMapper.MapServiceResponse(_mapToPageType, serviceResponse);
         }
 
-        private Pagination<TDomainObject> ToPagination(string orderBy, int offset, string projectedFields, int pageSize, bool withNavProps, string sortOrder, string query)
+        private Pagination<TDomainObject> ToPagination(string orderBy, int offset, IEnumerable<string> projectedFields, int pageSize, bool withNavProps, string sortOrder, string query)
         {
+            var toProject = projectedFields.IsNullOrEmpty() ? new string[] { } : getProjectionMap();
+            if (toProject == null) return null;
+
             return new Pagination<TDomainObject>
             {
                 OrderBy = orderBy,
                 Offset = offset,
-                ProjectedFields = projectedFields?.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray(),
+                ProjectedFields = toProject,
                 PageSize = pageSize,
                 IncludeNested = withNavProps,
                 SortOrder = sortOrder,
                 QueryOrFilter = query
             };
 
+            IEnumerable<string> getProjectionMap()
+            {
+                var projMaps = _workContext.CurrentEntityConfigRecord.EndpointSettings.PropertiesProjectionMap;
+                var toProject = new List<string>();
+
+                foreach (var pf in projectedFields)
+                {
+                    var pm = projMaps.FirstOrDefault(p => p.Value.Equals(pf, StringComparison.InvariantCultureIgnoreCase));
+                    if (pm.Equals(DefaultKeyValuePair))
+                        return null;
+                    toProject.Add(pm.Key);
+                }
+                return toProject;
+            }
         }
 
         #region update
@@ -228,8 +259,8 @@ namespace AnyService.Controllers
         #region Utilities
         private IActionResult MapServiceResponseIfRequired(ServiceResponse<TDomainObject> res) =>
            _shouldMap ?
-                  _serviceResponseMapper.MapServiceResponse(res) :
-                  _serviceResponseMapper.MapServiceResponse(_mapToType, res);
+                  _serviceResponseMapper.MapServiceResponse(_mapToType, res) :
+                  _serviceResponseMapper.MapServiceResponse(res);
         private async Task<TDomainObject> ExctractModelFromStream()
         {
             // Used to accumulate all the form url encoded key value pairs in the 

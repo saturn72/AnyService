@@ -12,9 +12,10 @@ using Xunit.Abstractions;
 
 namespace AnyService.E2E
 {
-    public class FilterFactoryTests : E2EFixture
+    public class FilterFactoryTests : E2ETestBase
     {
-        public FilterFactoryTests(ITestOutputHelper output) : base(output)
+        public FilterFactoryTests(E2EFixture fixture, ITestOutputHelper outputHelper) :
+            base(fixture, outputHelper)
         {
         }
 
@@ -50,6 +51,7 @@ namespace AnyService.E2E
             jArr = JArray.Parse(content);
             jArr.Count.ShouldBe(totalEntities);
 
+            await Task.Delay(1000);
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(ManagedAuthenticationHandler.AuthorizedJson2);
             content = await HttpClient.GetStringAsync($"dependentmodel?query=__canRead");
             jArr = JArray.Parse(content);

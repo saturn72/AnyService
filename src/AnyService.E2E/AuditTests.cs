@@ -13,9 +13,10 @@ using System.Collections.Generic;
 
 namespace AnyService.E2E
 {
-    public class AuditTests : E2EFixture
+    public class AuditTests : E2ETestBase
     {
-        public AuditTests(ITestOutputHelper output) : base(output)
+        public AuditTests(E2EFixture fixture, ITestOutputHelper outputHelper) :
+            base(fixture, outputHelper)
         {
         }
 

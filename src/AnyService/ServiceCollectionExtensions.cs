@@ -201,7 +201,6 @@ namespace Microsoft.Extensions.DependencyInjection
 
                 ecr.AuditSettings = NormalizeAudity(ecr, config.AuditSettings);
                 ecr.EndpointSettings = NormalizeEndpointSettings(ecr, config);
-
                 if (ecr.CrudValidatorType != null)
                 {
                     var cvType = typeof(CrudValidatorBase<>);

@@ -10,9 +10,10 @@ using Xunit.Abstractions;
 
 namespace AnyService.E2E.Authorization
 {
-    public class UserRoleE2ETest : E2EFixture
+    public class UserRoleE2ETest : E2ETestBase
     {
-        public UserRoleE2ETest(ITestOutputHelper outputHelper) : base(outputHelper)
+        public UserRoleE2ETest(E2EFixture fixture, ITestOutputHelper outputHelper) : 
+            base(fixture,outputHelper)
         {
         }
 

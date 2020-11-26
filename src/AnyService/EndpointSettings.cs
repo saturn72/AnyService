@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Collections.Generic;
 
 namespace AnyService
 {
@@ -25,5 +26,6 @@ namespace AnyService
         public EndpointMethodSettings PutSettings { get; set; }
         public EndpointMethodSettings DeleteSettings { get; set; }
         public bool Disabled { get; set; }
+        public IReadOnlyDictionary<string, string> PropertiesProjectionMap { get; set; }
     }
 }

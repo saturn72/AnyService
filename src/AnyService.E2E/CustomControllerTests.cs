@@ -8,10 +8,11 @@ using Shouldly;
 
 namespace AnyService.E2E
 {
-    public class CustomControllerTests : E2EFixture
+    public class CustomControllerTests : E2ETestBase
     {
         private const string URI = "v1/my-great-route";
-        public CustomControllerTests(ITestOutputHelper outputHelper) : base(outputHelper)
+        public CustomControllerTests(E2EFixture fixture, ITestOutputHelper outputHelper) :
+            base(fixture, outputHelper)
         {
         }
 

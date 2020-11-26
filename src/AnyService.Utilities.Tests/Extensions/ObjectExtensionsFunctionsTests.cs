@@ -2,6 +2,7 @@ using Xunit;
 using System;
 using Shouldly;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace AnyService.Utilities.Tests
 {
@@ -10,10 +11,36 @@ namespace AnyService.Utilities.Tests
         public int Value { get; set; }
     }
     public class T1 { }
-    public class T2:T1 { }
-    public class T3:T2 { }
+    public class T2 : T1 { }
+    public class T3 : T2 { }
     public class ObjectExtensionsTests
     {
+        #region ToDynamicObject
+        public class TClass
+        {
+            public int Num1 { get; set; }
+            public int Num2 { get; set; }
+            public int Num3 { get; set; }
+            public int Num4 { get; set; }
+        }
+        [Fact]
+        public void ToDynamicObject_Projects()
+        {
+            var tc = new TClass
+            {
+                Num1 = 1,
+                Num2 = 2,
+                Num3 = 3,
+                Num4 = 4,
+            };
+            IDictionary<string, object> d = tc.ToDynamic(new[] { nameof(TClass.Num1), nameof(TClass.Num4) });
+            d["Num1"].ShouldBe(tc.Num1);
+            d["Num4"].ShouldBe(tc.Num4);
+
+            Should.Throw<KeyNotFoundException>(() => d["Num2"]);
+            Should.Throw<KeyNotFoundException>(() => d["Num3"]);
+        }
+        #endregion
         #region GetAllBaseTypes
         [Fact]
         public void GetAllBaseTypes_GetEntireTree()
@@ -32,7 +59,6 @@ namespace AnyService.Utilities.Tests
             bts.ShouldContain(typeof(T2));
         }
         #endregion
-
         #region IsOfType
 
         [Fact]
@@ -48,6 +74,7 @@ namespace AnyService.Utilities.Tests
             ObjectExtensionsFunctions.IsOfType(typeof(T1), typeof(string)).ShouldBeFalse();
         }
         #endregion
+        #region GetPropertyInfo
         [Fact]
         public void GetPropertyInfo_ReturnsNull()
         {
@@ -60,6 +87,8 @@ namespace AnyService.Utilities.Tests
         {
             typeof(TestClass).GetPropertyInfo("Value").ShouldNotBeNull();
         }
+        #endregion
+        #region GetPropertyValueByName
         [Fact]
         public void GetPropertyValueByName_ThrowsOnNotExists()
         {
@@ -113,10 +142,10 @@ namespace AnyService.Utilities.Tests
             ObjectExtensionsFunctions.GetPropertyValueOrDefaultByName<string>(tc, "StringValue").ShouldBe(tc.StringValue);
             ObjectExtensionsFunctions.GetPropertyValueOrDefaultByName<MyTestClass>(tc, "TestClass").ShouldBe(tc.TestClass);
         }
-
+        #endregion
         #region ToJsonString
         [Fact]
-        public void  ToJsonString()
+        public void ToJsonString()
         {
             var exp = "{\"value\":123}";
             var t = new TestClass
@@ -126,7 +155,7 @@ namespace AnyService.Utilities.Tests
             t.ToJsonString().ShouldBe(exp);
         }
         #endregion
-
+        #region DeepClone
         [Fact]
         public void DeepClone()
         {
@@ -144,6 +173,7 @@ namespace AnyService.Utilities.Tests
             dest.TestClass.StringValue.ShouldBe(src.TestClass.StringValue);
             dest.TestClass.GetHashCode().ShouldNotBe(src.TestClass.GetHashCode());
         }
+        #endregion
     }
     public class MyTestClass
     {

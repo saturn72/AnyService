@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 
@@ -6,6 +8,16 @@ namespace System
 {
     public static class ObjectExtensionsFunctions
     {
+        public static dynamic ToDynamic<T>(this T obj, IEnumerable<string> propertyNames)
+        {
+            IDictionary<string, object> expando = new ExpandoObject();
+            var pInfosToAdd = typeof(T).GetProperties().Where(p => propertyNames.Contains(p.Name));
+
+            foreach (var pInfo in pInfosToAdd)
+                expando[pInfo.Name] = pInfo.GetValue(obj);
+            return expando as ExpandoObject;
+        }
+
         public static bool IsOfType(this Type source, Type typeToCheck) => typeToCheck.IsAssignableFrom(source);
         public static bool IsOfType<T>(this Type source) => IsOfType(source, typeof(T));
         public static IEnumerable<Type> GetAllBaseTypes(this Type type, Type excludeFromType = null)

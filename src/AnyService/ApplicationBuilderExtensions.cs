@@ -13,6 +13,7 @@ using AnyService.Services.Logging;
 using AnyService.Audity;
 using AnyService.Services.Audit;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using AnyService.Infrastructure;
 
 namespace AnyService
 {
@@ -25,25 +26,51 @@ namespace AnyService
             bool logExceptions = true,
             bool usePermissionMiddleware = true)
         {
-            var sp = app.ApplicationServices;
-            using var scope = sp.CreateScope();
-            var apm = scope.ServiceProvider.GetRequiredService<ApplicationPartManager>();
-            apm.FeatureProviders.Add(new GenericControllerFeatureProvider(sp));
+            var appServices = app.ApplicationServices;
 
-            InitializeServices(sp);
+            using var scope = appServices.CreateScope();
+            var apm = scope.ServiceProvider.GetRequiredService<ApplicationPartManager>();
+            apm.FeatureProviders.Add(new GenericControllerFeatureProvider(appServices));
+
+            InitializeServices(appServices);
+            NormlizeProjectionMaps(scope.ServiceProvider);
             var cm = scope.ServiceProvider.GetRequiredService<ICacheManager>();
-            var entityConfigRecords = sp.GetRequiredService<IEnumerable<EntityConfigRecord>>();
-            var eventBus = sp.GetRequiredService<IEventBus>();
+            var entityConfigRecords = scope.ServiceProvider.GetRequiredService<IEnumerable<EntityConfigRecord>>();
+            var eventBus = appServices.GetRequiredService<IEventBus>();
 
             if (useWorkContextMiddleware) app.UseMiddleware<WorkContextMiddleware>();
             if (useAuthorizationMiddleware) app.UseMiddleware<DefaultAuthorizationMiddleware>();
 
-            if (logExceptions) SubscribeLogExceptionHandler(eventBus, sp, entityConfigRecords);
-            SubscribeAuditHandler(sp, eventBus, entityConfigRecords);
+            if (logExceptions) SubscribeLogExceptionHandler(eventBus, appServices, entityConfigRecords);
+            SubscribeAuditHandler(appServices, eventBus, entityConfigRecords);
 
             if (usePermissionMiddleware)
-                AddPermissionComponents(app, sp, eventBus, entityConfigRecords);
+                AddPermissionComponents(app, appServices, eventBus, entityConfigRecords);
             return app;
+        }
+
+        private static void NormlizeProjectionMaps(IServiceProvider serviceProvider)
+        {
+            var ecrs = serviceProvider.GetServices<EntityConfigRecord>();
+            var mFactory = serviceProvider.GetService<IMapperFactory>();
+            var mapper = mFactory.GetMapper(serviceProvider.GetService<AnyServiceConfig>().MapperName);
+            foreach (var ecr in ecrs)
+            {
+                if (ecr.Type == ecr.EndpointSettings.MapToType)
+                {
+                    ecr.EndpointSettings.PropertiesProjectionMap = ecr.Type.GetProperties()
+                        .Select(pi => pi.Name)
+                        .ToDictionary(k => k, v => v, StringComparer.InvariantCultureIgnoreCase);
+                    continue;
+                }
+                var m = mapper.ConfigurationProvider.GetAllTypeMaps()
+                    .FirstOrDefault(x => x.SourceType == ecr.Type && x.DestinationType == ecr.EndpointSettings.MapToType);
+                var projMap = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+                foreach (var pm in m.PropertyMaps)
+                    projMap[pm.SourceMember.Name] = pm.DestinationName;
+
+                ecr.EndpointSettings.PropertiesProjectionMap = projMap;
+            }
         }
 
         private static void SubscribeAuditHandler(IServiceProvider sp, IEventBus eventBus, IEnumerable<EntityConfigRecord> entityConfigRecords)

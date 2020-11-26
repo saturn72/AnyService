@@ -7,9 +7,10 @@ using Xunit.Abstractions;
 
 namespace AnyService.E2E
 {
-    public class UsesAnyserviceComponentControllerTests : E2EFixture
+    public class UsesAnyserviceComponentControllerTests : E2ETestBase
     {
-        public UsesAnyserviceComponentControllerTests(ITestOutputHelper output) : base(output)
+        public UsesAnyserviceComponentControllerTests(E2EFixture fixture, ITestOutputHelper outputHelper) :
+            base(fixture, outputHelper)
         {
         }
 

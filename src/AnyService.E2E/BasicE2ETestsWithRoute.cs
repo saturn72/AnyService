@@ -11,9 +11,10 @@ using Xunit.Abstractions;
 
 namespace AnyService.E2E
 {
-    public class BasicE2ETestsWithRoute : E2EFixture
+    public class BasicE2ETestsWithRoute : E2ETestBase
     {
-        public BasicE2ETestsWithRoute(ITestOutputHelper outputHelper) : base(outputHelper)
+        public BasicE2ETestsWithRoute(E2EFixture fixture, ITestOutputHelper outputHelper) :
+            base(fixture, outputHelper)
         {
         }
         [Fact]

@@ -15,9 +15,10 @@ using Xunit.Abstractions;
 namespace AnyService.E2E
 {
 
-    public class BasicE2ETests : E2EFixture
+    public class BasicE2ETests : E2ETestBase
     {
-        public BasicE2ETests(ITestOutputHelper outputHelper) : base(outputHelper)
+        public BasicE2ETests(E2EFixture fixture, ITestOutputHelper outputHelper) :
+            base(fixture, outputHelper)
         {
         }
         [Fact]

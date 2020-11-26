@@ -191,17 +191,9 @@ namespace AnyService.Services
 
             if (!p.ProjectedFields.IsNullOrEmpty())
             {
-                _propertyNames ??= new ReadOnlyCollection<string>(CurrentEntityConfigRecord.Type.GetProperties().Select(p => p.Name).ToList());
-
-                var normalizedProjectedFileds = new List<string>();
-                foreach (var pf in p.ProjectedFields)
-                {
-                    var x = _propertyNames.FirstOrDefault(x => x.Equals(pf.Trim(), StringComparison.InvariantCultureIgnoreCase));
-                    if (x == null)
-                        return null;
-                    normalizedProjectedFileds.Add(x);
-                }
-                p.ProjectedFields = normalizedProjectedFileds;
+                p.ProjectedFields = MatchProjectedFields(p);
+                if (p.ProjectedFields.IsNullOrEmpty())
+                    return null;
             }
 
             if (filter != null)
@@ -244,6 +236,21 @@ namespace AnyService.Services
             p.SortOrder ??= paginationSettings.DefaultSortOrder;
 
             return p;
+        }
+
+        private IEnumerable<string> MatchProjectedFields(Pagination<TEntity> p)
+        {
+            _propertyNames ??= new ReadOnlyCollection<string>(CurrentEntityConfigRecord.Type.GetProperties().Select(p => p.Name).ToList());
+
+            var normalizedProjectedFileds = new List<string>();
+            foreach (var pf in p.ProjectedFields)
+            {
+                var x = _propertyNames.FirstOrDefault(x => x.Equals(pf.Trim(), StringComparison.InvariantCultureIgnoreCase));
+                if (x == null)
+                    return null;
+                normalizedProjectedFileds.Add(x);
+            }
+            return normalizedProjectedFileds;
         }
 
         public virtual async Task<ServiceResponse<TEntity>> Update(string id, TEntity entity)
