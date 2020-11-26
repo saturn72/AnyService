@@ -28,6 +28,7 @@ namespace AnyService.SampleApp
             });
             modelBuilder.Entity<DependentModel>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
             modelBuilder.Entity<Dependent2>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
+            modelBuilder.Entity<MyModel>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
             modelBuilder.Entity<MultipartSampleModel>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
             modelBuilder.Entity<FileModel>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
             modelBuilder.Entity<CustomEntity>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());

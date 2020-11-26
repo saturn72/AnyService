@@ -2,6 +2,7 @@
 using AnyService.SampleApp.Entities;
 using AnyService.SampleApp.Models;
 using AnyService.SampleApp.Services;
+using AnyService.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -65,7 +66,15 @@ namespace AnyService.SampleApp.Configurars
                         },
                         CrudValidatorType = typeof(Dependent2AlwaysTrueCrudValidator)
                     },
-
+                    new EntityConfigRecord
+                    {
+                        Type = typeof(MyModel),
+                        EndpointSettings = new EndpointSettings
+                        {
+                            Route = "/api/mymodel",
+                        },
+                        CrudValidatorType = typeof(AlwaysTrueCrudValidator<MyModel>)
+                    },
                     new EntityConfigRecord
                     {
                         Type = typeof(MultipartSampleModel),
