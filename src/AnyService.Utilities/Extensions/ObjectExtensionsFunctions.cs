@@ -8,13 +8,24 @@ namespace System
 {
     public static class ObjectExtensionsFunctions
     {
-        public static dynamic ToDynamic<T>(this T obj, IEnumerable<string> propertyNames)
+        public static dynamic ToDynamic<T>(this T obj, IEnumerable<string> propertyNames, bool ignoreCase = true)
         {
-            IDictionary<string, object> expando = new ExpandoObject();
-            var pInfosToAdd = typeof(T).GetProperties().Where(p => propertyNames.Contains(p.Name));
+            var stringComparison = ignoreCase ? StringComparison.InvariantCultureIgnoreCase : StringComparison.CurrentCulture;
+            var comperar = ignoreCase ?
+                StringComparer.InvariantCultureIgnoreCase :
+                StringComparer.CurrentCulture;
 
-            foreach (var pInfo in pInfosToAdd)
-                expando[pInfo.Name] = pInfo.GetValue(obj);
+            IDictionary<string, object> expando = new ExpandoObject();
+            var pInfos = typeof(T).GetProperties();
+            var pInfosToAdd = new Dictionary<string, PropertyInfo>(comperar);
+            foreach (var pn in propertyNames)
+            {
+                var pi = pInfos.FirstOrDefault(p => p.Name.Equals(pn, stringComparison));
+                if (pi == default) continue;
+                pInfosToAdd[pn] = pi;
+            }
+            foreach (var pita in pInfosToAdd)
+                expando[pita.Key] = pita.Value.GetValue(obj);
             return expando as ExpandoObject;
         }
 

@@ -10,6 +10,8 @@ using Xunit;
 using Xunit.Abstractions;
 using AnyService.Services.Audit;
 using System.Collections.Generic;
+using AnyService.Audity;
+using System;
 
 namespace AnyService.E2E
 {
@@ -49,6 +51,13 @@ namespace AnyService.E2E
             var jArr = JArray.Parse(content);
             _output.WriteLine(jArr.ToString());
             jArr.Count.ShouldBe(totalEntities);
+
+            //with projection
+            res = await HttpClient.GetAsync($"__audit?auditRecordTypes={AuditRecordTypes.CREATE}&entityNames=Stock&projectedFields={nameof(AuditRecord.EntityId)}");
+            res.EnsureSuccessStatusCode();
+            content = await res.Content.ReadAsStringAsync();
+            content.Contains("{\"id\":").ShouldBeFalse();
+            content.Contains("{\"entityId\":").ShouldBeTrue();
 
             //for later...
 

@@ -1,4 +1,5 @@
-﻿using AnyService.Models;
+﻿using AnyService.Audity;
+using AnyService.Models;
 using AnyService.Services;
 using AnyService.Services.Audit;
 using AnyService.Services.ServiceResponseMappers;
@@ -13,9 +14,10 @@ namespace AnyService.Controllers
 {
     [ApiController]
     [Route("__audit")]
-    public class AuditController : ControllerBase
+    public class AuditController : AnyServiceControllerBase
     {
         #region fields
+        private static readonly KeyValuePair<string, string> DefaultKeyValuePair = default(KeyValuePair<string, string>);
         private static readonly IEnumerable<string> ValidAuditRecordTypes = new[]
         {
             AuditRecordTypes.CREATE,
@@ -29,6 +31,7 @@ namespace AnyService.Controllers
         private readonly WorkContext _workContext;
         private readonly IServiceResponseMapper _serviceResponseMapper;
         private readonly ILogger<AuditController> _logger;
+        private static IReadOnlyDictionary<string, string> PropertiesProjectionMap;
         #endregion
 
         #region ctor
@@ -37,6 +40,7 @@ namespace AnyService.Controllers
             AnyServiceConfig config,
             WorkContext workContext,
             IServiceResponseMapper serviceResponseMapper,
+            IEnumerable<EntityConfigRecord> entityConfigRecords,
             ILogger<AuditController> logger
             )
         {
@@ -45,6 +49,7 @@ namespace AnyService.Controllers
             _workContext = workContext;
             _serviceResponseMapper = serviceResponseMapper;
             _logger = logger;
+            PropertiesProjectionMap ??= entityConfigRecords.First(typeof(AuditRecord)).EndpointSettings.PropertiesProjectionMap;
         }
         #endregion
 
@@ -79,12 +84,14 @@ namespace AnyService.Controllers
                 $"\'{nameof(pageSize)}\' = \'{pageSize}\', " +
                 $"\'{nameof(sortOrder)}\' = \'{sortOrder}\'");
 
+            var toBeProjected = projectedFields?.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
+
             var pagination = QueryParamsToPagination(
                 auditRecordTypes, entityNames,
                 entityIds, userIds,
                 clientIds,
                 fromUtc, toUtc,
-                projectedFields,
+                toBeProjected,
                 offset, pageSize,
                 orderBy, sortOrder);
 
@@ -95,13 +102,27 @@ namespace AnyService.Controllers
             _logger.LogDebug(LoggingEvents.Controller,
                 $"Get all audit service result: '{srvRes.Result}', message: '{srvRes.Message}', {nameof(ServiceResponse.TraceId)}: '{srvRes.TraceId}', data: '{pagination.Data.ToJsonString()}'");
 
-            return ToPaginationActionResult(srvRes, dataOnly);
+            return ToPaginationActionResult(srvRes, dataOnly, toBeProjected);
         }
-        private IActionResult ToPaginationActionResult(ServiceResponse<AuditPagination> serviceResponse, bool dataOnly)
+        private IActionResult ToPaginationActionResult(ServiceResponse<AuditPagination> serviceResponse, bool dataOnly, IEnumerable<string> toBeProjected)
         {
-            return dataOnly && serviceResponse.ValidateServiceResponse() ?
-                new OkObjectResult(serviceResponse.Payload.Data.Map<IEnumerable<AuditRecordModel>>(_config.MapperName)) :
-                _serviceResponseMapper.MapServiceResponse<AuditPaginationModel>(serviceResponse);
+            toBeProjected = toBeProjected?.Select(s => char.ToLowerInvariant(s[0]) + s[1..]); //make camelCase
+            if (dataOnly && serviceResponse.ValidateServiceResponse())
+            {
+                var d = serviceResponse.Payload.Data.Map<IEnumerable<AuditRecordModel>>(_config.MapperName);
+                return toBeProjected.IsNullOrEmpty() ?
+                        JsonResult(d) :
+                        JsonResult(d.Select(x => x.ToDynamic(toBeProjected)).ToArray());
+            }
+
+            if (toBeProjected.IsNullOrEmpty())
+                return _serviceResponseMapper.MapServiceResponse<AuditPaginationModel>(serviceResponse);
+
+            var projSrvRes = new ServiceResponse(serviceResponse)
+            {
+                PayloadObject = serviceResponse.Payload.Data.Select(x => x.ToDynamic(toBeProjected)).ToArray()
+            };
+            return _serviceResponseMapper.MapServiceResponse<AuditPaginationModel>(serviceResponse);
         }
 
         private AuditPagination QueryParamsToPagination(
@@ -112,7 +133,7 @@ namespace AnyService.Controllers
             string clientIds,
             string fromUtc,
             string toUtc,
-            string projectedFields,
+            IEnumerable<string> projectedFields,
             int offset,
             int pageSize,
             string orderBy,
@@ -124,6 +145,8 @@ namespace AnyService.Controllers
                 (fromUtc.HasValue() && fromDate == null) ||
                 (toUtc.HasValue() && toDate == null))
                 return null;
+            var toProject = projectedFields.IsNullOrEmpty() ? new string[] { } : getProjectionMap();
+            if (toProject == null) return null;
 
             return new AuditPagination
             {
@@ -134,7 +157,7 @@ namespace AnyService.Controllers
                 ClientIds = getClientIdsOrNull(clientIds),
                 FromUtc = fromDate,
                 ToUtc = toDate,
-                ProjectedFields = splitOrNull(projectedFields),
+                ProjectedFields = toProject,
                 Offset = offset,
                 PageSize = pageSize,
                 OrderBy = orderBy,
@@ -159,6 +182,19 @@ namespace AnyService.Controllers
                 if (DateTime.TryParse(iso8601, out DateTime value))
                     return value;
                 return null;
+            }
+            IEnumerable<string> getProjectionMap()
+            {
+                var r = new List<string>();
+
+                foreach (var pf in projectedFields)
+                {
+                    var t = PropertiesProjectionMap.FirstOrDefault(a => a.Value.Equals(pf, StringComparison.InvariantCultureIgnoreCase));
+                    if (t.Equals(DefaultKeyValuePair))
+                        return null;
+                    r.Add(t.Key);
+                }
+                return r;
             }
         }
 

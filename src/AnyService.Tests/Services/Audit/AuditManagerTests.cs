@@ -163,6 +163,8 @@ namespace AnyService.Tests.Services.Audit
         {
             //Ids
             new object[]{ new AuditPagination{EntityIds = new []{ Entity1 },}, new[]{0, 2, 4, 7 }},
+            //with projection
+            new object[]{ new AuditPagination{EntityIds = new []{ Entity1 }, ProjectedFields = new[] { nameof(AuditRecord.CreatedOnUtc)} }, new[]{0, 2, 4, 7 }},
 
             //record types
             new object[]{ new AuditPagination{AuditRecordTypes = new[]{Create },}, new[]{0,1,6 }},

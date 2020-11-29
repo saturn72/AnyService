@@ -30,8 +30,8 @@ namespace AnyService.SampleApp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-                //.AddMvcCore(o => o.EnableEndpointRouting = false)
-                //.AddAuthorization();
+            //.AddMvcCore(o => o.EnableEndpointRouting = false)
+            //.AddAuthorization();
 
             services.AddSignalR();
             services.AddAuthentication(ManagedAuthenticationHandler.Schema)

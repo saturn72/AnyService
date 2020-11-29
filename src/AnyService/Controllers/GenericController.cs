@@ -176,18 +176,21 @@ namespace AnyService.Controllers
 
         private IActionResult ToPaginationActionResult(ServiceResponse<Pagination<TDomainObject>> serviceResponse, bool dataOnly, IEnumerable<string> toProject)
         {
+            toProject = toProject?.Select(s => char.ToLowerInvariant(s[0]) + s[1..]); //make camelCase
             if (dataOnly && serviceResponse.ValidateServiceResponse())
             {
                 var d = serviceResponse.Payload.Data.Map<IEnumerable<TResponseObject>>(_config.MapperName);
                 return toProject.IsNullOrEmpty() ?
-                        new OkObjectResult(d) :
-                        new OkObjectResult(d.Select(x => x.ToDynamic(toProject)).ToArray());
+                        JsonResult(d) :
+                        JsonResult(d.Select(x => x.ToDynamic(toProject)).ToArray());
             }
 
             if (toProject.IsNullOrEmpty())
                 return _serviceResponseMapper.MapServiceResponse(_mapToPageType, serviceResponse);
-            var projSrvRes = new ServiceResponse(serviceResponse);
-            projSrvRes.PayloadObject = serviceResponse.Payload.Data.Select(x => x.ToDynamic(toProject)).ToArray();
+            var projSrvRes = new ServiceResponse(serviceResponse)
+            {
+                PayloadObject = serviceResponse.Payload.Data.Select(x => x.ToDynamic(toProject)).ToArray()
+            };
 
             return _serviceResponseMapper.MapServiceResponse(_mapToPageType, serviceResponse);
         }

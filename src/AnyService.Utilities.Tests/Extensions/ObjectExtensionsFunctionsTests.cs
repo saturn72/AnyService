@@ -24,7 +24,7 @@ namespace AnyService.Utilities.Tests
             public int Num4 { get; set; }
         }
         [Fact]
-        public void ToDynamicObject_Projects()
+        public void ToDynamicObject_Projects_caseInsensitive()
         {
             var tc = new TClass
             {
@@ -33,10 +33,29 @@ namespace AnyService.Utilities.Tests
                 Num3 = 3,
                 Num4 = 4,
             };
-            IDictionary<string, object> d = tc.ToDynamic(new[] { nameof(TClass.Num1), nameof(TClass.Num4) });
-            d["Num1"].ShouldBe(tc.Num1);
+            IDictionary<string, object> d = tc.ToDynamic(new[] { nameof(TClass.Num1).ToLower(), nameof(TClass.Num4) }, ignoreCase: true);
+            d["num1"].ShouldBe(tc.Num1);
             d["Num4"].ShouldBe(tc.Num4);
 
+            Should.Throw<KeyNotFoundException>(() => d["Num1"]);
+            Should.Throw<KeyNotFoundException>(() => d["Num2"]);
+            Should.Throw<KeyNotFoundException>(() => d["Num3"]);
+        }
+        [Fact]
+        public void ToDynamicObject_Projects_caseSensitive()
+        {
+            var tc = new TClass
+            {
+                Num1 = 1,
+                Num2 = 2,
+                Num3 = 3,
+                Num4 = 4,
+            };
+            IDictionary<string, object> d = tc.ToDynamic(new[] { nameof(TClass.Num1).ToLower(), nameof(TClass.Num4) }, ignoreCase: false);
+            d["Num4"].ShouldBe(tc.Num4);
+
+            Should.Throw<KeyNotFoundException>(() => d["num1"]);
+            Should.Throw<KeyNotFoundException>(() => d["Num1"]);
             Should.Throw<KeyNotFoundException>(() => d["Num2"]);
             Should.Throw<KeyNotFoundException>(() => d["Num3"]);
         }
