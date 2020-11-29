@@ -13,12 +13,12 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 3.0.100
+          dotnet-version: 3.1.x
 
       - name: Checkout main branch
         uses: actions/checkout@main
         with:
-          dotnet-version: 3.1.100
+          dotnet-version: 3.1.x
 
       - name: Build
         working-directory: ./src
