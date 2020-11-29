@@ -3,7 +3,7 @@ name: anyservice ci
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   continunous_delivery:
@@ -15,8 +15,8 @@ jobs:
         with:
           dotnet-version: 3.0.100
 
-      - name: Checkout master branch
-        uses: actions/checkout@master
+      - name: Checkout main branch
+        uses: actions/checkout@main
         with:
           dotnet-version: 3.1.100
 
