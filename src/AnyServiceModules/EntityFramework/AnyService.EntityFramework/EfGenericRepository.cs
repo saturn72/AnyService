@@ -19,7 +19,10 @@ namespace AnyService.EntityFramework
     {
         #region fields
         private static readonly ConcurrentDictionary<Type, IEnumerable<PropertyInfo>> TypeProperties = new ConcurrentDictionary<Type, IEnumerable<PropertyInfo>>();
+        private static Func<string, string, bool> OrderByPropertyGetFunction;
+
         private readonly DbContext _dbContext;
+        private readonly EfRepositoryConfig _config;
         private readonly ILogger<EfGenericRepository<TDbModel, TId>> _logger;
         private readonly IQueryable<TDbModel> _collection;
 
@@ -30,15 +33,30 @@ namespace AnyService.EntityFramework
         };
         #endregion
         #region ctor
-        public EfGenericRepository(DbContext dbContext, ILogger<EfGenericRepository<TDbModel, TId>> logger)
+        public EfGenericRepository(
+            DbContext dbContext,
+            EfRepositoryConfig config,
+            ILogger<EfGenericRepository<TDbModel, TId>> logger)
         {
             _dbContext = dbContext;
+            _config = config;
             _logger = logger;
             _collection = _dbContext.Set<TDbModel>().AsNoTracking();
+            OrderByPropertyGetFunction ??= BuildOrderByPropertyMethod(_config.CaseSensitiveOrderBy);
+        }
+        protected Func<string, string, bool> BuildOrderByPropertyMethod(bool caseSensitiveOrderBy)
+        {
+            var comparison = caseSensitiveOrderBy ?
+                StringComparison.CurrentCulture :
+                StringComparison.InvariantCultureIgnoreCase;
+
+            return (piName, propertyName) => piName.Equals(propertyName, comparison);
         }
         #endregion
 
         public Task<IQueryable<TDbModel>> Collection => Task.FromResult(_collection);
+
+
         public virtual async Task<IEnumerable<TDbModel>> GetAll(Pagination<TDbModel> pagination)
         {
             if (pagination == null || pagination.QueryFunc == null)
@@ -72,10 +90,12 @@ namespace AnyService.EntityFramework
             return page;
         }
 
-        private static string GetOrderByProperty(string paginationOrderBy)
+        private static string GetOrderByProperty(string propertyName)
         {
-            return paginationOrderBy != null && GetTypePropertyInfos().Any(x => x.Name == paginationOrderBy) ?
-                paginationOrderBy : nameof(IEntity.Id);
+            if (!propertyName.HasValue())
+                return nameof(IEntity.Id);
+            var pi = GetTypePropertyInfos().FirstOrDefault(x => OrderByPropertyGetFunction(x.Name, propertyName));
+            return pi == default ? nameof(IEntity.Id) : pi.Name;
         }
 
         public virtual async Task<TDbModel> GetById(TId id)

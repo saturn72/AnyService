@@ -35,6 +35,7 @@ namespace AnyService.EntityFramework.Tests
         public class EfRepositoryTests
         {
             private readonly TestDbContext _dbContext;
+            private readonly EfRepositoryConfig _config;
             private readonly Mock<ILogger<EfRepository<TestClass>>> _logger;
             private readonly EfRepository<TestClass> _repository;
             private static readonly DbContextOptions<TestDbContext> DbOptions = new DbContextOptionsBuilder<TestDbContext>()
@@ -43,8 +44,24 @@ namespace AnyService.EntityFramework.Tests
             public EfRepositoryTests()
             {
                 _dbContext = new TestDbContext(DbOptions);
+                _config = new EfRepositoryConfig();
                 _logger = new Mock<ILogger<EfRepository<TestClass>>>();
-                _repository = new EfRepository<TestClass>(_dbContext, _logger.Object);
+                _repository = new EfRepository<TestClass>(_dbContext, _config, _logger.Object);
+            }
+            [Theory]
+            [InlineData(true, false)]
+            [InlineData(false, true)]
+            public void BuildOrderByPropertyMethod_Equality(bool caseSensitive, bool expResult)
+            {
+                var f = new RepositoryForTest().Handler(caseSensitive);
+                f("test", "TEST").ShouldBe(expResult);
+            }
+            public class RepositoryForTest : EfGenericRepository<TestClass, string>
+            {
+                public RepositoryForTest() : base(new TestDbContext(DbOptions), new EfRepositoryConfig(), null)
+                {
+                }
+                public Func<string, string, bool> Handler(bool cs) => base.BuildOrderByPropertyMethod(cs);
             }
             [Fact]
             public async Task Insert()
@@ -68,7 +85,7 @@ namespace AnyService.EntityFramework.Tests
                 var ctx = new TestDbContext(options);
 
                 var l = new Mock<ILogger<EfRepository<BulkTestClass>>>();
-                var r = new EfRepository<BulkTestClass>(ctx, l.Object);
+                var r = new EfRepository<BulkTestClass>(ctx, _config, l.Object);
                 var total = 4;
                 var entities = new List<BulkTestClass>();
                 for (int i = 0; i < total; i++)

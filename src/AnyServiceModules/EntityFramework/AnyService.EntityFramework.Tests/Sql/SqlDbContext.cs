@@ -26,6 +26,13 @@ namespace AnyService.EntityFramework.Tests
                    .ValueGeneratedOnAdd()
                    .HasConversion(converter);
             });
+            modelBuilder.Entity<SqlBulkTestClass2>(b =>
+            {
+                b.ToTable("Table2");
+                b.Property(u => u.Id)
+                   .ValueGeneratedOnAdd()
+                   .HasConversion(converter);
+            });
         }
     }
 }

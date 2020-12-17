@@ -11,7 +11,6 @@ using Xunit.Abstractions;
 using AnyService.Services.Audit;
 using System.Collections.Generic;
 using AnyService.Audity;
-using System;
 
 namespace AnyService.E2E
 {
@@ -21,7 +20,6 @@ namespace AnyService.E2E
             base(fixture, outputHelper)
         {
         }
-
         [Fact]
         public async Task Use_ReservedQueries()
         {

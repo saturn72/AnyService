@@ -41,7 +41,7 @@ namespace AnyService.Middlewares
             _logger.LogInformation(LoggingEvents.WorkContext, $"Start {nameof(WorkContextMiddleware)} invokation");
             if (!await HttpContextToWorkContext(httpContext, workContext))
                 return;
-            workContext.TraceId = Activity.Current.TraceId.ToString();
+            workContext.TraceId = Activity.Current?.TraceId.ToString();
 
             var ecr = GetEntityConfigRecordByRoute(httpContext.Request.Path);
             if (ecr != null && !ecr.Equals(default))

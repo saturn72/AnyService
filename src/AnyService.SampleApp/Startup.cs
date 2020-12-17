@@ -63,8 +63,8 @@ namespace AnyService.SampleApp
             services.AddTransient<DbContext>(sp => new SampleAppDbContext(options));
             services.AddTransient(typeof(IRepository<>), typeof(EfRepository<>));
             services.AddTransient<IFileStoreManager, EfFileStoreManager>();
+            services.AddSingleton<EfRepositoryConfig>();
         }
-
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             var config = app.ApplicationServices.GetRequiredService<AnyServiceConfig>();

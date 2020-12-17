@@ -15,6 +15,7 @@ namespace AnyService.Services
         public int DefaultOffset { get; set; }
         public int DefaultPageSize { get; set; }
         public string DefaultOrderBy { get => _orderBy; set => _orderBy = value.Trim(); }
+        public bool CaseSensitiveOrderBy { get; set; }
         public string DefaultSortOrder
         {
             get => _sortOrder;

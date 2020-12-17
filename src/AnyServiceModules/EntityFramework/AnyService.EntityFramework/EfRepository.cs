@@ -8,7 +8,7 @@ namespace AnyService.EntityFramework
         IRepository<TDbModel>
         where TDbModel : class, IDbModel<string>
     {
-        public EfRepository(DbContext dbContext, ILogger<EfGenericRepository<TDbModel, string>> logger) : base(dbContext, logger)
+        public EfRepository(DbContext dbContext, EfRepositoryConfig config, ILogger<EfGenericRepository<TDbModel, string>> logger) : base(dbContext, config, logger)
         {
         }
     }
