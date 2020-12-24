@@ -51,8 +51,6 @@ namespace AnyService.EntityFramework.Tests.Sql
             _logger2 = new Mock<ILogger<EfRepository<SqlBulkTestClass2>>>();
             _repository2 = new EfRepository<SqlBulkTestClass2>(_dbContext, _config, _logger2.Object);
         }
-
-
         [Fact]
         [Trait("category", "sql-server")]
         public async Task GetAllWithProjection()

@@ -21,6 +21,7 @@ namespace AnyService.E2E
         {
         }
         [Fact]
+        [Trait("category", "sql-server")]
         public async Task Use_ReservedQueries()
         {
             var url = "Stock/";
