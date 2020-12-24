@@ -53,10 +53,7 @@ namespace AnyService.EntityFramework
             return (piName, propertyName) => piName.Equals(propertyName, comparison);
         }
         #endregion
-
         public Task<IQueryable<TDbModel>> Collection => Task.FromResult(_collection);
-
-
         public virtual async Task<IEnumerable<TDbModel>> GetAll(Pagination<TDbModel> pagination)
         {
             if (pagination == null || pagination.QueryFunc == null)

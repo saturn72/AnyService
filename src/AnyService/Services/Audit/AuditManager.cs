@@ -2,7 +2,6 @@
 using AnyService.Events;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,10 +11,8 @@ namespace AnyService.Services.Audit
     public class AuditManager : IAuditManager
     {
         #region Fields
-        private static readonly ConcurrentDictionary<Type, string> EntityTypesNames = new ConcurrentDictionary<Type, string>();
         private readonly IRepository<AuditRecord> _repository;
         private readonly AuditSettings _auditSettings;
-        private readonly IEnumerable<EntityConfigRecord> _entityConfigRecords;
         private readonly IEventBus _eventBus;
         private readonly ILogger<AuditManager> _logger;
         private static readonly IEnumerable<string> FaultedServiceResult = new[] { ServiceResult.BadOrMissingData, ServiceResult.Error, ServiceResult.NotFound };
@@ -34,11 +31,10 @@ namespace AnyService.Services.Audit
         {
             _repository = repository;
             _auditSettings = auditConfig;
-            _entityConfigRecords = entityConfigRecords;
             _eventBus = eventBus;
             _logger = logger;
 
-            EventKeys ??= _entityConfigRecords.First(typeof(AuditRecord)).EventKeys;
+            EventKeys ??= entityConfigRecords.First(typeof(AuditRecord)).EventKeys;
         }
         #endregion
         public async virtual Task<ServiceResponse<AuditPagination>> GetAll(AuditPagination pagination)
@@ -51,11 +47,8 @@ namespace AnyService.Services.Audit
             var wrapper = new ServiceResponseWrapper(new ServiceResponse<IEnumerable<AuditRecord>>());
             var data = await _repository.Query(r => r.GetAll(pagination), wrapper);
             _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data?.ToJsonString()}");
-
             var wSrvRes = wrapper.ServiceResponse;
-
             var isFault = FaultedServiceResult.Contains(wSrvRes.Result);
-
             pagination.Data = isFault ? data : (data ?? new AuditRecord[] { });
             var serviceResponse = new ServiceResponse<AuditPagination>
             {
@@ -104,23 +97,15 @@ namespace AnyService.Services.Audit
                     new Func<AuditRecord, bool>(c => collection.Contains(propertyValue(c)));
             }
         }
-        public async virtual Task<AuditRecord> InsertAuditRecord(Type entityType, string entityId, string auditRecordType, WorkContext workContext, object data)
+        public async virtual Task<IEnumerable<AuditRecord>> Insert(IEnumerable<AuditRecord> records)
         {
-            if (!ShouldAudit(auditRecordType))
-                return null;
-            var record = new AuditRecord
-            {
-                EntityName = GetEntityName(entityType),
-                EntityId = entityId,
-                AuditRecordType = auditRecordType,
-                Data = data.ToJsonString(),
-                WorkContext = workContext.Parameters?.ToJsonString(),
-                UserId = workContext.CurrentUserId,
-                ClientId = workContext.CurrentClientId,
-                CreatedOnUtc = DateTime.UtcNow.ToIso8601(),
-            };
-            var res = await _repository.Insert(record);
-            _eventBus.Publish(EventKeys.Create, res, workContext);
+            var toInsert = records?.Where(r => ShouldAudit(r.AuditRecordType));
+            if (toInsert.IsNullOrEmpty()) return new AuditRecord[] { };
+
+            foreach (var item in toInsert)
+                item.CreatedOnUtc = DateTime.UtcNow.ToIso8601();
+            var res = await _repository.BulkInsert(toInsert);
+            _eventBus.Publish(EventKeys.Create, new DomainEvent { Data = res });
             return res;
         }
 
@@ -132,14 +117,6 @@ namespace AnyService.Services.Audit
                 (auditRecordType == AuditRecordTypes.UPDATE && _auditSettings.AuditRules.AuditUpdate) ||
                 (auditRecordType == AuditRecordTypes.DELETE && _auditSettings.AuditRules.AuditDelete) ||
                 false;
-        }
-        private string GetEntityName(Type entityType)
-        {
-            if (EntityTypesNames.TryGetValue(entityType, out string value))
-                return value;
-
-            EntityTypesNames.TryAdd(entityType, _entityConfigRecords.First(entityType).Name);
-            return EntityTypesNames[entityType];
         }
     }
 }

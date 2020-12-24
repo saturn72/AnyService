@@ -38,13 +38,13 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 .Returns(serviceScopeFactory.Object);
             ServiceProviderMock = sp;
 
-            MappingExtensions.Configure("default", cfg =>
+            MappingExtensions.AddConfiguration("default", cfg =>
             {
                 cfg.CreateMap<TestClass1, TestClass2>()
                     .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.Id.ToString()));
                 cfg.CreateMap<AuditRecord, AuditRecordModel>();
                 cfg.CreateMap<AuditPagination, AuditPaginationModel>();
-            });
+            }, true);
 
             MappingExtensions.Build(sp.Object);
         }

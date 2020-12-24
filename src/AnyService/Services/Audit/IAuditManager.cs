@@ -1,12 +1,12 @@
 ﻿using AnyService.Audity;
-using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace AnyService.Services.Audit
 {
     public interface IAuditManager
     {
-        Task<AuditRecord> InsertAuditRecord(Type entityType, string entityId, string auditRecordType, WorkContext workContext, object data);
+        Task<IEnumerable<AuditRecord>> Insert(IEnumerable<AuditRecord> records);
         Task<ServiceResponse<AuditPagination>> GetAll(AuditPagination pagination);
     }
 }

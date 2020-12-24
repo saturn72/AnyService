@@ -57,7 +57,7 @@ namespace AnyService.EntityFramework.Tests.Sql
         [Trait("category", "sql-server")]
         public async Task GetAllWithProjection()
         {
-            var total = 100000;
+            var total = 100;
             var iterations = 20;
             for (int j = 0; j < iterations; j++)
             {
@@ -88,7 +88,7 @@ namespace AnyService.EntityFramework.Tests.Sql
         [Trait("category", "sql-server")]
         public async Task InsertBulk_DontTrackId()
         {
-            var total = 40000;
+            var total = 400;
             var entities = new List<SqlBulkTestClass>();
             for (int i = 0; i < total; i++)
                 entities.Add(new SqlBulkTestClass { Id = Guid.NewGuid().ToString(), Value = i, });
@@ -103,7 +103,7 @@ namespace AnyService.EntityFramework.Tests.Sql
         [Trait("category", "sql-server")]
         public async Task InsertBulk_TrackId()
         {
-            var total = 40000;
+            var total = 400;
             var entities = new List<SqlBulkTestClass>();
             for (int i = 0; i < total; i++)
                 entities.Add(new SqlBulkTestClass { Value = i, });

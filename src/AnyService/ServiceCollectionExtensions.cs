@@ -40,7 +40,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             AddDefaultMapping(config.MapperName);
             AddEntityConfigRecordsMappings(config.MapperName, config.EntityConfigRecords);
-
+            AuditManagerExtensions.AddEntityConfigRecords(config.EntityConfigRecords);
             return services;
         }
         private static void AddDefaultMapping(string mapperName)

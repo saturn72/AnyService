@@ -1,7 +1,9 @@
-﻿using AnyService.Services;
+﻿using AnyService.Audity;
 using AnyService.Services.Audit;
 using Moq;
 using System;
+using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -13,20 +15,31 @@ namespace AnyService.Tests.Services.Audit
         {
             public string Id { get; set; }
         }
+        public AuditManagerExtensionsTests()
+        {
+            var ecrs = new[]
+            {
+                new EntityConfigRecord
+                {
+                    Type = typeof(TestClass),
+                }
+            };
+            AuditManagerExtensions.AddEntityConfigRecords(ecrs);
+        }
         [Fact]
         public async Task InsertCreateRecord()
         {
             var ah = new Mock<IAuditManager>();
             var t = new TestClass { Id = "a" };
             var wc = new WorkContext();
-            
-            await AuditManagerExtensions.InsertCreateRecord(ah.Object, t, wc);
-            ah.Verify(a => a.InsertAuditRecord(
-                It.Is<Type>(x => x == typeof(TestClass)),
-                It.Is<string>(i => i == t.Id),
-                It.Is<string>(i => i == AuditRecordTypes.CREATE),
-                It.Is<WorkContext>(w => w == wc), It.Is<TestClass>(x => x == t)),
+            var ctx = "ctx";
 
+            await AuditManagerExtensions.InsertCreateRecords(ah.Object, new[] { t }, wc, ctx);
+            ah.Verify(a => a.Insert(It.Is<IEnumerable<AuditRecord>>(ars =>
+               ars.Count() == 1 &&
+               ars.ElementAt(0).AuditRecordType == AuditRecordTypes.CREATE &&
+               ars.ElementAt(0).EntityId == t.Id &&
+               ars.ElementAt(0).Context == ctx.ToJsonString())),
                 Times.Once);
         }
 
@@ -34,37 +47,18 @@ namespace AnyService.Tests.Services.Audit
         public async Task InsertReadRecord_SingleEntity()
         {
             var ah = new Mock<IAuditManager>();
-            var read = new TestClass { Id = "b" };
+            var t = new TestClass { Id = "b" };
             var wc = new WorkContext();
+            var ctx = "ctx";
 
-            await AuditManagerExtensions.InsertReadRecord(ah.Object, read, wc);
-            ah.Verify(a => a.InsertAuditRecord(
-                It.Is<Type>(x => x == typeof(TestClass)),
-                It.Is<string>(i => i == read.Id),
-                It.Is<string>(i => i == AuditRecordTypes.READ),
-               It.Is<WorkContext>(w => w == wc), It.Is<object>(x => x == read)),
+            await AuditManagerExtensions.InsertReadRecords(ah.Object, new[] { t }, wc, ctx);
+            ah.Verify(a => a.Insert(It.Is<IEnumerable<AuditRecord>>(ars =>
+               ars.Count() == 1 &&
+               ars.ElementAt(0).AuditRecordType == AuditRecordTypes.READ &&
+               ars.ElementAt(0).EntityId == t.Id &&
+               ars.ElementAt(0).Context == ctx.ToJsonString())),
                 Times.Once);
         }
-        [Fact]
-        public async Task InsertReadRecord_Pagination()
-        {
-            var ah = new Mock<IAuditManager>();
-            var page = new Pagination<TestClass>
-            {
-                Total = 123,
-                Data = new[] { new TestClass { Id = "b" } }
-            };
-            var wc = new WorkContext();
-            
-            await AuditManagerExtensions.InsertReadRecord(ah.Object, page, wc);
-            ah.Verify(a => a.InsertAuditRecord(
-                It.Is<Type>(x => x == typeof(TestClass)),
-                It.Is<string>(i => i == null),
-                It.Is<string>(i => i == AuditRecordTypes.READ),
-               It.Is<WorkContext>(w => w == wc), It.Is<object>(x => x.GetPropertyValueByName<int>("total") == page.Total)),
-                Times.Once);
-        }
-
         [Fact]
         public async Task InsertUpdatedRecord()
         {
@@ -72,17 +66,14 @@ namespace AnyService.Tests.Services.Audit
             var after = new TestClass { Id = "a" };
             var before = new TestClass { Id = "b" };
             var wc = new WorkContext();
+            var ctx = "ctx";
 
-            await AuditManagerExtensions.InsertUpdatedRecord(ah.Object, after, before, wc);
-            ah.Verify(a => a.InsertAuditRecord(
-                It.Is<Type>(x => x == typeof(TestClass)),
-                It.Is<string>(i => i == after.Id),
-                It.Is<string>(i => i == AuditRecordTypes.UPDATE),
-                It.Is<WorkContext>(w => w == wc),
-                It.Is<object>(x =>
-                    x.GetPropertyValueByName<TestClass>("before") != null &&
-                    x.GetPropertyValueByName<TestClass>("after") != null)),
-
+            await AuditManagerExtensions.InsertUpdatedRecord(ah.Object, after, before, wc, ctx);
+            ah.Verify(a => a.Insert(It.Is<IEnumerable<AuditRecord>>(ars =>
+               ars.Count() == 1 &&
+               ars.ElementAt(0).AuditRecordType == AuditRecordTypes.UPDATE &&
+               ars.ElementAt(0).EntityId == after.Id &&
+               ars.ElementAt(0).Context == ctx.ToJsonString())),
                 Times.Once);
         }
         [Fact]
@@ -91,15 +82,15 @@ namespace AnyService.Tests.Services.Audit
             var ah = new Mock<IAuditManager>();
             var t = new TestClass { Id = "a" };
             var wc = new WorkContext();
-            
-            await AuditManagerExtensions.InsertDeletedRecord(ah.Object, t, wc);
-            ah.Verify(a => a.InsertAuditRecord(
-                It.Is<Type>(x => x == typeof(TestClass)),
-                It.Is<string>(i => i == t.Id),
-                It.Is<string>(i => i == AuditRecordTypes.DELETE),
-                It.Is<WorkContext>(w => w == wc), 
-                It.Is<TestClass>(x => x == t)),
-                Times.Once);
+            var ctx = "ctx";
+
+            await AuditManagerExtensions.InsertDeletedRecord(ah.Object, new[] { t }, wc, ctx);
+            ah.Verify(a =>
+            a.Insert(It.Is<IEnumerable<AuditRecord>>(ars =>
+               ars.Count() == 1 &&
+               ars.ElementAt(0).AuditRecordType == AuditRecordTypes.DELETE &&
+               ars.ElementAt(0).Context == ctx.ToJsonString())),
+               Times.Once);
         }
     }
 }

@@ -26,15 +26,14 @@ namespace AnyService
                 _mapperFactory.AddMapper(mc.Key, mapperConfig.CreateMapper());
             }
         }
-        public static void AddConfiguration(string mapperName, Action<IMapperConfigurationExpression> configuration)
+        public static void AddConfiguration(string mapperName, Action<IMapperConfigurationExpression> configuration, bool deleteExists = false)
         {
-            if (_mapperConfigurations.ContainsKey(mapperName))
-                configuration = _mapperConfigurations[mapperName] += configuration;
-            Configure(mapperName, configuration);
+            var exist = _mapperConfigurations.ContainsKey(mapperName);
+            var cfg = deleteExists || !exist ?
+                configuration :
+                (_mapperConfigurations[mapperName] += configuration);
+            _mapperConfigurations[mapperName] = cfg;
         }
-        public static void Configure(string mapperName, Action<IMapperConfigurationExpression> configuration)
-            => _mapperConfigurations[mapperName] = configuration;
-
         public static object Map(this object source, Type destination, string mapperName)
         {
             return _mapperFactory.GetMapper(mapperName).Map(source, source.GetType(), destination);

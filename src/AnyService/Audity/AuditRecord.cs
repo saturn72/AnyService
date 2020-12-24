@@ -11,5 +11,6 @@
         public string UserId { get; set; }
         public string ClientId { get; set; }
         public string Data { get; set; }
+        public string Context { get; set; }
     }
 }

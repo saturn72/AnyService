@@ -1,7 +1,6 @@
 ﻿using AnyService.Audity;
 using AnyService.Events;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -24,9 +23,9 @@ namespace AnyService.Services.Audit
         {
         }
 
-        public override Task<AuditRecord> InsertAuditRecord(Type entityType, string entityId, string auditRecordType, WorkContext workcontext, object data)
+        public override Task<IEnumerable<AuditRecord>> Insert(IEnumerable<AuditRecord> records)
         {
-            return Task.FromResult(null as AuditRecord);
+            return Task.FromResult(null as IEnumerable<AuditRecord>);
         }
     }
 }

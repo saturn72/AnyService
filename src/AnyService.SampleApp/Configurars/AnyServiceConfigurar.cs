@@ -1,4 +1,5 @@
-﻿using AnyService.SampleApp.Controllers;
+﻿using AnyService.Audity;
+using AnyService.SampleApp.Controllers;
 using AnyService.SampleApp.Entities;
 using AnyService.SampleApp.Models;
 using AnyService.SampleApp.Services;
@@ -14,6 +15,13 @@ namespace AnyService.SampleApp.Configurars
         {
             var anyServiceConfig = new AnyServiceConfig
             {
+                AuditSettings = new AuditSettings
+                {
+                    AuditRules = new AuditRules
+                    {
+                        AuditCreate = true
+                    }
+                },
                 EntityConfigRecords = new[]
                 {
                     new EntityConfigRecord

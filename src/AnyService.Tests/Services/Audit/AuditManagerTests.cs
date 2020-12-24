@@ -22,11 +22,8 @@ namespace AnyService.Tests.Services.Audit
             public string Id { get; set; }
         }
         [Theory]
-        [InlineData(AuditRecordTypes.CREATE)]
-        [InlineData(AuditRecordTypes.READ)]
-        [InlineData(AuditRecordTypes.UPDATE)]
-        [InlineData(AuditRecordTypes.DELETE)]
-        public async Task DoesNotCreateRecord(string art)
+        [MemberData(nameof(DoesNotCreateRecord_OnEmpty_Or_Null_Collection_OrShouldNotAudit_DATA))]
+        public async Task DoesNotCreateRecord_OnEmpty_Or_Null_Collection_OrShouldNotAudit(IEnumerable<AuditRecord> records)
         {
             var aSettings = new AuditSettings
             {
@@ -37,9 +34,15 @@ namespace AnyService.Tests.Services.Audit
                 new EntityConfigRecord{Type = typeof(AuditRecord), EventKeys = new EventKeyRecord("c", "r", "u", "d")}
             };
             var am = new AuditManager(null, aSettings, ecrs, null, null);
-            var res = await am.InsertAuditRecord(null, null, art, null, null);
-            res.ShouldBeNull();
+            var res = await am.Insert(records);
+            res.ShouldBeEmpty();
         }
+        public static IEnumerable<object[]> DoesNotCreateRecord_OnEmpty_Or_Null_Collection_OrShouldNotAudit_DATA => new[]
+        {
+            new object[]{null as IEnumerable<AuditRecord>,},
+            new object[]{new AuditRecord[]{ },},
+            new object[]{new[] {new AuditRecord()}},
+        };
         [Fact]
         public async Task CreatesNewRecord()
         {
@@ -53,7 +56,7 @@ namespace AnyService.Tests.Services.Audit
             string eId = "entity-id",
                 createdKey = "c";
             var data = new TestClass();
-            var dbData = new AuditRecord();
+            var dbData = new[] { new AuditRecord() };
             var wc = new WorkContext
             {
 
@@ -64,13 +67,21 @@ namespace AnyService.Tests.Services.Audit
                 new EntityConfigRecord{Type = typeof(TestClass), Name = "name", EntityKey = "test-class", EventKeys = new EventKeyRecord("ccc", "r", "u", "d")}
             };
             var repo = new Mock<IRepository<AuditRecord>>();
-            repo.Setup(r => r.Insert(It.IsAny<AuditRecord>())).ReturnsAsync(dbData);
+            repo.Setup(r => r.BulkInsert(
+                It.IsAny<IEnumerable<AuditRecord>>(),
+                It.IsAny<bool>())).ReturnsAsync(dbData);
             var eb = new Mock<IEventBus>();
             var logger = new Mock<ILogger<AuditManager>>();
 
+            var ar = new AuditRecord
+            {
+                AuditRecordType = AuditRecordTypes.CREATE,
+                Data = data.ToJsonString(),
+            };
             var am = new AuditManager(repo.Object, aSettings, ecrs, eb.Object, logger.Object);
-            var res = await am.InsertAuditRecord(typeof(TestClass), eId, AuditRecordTypes.CREATE, wc, data);
+            var res = await am.Insert(new[] { ar });
             res.ShouldNotBeNull();
+
             eb.Verify(e => e.Publish(It.Is<string>(s => s == createdKey), It.Is<DomainEvent>(ded => ded.Data == dbData)), Times.Once);
         }
         #endregion

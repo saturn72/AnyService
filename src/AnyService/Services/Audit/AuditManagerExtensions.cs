@@ -1,40 +1,79 @@
-﻿using System.Threading.Tasks;
+﻿using AnyService.Audity;
+using System.Collections.Generic;
+using System;
+using System.Threading.Tasks;
+using System.Linq;
+using System.Collections.Concurrent;
 
 namespace AnyService.Services.Audit
 {
     public static class AuditManagerExtensions
     {
-        public static Task InsertCreateRecord<TEntity>(this IAuditManager auditHelper, TEntity entity, WorkContext workContext) where TEntity : IEntity
+        private static IEnumerable<EntityConfigRecord> EntityConfigRecords = new List<EntityConfigRecord>();
+        private static readonly ConcurrentDictionary<Type, string> EntityTypesNames = new ConcurrentDictionary<Type, string>();
+        public static void AddEntityConfigRecords(IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
-            return auditHelper.InsertAuditRecord(entity.GetType(), entity.Id, AuditRecordTypes.CREATE, workContext, entity);
+            var ecrs = EntityConfigRecords.ToList();
+            ecrs.AddRange(entityConfigRecords);
+            EntityConfigRecords = ecrs;
         }
-        public static Task InsertReadRecord<TEntity>(this IAuditManager auditHelper, TEntity entity, WorkContext workContext) where TEntity : IEntity
+        public static Task InsertCreateRecords(this IAuditManager auditHelper, IEnumerable<IEntity> entities, WorkContext workContext, object context)
         {
-            return auditHelper.InsertAuditRecord(entity.GetType(), entity.Id, AuditRecordTypes.READ, workContext, entity);
+            var records = ToAuditRecords(entities, AuditRecordTypes.CREATE, workContext, context);
+            return auditHelper.Insert(records);
         }
-        public static Task InsertReadRecord<TEntity>(this IAuditManager auditHelper, Pagination<TEntity> page, WorkContext workContext) where TEntity : IEntity
+        public static Task InsertReadRecords(this IAuditManager auditHelper, IEnumerable<IEntity> entities, WorkContext workContext, object context)
         {
-            var p = new
+            var records = ToAuditRecords(entities, AuditRecordTypes.READ, workContext, context);
+            return auditHelper.Insert(records);
+        }
+        public static Task InsertUpdatedRecord(this IAuditManager auditHelper, IEntity before, IEntity after, WorkContext workContext, object context)
+        {
+            var entity = new { before, after };
+            var ar = new AuditRecord
             {
-                total = page.Total,
-                offset = page.Offset,
-                pageSize = page.PageSize,
-                sortOrder = page.SortOrder,
-                orderBy = page.OrderBy,
-                data = page.Data,
-                queryOrFilter = page.QueryOrFilter,
-                includeNested = page.IncludeNested
+                EntityId = before.Id,
+                EntityName = GeIEntityName(before.GetType()),
+                AuditRecordType = AuditRecordTypes.UPDATE,
+                Data = entity.ToJsonString(),
+                Context = context.ToJsonString(),
+                WorkContext = workContext.Parameters?.ToJsonString(),
+                UserId = workContext.CurrentUserId,
+                ClientId = workContext.CurrentClientId,
             };
-            return auditHelper.InsertAuditRecord(page.Type, null, AuditRecordTypes.READ, workContext, p);
+            return auditHelper.Insert(new[] { ar });
         }
+        public static Task InsertDeletedRecord(this IAuditManager auditHelper, IEnumerable<IEntity> entities, WorkContext workContext, object context)
+        {
+            var records = ToAuditRecords(entities, AuditRecordTypes.DELETE, workContext, context);
+            return auditHelper.Insert(records);
+        }
+        private static IEnumerable<AuditRecord> ToAuditRecords(
+            IEnumerable<IEntity> entities,
+            string auditRecordType,
+            WorkContext workContext,
+            object context
+            )
+        {
+            return entities.Select(e => new AuditRecord
+            {
+                EntityId = e.Id,
+                EntityName = GeIEntityName(e.GetType()),
+                AuditRecordType = auditRecordType,
+                Data = e.ToJsonString(),
+                Context = (context ?? e).ToJsonString(),
+                WorkContext = workContext.Parameters?.ToJsonString(),
+                UserId = workContext.CurrentUserId,
+                ClientId = workContext.CurrentClientId,
+            });
+        }
+        private static string GeIEntityName(Type entityType)
+        {
+            if (EntityTypesNames.TryGetValue(entityType, out string value))
+                return value;
 
-        public static Task InsertUpdatedRecord<TEntity>(this IAuditManager auditHelper, TEntity before, TEntity after, WorkContext workContext) where TEntity : IEntity
-        {
-            return auditHelper.InsertAuditRecord(before.GetType(), before.Id, AuditRecordTypes.UPDATE, workContext, new { before, after });
-        }
-        public static Task InsertDeletedRecord<TEntity>(this IAuditManager auditHelper, TEntity entity, WorkContext workContext) where TEntity : IEntity
-        {
-            return auditHelper.InsertAuditRecord(entity.GetType(), entity.Id, AuditRecordTypes.DELETE, workContext, entity);
+            EntityTypesNames.TryAdd(entityType, EntityConfigRecords.First(entityType).Name);
+            return EntityTypesNames[entityType];
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using AnyService.Events;
+﻿using AnyService.Audity;
+using AnyService.Events;
 using AnyService.Services;
 using AnyService.Services.Audit;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -13,14 +15,24 @@ namespace AnyService.Tests.Services.Audit
 {
     public class AuditHandlerTests
     {
+        public AuditHandlerTests()
+        {
+            var ecrs = new[]
+            {
+                new EntityConfigRecord
+                {
+                    Type = typeof(EventDataObject),
+                }
+            };
+            AuditManagerExtensions.AddEntityConfigRecords(ecrs);
+        }
         public class EventDataObject : IEntity
         {
             public string Id { get; set; }
             public string Value { get; set; }
         }
-
         [Fact]
-        public async Task CreatedHandler()
+        public async Task CreatedHandler_SingleEntityCreated()
         {
             var logger = new Mock<ILogger<AuditHandler>>();
             var sp = MockServiceProvider(logger);
@@ -44,16 +56,56 @@ namespace AnyService.Tests.Services.Audit
                 WorkContext = wc
             };
             await h.CreateEventHandler(ded);
-            am.Verify(a => a.InsertAuditRecord(
-                It.Is<Type>(t => t == typeof(EventDataObject)),
-                It.Is<string>(i => i == o.Id),
-                It.Is<string>(art => art == AuditRecordTypes.CREATE),
-                It.Is<WorkContext>(w => w == wc),
-                It.Is<object>(obj => obj == o)),
+
+            am.Verify(a => a.Insert(
+                It.Is<IEnumerable<AuditRecord>>(ars =>
+                    ars.Count() == 1 &&
+                    ars.ElementAt(0).EntityId == o.Id)),
                 Times.Once);
         }
         [Fact]
-        public async Task ReadHandler()
+        public async Task CreatedHandler_BulkCreated()
+        {
+            var logger = new Mock<ILogger<AuditHandler>>();
+            var sp = MockServiceProvider(logger);
+            var am = new Mock<IAuditManager>();
+            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
+            var h = new AuditHandler(sp.Object);
+
+            var o0 = new EventDataObject
+            {
+                Id = "000",
+                Value = "data"
+            };
+            var o1 = new EventDataObject
+            {
+                Id = "111",
+                Value = "data"
+            };
+
+            var uId = "u-id";
+            var wc = new WorkContext { CurrentUserId = uId };
+
+            var ded = new DomainEvent
+            {
+                Data = new[] { o0, o1 },
+                PerformedByUserId = uId,
+                WorkContext = wc
+            };
+            await h.CreateEventHandler(ded);
+
+            am.Verify(a => a.Insert(
+                It.Is<IEnumerable<AuditRecord>>(ars =>
+                    ars.Count() == 2 &&
+                    ars.ElementAt(0).EntityId == o0.Id &&
+                    ars.ElementAt(0).AuditRecordType == AuditRecordTypes.CREATE &&
+                    ars.ElementAt(1).EntityId == o1.Id &&
+                    ars.ElementAt(1).AuditRecordType == AuditRecordTypes.CREATE
+                    )),
+                Times.Once);
+        }
+        [Fact]
+        public async Task ReadHandler_Single()
         {
             var logger = new Mock<ILogger<AuditHandler>>();
             var sp = MockServiceProvider(logger);
@@ -77,13 +129,12 @@ namespace AnyService.Tests.Services.Audit
                 WorkContext = wc
             };
             await h.ReadEventHandler(ded);
-            am.Verify(a => a.InsertAuditRecord(
-                It.Is<Type>(t => t == typeof(EventDataObject)),
-                It.Is<string>(i => i == o.Id),
-                It.Is<string>(art => art == AuditRecordTypes.READ),
-                It.Is<WorkContext>(w => w == wc),
-                It.Is<object>(obj => obj == o)),
-                Times.Once);
+            am.Verify(a => a.Insert(
+               It.Is<IEnumerable<AuditRecord>>(ars =>
+                   ars.Count() == 1 &&
+                   ars.ElementAt(0).EntityId == o.Id &&
+                   ars.ElementAt(0).AuditRecordType == AuditRecordTypes.READ)),
+               Times.Once);
         }
         [Fact]
         public async Task ReadHandler_Pagination()
@@ -94,9 +145,19 @@ namespace AnyService.Tests.Services.Audit
             sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
             var h = new AuditHandler(sp.Object);
 
-            var o = new Pagination<string>
+            var o0 = new EventDataObject
             {
-                Data = new[] { "1", "2", "3" }
+                Id = "123",
+                Value = "data"
+            };
+            var o1 = new EventDataObject
+            {
+                Id = "123",
+                Value = "data"
+            };
+            var page = new Pagination<EventDataObject>
+            {
+                Data = new[] { o0, o1 }
             };
 
             var uId = "u-id";
@@ -104,18 +165,20 @@ namespace AnyService.Tests.Services.Audit
 
             var ded = new DomainEvent
             {
-                Data = o,
+                Data = page,
                 PerformedByUserId = uId,
                 WorkContext = wc
             };
             await h.ReadEventHandler(ded);
-            am.Verify(a => a.InsertAuditRecord(
-                It.Is<Type>(t => t == typeof(string)),
-                It.Is<string>(i => i == null),
-                It.Is<string>(art => art == AuditRecordTypes.READ),
-                It.Is<WorkContext>(w => w == wc),
-                It.Is<object>(obj => obj.GetPropertyValueByName<IEnumerable<string>>("Data") == o.Data)),
-                Times.Once);
+            am.Verify(a => a.Insert(
+               It.Is<IEnumerable<AuditRecord>>(ars =>
+                   ars.Count() == 2 &&
+                   ars.ElementAt(0).EntityId == o0.Id &&
+                   ars.ElementAt(0).AuditRecordType == AuditRecordTypes.READ &&
+                   ars.ElementAt(1).EntityId == o1.Id &&
+                   ars.ElementAt(1).AuditRecordType == AuditRecordTypes.READ
+                   )),
+               Times.Once);
         }
         [Fact]
         public async Task UpdateHandler_DomainEntity()
@@ -131,38 +194,10 @@ namespace AnyService.Tests.Services.Audit
                 Id = "123",
                 Value = "data"
             };
-
-            var uId = "u-id";
-            var wc = new WorkContext { CurrentUserId = uId };
-
-            var ded = new DomainEvent
-            {
-                Data = before,
-                PerformedByUserId = uId,
-                WorkContext = wc
-            };
-            await h.UpdateEventHandler(ded);
-            am.Verify(a => a.InsertAuditRecord(
-                It.Is<Type>(t => t == typeof(EventDataObject)),
-                It.Is<string>(i => i == before.Id),
-                It.Is<string>(art => art == AuditRecordTypes.UPDATE),
-                It.Is<WorkContext>(w => w == wc),
-                It.Is<object>(obj => obj == before)),
-                Times.Once);
-        }
-        [Fact]
-        public async Task UpdateHandler_AnonymousObject()
-        {
-            var logger = new Mock<ILogger<AuditHandler>>();
-            var sp = MockServiceProvider(logger);
-            var am = new Mock<IAuditManager>();
-            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
-            var h = new AuditHandler(sp.Object);
-
-            var o = new
+            var after = new EventDataObject
             {
                 Id = "123",
-                Value = "data"
+                Value = "data_2"
             };
 
             var uId = "u-id";
@@ -170,19 +205,20 @@ namespace AnyService.Tests.Services.Audit
 
             var ded = new DomainEvent
             {
-                Data = o,
+                Data = new EntityUpdatedDomainEvent(before, after),
                 PerformedByUserId = uId,
                 WorkContext = wc
             };
             await h.UpdateEventHandler(ded);
-            am.Verify(a => a.InsertAuditRecord(
-                It.Is<Type>(t => t == o.GetType()),
-                It.Is<string>(i => i == null),
-                It.Is<string>(art => art == AuditRecordTypes.UPDATE),
-                It.Is<WorkContext>(w => w == wc),
-                It.Is<object>(obj => obj == o)),
-                Times.Once);
+            am.Verify(a => a.Insert(
+               It.Is<IEnumerable<AuditRecord>>(ars =>
+                   ars.Count() == 1 &&
+                   ars.ElementAt(0).EntityId == before.Id &&
+                   ars.ElementAt(0).AuditRecordType == AuditRecordTypes.UPDATE
+                   )),
+               Times.Once);
         }
+       
         [Fact]
         public async Task UpdateHandler_EntityUpdatedEventData()
         {
@@ -213,13 +249,13 @@ namespace AnyService.Tests.Services.Audit
                 WorkContext = wc
             };
             await h.UpdateEventHandler(ded);
-            am.Verify(a => a.InsertAuditRecord(
-                It.Is<Type>(t => t == typeof(EventDataObject)),
-                It.Is<string>(i => i == before.Id),
-                It.Is<string>(art => art == AuditRecordTypes.UPDATE),
-                It.Is<WorkContext>(w => w == wc),
-                It.Is<object>(obj => VerifyPayload(obj, before, after))),
-                Times.Once);
+            am.Verify(a => a.Insert(
+               It.Is<IEnumerable<AuditRecord>>(ars =>
+                   ars.Count() == 1 &&
+                   ars.ElementAt(0).EntityId == before.Id &&
+                   ars.ElementAt(0).AuditRecordType == AuditRecordTypes.UPDATE
+                   )),
+               Times.Once);
         }
 
         private bool VerifyPayload(object obj, EventDataObject before, EventDataObject after)
@@ -227,9 +263,8 @@ namespace AnyService.Tests.Services.Audit
             var o = (obj as EntityUpdatedDomainEvent).Data as EntityUpdatedDomainEvent.EntityUpdatedEventData;
             return o.Before == before && o.After == after;
         }
-
         [Fact]
-        public async Task DeleteHandler()
+        public async Task DeleteHandler_SingleEntityDeleted()
         {
             var logger = new Mock<ILogger<AuditHandler>>();
             var sp = MockServiceProvider(logger);
@@ -253,12 +288,53 @@ namespace AnyService.Tests.Services.Audit
                 WorkContext = wc
             };
             await h.DeleteEventHandler(ded);
-            am.Verify(a => a.InsertAuditRecord(
-                It.Is<Type>(t => t == typeof(EventDataObject)),
-                It.Is<string>(i => i == o.Id),
-                It.Is<string>(art => art == AuditRecordTypes.DELETE),
-                It.Is<WorkContext>(w => w == wc),
-                It.Is<object>(obj => obj == o)),
+
+            am.Verify(a => a.Insert(
+                It.Is<IEnumerable<AuditRecord>>(ars =>
+                    ars.Count() == 1 &&
+                    ars.ElementAt(0).EntityId == o.Id &&
+                     ars.ElementAt(0).AuditRecordType == AuditRecordTypes.DELETE)),
+                Times.Once);
+        }
+        [Fact]
+        public async Task DeletedHandler_BulkDeleted()
+        {
+            var logger = new Mock<ILogger<AuditHandler>>();
+            var sp = MockServiceProvider(logger);
+            var am = new Mock<IAuditManager>();
+            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
+            var h = new AuditHandler(sp.Object);
+
+            var o0 = new EventDataObject
+            {
+                Id = "000",
+                Value = "data"
+            };
+            var o1 = new EventDataObject
+            {
+                Id = "111",
+                Value = "data"
+            };
+
+            var uId = "u-id";
+            var wc = new WorkContext { CurrentUserId = uId };
+
+            var ded = new DomainEvent
+            {
+                Data = new[] { o0, o1 },
+                PerformedByUserId = uId,
+                WorkContext = wc
+            };
+            await h.DeleteEventHandler(ded);
+
+            am.Verify(a => a.Insert(
+                It.Is<IEnumerable<AuditRecord>>(ars =>
+                    ars.Count() == 2 &&
+                    ars.ElementAt(0).EntityId == o0.Id &&
+                     ars.ElementAt(0).AuditRecordType == AuditRecordTypes.DELETE &&
+                    ars.ElementAt(1).EntityId == o1.Id &&
+                    ars.ElementAt(1).AuditRecordType == AuditRecordTypes.DELETE
+                    )),
                 Times.Once);
         }
         private Mock<IServiceProvider> MockServiceProvider(Mock<ILogger<AuditHandler>> logger)

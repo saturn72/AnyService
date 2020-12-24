@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Security.Cryptography.X509Certificates;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace AnyService.Services.Audit
@@ -18,51 +18,46 @@ namespace AnyService.Services.Audit
         public Func<DomainEvent, Task> CreateEventHandler => ded =>
         {
             var entity = ded.Data as IEntity;
-            return InsertAuditRecord(a => a.InsertCreateRecord(entity, ded.WorkContext), entity.ToJsonString());
+            var entities = entity == null ? ded.Data as IEnumerable<IEntity> : new[] { entity };
+            return InsertAuditRecord(a => a.InsertCreateRecords(entities, ded.WorkContext, null), entity.ToJsonString());
+
         };
         public Func<DomainEvent, Task> ReadEventHandler => ded =>
         {
             var entity = ded.Data as IEntity;
-            var data = ded.Data as Pagination;
+            if (entity != null)
+                return InsertAuditRecord(a => a.InsertReadRecords(new[] { entity }, ded.WorkContext, null), entity.ToJsonString());
 
-            var type = data?.Type ?? ded.Data.GetType();
-            var entityId = entity?.Id;
-            var entityJson = data?.Type.Name ?? entity.ToJsonString();
-            return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.READ, ded.WorkContext, ToAuditPagination(data) ?? entity), entityJson);
+            var page = ded.Data as Pagination;
+            var entities = page.DataObject as IEnumerable<IEntity>;
+            return InsertAuditRecord(a => a.InsertReadRecords(entities, ded.WorkContext, ToAuditPagination()), null);
 
-            object ToAuditPagination(Pagination p)
+            object ToAuditPagination()
             {
-                return p == null ?
-                    null :
-                    new
-                    {
-                        Data = p.DataObject,
-                        p.IncludeNested,
-                        p.Offset,
-                        p.OrderBy,
-                        p.PageSize,
-                        p.QueryOrFilter,
-                        p.SortOrder,
-                        p.Total,
-                        Type = p.Type.FullName,
-                    };
+                return new
+                {
+                    Data = page.DataObject,
+                    page.IncludeNested,
+                    page.Offset,
+                    page.OrderBy,
+                    page.PageSize,
+                    page.QueryOrFilter,
+                    page.SortOrder,
+                    page.Total,
+                    Type = page.Type.FullName,
+                };
             }
         };
         public Func<DomainEvent, Task> UpdateEventHandler => ded =>
         {
             var data = (ded.Data as EntityUpdatedDomainEvent)?.Data as EntityUpdatedDomainEvent.EntityUpdatedEventData;
-            var entity = ded.Data as IEntity;
-
-            var type = data?.Before.GetType() ?? ded.Data.GetType();
-            var entityId = data?.Before?.Id ?? entity?.Id;
-
-            return InsertAuditRecord(a => a.InsertAuditRecord(type, entityId, AuditRecordTypes.UPDATE, ded.WorkContext, ded.Data), entity.ToJsonString());
+            return InsertAuditRecord(a => a.InsertUpdatedRecord(data.Before, data.After, ded.WorkContext, null), data.ToJsonString());
         };
-
         public Func<DomainEvent, Task> DeleteEventHandler => ded =>
          {
              var entity = ded.Data as IEntity;
-             return InsertAuditRecord(a => a.InsertDeletedRecord(entity, ded.WorkContext), entity.ToJsonString());
+             var entities = entity == null ? ded.Data as IEnumerable<IEntity> : new[] { entity };
+             return InsertAuditRecord(a => a.InsertDeletedRecord(entities, ded.WorkContext, null), entity.ToJsonString());
          };
 
         private async Task InsertAuditRecord(Func<IAuditManager, Task> action, string entityJson)
