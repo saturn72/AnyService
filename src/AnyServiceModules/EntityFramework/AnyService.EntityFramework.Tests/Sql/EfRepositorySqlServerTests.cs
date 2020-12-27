@@ -44,7 +44,7 @@ namespace AnyService.EntityFramework.Tests.Sql
                    .Options;
 
             var sc = new ServiceCollection();
-            sc.AddScoped<DbContext>(sp => new SqlDbContext(_options));
+            sc.AddTransient<DbContext>(sp => new SqlDbContext(_options));
             var sp = sc.BuildServiceProvider();
 
             _dbContext = new SqlDbContext(_options);

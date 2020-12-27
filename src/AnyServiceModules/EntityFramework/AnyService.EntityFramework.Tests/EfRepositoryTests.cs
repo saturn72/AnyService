@@ -85,7 +85,7 @@ namespace AnyService.EntityFramework.Tests
                     .Options;
                 var ctx = new TestDbContext(options);
                 var sc = new ServiceCollection();
-                sc.AddScoped<DbContext>(s => new TestDbContext(options));
+                sc.AddTransient<DbContext>(s => new TestDbContext(options));
                 var sp = sc.BuildServiceProvider();
 
                 var l = new Mock<ILogger<EfRepository<BulkTestClass>>>();
