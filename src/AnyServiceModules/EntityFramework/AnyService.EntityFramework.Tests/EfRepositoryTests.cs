@@ -8,6 +8,7 @@ using AnyService.Services;
 using System;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AnyService.EntityFramework.Tests
 {
@@ -46,7 +47,7 @@ namespace AnyService.EntityFramework.Tests
                 _dbContext = new TestDbContext(DbOptions);
                 _config = new EfRepositoryConfig();
                 _logger = new Mock<ILogger<EfRepository<TestClass>>>();
-                _repository = new EfRepository<TestClass>(_dbContext, _config, _logger.Object);
+                _repository = new EfRepository<TestClass>(_dbContext, _config, null, _logger.Object);
             }
             [Theory]
             [InlineData(true, false)]
@@ -58,7 +59,7 @@ namespace AnyService.EntityFramework.Tests
             }
             public class RepositoryForTest : EfGenericRepository<TestClass, string>
             {
-                public RepositoryForTest() : base(new TestDbContext(DbOptions), new EfRepositoryConfig(), null)
+                public RepositoryForTest() : base(new TestDbContext(DbOptions), new EfRepositoryConfig(), null, null)
                 {
                 }
                 public Func<string, string, bool> Handler(bool cs) => base.BuildOrderByPropertyMethod(cs);
@@ -83,9 +84,12 @@ namespace AnyService.EntityFramework.Tests
                     .UseSqlite(@"Filename=test.db")
                     .Options;
                 var ctx = new TestDbContext(options);
+                var sc = new ServiceCollection();
+                sc.AddScoped<DbContext>(s => new TestDbContext(options));
+                var sp = sc.BuildServiceProvider();
 
                 var l = new Mock<ILogger<EfRepository<BulkTestClass>>>();
-                var r = new EfRepository<BulkTestClass>(ctx, _config, l.Object);
+                var r = new EfRepository<BulkTestClass>(ctx, _config, sp, l.Object);
                 var total = 4;
                 var entities = new List<BulkTestClass>();
                 for (int i = 0; i < total; i++)
@@ -98,7 +102,7 @@ namespace AnyService.EntityFramework.Tests
 
                 var inserted = await r.BulkInsert(entities);
 
-                inserted.GetHashCode().ShouldBe(entities.GetHashCode());
+                inserted.GetHashCode().ShouldNotBe(entities.GetHashCode());
                 inserted.Count().ShouldBe(total);
                 for (int i = 0; i < total; i++)
                     inserted.ElementAt(i).Value.ShouldBe(i);

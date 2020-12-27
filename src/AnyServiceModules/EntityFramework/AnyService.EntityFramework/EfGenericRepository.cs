@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 using System.Data;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AnyService.EntityFramework
 {
@@ -22,6 +23,7 @@ namespace AnyService.EntityFramework
 
         private readonly DbContext _dbContext;
         private readonly EfRepositoryConfig _config;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<EfGenericRepository<TDbModel, TId>> _logger;
         private readonly IQueryable<TDbModel> _collection;
         #endregion
@@ -29,10 +31,12 @@ namespace AnyService.EntityFramework
         public EfGenericRepository(
             DbContext dbContext,
             EfRepositoryConfig config,
+            IServiceProvider serviceProvider,
             ILogger<EfGenericRepository<TDbModel, TId>> logger)
         {
             _dbContext = dbContext;
             _config = config;
+            _serviceProvider = serviceProvider;
             _logger = logger;
             _collection = _dbContext.Set<TDbModel>().AsNoTracking();
             OrderByPropertyGetFunction ??= BuildOrderByPropertyMethod(_config.CaseSensitiveOrderBy);
@@ -109,21 +113,57 @@ namespace AnyService.EntityFramework
         public virtual async Task<IEnumerable<TDbModel>> BulkInsert(IEnumerable<TDbModel> entities, bool trackIds = false)
         {
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} with entity = {entities.ToJsonString()}");
+            var insertBulkTask = trackIds ?
+                BulkInsertAndTrack(entities) :
+                BulkInsertDoNotTrack(entities);
+            return await insertBulkTask;
+        }
+        protected virtual async Task<IEnumerable<TDbModel>> BulkInsertDoNotTrack(IEnumerable<TDbModel> entities)
+        {
+            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
+            var inserted = new List<TDbModel>();
+            try
+            {
+                int offset = 0,
+                curCount = _config.InsertBatchSize;
+                var tasks = new List<Task>();
+                do
+                {
+                    var curBatch = entities.Skip(offset).Take(_config.InsertBatchSize);
+                    curCount = curBatch.Count();
+                    offset += _config.InsertBatchSize;
+                    tasks.Add(insertBatchToDatabase(curBatch));
+                } while (curCount == _config.InsertBatchSize);
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Exception was thrown: {ex.Message}");
+                return null;
+            }
+            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Bulk operation ended");
+            return inserted;
+
+            async Task insertBatchToDatabase(IEnumerable<TDbModel> bulk)
+            {
+                using var sc = _serviceProvider.CreateScope();
+                using var ctx = sc.ServiceProvider.GetService<DbContext>();
+                ctx.ChangeTracker.AutoDetectChangesEnabled = false;
+                var set = ctx.Set<TDbModel>();
+                await set.AddRangeAsync(bulk);
+                await ctx.SaveChangesAsync();
+                inserted.AddRange(bulk);
+            }
+        }
+        protected virtual async Task<IEnumerable<TDbModel>> BulkInsertAndTrack(IEnumerable<TDbModel> entities)
+        {
+            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
             var set = _dbContext.Set<TDbModel>();
             await set.AddRangeAsync(entities.ToArray());
-            if (trackIds)
-            {
-                _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
-                await _dbContext.SaveChangesAsync();
-                _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Bulk operation ended");
-                _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} result = {entities.ToJsonString()}");
-                await DetachEntities(entities);
-                return entities;
-            }
-
-            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
-            await _dbContext.BulkSaveChangesAsync(bulk => bulk.BatchSize = 100);
+            await _dbContext.SaveChangesAsync();
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Bulk operation ended");
+            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} result = {entities.ToJsonString()}");
+            await DetachEntities(entities);
             return entities;
         }
 

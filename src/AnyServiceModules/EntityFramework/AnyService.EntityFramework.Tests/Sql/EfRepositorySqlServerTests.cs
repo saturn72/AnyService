@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using AnyService.Services;
 using System;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AnyService.EntityFramework.Tests.Sql
 {
@@ -42,25 +43,29 @@ namespace AnyService.EntityFramework.Tests.Sql
                    .UseSqlServer(@"Data Source=.\SqlExpress;Initial Catalog=AnyService_Test_DB;Integrated Security=True")
                    .Options;
 
+            var sc = new ServiceCollection();
+            sc.AddScoped<DbContext>(sp => new SqlDbContext(_options));
+            var sp = sc.BuildServiceProvider();
+
             _dbContext = new SqlDbContext(_options);
             _dbContext.Database.ExecuteSqlRaw("DELETE FROM [Table2]");
             _config = new EfRepositoryConfig();
             _logger = new Mock<ILogger<EfRepository<SqlBulkTestClass>>>();
 
-            _repository = new EfRepository<SqlBulkTestClass>(_dbContext, _config, _logger.Object);
+            _repository = new EfRepository<SqlBulkTestClass>(_dbContext, _config, sp, _logger.Object);
             _logger2 = new Mock<ILogger<EfRepository<SqlBulkTestClass2>>>();
-            _repository2 = new EfRepository<SqlBulkTestClass2>(_dbContext, _config, _logger2.Object);
+            _repository2 = new EfRepository<SqlBulkTestClass2>(_dbContext, _config, sp, _logger2.Object);
         }
         [Fact]
         [Trait("category", "sql-server")]
         public async Task GetAllWithProjection()
         {
-            var total = 100;
+            var total = 10000;
             var iterations = 20;
             for (int j = 0; j < iterations; j++)
             {
                 var entities = new List<SqlBulkTestClass2>();
-                for (int i = 0; i < total/iterations; i++)
+                for (int i = 0; i < total / iterations; i++)
                     entities.Add(new SqlBulkTestClass2 { Id = Guid.NewGuid().ToString(), Value = i, Description = GenerateRandomstring() });
                 _ = await _repository2.BulkInsert(entities);
             }
@@ -86,22 +91,20 @@ namespace AnyService.EntityFramework.Tests.Sql
         [Trait("category", "sql-server")]
         public async Task InsertBulk_DontTrackId()
         {
-            var total = 400;
+            var total = 40000;
             var entities = new List<SqlBulkTestClass>();
             for (int i = 0; i < total; i++)
-                entities.Add(new SqlBulkTestClass { Id = Guid.NewGuid().ToString(), Value = i, });
+                entities.Add(new SqlBulkTestClass { Value = i, });
 
             var inserted = await _repository.BulkInsert(entities);
             // inserted.GetHashCode().ShouldNotBe(entities.GetHashCode());
             inserted.Count().ShouldBe(total);
-            for (int i = 0; i < total; i++)
-                inserted.ElementAt(i).Value.ShouldBe(i);
         }
         [Fact]
         [Trait("category", "sql-server")]
         public async Task InsertBulk_TrackId()
         {
-            var total = 400;
+            var total = 40000;
             var entities = new List<SqlBulkTestClass>();
             for (int i = 0; i < total; i++)
                 entities.Add(new SqlBulkTestClass { Value = i, });

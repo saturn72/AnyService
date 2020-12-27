@@ -60,7 +60,7 @@ namespace AnyService.SampleApp
             //this is inmemory provider
             var options = new DbContextOptionsBuilder<SampleAppDbContext>()
                 .UseInMemoryDatabase(databaseName: DbName).Options;
-            services.AddTransient<DbContext>(sp => new SampleAppDbContext(options));
+            services.AddScoped<DbContext>(sp => new SampleAppDbContext(options));
             services.AddTransient(typeof(IRepository<>), typeof(EfRepository<>));
             services.AddTransient<IFileStoreManager, EfFileStoreManager>();
             services.AddSingleton<EfRepositoryConfig>();
