@@ -113,13 +113,6 @@ namespace AnyService.EntityFramework
         public virtual async Task<IEnumerable<TDbModel>> BulkInsert(IEnumerable<TDbModel> entities, bool trackIds = false)
         {
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} with entity = {entities.ToJsonString()}");
-            var insertBulkTask = trackIds ?
-                BulkInsertAndTrack(entities) :
-                BulkInsertDoNotTrack(entities);
-            return await insertBulkTask;
-        }
-        protected virtual async Task<IEnumerable<TDbModel>> BulkInsertDoNotTrack(IEnumerable<TDbModel> entities)
-        {
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
             var inserted = new List<TDbModel>();
             try
@@ -148,24 +141,23 @@ namespace AnyService.EntityFramework
             {
                 using var sc = _serviceProvider.CreateScope();
                 using var ctx = sc.ServiceProvider.GetService<DbContext>();
-                ctx.ChangeTracker.AutoDetectChangesEnabled = false;
-                var set = ctx.Set<TDbModel>();
-                await set.AddRangeAsync(bulk);
+                ctx.ChangeTracker.AutoDetectChangesEnabled = trackIds;
+                await ctx.Set<TDbModel>().AddRangeAsync(bulk);
                 await ctx.SaveChangesAsync();
                 inserted.AddRange(bulk);
             }
         }
-        protected virtual async Task<IEnumerable<TDbModel>> BulkInsertAndTrack(IEnumerable<TDbModel> entities)
-        {
-            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
-            var set = _dbContext.Set<TDbModel>();
-            await set.AddRangeAsync(entities.ToArray());
-            await _dbContext.SaveChangesAsync();
-            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Bulk operation ended");
-            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} result = {entities.ToJsonString()}");
-            await DetachEntities(entities);
-            return entities;
-        }
+        //protected virtual async Task<IEnumerable<TDbModel>> BulkInsertAndTrack(IEnumerable<TDbModel> entities)
+        //{
+        //    _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
+        //    var set = _dbContext.Set<TDbModel>();
+        //    await set.AddRangeAsync(entities.ToArray());
+        //    await _dbContext.SaveChangesAsync();
+        //    _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Bulk operation ended");
+        //    _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} result = {entities.ToJsonString()}");
+        //    await DetachEntities(entities);
+        //    return entities;
+        //}
 
         public virtual async Task<TDbModel> Update(TDbModel entity)
         {
