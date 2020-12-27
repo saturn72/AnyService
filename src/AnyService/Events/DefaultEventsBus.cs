@@ -25,7 +25,7 @@ namespace AnyService.Events
                 {
                     _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event to handler named {h.Name}");
                     eventData.PublishedOnUtc = DateTime.UtcNow;
-                    var t = h.Handler(eventData);
+                    _ = h.Handler(eventData);
                 }
             }
         }

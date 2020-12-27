@@ -19,7 +19,9 @@ namespace AnyService.SampleApp.Configurars
                 {
                     AuditRules = new AuditRules
                     {
-                        AuditCreate = true
+                        AuditCreate = true,
+                        AuditUpdate = true,
+                        AuditDelete = true,
                     }
                 },
                 EntityConfigRecords = new[]

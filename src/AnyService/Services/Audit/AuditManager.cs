@@ -65,7 +65,7 @@ namespace AnyService.Services.Audit
         {
             var auditRecordIds = getCollectionQuery(pagination.AuditRecordIds, a => a.Id);
             var entityIdsQuery = getCollectionQuery(pagination.EntityIds, a => a.EntityId);
-            var auditRecordsQuery = getCollectionQuery(pagination.AuditRecordTypes, a => a.AuditRecordType);
+            var auditRecordsTypeQuery = getCollectionQuery(pagination.AuditRecordTypes, a => a.AuditRecordType);
             var entityNamesQuery = getCollectionQuery(pagination.EntityNames, a => a.EntityName);
             var userIdsQuery = getCollectionQuery(pagination.UserIds, a => a.UserId);
             var clientIdsQuery = getCollectionQuery(pagination.ClientIds, a => a.ClientId);
@@ -82,7 +82,7 @@ namespace AnyService.Services.Audit
                 }) : null;
             var q = auditRecordIds.AndAlso(
                     entityIdsQuery,
-                    auditRecordsQuery,
+                    auditRecordsTypeQuery,
                     entityNamesQuery,
                     userIdsQuery,
                     clientIdsQuery,
