@@ -109,7 +109,8 @@ namespace AnyService.EntityFramework
         public virtual async Task<IEnumerable<TDbModel>> BulkInsert(IEnumerable<TDbModel> entities, bool trackIds = false)
         {
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} with entity = {entities.ToJsonString()}");
-            await _dbContext.Set<TDbModel>().AddRangeAsync(entities.ToArray());
+            var set = _dbContext.Set<TDbModel>();
+            await set.AddRangeAsync(entities.ToArray());
             if (trackIds)
             {
                 _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
