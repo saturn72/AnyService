@@ -103,7 +103,10 @@ namespace AnyService.Services.Audit
             if (toInsert.IsNullOrEmpty()) return new AuditRecord[] { };
 
             foreach (var item in toInsert)
+            {
+                item.Id = Guid.NewGuid().ToString();
                 item.CreatedOnUtc = DateTime.UtcNow.ToIso8601();
+            }
             var res = await _repository.BulkInsert(toInsert);
             _eventBus.Publish(EventKeys.Create, new DomainEvent { Data = res });
             return res;

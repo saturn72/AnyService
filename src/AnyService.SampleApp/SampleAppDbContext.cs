@@ -14,7 +14,6 @@ namespace AnyService.SampleApp
         { }
         public SampleAppDbContext(DbContextOptions<SampleAppDbContext> options) : base(options)
         { }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<UserPermissions>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());

@@ -127,7 +127,6 @@ namespace AnyService.EntityFramework
                 await DetachEntities(entities);
                 return entities;
             }
-
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
             await _dbContext.BulkInsertAsync(entities.ToList());
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Bulk operation ended");
