@@ -32,9 +32,6 @@ namespace AnyService.EntityFramework.Tests
             modelBuilder.Entity<BulkTestClass>(b =>
             {
                 b.ToTable("BulkTestClasses");
-                b.Property(u => u.Id)
-                   .ValueGeneratedOnAdd()
-                   .HasConversion(converter);
             });
         }
     }

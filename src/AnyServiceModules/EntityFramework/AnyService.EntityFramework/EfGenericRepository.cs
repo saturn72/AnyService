@@ -9,7 +9,6 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 using System.Data;
-using EFCore.BulkExtensions;
 
 namespace AnyService.EntityFramework
 {
@@ -25,12 +24,6 @@ namespace AnyService.EntityFramework
         private readonly EfRepositoryConfig _config;
         private readonly ILogger<EfGenericRepository<TDbModel, TId>> _logger;
         private readonly IQueryable<TDbModel> _collection;
-
-        private static readonly BulkConfig InsertBulkConfig = new BulkConfig
-        {
-            PreserveInsertOrder = true,
-            PropertiesToExclude = new List<string> { nameof(IEntity.Id) },
-        };
         #endregion
         #region ctor
         public EfGenericRepository(
@@ -86,7 +79,6 @@ namespace AnyService.EntityFramework
             _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll total entities in page: " + page.Count());
             return page;
         }
-
         private static string GetOrderByProperty(string propertyName)
         {
             if (!propertyName.HasValue())
@@ -117,9 +109,9 @@ namespace AnyService.EntityFramework
         public virtual async Task<IEnumerable<TDbModel>> BulkInsert(IEnumerable<TDbModel> entities, bool trackIds = false)
         {
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} with entity = {entities.ToJsonString()}");
+            await _dbContext.Set<TDbModel>().AddRangeAsync(entities.ToArray());
             if (trackIds)
             {
-                await _dbContext.Set<TDbModel>().AddRangeAsync(entities.ToArray());
                 _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
                 await _dbContext.SaveChangesAsync();
                 _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Bulk operation ended");
@@ -127,8 +119,9 @@ namespace AnyService.EntityFramework
                 await DetachEntities(entities);
                 return entities;
             }
+
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
-            await _dbContext.BulkInsertAsync(entities.ToList());
+            await _dbContext.BulkSaveChangesAsync(bulk => bulk.BatchSize = 100);
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Bulk operation ended");
             return entities;
         }

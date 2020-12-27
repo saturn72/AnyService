@@ -44,7 +44,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                     .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.Id.ToString()));
                 cfg.CreateMap<AuditRecord, AuditRecordModel>();
                 cfg.CreateMap<AuditPagination, AuditPaginationModel>();
-            }, true);
+            },false);
 
             MappingExtensions.Build(sp.Object);
         }
