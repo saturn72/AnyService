@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="10.1.1" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>

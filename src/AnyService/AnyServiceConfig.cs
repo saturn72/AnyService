@@ -79,5 +79,9 @@ namespace AnyService
         /// sets the default mapper name
         /// </summary>
         public string MapperName { get; set; }
+        /// <summary>
+        /// Gets or sets value indicating if tracing is enabled. Default is true
+        /// </summary>
+        public bool TraceEnabled { get; set; } = true;
     }
 }

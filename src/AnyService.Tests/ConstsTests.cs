@@ -11,6 +11,8 @@ namespace AnyService.Tests
             Consts.ReservedPrefix.ShouldBe("__");
             Consts.MultipartSuffix.ShouldBe("__multipart");
             Consts.StreamSuffix.ShouldBe("__stream");
+            Consts.ControllerAuthzPolicy.ShouldBe("controller-policy");
+            Consts.TracerName.ShouldBe("AnyService");
         }
     }
 }

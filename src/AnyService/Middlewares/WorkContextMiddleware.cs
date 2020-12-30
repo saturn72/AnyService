@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AnyService.Core.Services.Diagnostics;
 using AnyService.Http;
 using AnyService.Services;
 using Microsoft.AspNetCore.Http;
@@ -20,10 +21,14 @@ namespace AnyService.Middlewares
         private readonly RequestDelegate _next;
         protected readonly IReadOnlyDictionary<string, EntityConfigRecord> RouteMaps;
         protected readonly IReadOnlyDictionary<string, bool> ActivationMaps;
+        private static DiagnosticSource DiagnosticSource;
+        private static string InvokeStartedEventName;
+        private static string InvokeEndedEventName;
 
         public WorkContextMiddleware(
             RequestDelegate next,
             IEnumerable<EntityConfigRecord> entityConfigRecords,
+            IDiagnosticSourceFactory diagnosticSourceFactory,
             ILogger<WorkContextMiddleware> logger,
             Func<HttpContext, WorkContext, ILogger, Task<bool>> onMissingUserIdHandler = null
             )
@@ -34,10 +39,14 @@ namespace AnyService.Middlewares
             ActivationMaps = ToDisabledMethodsMap(entityConfigRecords);
             _onMissingUserIdOrClientIdHandler = onMissingUserIdHandler ??= OnMissingUserIdWorkContextMiddlewareHandlers.DefaultOnMissingUserIdHandler;
 
+            DiagnosticSource ??= diagnosticSourceFactory.Get(Consts.TracerName);
+            InvokeStartedEventName ??= $"{diagnosticSourceFactory.GetEventPrefix(GetType())}.{nameof(InvokeAsync)}.InvokeStarted";
+            InvokeEndedEventName ??= $"{diagnosticSourceFactory.GetEventPrefix(GetType())}.{nameof(InvokeAsync)}.InvoeEnded";
         }
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
         {
+            DiagnosticSource.Write(InvokeStartedEventName, httpContext);
             _logger.LogInformation(LoggingEvents.WorkContext, $"Start {nameof(WorkContextMiddleware)} invokation");
             if (!await HttpContextToWorkContext(httpContext, workContext))
                 return;
@@ -56,6 +65,7 @@ namespace AnyService.Middlewares
             }
             _logger.LogDebug(LoggingEvents.WorkContext, "Finish parsing current WorkContext");
             await _next(httpContext);
+            DiagnosticSource.Write(InvokeEndedEventName, httpContext);
         }
         protected async Task<bool> HttpContextToWorkContext(HttpContext httpContext, WorkContext workContext)
         {
