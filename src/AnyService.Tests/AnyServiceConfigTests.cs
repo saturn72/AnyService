@@ -32,7 +32,6 @@ namespace AnyService.Tests
             c.UseErrorEndpointForExceptionHandling.ShouldBeTrue();
             c.UseLogRecordEndpoint.ShouldBeTrue();
             c.MapperName.ShouldBe("default");
-            c.TraceSettings.ShouldBeNull();
         }
         public void ErrorEventKey_ModfiesErrorControllerEventKey()
         {

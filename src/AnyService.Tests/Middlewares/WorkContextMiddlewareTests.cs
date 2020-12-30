@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Xunit;
@@ -30,8 +29,7 @@ namespace AnyService.Tests.Middlewares
             };
             var entityConfigRecords = new[] { ecr };
 
-            var ds = new Mock<DiagnosticSource>();
-            var wcm = new WorkContextMiddleware(null, entityConfigRecords, ds.Object, logger.Object);
+            var wcm = new WorkContextMiddleware(null, entityConfigRecords, logger.Object);
 
             var user = new Mock<ClaimsPrincipal>();
             user.Setup(u => u.Claims).Returns(new Claim[] { });
@@ -86,8 +84,7 @@ namespace AnyService.Tests.Middlewares
             ctx.Setup(h => h.Response).Returns(response.Object);
             var wc = new WorkContext();
 
-            var ds = new Mock<DiagnosticSource>();
-            var wcm = new WorkContextMiddleware(reqDel, entityConfigRecords, ds.Object, logger.Object);
+            var wcm = new WorkContextMiddleware(reqDel, entityConfigRecords, logger.Object);
             await wcm.InvokeAsync(ctx.Object, wc);
             i.ShouldBe(expI);
             wc.CurrentEntityConfigRecord.ShouldBe(ecr);
@@ -159,7 +156,6 @@ namespace AnyService.Tests.Middlewares
                 : base(
                       null,
                       entityConfigRecords,
-                      new Mock<DiagnosticSource>().Object,
                       new Mock<ILogger<WorkContextMiddleware_ForTests>>().Object,
                       null)
             {
