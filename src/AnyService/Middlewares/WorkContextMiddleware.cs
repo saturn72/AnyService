@@ -14,7 +14,7 @@ namespace AnyService.Middlewares
 {
     public class WorkContextMiddleware
     {
-        protected static readonly DiagnosticSource DiagnosticSource =
+        protected static readonly DiagnosticListener DiagnosticListener =
                    new DiagnosticListener(typeof(WorkContextMiddleware).GetListenerName());
 
         private const string InvokeStartedEventName = "InvokeStarted";
@@ -44,7 +44,7 @@ namespace AnyService.Middlewares
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
         {
-            DiagnosticSource.Write(InvokeStartedEventName, new { httpContext, workContext });
+            DiagnosticListener.Write(InvokeStartedEventName, new { httpContext, workContext });
             _logger.LogInformation(LoggingEvents.WorkContext, $"Start {nameof(WorkContextMiddleware)} invokation");
             if (!await HttpContextToWorkContext(httpContext, workContext))
                 return;
@@ -63,7 +63,7 @@ namespace AnyService.Middlewares
             }
             _logger.LogDebug(LoggingEvents.WorkContext, "Finish parsing current WorkContext");
             await _next(httpContext);
-            DiagnosticSource.Write(InvokeEndedEventName, new { httpContext, workContext });
+            DiagnosticListener.Write(InvokeEndedEventName, new { httpContext, workContext });
         }
         protected async Task<bool> HttpContextToWorkContext(HttpContext httpContext, WorkContext workContext)
         {
