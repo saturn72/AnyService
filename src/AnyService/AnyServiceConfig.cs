@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using AnyService.Audity;
 using AnyService.Controllers;
-using AnyService.Diagnostics;
 using AnyService.Services;
 using AnyService.Services.Preparars;
 using AnyService.Services.ServiceResponseMappers;
@@ -75,10 +74,6 @@ namespace AnyService
         /// </summary>
         public AuditSettings AuditSettings { get; set; }
         public bool UseLogRecordEndpoint { get; set; }
-        /// <summary>
-        /// Gets or sets tracing configuration
-        /// </summary>
-        public TraceSettings TraceSettings { get; set; }
         public bool UseErrorEndpointForExceptionHandling { get; set; }
         /// <summary>
         /// sets the default mapper name

@@ -14,6 +14,10 @@ namespace AnyService.Middlewares
 {
     public class WorkContextMiddleware
     {
+        protected static readonly DiagnosticSource DiagnosticListener =
+                   new DiagnosticListener(typeof(WorkContextMiddleware).GetListenerName());
+
+
         private const string MapKeyFormat = "{0}_{1}";
         private readonly ILogger<WorkContextMiddleware> _logger;
         private readonly Func<HttpContext, WorkContext, ILogger, Task<bool>> _onMissingUserIdOrClientIdHandler;
@@ -39,8 +43,8 @@ namespace AnyService.Middlewares
             _onMissingUserIdOrClientIdHandler = onMissingUserIdHandler ??= OnMissingUserIdWorkContextMiddlewareHandlers.DefaultOnMissingUserIdHandler;
             _diagnosticSource = diagnosticSource;
 
-            InvokeStartedEventName ??= $"{GetType().GetEventPrefix()}.{nameof(InvokeAsync)}.InvokeStarted";
-            InvokeEndedEventName ??= $"{GetType().GetEventPrefix()}.{nameof(InvokeAsync)}.InvoeEnded";
+            InvokeStartedEventName ??= $"{GetType().GetListenerName()}.{nameof(InvokeAsync)}.InvokeStarted";
+            InvokeEndedEventName ??= $"{GetType().GetListenerName()}.{nameof(InvokeAsync)}.InvoeEnded";
         }
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)

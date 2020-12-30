@@ -2,6 +2,6 @@
 {
     public static class DiagnosticSourceExtensions
     {
-        public static string GetEventPrefix(this Type type) => $"{type.Namespace}.{type.Name}";
+        public static string GetListenerName(this Type type) => $"{type.Namespace}.{type.Name}";
     }
 }

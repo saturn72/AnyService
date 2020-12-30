@@ -9,7 +9,7 @@ namespace AnyService.Tests.Services.Diagnostics
         [Fact]
         public void GetEventPrefix()
         {
-            DiagnosticSourceExtensions.GetEventPrefix(typeof(string)).ShouldBe("System.String");
+            DiagnosticSourceExtensions.GetListenerName(typeof(string)).ShouldBe("System.String");
         }
     }
 }

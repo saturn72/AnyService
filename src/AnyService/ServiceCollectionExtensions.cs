@@ -19,8 +19,6 @@ using AnyService.Services.Logging;
 using AnyService.Models;
 using AnyService.Logging;
 using AnyService.Infrastructure;
-using System.Diagnostics;
-using AnyService.Diagnostics;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -37,7 +35,6 @@ namespace Microsoft.Extensions.DependencyInjection
         }
         public static IServiceCollection AddAnyService(this IServiceCollection services, AnyServiceConfig config)
         {
-            config.TraceSettings ??= new TraceSettings();
             NormalizeConfiguration(config);
             RegisterDependencies(services, config);
 
@@ -114,12 +111,6 @@ namespace Microsoft.Extensions.DependencyInjection
 
             //mapper factory
             services.TryAddSingleton<IMapperFactory, DefaultMapperFactory>();
-
-            //diagnosticSource
-            var ds = config.TraceSettings.Disabled ?
-                new DummyDiagnosticSource() as DiagnosticSource :
-                new DiagnosticListener(config.TraceSettings.TracerName);
-            services.TryAddSingleton<DiagnosticSource>(ds);
             //validator factory
             var validatorTypes = config.EntityConfigRecords.Select(t => t.CrudValidatorType).ToArray();
             foreach (var vType in validatorTypes)
