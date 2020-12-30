@@ -45,7 +45,7 @@ namespace AnyService.Middlewares
 
         public async Task InvokeAsync(HttpContext httpContext, WorkContext workContext)
         {
-            _diagnosticSource.Write(InvokeStartedEventName, httpContext);
+            _diagnosticSource.Write(InvokeStartedEventName, new { httpContext, workContext });
             _logger.LogInformation(LoggingEvents.WorkContext, $"Start {nameof(WorkContextMiddleware)} invokation");
             if (!await HttpContextToWorkContext(httpContext, workContext))
                 return;
@@ -64,7 +64,7 @@ namespace AnyService.Middlewares
             }
             _logger.LogDebug(LoggingEvents.WorkContext, "Finish parsing current WorkContext");
             await _next(httpContext);
-            _diagnosticSource.Write(InvokeEndedEventName, httpContext);
+            _diagnosticSource.Write(InvokeEndedEventName, new { httpContext, workContext });
         }
         protected async Task<bool> HttpContextToWorkContext(HttpContext httpContext, WorkContext workContext)
         {
