@@ -37,6 +37,7 @@ namespace Microsoft.Extensions.DependencyInjection
         }
         public static IServiceCollection AddAnyService(this IServiceCollection services, AnyServiceConfig config)
         {
+            config.TraceSettings ??= new TraceSettings();
             NormalizeConfiguration(config);
             RegisterDependencies(services, config);
 
@@ -115,8 +116,8 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IMapperFactory, DefaultMapperFactory>();
 
             //diagnosticSource
-            var ds = config.TraceSettings?.Disabled ?? true?
-                new DummyDiagnosticSource() as DiagnosticSource:
+            var ds = config.TraceSettings.Disabled ?
+                new DummyDiagnosticSource() as DiagnosticSource :
                 new DiagnosticListener(config.TraceSettings.TracerName);
             services.TryAddSingleton<DiagnosticSource>(ds);
             //validator factory
