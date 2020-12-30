@@ -6,6 +6,5 @@ namespace AnyService
         public const string MultipartSuffix = ReservedPrefix + "multipart";
         public const string StreamSuffix = ReservedPrefix + "stream";
         public const string ControllerAuthzPolicy = "controller-policy";
-        public const string TracerName = "AnyService";
     }
 }

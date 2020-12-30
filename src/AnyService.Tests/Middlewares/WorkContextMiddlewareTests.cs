@@ -1,4 +1,3 @@
-using AnyService.Core.Services.Diagnostics;
 using AnyService.Http;
 using AnyService.Middlewares;
 using Microsoft.AspNetCore.Http;
@@ -32,9 +31,7 @@ namespace AnyService.Tests.Middlewares
             var entityConfigRecords = new[] { ecr };
 
             var ds = new Mock<DiagnosticSource>();
-            var dsf = new Mock<IDiagnosticSourceFactory>();
-            dsf.Setup(d => d.Get(It.IsAny<string>())).Returns(ds.Object);
-            var wcm = new WorkContextMiddleware(null, entityConfigRecords, dsf.Object, logger.Object);
+            var wcm = new WorkContextMiddleware(null, entityConfigRecords, ds.Object, logger.Object);
 
             var user = new Mock<ClaimsPrincipal>();
             user.Setup(u => u.Claims).Returns(new Claim[] { });
@@ -90,9 +87,7 @@ namespace AnyService.Tests.Middlewares
             var wc = new WorkContext();
 
             var ds = new Mock<DiagnosticSource>();
-            var dsf = new Mock<IDiagnosticSourceFactory>();
-            dsf.Setup(d => d.Get(It.IsAny<string>())).Returns(ds.Object);
-            var wcm = new WorkContextMiddleware(reqDel, entityConfigRecords, dsf.Object, logger.Object);
+            var wcm = new WorkContextMiddleware(reqDel, entityConfigRecords, ds.Object, logger.Object);
             await wcm.InvokeAsync(ctx.Object, wc);
             i.ShouldBe(expI);
             wc.CurrentEntityConfigRecord.ShouldBe(ecr);
@@ -113,10 +108,7 @@ namespace AnyService.Tests.Middlewares
                 }
             };
 
-            var ds = new Mock<DiagnosticSource>();
-            var dsf = new Mock<IDiagnosticSourceFactory>();
-            dsf.Setup(d => d.Get(It.IsAny<string>())).Returns(ds.Object);
-            var wcmt = new WorkContextMiddleware_ForTests(new[] { e }, dsf.Object);
+            var wcmt = new WorkContextMiddleware_ForTests(new[] { e });
             wcmt.ActiveMap[$"{e.Name}_post"].ShouldBeFalse();
             wcmt.ActiveMap[$"{e.Name}_get"].ShouldBeTrue();
             wcmt.ActiveMap[$"{e.Name}_put"].ShouldBeTrue();
@@ -149,11 +141,7 @@ namespace AnyService.Tests.Middlewares
             ctx.Setup(h => h.User).Returns(user);
             ctx.Setup(h => h.Request).Returns(req.Object);
 
-
-            var ds = new Mock<DiagnosticSource>();
-            var dsf = new Mock<IDiagnosticSourceFactory>();
-            dsf.Setup(d => d.Get(It.IsAny<string>())).Returns(ds.Object);
-            var mw = new WorkContextMiddleware_ForTests(new EntityConfigRecord[] { }, dsf.Object);
+            var mw = new WorkContextMiddleware_ForTests(new EntityConfigRecord[] { });
 
             var wc = new WorkContext();
             var res = await mw.ExtractHttpContext(ctx.Object, wc);
@@ -167,8 +155,13 @@ namespace AnyService.Tests.Middlewares
 
         public class WorkContextMiddleware_ForTests : WorkContextMiddleware
         {
-            public WorkContextMiddleware_ForTests(IEnumerable<EntityConfigRecord> entityConfigRecords, IDiagnosticSourceFactory diagnosticSourceFactory)
-                : base(null, entityConfigRecords, diagnosticSourceFactory, new Mock<ILogger<WorkContextMiddleware_ForTests>>().Object, null)
+            public WorkContextMiddleware_ForTests(IEnumerable<EntityConfigRecord> entityConfigRecords)
+                : base(
+                      null,
+                      entityConfigRecords,
+                      new Mock<DiagnosticSource>().Object,
+                      new Mock<ILogger<WorkContextMiddleware_ForTests>>().Object,
+                      null)
             {
             }
             public Task<bool> ExtractHttpContext(HttpContext ctx, WorkContext wc) => HttpContextToWorkContext(ctx, wc);
