@@ -30,7 +30,7 @@ namespace AnyService.Core.Services.Diagnostics
             return value;
         }
 
-        public string GetEventPrefix(Type type) => $"{GetType().Namespace}.{GetType().Name}";
+        public string GetEventPrefix(Type type) => $"{type.Namespace}.{type.Name}";
 
         public class DummyDiagnosticSource : DiagnosticSource
         {
