@@ -59,6 +59,11 @@ namespace AnyService.LiteDb
             await Task.Run(() => LiteDbUtility.Command(_dbName, db => db.GetCollection<TEntity>().InsertBulk(entities)));
             return entities;
         }
+        public async Task<IEnumerable<TEntity>> BulkUpdate(IEnumerable<TEntity> entities, bool trackIds = false)
+        {
+            await Task.Run(() => LiteDbUtility.Command(_dbName, db => db.GetCollection<TEntity>().Update(entities)));
+            return entities;
+        }
 
         public Task<IEnumerable<TEntity>> GetAll(Pagination<TEntity> pagination)
         {

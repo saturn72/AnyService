@@ -15,6 +15,7 @@ namespace AnyService.Services
         /// <param name="track">specifies if database data should be fetched after insertion. Default is false.</param>
         /// <returns></returns>
         Task<IEnumerable<TDbModel>> BulkInsert(IEnumerable<TDbModel> entities, bool track = false);
+        Task<IEnumerable<TDbModel>> BulkUpdate(IEnumerable<TDbModel> entities, bool track = false);
         Task<TDbModel> GetById(TId id);
         Task<IEnumerable<TDbModel>> GetAll(Pagination<TDbModel> paginate);
         Task<TDbModel> Update(TDbModel entity);

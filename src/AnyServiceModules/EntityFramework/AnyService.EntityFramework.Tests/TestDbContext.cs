@@ -18,6 +18,7 @@ namespace AnyService.EntityFramework.Tests
         }
         public DbSet<TestClass> TestClasses { get; set; }
         public DbSet<FileModel> FileModels { get; set; }
+        public DbSet<BulkUpdateTestClass> BulkUpdateTestClasses { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             var converter = new ValueConverter<string, Guid>(
@@ -29,9 +30,13 @@ namespace AnyService.EntityFramework.Tests
             modelBuilder.Entity<TestClass>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
             modelBuilder.Entity<TestNestedClass>(b => b.Property(u => u.Id).ValueGeneratedOnAdd());
 
-            modelBuilder.Entity<BulkTestClass>(b =>
+            modelBuilder.Entity<BulkInsertTestClass>(b =>
             {
-                b.ToTable("BulkTestClasses");
+                b.ToTable("BulkInsertTestClasses");
+            });
+            modelBuilder.Entity<BulkUpdateTestClass>(b =>
+            {
+                b.ToTable("BulkUpdateTestClasses");
             });
         }
     }

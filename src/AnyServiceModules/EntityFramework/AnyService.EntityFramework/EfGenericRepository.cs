@@ -147,18 +147,6 @@ namespace AnyService.EntityFramework
                 inserted.AddRange(bulk);
             }
         }
-        //protected virtual async Task<IEnumerable<TDbModel>> BulkInsertAndTrack(IEnumerable<TDbModel> entities)
-        //{
-        //    _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} bulk operation started");
-        //    var set = _dbContext.Set<TDbModel>();
-        //    await set.AddRangeAsync(entities.ToArray());
-        //    await _dbContext.SaveChangesAsync();
-        //    _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Bulk operation ended");
-        //    _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} result = {entities.ToJsonString()}");
-        //    await DetachEntities(entities);
-        //    return entities;
-        //}
-
         public virtual async Task<TDbModel> Update(TDbModel entity)
         {
             _logger.LogDebug(EfRepositoryEventIds.Update, $"{nameof(Update)} with entity = {entity.ToJsonString()}");
@@ -177,6 +165,65 @@ namespace AnyService.EntityFramework
             await DetachEntities(new[] { dbEntity });
             _logger.LogDebug(EfRepositoryEventIds.Update, $"{nameof(Update)} result = {entity.ToJsonString()}");
             return dbEntity;
+        }
+
+        public virtual async Task<IEnumerable<TDbModel>> BulkUpdate(IEnumerable<TDbModel> entities, bool trackIds = false)
+        {
+            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkUpdate)} with entity = {entities.ToJsonString()}");
+            _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkUpdate)} bulk operation started");
+            var updated = new List<TDbModel>();
+            try
+            {
+                int offset = 0,
+                curCount = _config.UpdateBatchSize;
+                var tasks = new List<Task>();
+                do
+                {
+                    var curBatch = entities.Skip(offset).Take(_config.UpdateBatchSize);
+                    curCount = curBatch.Count();
+                    offset += _config.UpdateBatchSize;
+                    tasks.Add(updatetBatchInDatabase(curBatch));
+                } while (curCount == _config.UpdateBatchSize);
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(EfRepositoryEventIds.Update, $"{nameof(BulkUpdate)} Exception was thrown: {ex.Message}");
+                return null;
+            }
+            _logger.LogDebug(EfRepositoryEventIds.Update, $"{nameof(BulkUpdate)} Bulk operation ended");
+            return updated;
+
+            async Task updatetBatchInDatabase(IEnumerable<TDbModel> batch)
+            {
+                using var sc = _serviceProvider.CreateScope();
+                using var ctx = sc.ServiceProvider.GetService<DbContext>();
+                var set = ctx.Set<TDbModel>().AsNoTracking();
+                var allIds = batch.Select(s => s.Id);
+                var allDbEntries = set.Where(e => allIds.Contains(e.Id));
+                if (allDbEntries.IsNullOrEmpty())
+                    return;
+                await DetachEntities(allDbEntries);
+
+                foreach (var b in batch)
+                {
+                    var dbEntry = allDbEntries.FirstOrDefault(x => x.Id.Equals(b.Id));
+                    if (dbEntry == null) continue;
+
+                    foreach (var pInfo in GetTypePropertyInfos())
+                    {
+                        if (pInfo.Name == nameof(IEntity.Id)) continue;
+                        var value = pInfo.GetValue(b);
+                        pInfo.SetValue(dbEntry, value);
+                    }
+                    _dbContext.Update(dbEntry);
+                    updated.Add(dbEntry);
+                }
+
+                await _dbContext.SaveChangesAsync();
+                ctx.Set<TDbModel>().UpdateRange(batch);
+                await ctx.SaveChangesAsync();
+            }
         }
         public virtual async Task<TDbModel> Delete(TDbModel entity)
         {

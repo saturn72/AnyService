@@ -11,7 +11,7 @@ namespace AnyService.EntityFramework.Tests
         public SqlDbContext(DbContextOptions<SqlDbContext> options) : base(options)
         {
         }
-        public DbSet<BulkTestClass> BulkTestClasses { get; set; }
+        public DbSet<BulkInsertTestClass> BulkTestClasses { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             var converter = new ValueConverter<string, Guid>(
