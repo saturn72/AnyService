@@ -41,7 +41,8 @@ namespace AnyService
             if (useWorkContextMiddleware) app.UseMiddleware<WorkContextMiddleware>();
             if (useAuthorizationMiddleware) app.UseMiddleware<DefaultAuthorizationMiddleware>();
 
-            if (logExceptions) SubscribeLogExceptionHandler(eventBus, appServices, entityConfigRecords);
+            if (logExceptions) 
+                SubscribeLogExceptionHandler(eventBus, entityConfigRecords);
             SubscribeAuditHandler(appServices, eventBus, entityConfigRecords);
 
             if (usePermissionMiddleware)
@@ -94,9 +95,11 @@ namespace AnyService
                 eventBus.Subscribe(ca.EventKeys.Delete, auditHandler.DeleteEventHandler, $"{ca.Name.ToLower()}-deletable-audit-handler");
         }
 
-        private static void SubscribeLogExceptionHandler(IEventBus eventBus, IServiceProvider sp, IEnumerable<EntityConfigRecord> entityConfigRecords)
+        private static void SubscribeLogExceptionHandler(
+            IEventBus eventBus, 
+            IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
-            var handlers = new ExceptionsLoggingEventHandlers(sp);
+            var handlers = new ExceptionsLoggingEventHandlers();
             foreach (var ecr in entityConfigRecords)
             {
                 eventBus.Subscribe(ecr.EventKeys.Create, handlers.CreateEventHandler, $"{ecr.Name.ToLower()}-domain-entity-handler-created");

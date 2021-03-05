@@ -1,4 +1,5 @@
 using AnyService.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -9,27 +10,31 @@ namespace AnyService.Events
 {
     public class DefaultEventsBus : IEventBus
     {
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<DefaultEventsBus> _logger;
         private readonly IDictionary<string, ICollection<HandlerData>> _handlers;
-        public DefaultEventsBus(ILogger<DefaultEventsBus> logger)
+        public DefaultEventsBus(
+            IServiceProvider serviceProvider, 
+            ILogger<DefaultEventsBus> logger)
         {
+            _serviceProvider = serviceProvider;
             _logger = logger;
             _handlers = new Dictionary<string, ICollection<HandlerData>>();
         }
-        public void Publish(string eventKey, DomainEvent eventData)
+        public void Publish(string eventKey, Event @event)
         {
             _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event with key: {eventKey}");
             if (_handlers.TryGetValue(eventKey, out ICollection<HandlerData> handlerDatas))
             {
+                using var scope = _serviceProvider.CreateScope();
                 foreach (var h in handlerDatas)
                 {
                     _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event to handler named {h.Name}");
-                    eventData.PublishedOnUtc = DateTime.UtcNow;
-                    _ = h.Handler(eventData);
+                    _ = h.Handler(@event, scope.ServiceProvider);
                 }
             }
         }
-        public string Subscribe(string eventKey, Func<DomainEvent, Task> handler, string name)
+        public string Subscribe(string eventKey, Func<Event, IServiceProvider, Task> handler, string name)
         {
             var handlerId = Convert
                 .ToBase64String(Guid.NewGuid().ToByteArray())
@@ -64,7 +69,7 @@ namespace AnyService.Events
         {
             public string HandlerId { get; set; }
             public string Name { get; set; }
-            public Func<DomainEvent, Task> Handler { get; set; }
+            public Func<Event, IServiceProvider, Task> Handler { get; set; }
         }
         #endregion
     }

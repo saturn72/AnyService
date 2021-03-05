@@ -55,7 +55,7 @@ namespace AnyService.Tests.Services.Audit
                 PerformedByUserId = uId,
                 WorkContext = wc
             };
-            await h.CreateEventHandler(ded);
+            await h.CreateEventHandler(ded, null);
 
             am.Verify(a => a.Insert(
                 It.Is<IEnumerable<AuditRecord>>(ars =>
@@ -92,7 +92,7 @@ namespace AnyService.Tests.Services.Audit
                 PerformedByUserId = uId,
                 WorkContext = wc
             };
-            await h.CreateEventHandler(ded);
+            await h.CreateEventHandler(ded, null);
 
             am.Verify(a => a.Insert(
                 It.Is<IEnumerable<AuditRecord>>(ars =>
@@ -128,7 +128,7 @@ namespace AnyService.Tests.Services.Audit
                 PerformedByUserId = uId,
                 WorkContext = wc
             };
-            await h.ReadEventHandler(ded);
+            await h.ReadEventHandler(ded, null);
             am.Verify(a => a.Insert(
                It.Is<IEnumerable<AuditRecord>>(ars =>
                    ars.Count() == 1 &&
@@ -169,7 +169,7 @@ namespace AnyService.Tests.Services.Audit
                 PerformedByUserId = uId,
                 WorkContext = wc
             };
-            await h.ReadEventHandler(ded);
+            await h.ReadEventHandler(ded, null);
             am.Verify(a => a.Insert(
                It.Is<IEnumerable<AuditRecord>>(ars =>
                    ars.Count() == 2 &&
@@ -209,7 +209,7 @@ namespace AnyService.Tests.Services.Audit
                 PerformedByUserId = uId,
                 WorkContext = wc
             };
-            await h.UpdateEventHandler(ded);
+            await h.UpdateEventHandler(ded, null);
             am.Verify(a => a.Insert(
                It.Is<IEnumerable<AuditRecord>>(ars =>
                    ars.Count() == 1 &&
@@ -218,7 +218,7 @@ namespace AnyService.Tests.Services.Audit
                    )),
                Times.Once);
         }
-       
+
         [Fact]
         public async Task UpdateHandler_EntityUpdatedEventData()
         {
@@ -248,7 +248,7 @@ namespace AnyService.Tests.Services.Audit
                 PerformedByUserId = uId,
                 WorkContext = wc
             };
-            await h.UpdateEventHandler(ded);
+            await h.UpdateEventHandler(ded, null);
             am.Verify(a => a.Insert(
                It.Is<IEnumerable<AuditRecord>>(ars =>
                    ars.Count() == 1 &&
@@ -287,7 +287,7 @@ namespace AnyService.Tests.Services.Audit
                 PerformedByUserId = uId,
                 WorkContext = wc
             };
-            await h.DeleteEventHandler(ded);
+            await h.DeleteEventHandler(ded, null);
 
             am.Verify(a => a.Insert(
                 It.Is<IEnumerable<AuditRecord>>(ars =>
@@ -325,7 +325,7 @@ namespace AnyService.Tests.Services.Audit
                 PerformedByUserId = uId,
                 WorkContext = wc
             };
-            await h.DeleteEventHandler(ded);
+            await h.DeleteEventHandler(ded, null);
 
             am.Verify(a => a.Insert(
                 It.Is<IEnumerable<AuditRecord>>(ars =>

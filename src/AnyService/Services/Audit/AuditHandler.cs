@@ -15,20 +15,22 @@ namespace AnyService.Services.Audit
         {
             _serviceProvider = serviceProvider;
         }
-        public Func<DomainEvent, Task> CreateEventHandler => ded =>
+        public Func<Event, IServiceProvider, Task> CreateEventHandler => (evt, services) =>
         {
-            var entity = ded.Data as IEntity;
-            var entities = entity == null ? ded.Data as IEnumerable<IEntity> : new[] { entity };
-            return InsertAuditRecord(a => a.InsertCreateRecords(entities, ded.WorkContext, null), entity.ToJsonString());
+            var ded = evt as DomainEvent;
+            var entity = evt.Data as IEntity;
+            var entities = entity == null ? evt.Data as IEnumerable<IEntity> : new[] { entity };
+            return InsertAuditRecord(a => a.InsertCreateRecords(entities, ded?.WorkContext, null), entity.ToJsonString());
 
         };
-        public Func<DomainEvent, Task> ReadEventHandler => ded =>
+        public Func<Event, IServiceProvider, Task> ReadEventHandler => (evt, services) =>
         {
-            var entity = ded.Data as IEntity;
-            if (entity != null)
+            var ded = evt as DomainEvent;
+            var entity = evt.Data as IEntity;
+            if (ded != null && entity != null)
                 return InsertAuditRecord(a => a.InsertReadRecords(new[] { entity }, ded.WorkContext, null), entity.ToJsonString());
 
-            var page = ded.Data as Pagination;
+            var page = evt.Data as Pagination;
             var entities = page.DataObject as IEnumerable<IEntity>;
             return InsertAuditRecord(a => a.InsertReadRecords(entities, ded.WorkContext, ToAuditPagination()), null);
 
@@ -48,16 +50,18 @@ namespace AnyService.Services.Audit
                 };
             }
         };
-        public Func<DomainEvent, Task> UpdateEventHandler => ded =>
+        public Func<Event, IServiceProvider, Task> UpdateEventHandler => (evt, services) =>
         {
-            var data = (ded.Data as EntityUpdatedDomainEvent)?.Data as EntityUpdatedDomainEvent.EntityUpdatedEventData;
+            var ded = evt as DomainEvent;
+            var data = (ded?.Data as EntityUpdatedDomainEvent)?.Data as EntityUpdatedDomainEvent.EntityUpdatedEventData;
             return InsertAuditRecord(a => a.InsertUpdatedRecord(data.Before, data.After, ded.WorkContext, null), data.ToJsonString());
         };
-        public Func<DomainEvent, Task> DeleteEventHandler => ded =>
+        public Func<Event, IServiceProvider, Task> DeleteEventHandler => (evt, services) =>
          {
-             var entity = ded.Data as IEntity;
-             var entities = entity == null ? ded.Data as IEnumerable<IEntity> : new[] { entity };
-             return InsertAuditRecord(a => a.InsertDeletedRecord(entities, ded.WorkContext, null), entity.ToJsonString());
+             var ded = evt as DomainEvent;
+             var entity = evt.Data as IEntity;
+             var entities = entity == null ? evt.Data as IEnumerable<IEntity> : new[] { entity };
+             return InsertAuditRecord(a => a.InsertDeletedRecord(entities, ded?.WorkContext, null), entity.ToJsonString());
          };
 
         private async Task InsertAuditRecord(Func<IAuditManager, Task> action, string entityJson)

@@ -26,8 +26,8 @@ namespace AnyService.Tests.Services.Security
                 Data = "some=string",
                 PerformedByUserId = "uId",
             };
-            var ph = new DefaultPermissionsEventsHandler(null);
-            ph.PermissionCreatedHandler(ed);
+            var ph = new DefaultPermissionsEventsHandler();
+            ph.PermissionCreatedHandler(ed, null);
         }
         [Fact]
         public void EntityCreatedHandler_CreatesNewUserPermissions_WhenNotExistsInDatabase()
@@ -52,8 +52,8 @@ namespace AnyService.Tests.Services.Security
                 PerformedByUserId = userId,
                 WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
             };
-            var ph = new DefaultPermissionsEventsHandler(sp.Object);
-            ph.PermissionCreatedHandler(ed);
+            var ph = new DefaultPermissionsEventsHandler();
+            ph.PermissionCreatedHandler(ed, sp.Object);
             Thread.Sleep(50);
 
             pm.Verify(p => p.CreateUserPermissions(It.Is<UserPermissions>(
@@ -93,8 +93,8 @@ namespace AnyService.Tests.Services.Security
                 PerformedByUserId = userId,
                 WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
             };
-            var ph = new DefaultPermissionsEventsHandler(sp.Object);
-            ph.PermissionCreatedHandler(ed);
+            var ph = new DefaultPermissionsEventsHandler();
+            ph.PermissionCreatedHandler(ed, sp.Object);
             Thread.Sleep(50);
 
             pm.Verify(p => p.UpdateUserPermissions(It.Is<UserPermissions>(
@@ -141,8 +141,8 @@ namespace AnyService.Tests.Services.Security
                 PerformedByUserId = userId,
                 WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
             };
-            var ph = new DefaultPermissionsEventsHandler(sp.Object);
-            ph.PermissionCreatedHandler(ed);
+            var ph = new DefaultPermissionsEventsHandler();
+            ph.PermissionCreatedHandler(ed, sp.Object);
             Thread.Sleep(250);
 
             pm.Verify(p => p.UpdateUserPermissions(It.Is<UserPermissions>(
@@ -165,8 +165,8 @@ namespace AnyService.Tests.Services.Security
                 Data = "some=string",
                 PerformedByUserId = "uId"
             };
-            var ph = new DefaultPermissionsEventsHandler(null);
-            ph.PermissionDeletedHandler(ed);
+            var ph = new DefaultPermissionsEventsHandler();
+            ph.PermissionDeletedHandler(ed, null);
             Thread.Sleep(50);
 
         }
@@ -191,8 +191,8 @@ namespace AnyService.Tests.Services.Security
                 Data = data,
                 PerformedByUserId = userId
             };
-            var ph = new DefaultPermissionsEventsHandler(sp.Object);
-            ph.PermissionDeletedHandler(ed);
+            var ph = new DefaultPermissionsEventsHandler();
+            ph.PermissionDeletedHandler(ed, sp.Object);
             Thread.Sleep(100);
 
             pm.Verify(p => p.UpdateUserPermissions(It.IsAny<UserPermissions>()), Times.Never);
@@ -221,8 +221,8 @@ namespace AnyService.Tests.Services.Security
                 Data = data,
                 PerformedByUserId = userId
             };
-            var ph = new DefaultPermissionsEventsHandler(sp.Object);
-            ph.PermissionDeletedHandler(ed);
+            var ph = new DefaultPermissionsEventsHandler();
+            ph.PermissionDeletedHandler(ed, sp.Object);
             Thread.Sleep(50);
 
             pm.Verify(p => p.UpdateUserPermissions(It.IsAny<UserPermissions>()), Times.Never);
@@ -276,8 +276,8 @@ namespace AnyService.Tests.Services.Security
                 PerformedByUserId = userId,
                 WorkContext = new WorkContext { CurrentEntityConfigRecord = ecr },
             };
-            var ph = new DefaultPermissionsEventsHandler(sp.Object);
-            ph.PermissionDeletedHandler(ed);
+            var ph = new DefaultPermissionsEventsHandler();
+            ph.PermissionDeletedHandler(ed, sp.Object);
             Thread.Sleep(150);
 
             pm.Verify(p => p.UpdateUserPermissions(It.Is<UserPermissions>(

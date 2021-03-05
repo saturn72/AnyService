@@ -6,7 +6,7 @@ namespace AnyService.Services.Security
 {
     public interface IPermissionEventsHandler
     {
-        Func<DomainEvent, Task> PermissionCreatedHandler { get; }
-        Func<DomainEvent, Task> PermissionDeletedHandler { get; }
+        Func<Event, IServiceProvider, Task> PermissionCreatedHandler { get; }
+        Func<Event, IServiceProvider, Task> PermissionDeletedHandler { get; }
     }
 }

@@ -13,30 +13,22 @@ namespace AnyService.Services.Logging
     {
         private static readonly object lockObj = new object();
         private static IDictionary<string, int> _eventIndexes = new Dictionary<string, int>();
-        private readonly IServiceProvider _serviceProvider;
 
-        public ExceptionsLoggingEventHandlers(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider;
-        }
-        public Func<DomainEvent, Task> CreateEventHandler => LogErrorOnException;
-        public Func<DomainEvent, Task> ReadEventHandler => LogErrorOnException;
-        public Func<DomainEvent, Task> UpdateEventHandler => LogErrorOnException;
-        public Func<DomainEvent, Task> DeleteEventHandler => LogErrorOnException;
+        public Func<Event, IServiceProvider, Task> CreateEventHandler => LogErrorOnException;
+        public Func<Event, IServiceProvider, Task> ReadEventHandler => LogErrorOnException;
+        public Func<Event, IServiceProvider, Task> UpdateEventHandler => LogErrorOnException;
+        public Func<Event, IServiceProvider, Task> DeleteEventHandler => LogErrorOnException;
         #region Utilties
-        private Func<DomainEvent, Task> LogErrorOnException => ed =>
+        private Func<Event, IServiceProvider, Task> LogErrorOnException => (evt, services) =>
         {
-            using (var scope = _serviceProvider.CreateScope())
-            {
-                var logger = scope.ServiceProvider.GetService<ILogger<ExceptionsLoggingEventHandlers>>();
-                var lr = ed.Data.GetPropertyValueOrDefaultByName<LogRecord>("logRecord");
-                var traceId = lr?.TraceId;
-                if (!traceId.HasValue())
-                    return Task.CompletedTask;
-
-                logger.LogError(GetEventId(), ed.Data.GetPropertyValueByName<Exception>("exception"), traceId);
+            var logger = services.GetService<ILogger<ExceptionsLoggingEventHandlers>>();
+            var lr = evt.Data.GetPropertyValueOrDefaultByName<LogRecord>("logRecord");
+            var traceId = lr?.TraceId;
+            if (!traceId.HasValue())
                 return Task.CompletedTask;
-            }
+
+            logger.LogError(GetEventId(), evt.Data.GetPropertyValueByName<Exception>("exception"), traceId);
+            return Task.CompletedTask;
         };
         private static EventId GetEventId()
         {

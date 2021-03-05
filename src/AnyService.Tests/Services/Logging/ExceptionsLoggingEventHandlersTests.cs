@@ -16,13 +16,13 @@ namespace AnyService.Tests.Services.Logging
         {
             var logger = new Mock<ILogger<ExceptionsLoggingEventHandlers>>();
             var sp = MockServiceProvider(logger);
-            var h = new ExceptionsLoggingEventHandlers(sp.Object);
+            var h = new ExceptionsLoggingEventHandlers();
 
             var e = new DomainEvent();
-            h.CreateEventHandler(e);
-            h.ReadEventHandler(e);
-            h.UpdateEventHandler(e);
-            h.DeleteEventHandler(e);
+            h.CreateEventHandler(e, sp.Object);
+            h.ReadEventHandler(e, sp.Object);
+            h.UpdateEventHandler(e, sp.Object);
+            h.DeleteEventHandler(e, sp.Object);
             logger.Verify(l => l.Log(
                     It.Is<LogLevel>(level => level == LogLevel.Error),
                     It.IsAny<EventId>(),
@@ -39,7 +39,7 @@ namespace AnyService.Tests.Services.Logging
             var sp = MockServiceProvider(logger);
 
 
-            var h = new ExceptionsLoggingEventHandlers(sp.Object);
+            var h = new ExceptionsLoggingEventHandlers();
 
             var expEx = new Exception();
             var e = new DomainEvent
@@ -50,13 +50,13 @@ namespace AnyService.Tests.Services.Logging
                     logRecord = new LogRecord { TraceId = "some-ex-id" },
                 }
             };
-            h.CreateEventHandler(e);
+            h.CreateEventHandler(e, sp.Object);
             VerifyLogger();
-            h.ReadEventHandler(e);
+            h.ReadEventHandler(e, sp.Object);
             VerifyLogger();
-            h.UpdateEventHandler(e);
+            h.UpdateEventHandler(e, sp.Object);
             VerifyLogger();
-            h.DeleteEventHandler(e);
+            h.DeleteEventHandler(e, sp.Object);
             VerifyLogger();
 
             void VerifyLogger()
@@ -71,7 +71,6 @@ namespace AnyService.Tests.Services.Logging
                 logger.Reset();
             }
         }
-
         private Mock<IServiceProvider> MockServiceProvider(Mock<ILogger<ExceptionsLoggingEventHandlers>> logger)
         {
             var sp = new Mock<IServiceProvider>();
