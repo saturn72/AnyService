@@ -10,11 +10,13 @@ namespace AnyService.Events
 {
     public class DefaultEventsBus : IEventBus
     {
+        private const int TaskExecutionTimeout = 60000;
+
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<DefaultEventsBus> _logger;
         private readonly IDictionary<string, ICollection<HandlerData>> _handlers;
         public DefaultEventsBus(
-            IServiceProvider serviceProvider, 
+            IServiceProvider serviceProvider,
             ILogger<DefaultEventsBus> logger)
         {
             _serviceProvider = serviceProvider;
@@ -26,12 +28,15 @@ namespace AnyService.Events
             _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event with key: {eventKey}");
             if (_handlers.TryGetValue(eventKey, out ICollection<HandlerData> handlerDatas))
             {
+                var tasks = new List<Task>();
                 using var scope = _serviceProvider.CreateScope();
                 foreach (var h in handlerDatas)
                 {
                     _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event to handler named {h.Name}");
-                    _ = h.Handler(@event, scope.ServiceProvider);
+                    tasks.Add(h.Handler(@event, scope.ServiceProvider));
                 }
+                if (!Task.WaitAll(tasks.ToArray(), TaskExecutionTimeout))
+                    _logger.LogDebug($"Not all tasks finished execution within given timout ({TaskExecutionTimeout})");
             }
         }
         public string Subscribe(string eventKey, Func<Event, IServiceProvider, Task> handler, string name)

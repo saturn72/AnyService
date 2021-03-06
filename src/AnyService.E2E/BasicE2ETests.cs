@@ -44,10 +44,8 @@ namespace AnyService.E2E
                     r.EnsureSuccessStatusCode();
                 }
             }
-            await Task.Delay(1000);
-            var c = await HttpClient.GetStringAsync($"dependentmodel?dataOnly=false&query=value ==\"" + model.Value + "\"");
-            var jObj = JObject.Parse(c);
-            var jArr = jObj["data"] as JArray;
+            var c = await HttpClient.GetStringAsync($"dependentmodel?query=value==\"{model.Value}\"");
+            var jArr = JArray.Parse(c);
             jArr.Count.ShouldBe(totalEntitiesPerUser);
         }
         [Fact]

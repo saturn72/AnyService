@@ -20,15 +20,15 @@ namespace AnyService.Controllers
     [ApiController]
     [Route("[controller]")]
     [GenericControllerNameConvention]
-    public class GenericController<TResponseObject, TDomainObject> : AnyServiceControllerBase<TDomainObject>
-        where TResponseObject : class
+    public class GenericController<TModel, TDomainObject> : AnyServiceControllerBase<TDomainObject>
+        where TModel : class
         where TDomainObject : IEntity
     {
         #region fields
         private static readonly KeyValuePair<string, string> DefaultKeyValuePair = default(KeyValuePair<string, string>);
         private readonly ICrudService<TDomainObject> _crudService;
         private readonly IServiceResponseMapper _serviceResponseMapper;
-        private readonly ILogger<GenericController<TResponseObject, TDomainObject>> _logger;
+        private readonly ILogger<GenericController<TModel, TDomainObject>> _logger;
         private readonly AnyServiceConfig _config;
         private readonly WorkContext _workContext;
         private readonly Type _curType;
@@ -42,7 +42,7 @@ namespace AnyService.Controllers
         public GenericController(
             IServiceProvider serviceProvider, AnyServiceConfig config,
             IServiceResponseMapper serviceResponseMapper, WorkContext workContext,
-            ILogger<GenericController<TResponseObject, TDomainObject>> logger)
+            ILogger<GenericController<TModel, TDomainObject>> logger)
         {
             _crudService = serviceProvider.GetService<ICrudService<TDomainObject>>();
             _config = config;
@@ -58,7 +58,7 @@ namespace AnyService.Controllers
         }
         #endregion
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] TResponseObject model)
+        public async Task<IActionResult> Post([FromBody] TModel model)
         {
             _logger.LogInformation(LoggingEvents.Controller, $"{_curTypeName}: Start Post flow");
 
@@ -179,7 +179,7 @@ namespace AnyService.Controllers
             toProject = toProject?.Select(s => char.ToLowerInvariant(s[0]) + s[1..]); //make camelCase
             if (dataOnly && serviceResponse.ValidateServiceResponse())
             {
-                var d = serviceResponse.Payload.Data.Map<IEnumerable<TResponseObject>>(_config.MapperName);
+                var d = serviceResponse.Payload.Data.Map<IEnumerable<TModel>>(_config.MapperName);
                 return toProject.IsNullOrEmpty() ?
                         JsonResult(d) :
                         JsonResult(d.Select(x => x.ToDynamic(toProject)).ToArray());
@@ -229,7 +229,7 @@ namespace AnyService.Controllers
 
         #region update
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(string id, [FromBody] TResponseObject model)
+        public async Task<IActionResult> Put(string id, [FromBody] TModel model)
         {
             _logger.LogDebug(LoggingEvents.Controller, $"{_curTypeName}: Start Put flow");
 

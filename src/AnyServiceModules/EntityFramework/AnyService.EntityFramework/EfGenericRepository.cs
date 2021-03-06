@@ -90,7 +90,6 @@ namespace AnyService.EntityFramework
             var pi = GetTypePropertyInfos().FirstOrDefault(x => OrderByPropertyGetFunction(x.Name, propertyName));
             return pi == default ? nameof(IEntity.Id) : pi.Name;
         }
-
         public virtual async Task<TDbModel> GetById(TId id)
         {
             _logger.LogDebug(EfRepositoryEventIds.Read, $"{nameof(GetById)} with id = {id}");
