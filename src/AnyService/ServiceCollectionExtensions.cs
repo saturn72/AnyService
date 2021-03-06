@@ -167,8 +167,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 typeof(AuditManager);
 
             services.TryAddTransient(typeof(IAuditManager), auditManagerType);
-            services.TryAddSingleton<IEventBus, DefaultEventsBus>();
-
+            services.TryAddSingleton<IDomainEventBus, DefaultDomainEventsBus>();
+            services.TryAddSingleton<ISubscriptionManager, DefaultSubscriptionManager>();
+            
             if (config.ManageEntityPermissions)
                 services.TryAddSingleton<IPermissionEventsHandler, DefaultPermissionsEventsHandler>();
         }

@@ -25,7 +25,7 @@ namespace AnyService.Tests.Events
             {
                 CurrentUserId = "userid",
             };
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             EventBusExtensions.Publish(eb.Object, key, data, wc);
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == key),
@@ -53,7 +53,7 @@ namespace AnyService.Tests.Events
             {
                 CurrentUserId = "userid",
             };
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             EventBusExtensions.PublishUpdated(eb.Object, key, before, after, wc);
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == key),
@@ -73,7 +73,7 @@ namespace AnyService.Tests.Events
             {
                 CurrentUserId = "userid",
             };
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             EventBusExtensions.PublishException(eb.Object, key, ex, data, wc);
             eb.Verify(e => e.Publish(
                 It.Is<string>(k => k == key),

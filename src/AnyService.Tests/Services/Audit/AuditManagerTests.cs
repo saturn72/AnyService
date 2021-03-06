@@ -70,7 +70,7 @@ namespace AnyService.Tests.Services.Audit
             repo.Setup(r => r.BulkInsert(
                 It.IsAny<IEnumerable<AuditRecord>>(),
                 It.IsAny<bool>())).ReturnsAsync(dbData);
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             var logger = new Mock<ILogger<AuditManager>>();
 
             var ar = new AuditRecord

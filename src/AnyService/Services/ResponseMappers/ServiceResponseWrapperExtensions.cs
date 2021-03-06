@@ -31,7 +31,7 @@ namespace Microsoft.AspNetCore.Mvc
             serviceResponse.TraceId = wc.TraceId;
             serviceResponse.SpanId = wc.SpanId;
 
-            var eb = scope.ServiceProvider.GetService<IEventBus>();
+            var eb = scope.ServiceProvider.GetService<IDomainEventBus>();
             eb.PublishException(eventKey, exception, data, wc);
         }
     }

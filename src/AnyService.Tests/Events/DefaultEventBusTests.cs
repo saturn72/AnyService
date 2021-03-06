@@ -13,7 +13,7 @@ namespace AnyService.Tests.Events
     public class DefaultEventBusTests
     {
         [Fact]
-        public void PublishWithoutSubscription()
+        public async Task PublishWithoutSubscription()
         {
             var ek = "event-key";
             var ed = new DomainEvent
@@ -21,14 +21,15 @@ namespace AnyService.Tests.Events
                 Data = "this is data"
             };
 
+            var sm = new Mock<ISubscriptionManager>();
             var sp = MockServiceProvider();
-            var l = new Mock<ILogger<DefaultEventsBus>>();
-            var eb = new DefaultEventsBus(sp.Object, l.Object);
+            var l = new Mock<ILogger<DefaultDomainEventsBus>>();
+            var eb = new DefaultDomainEventsBus(sm.Object, sp.Object, l.Object);
 
-            eb.Publish(ek, ed);
+            await eb.Publish(ek, ed);
         }
         [Fact]
-        public void PublishWithSubscription_ThenUnsubscribe()
+        public async Task PublishWithSubscription_ThenUnsubscribe()
         {
             var handleCounter = 0;
             var ek = "event-key";
@@ -41,20 +42,22 @@ namespace AnyService.Tests.Events
                 handleCounter++;
                 return Task.CompletedTask;
             });
+
+            var sm = new Mock<ISubscriptionManager>();
             var sp = MockServiceProvider();
-            var l = new Mock<ILogger<DefaultEventsBus>>();
-            var eb = new DefaultEventsBus(sp.Object, l.Object);
-            var handlerId = eb.Subscribe(ek, handler, "name");
-            eb.Publish(ek, ed);
+            var l = new Mock<ILogger<DefaultDomainEventsBus>>();
+            var eb = new DefaultDomainEventsBus(sm.Object, sp.Object, l.Object);
+            var handlerId = await eb.Subscribe(ek, handler, "name");
+            await eb.Publish(ek, ed);
             Thread.Sleep(50);
             handleCounter.ShouldBe(1);
             ed.PublishedOnUtc.ShouldBeGreaterThan(default(DateTime));
 
-            eb.Unsubscribe(handlerId);
-            eb.Publish(ek, ed);
+            await eb.Unsubscribe(handlerId);
+            await eb.Publish(ek, ed);
             Thread.Sleep(50);
             handleCounter.ShouldBe(1);
-         }
+        }
         private Mock<IServiceProvider> MockServiceProvider()
         {
             var sp = new Mock<IServiceProvider>();

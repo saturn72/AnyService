@@ -24,11 +24,11 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 CurrentEntityConfigRecord = new EntityConfigRecord { EventKeys = new EventKeyRecord("create", null, null, null) },
                 TraceId = traceId
             };
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             eb.Setup(e => e.Publish(It.Is<string>(s => s == eventKey), It.Is<DomainEvent>(d => d.Data.GetPropertyValueByName<string>("TraceId") == traceId)))
                 .Callback(() => eventPublished = true);
 
-            ServiceProviderMock.Setup(s => s.GetService(typeof(IEventBus))).Returns(eb.Object);
+            ServiceProviderMock.Setup(s => s.GetService(typeof(IDomainEventBus))).Returns(eb.Object);
             ServiceProviderMock.Setup(s => s.GetService(typeof(WorkContext))).Returns(wc);
 
             ServiceResponseWrapperExtensions.Init(ServiceProviderMock.Object);

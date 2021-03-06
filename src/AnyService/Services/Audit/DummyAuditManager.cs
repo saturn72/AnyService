@@ -12,7 +12,7 @@ namespace AnyService.Services.Audit
             IRepository<AuditRecord> repository,
             AuditSettings auditConfig,
             IEnumerable<EntityConfigRecord> entityConfigRecords,
-            IEventBus eventBus,
+            IDomainEventBus eventBus,
             ILogger<AuditManager> logger)
             : base(
                   repository,

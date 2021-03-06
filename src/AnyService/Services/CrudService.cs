@@ -24,7 +24,7 @@ namespace AnyService.Services
         protected readonly CrudValidatorBase<TEntity> Validator;
         protected readonly IModelPreparar<TEntity> ModelPreparar;
         protected readonly WorkContext WorkContext;
-        protected readonly IEventBus EventBus;
+        protected readonly IDomainEventBus EventBus;
         protected readonly IFileStoreManager FileStorageManager;
         protected readonly ILogger<CrudService<TEntity>> Logger;
         protected readonly IFilterFactory FilterFactory;
@@ -39,7 +39,7 @@ namespace AnyService.Services
             CrudValidatorBase<TEntity> validator,
             WorkContext workContext,
             IModelPreparar<TEntity> modelPreparar,
-            IEventBus eventBus,
+            IDomainEventBus eventBus,
             IFileStoreManager fileStoreManager,
             IFilterFactory filterFactory,
             IPermissionManager permissionManager,

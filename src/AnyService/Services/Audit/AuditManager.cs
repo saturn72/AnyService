@@ -13,7 +13,7 @@ namespace AnyService.Services.Audit
         #region Fields
         private readonly IRepository<AuditRecord> _repository;
         private readonly AuditSettings _auditSettings;
-        private readonly IEventBus _eventBus;
+        private readonly IDomainEventBus _eventBus;
         private readonly ILogger<AuditManager> _logger;
         private static readonly IEnumerable<string> FaultedServiceResult = new[] { ServiceResult.BadOrMissingData, ServiceResult.Error, ServiceResult.NotFound };
         private static EventKeyRecord EventKeys;
@@ -25,7 +25,7 @@ namespace AnyService.Services.Audit
             IRepository<AuditRecord> repository,
             AuditSettings auditConfig,
             IEnumerable<EntityConfigRecord> entityConfigRecords,
-            IEventBus eventBus,
+            IDomainEventBus eventBus,
             ILogger<AuditManager> logger
             )
         {

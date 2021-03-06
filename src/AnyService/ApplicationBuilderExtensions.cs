@@ -36,7 +36,7 @@ namespace AnyService
             NormlizeProjectionMaps(scope.ServiceProvider);
             var cm = scope.ServiceProvider.GetRequiredService<ICacheManager>();
             var entityConfigRecords = scope.ServiceProvider.GetRequiredService<IEnumerable<EntityConfigRecord>>();
-            var eventBus = appServices.GetRequiredService<IEventBus>();
+            var eventBus = appServices.GetRequiredService<IDomainEventBus>();
 
             if (useWorkContextMiddleware) app.UseMiddleware<WorkContextMiddleware>();
             if (useAuthorizationMiddleware) app.UseMiddleware<DefaultAuthorizationMiddleware>();
@@ -74,7 +74,7 @@ namespace AnyService
             }
         }
 
-        private static void SubscribeAuditHandler(IServiceProvider sp, IEventBus eventBus, IEnumerable<EntityConfigRecord> entityConfigRecords)
+        private static void SubscribeAuditHandler(IServiceProvider sp, IDomainEventBus eventBus, IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
             var auditHandler = new AuditHandler(sp);
 
@@ -96,7 +96,7 @@ namespace AnyService
         }
 
         private static void SubscribeLogExceptionHandler(
-            IEventBus eventBus, 
+            IDomainEventBus eventBus, 
             IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
             var handlers = new ExceptionsLoggingEventHandlers();
@@ -116,7 +116,7 @@ namespace AnyService
             MappingExtensions.Build(serviceProvider);
         }
 
-        private static void AddPermissionComponents(IApplicationBuilder app, IServiceProvider serviceProvider, IEventBus eventBus, IEnumerable<EntityConfigRecord> ecrs)
+        private static void AddPermissionComponents(IApplicationBuilder app, IServiceProvider serviceProvider, IDomainEventBus eventBus, IEnumerable<EntityConfigRecord> ecrs)
         {
             var config = serviceProvider.GetRequiredService<AnyServiceConfig>();
             if (!config.ManageEntityPermissions)

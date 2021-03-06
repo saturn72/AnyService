@@ -17,13 +17,13 @@ namespace AnyService.Controllers
         #region fields
         public static string ErrorEventKey { get; internal set; }
         private readonly WorkContext _workContext;
-        private readonly IEventBus _eventBus;
+        private readonly IDomainEventBus _eventBus;
         private readonly ILogger<ErrorController> _logger;
         #endregion
         #region ctor
         public ErrorController(
             WorkContext workContext,
-            IEventBus eventBus,
+            IDomainEventBus eventBus,
             ILogger<ErrorController> logger
             )
         {

@@ -73,7 +73,7 @@ namespace AnyService.Tests.Services
             var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestEntity>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
                 .ReturnsAsync(true);
-            var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>();
+            var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IDomainEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var ekr = new EventKeyRecord("create", null, null, null);
 
@@ -107,7 +107,7 @@ namespace AnyService.Tests.Services
             var ex = new Exception();
             repo.Setup(r => r.Insert(It.IsAny<AuditableTestEntity>())).ThrowsAsync(ex); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestEntity>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
-                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>();
+                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IDomainEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var traceId = "traceId";
 
@@ -151,7 +151,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForCreate(It.IsAny<AuditableTestEntity>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
                 .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
 
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             var ekr = new EventKeyRecord("create", null, null, null);
 
             var ecr = new EntityConfigRecord
@@ -195,7 +195,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForCreate(It.IsAny<TestFileContainer>(), It.IsAny<ServiceResponse<TestFileContainer>>()))
                 .ReturnsAsync(true); var mp = new Mock<IModelPreparar<TestFileContainer>>();
 
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             var ekr = new EventKeyRecord("create", null, null, null);
             var wc = new WorkContext
             {
@@ -260,7 +260,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetById(It.IsAny<string>()))
                 .ReturnsAsync(null as AuditableTestEntity); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
-                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>();
+                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IDomainEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var ekr = new EventKeyRecord("create", null, null, null);
             var ecr = new EntityConfigRecord
@@ -295,7 +295,7 @@ namespace AnyService.Tests.Services
             var ex = new Exception();
             repo.Setup(r => r.GetById(It.IsAny<string>())).ThrowsAsync(ex); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
-                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>();
+                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IDomainEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
 
 
@@ -341,7 +341,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<string>(), It.IsAny<ServiceResponse<AuditableTestEntity>>()))
                 .ReturnsAsync(true);
             var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             var ekr = new EventKeyRecord(null, "read", null, null);
 
             var ecr = new EntityConfigRecord
@@ -384,7 +384,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<string>(), It.IsAny<ServiceResponse<SoftDeleteEntity>>()))
                .ReturnsAsync(true);
 
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
 
             var ecr = new EntityConfigRecord
             {
@@ -424,7 +424,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<string>(), It.IsAny<ServiceResponse<SoftDeleteEntity>>()))
                .ReturnsAsync(true);
 
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
 
             var ecr = new EntityConfigRecord
             {
@@ -468,7 +468,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(dbRes); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestEntity>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestEntity>>>()))
                 .ReturnsAsync(true);
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             var ekr = new EventKeyRecord(null, "read", null, null);
 
             var ecr = new EntityConfigRecord
@@ -571,7 +571,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(dbRes); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestEntity>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestEntity>>>()))
                 .ReturnsAsync(true);
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             var ekr = new EventKeyRecord(null, "read", null, null);
 
             var ecr = new EntityConfigRecord
@@ -613,7 +613,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetAll(It.IsAny<Pagination<AuditableTestEntity>>()))
                 .ReturnsAsync(dbRes); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestEntity>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestEntity>>>()))
-                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>();
+                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IDomainEventBus>();
             var ekr = new EventKeyRecord(null, "read", null, null);
             var ecr = new EntityConfigRecord
             {
@@ -659,7 +659,7 @@ namespace AnyService.Tests.Services
             var ex = new Exception();
             repo.Setup(r => r.GetAll(It.IsAny<Pagination<AuditableTestEntity>>())).ThrowsAsync(ex); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestEntity>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestEntity>>>()))
-                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>();
+                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IDomainEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
 
             var ekr = new EventKeyRecord(null, "read", null, null);
@@ -710,7 +710,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.GetAll(It.Is<Pagination<AuditableTestEntity>>(d => d == paginate)))
                 .ReturnsAsync(dbRes); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
             v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<AuditableTestEntity>>(), It.IsAny<ServiceResponse<Pagination<AuditableTestEntity>>>()))
-                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IEventBus>(); var ekr = new EventKeyRecord(null, "read", null, null);
+                .ReturnsAsync(true); var mp = new Mock<IModelPreparar<AuditableTestEntity>>(); var eb = new Mock<IDomainEventBus>(); var ekr = new EventKeyRecord(null, "read", null, null);
 
             var ecr = new EntityConfigRecord
             {
@@ -763,7 +763,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<SoftDeleteEntity>>(), It.IsAny<ServiceResponse<Pagination<SoftDeleteEntity>>>()))
                .ReturnsAsync(true);
 
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
 
             var ecr = new EntityConfigRecord
             {
@@ -815,7 +815,7 @@ namespace AnyService.Tests.Services
             v.Setup(i => i.ValidateForGet(It.IsAny<Pagination<SoftDeleteEntity>>(), It.IsAny<ServiceResponse<Pagination<SoftDeleteEntity>>>()))
                .ReturnsAsync(true);
 
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
 
             var ecr = new EntityConfigRecord
             {
@@ -929,7 +929,7 @@ namespace AnyService.Tests.Services
             var ex = new Exception();
             repo.Setup(r => r.GetById(It.IsAny<string>()))
                 .ThrowsAsync(ex); var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             var logger = new Mock<ILogger<CrudService<AuditableTestEntity>>>();
             var ekr = new EventKeyRecord(null, null, "update", null);
 
@@ -979,7 +979,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(dbModel);
             repo.Setup(r => r.Update(It.IsAny<AuditableTestEntity>()))
                 .ReturnsAsync(null as AuditableTestEntity); var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             var ekr = new EventKeyRecord(null, null, "update", null);
 
             var ecr = new EntityConfigRecord
@@ -1026,7 +1026,7 @@ namespace AnyService.Tests.Services
             var ex = new Exception();
             repo.Setup(r => r.Update(It.IsAny<AuditableTestEntity>()))
                 .ThrowsAsync(ex); var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             var ekr = new EventKeyRecord(null, null, "update", null);
 
             var ecr = new EntityConfigRecord
@@ -1078,7 +1078,7 @@ namespace AnyService.Tests.Services
                 .ReturnsAsync(dbModel);
             repo.Setup(r => r.Update(It.IsAny<AuditableTestEntity>()))
                 .ReturnsAsync(entity); var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             var ekr = new EventKeyRecord(null, null, "update", null);
 
             var ecr = new EntityConfigRecord
@@ -1169,7 +1169,7 @@ namespace AnyService.Tests.Services
             repo.Setup(r => r.Update(It.IsAny<TestFileContainer>()))
                 .ReturnsAsync(entity);
             var mp = new Mock<IModelPreparar<TestFileContainer>>();
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             var logger = new Mock<ILogger<CrudService<TestFileContainer>>>();
             var fsm = new Mock<IFileStoreManager>();
             fsm.Setup(f => f.Upload(It.IsAny<IEnumerable<FileModel>>()))
@@ -1317,7 +1317,7 @@ namespace AnyService.Tests.Services
             var ex = new Exception();
             repo.Setup(r => r.Update(It.IsAny<AuditableTestEntity>()))
                 .ThrowsAsync(ex); var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
             var ekr = new EventKeyRecord(null, null, null, "delete");
 
             var ecr = new EntityConfigRecord
@@ -1410,7 +1410,7 @@ namespace AnyService.Tests.Services
                 CurrentUserId = "some-user-id",
                 CurrentEntityConfigRecord = ecr
             };
-            var eb = new Mock<IEventBus>();
+            var eb = new Mock<IDomainEventBus>();
 
             var cSrv = new CrudService<TestEntity>(
                 _config, repo.Object, v.Object,
@@ -1431,7 +1431,7 @@ namespace AnyService.Tests.Services
         public async Task Delete_IDeletableAudit_SoftDelete_AlreadyDeleted_ReturnsBadRequest()
         {
             var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
-            var eb = new Mock<IEventBus>(); var dbModel = new AuditableTestEntity { Deleted = true }; var repo = new Mock<IRepository<AuditableTestEntity>>();
+            var eb = new Mock<IDomainEventBus>(); var dbModel = new AuditableTestEntity { Deleted = true }; var repo = new Mock<IRepository<AuditableTestEntity>>();
             repo.Setup(r => r.GetById(It.IsAny<string>()))
                 .ReturnsAsync(dbModel); repo.Setup(r => r.Update(It.IsAny<AuditableTestEntity>()))
      .ReturnsAsync(dbModel); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
@@ -1464,7 +1464,7 @@ namespace AnyService.Tests.Services
         public async Task Delete_IDeletableAudit_Success()
         {
             var mp = new Mock<IModelPreparar<AuditableTestEntity>>();
-            var eb = new Mock<IEventBus>(); var dbModel = new AuditableTestEntity(); var repo = new Mock<IRepository<AuditableTestEntity>>();
+            var eb = new Mock<IDomainEventBus>(); var dbModel = new AuditableTestEntity(); var repo = new Mock<IRepository<AuditableTestEntity>>();
             repo.Setup(r => r.GetById(It.IsAny<string>()))
                 .ReturnsAsync(dbModel); repo.Setup(r => r.Update(It.IsAny<AuditableTestEntity>()))
      .ReturnsAsync(dbModel); var v = new Mock<CrudValidatorBase<AuditableTestEntity>>();
@@ -1504,7 +1504,7 @@ namespace AnyService.Tests.Services
         [Fact]
         public async Task Delete_Success()
         {
-            var eb = new Mock<IEventBus>(); var dbModel = new TestEntity(); var repo = new Mock<IRepository<TestEntity>>();
+            var eb = new Mock<IDomainEventBus>(); var dbModel = new TestEntity(); var repo = new Mock<IRepository<TestEntity>>();
             repo.Setup(r => r.GetById(It.IsAny<string>()))
                 .ReturnsAsync(dbModel); repo.Setup(r => r.Delete(It.IsAny<TestEntity>()))
      .ReturnsAsync(dbModel); var v = new Mock<CrudValidatorBase<TestEntity>>();
