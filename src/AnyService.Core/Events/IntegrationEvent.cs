@@ -2,9 +2,9 @@
 
 namespace AnyService.Events
 {
-    public class Event
+    public class IntegrationEvent
     {
-        public Event()
+        public IntegrationEvent()
         {
             Id = Guid.NewGuid().ToString();
             PublishedOnUtc = DateTime.UtcNow;

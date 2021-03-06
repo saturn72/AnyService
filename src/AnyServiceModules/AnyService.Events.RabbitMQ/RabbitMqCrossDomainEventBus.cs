@@ -19,7 +19,7 @@ namespace AnyService.Events.RabbitMQ
 
         private readonly IRabbitMQPersistentConnection _persistentConnection;
         private readonly IServiceProvider _serviceProvider;
-        private readonly ISubscriptionManager _subscriptionManager;
+        private readonly ISubscriptionManager<IntegrationEvent> _subscriptionManager;
         private readonly RabbitMqConfig _config;
         private readonly ILogger<RabbitMqCrossDomainEventBus> _logger;
         private IModel _consumerChannel;
@@ -27,7 +27,7 @@ namespace AnyService.Events.RabbitMQ
         public RabbitMqCrossDomainEventBus(
             IRabbitMQPersistentConnection persistentConnection,
             IServiceProvider serviceProvider,
-            ISubscriptionManager subscriptionManager,
+            ISubscriptionManager<IntegrationEvent> subscriptionManager,
             RabbitMqConfig config,
             ILogger<RabbitMqCrossDomainEventBus> logger,
             int retryCount = 5
@@ -56,7 +56,7 @@ namespace AnyService.Events.RabbitMQ
                 _consumerChannel.Close();
             }
         }
-        public async Task Publish(string eventKey, Event @event)
+        public async Task Publish(string eventKey, IntegrationEvent @event)
         {
             var handlersData = await _subscriptionManager.GetHandlers(eventKey);
             if (handlersData.IsNullOrEmpty())
@@ -93,7 +93,7 @@ namespace AnyService.Events.RabbitMQ
                     body: body);
             });
         }
-        public async Task<string> Subscribe(string eventKey, Func<Event, IServiceProvider, Task> handler, string name)
+        public async Task<string> Subscribe(string eventKey, Func<IntegrationEvent, IServiceProvider, Task> handler, string name)
         {
             _logger.LogDebug("Subscribing event handler for {EventKey} with {Name}", eventKey, name);
 
@@ -211,7 +211,7 @@ namespace AnyService.Events.RabbitMQ
             using var scope = _serviceProvider.CreateScope();
             foreach (var hd in handlerDatas)
             {
-                var @event = message.ToObject<Event>();
+                var @event = message.ToObject<IntegrationEvent>();
                 tasks.Add(hd.Handler(@event, scope.ServiceProvider));
                 await Task.Yield();
             }

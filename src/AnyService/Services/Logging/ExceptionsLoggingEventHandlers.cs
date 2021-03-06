@@ -14,12 +14,12 @@ namespace AnyService.Services.Logging
         private static readonly object lockObj = new object();
         private static IDictionary<string, int> _eventIndexes = new Dictionary<string, int>();
 
-        public Func<Event, IServiceProvider, Task> CreateEventHandler => LogErrorOnException;
-        public Func<Event, IServiceProvider, Task> ReadEventHandler => LogErrorOnException;
-        public Func<Event, IServiceProvider, Task> UpdateEventHandler => LogErrorOnException;
-        public Func<Event, IServiceProvider, Task> DeleteEventHandler => LogErrorOnException;
+        public Func<DomainEvent, IServiceProvider, Task> CreateEventHandler => LogErrorOnException;
+        public Func<DomainEvent, IServiceProvider, Task> ReadEventHandler => LogErrorOnException;
+        public Func<DomainEvent, IServiceProvider, Task> UpdateEventHandler => LogErrorOnException;
+        public Func<DomainEvent, IServiceProvider, Task> DeleteEventHandler => LogErrorOnException;
         #region Utilties
-        private Func<Event, IServiceProvider, Task> LogErrorOnException => (evt, services) =>
+        private Func<DomainEvent, IServiceProvider, Task> LogErrorOnException => (evt, services) =>
         {
             var logger = services.GetService<ILogger<ExceptionsLoggingEventHandlers>>();
             var lr = evt.Data.GetPropertyValueOrDefaultByName<LogRecord>("logRecord");

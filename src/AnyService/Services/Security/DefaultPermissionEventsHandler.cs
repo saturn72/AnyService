@@ -11,16 +11,15 @@ namespace AnyService.Services.Security
     public sealed class DefaultPermissionsEventsHandler : IPermissionEventsHandler
     {
         private static readonly object lockObj = new object();
-        public Func<Event, IServiceProvider, Task> PermissionCreatedHandler => async (evt, services) =>
+        public Func<DomainEvent, IServiceProvider, Task> PermissionCreatedHandler => async (de, services) =>
           {
-              var ded = evt as DomainEvent;
-              if (ded == null || !(evt.Data is IEntity createdEntity))
+              if (!(de.Data is IEntity createdEntity))
                   return;
 
               var manager = services.GetService<IPermissionManager>();
-              var userId = ded.PerformedByUserId;
+              var userId = de.PerformedByUserId;
 
-              var ecr = ded.WorkContext.CurrentEntityConfigRecord;
+              var ecr = de.WorkContext.CurrentEntityConfigRecord;
               var entityPermission = new EntityPermission
               {
                   EntityId = createdEntity.Id,
@@ -52,16 +51,15 @@ namespace AnyService.Services.Security
               }
               await manager.UpdateUserPermissions(userPermissions);
           };
-        public Func<Event, IServiceProvider, Task> PermissionDeletedHandler => async (evt, services) =>
+        public Func<DomainEvent, IServiceProvider, Task> PermissionDeletedHandler => async (de, services) =>
       {
-          var ded = evt as DomainEvent;
-          var deletedEntity = evt.Data as IEntity;
-          if (ded == null || deletedEntity == null)
+          var deletedEntity = de.Data as IEntity;
+          if (deletedEntity == null)
               return;
 
           var manager = services.GetService<IPermissionManager>();
-          var userId = ded.PerformedByUserId;
-          var ecr = ded.WorkContext.CurrentEntityConfigRecord;
+          var userId = de.PerformedByUserId;
+          var ecr = de.WorkContext.CurrentEntityConfigRecord;
 
           var userPermissions = await manager.GetUserPermissions(userId);
           var permissionToDelete = userPermissions?.EntityPermissions?.FirstOrDefault(p => p.EntityId == deletedEntity.Id && p.EntityKey == ecr.EntityKey);

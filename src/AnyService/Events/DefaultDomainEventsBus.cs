@@ -10,11 +10,11 @@ namespace AnyService.Events
     public class DefaultDomainEventsBus : IDomainEventBus
     {
         private const int TaskExecutionTimeout = 60000;
-        private readonly ISubscriptionManager _subscriptionManager;
+        private readonly ISubscriptionManager<DomainEvent> _subscriptionManager;
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<DefaultDomainEventsBus> _logger;
         public DefaultDomainEventsBus(
-            ISubscriptionManager subscriptionManager,
+            ISubscriptionManager<DomainEvent> subscriptionManager,
             IServiceProvider serviceProvider,
             ILogger<DefaultDomainEventsBus> logger)
         {
@@ -22,7 +22,7 @@ namespace AnyService.Events
             _serviceProvider = serviceProvider;
             _logger = logger;
         }
-        public async Task Publish(string eventKey, Event @event)
+        public async Task Publish(string eventKey, DomainEvent @event)
         {
             _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event with key: {eventKey}");
 
@@ -40,7 +40,8 @@ namespace AnyService.Events
             if (!Task.WaitAll(tasks.ToArray(), TaskExecutionTimeout))
                 _logger.LogDebug($"Not all tasks finished execution within given timout ({TaskExecutionTimeout})");
         }
-        public Task<string> Subscribe(string eventKey, Func<Event, IServiceProvider, Task> handler, string name) => _subscriptionManager.Subscribe(eventKey, handler, name);
+        public Task<string> Subscribe(string eventKey, Func<DomainEvent, IServiceProvider, Task> handler, string name) =>
+            _subscriptionManager.Subscribe(eventKey, handler, name);
         public Task Unsubscribe(string handlerId) => _subscriptionManager.Unsubscribe(handlerId);
     }
 }

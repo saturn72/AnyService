@@ -10,7 +10,7 @@ using Xunit;
 
 namespace AnyService.Tests.Events
 {
-    public class DefaultEventBusTests
+    public class DefaultDomainEventBusTests
     {
         [Fact]
         public async Task PublishWithoutSubscription()
@@ -21,7 +21,7 @@ namespace AnyService.Tests.Events
                 Data = "this is data"
             };
 
-            var sm = new Mock<ISubscriptionManager>();
+            var sm = new Mock<ISubscriptionManager<DomainEvent>>();
             var sp = MockServiceProvider();
             var l = new Mock<ILogger<DefaultDomainEventsBus>>();
             var eb = new DefaultDomainEventsBus(sm.Object, sp.Object, l.Object);
@@ -37,25 +37,26 @@ namespace AnyService.Tests.Events
             {
                 Data = "thjis is data"
             };
-            var handler = new Func<Event, IServiceProvider, Task>((evt, services) =>
+            var handler = new Func<DomainEvent, IServiceProvider, Task>((evt, services) =>
             {
                 handleCounter++;
                 return Task.CompletedTask;
             });
 
-            var sm = new Mock<ISubscriptionManager>();
+            var sm = new Mock<ISubscriptionManager<DomainEvent>>();
+            sm.Setup(s => s.GetHandlers(It.Is<string>(str => str == ek)))
+                .ReturnsAsync(new[]
+                {
+                    new HandlerData<DomainEvent>
+                    {
+                        Handler = handler
+                    }
+                });
             var sp = MockServiceProvider();
             var l = new Mock<ILogger<DefaultDomainEventsBus>>();
             var eb = new DefaultDomainEventsBus(sm.Object, sp.Object, l.Object);
             var handlerId = await eb.Subscribe(ek, handler, "name");
             await eb.Publish(ek, ed);
-            Thread.Sleep(50);
-            handleCounter.ShouldBe(1);
-            ed.PublishedOnUtc.ShouldBeGreaterThan(default(DateTime));
-
-            await eb.Unsubscribe(handlerId);
-            await eb.Publish(ek, ed);
-            Thread.Sleep(50);
             handleCounter.ShouldBe(1);
         }
         private Mock<IServiceProvider> MockServiceProvider()

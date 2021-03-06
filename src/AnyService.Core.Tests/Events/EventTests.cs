@@ -10,7 +10,7 @@ namespace AnyService.Core.Tests.Events
         [Fact]
         public void Event_InitAllFields()
         {
-            var e = new Event();
+            var e = new IntegrationEvent();
             e.Id.ShouldNotBeNullOrWhiteSpace();
             e.Id.ShouldNotBeNullOrEmpty();
 

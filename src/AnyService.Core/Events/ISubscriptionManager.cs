@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 namespace AnyService.Events
 {
-    public interface ISubscriptionManager
+    public interface ISubscriptionManager<TEvent>
     {
-        Task<string> Subscribe(string eventKey, Func<Event, IServiceProvider, Task> handler, string name);
+        Task<string> Subscribe(string eventKey, Func<TEvent, IServiceProvider, Task> handler, string name);
         Task Unsubscribe(string handlerId);
-        Task<IEnumerable<HandlerData>> GetAllHandlers();
-        Task<IEnumerable<HandlerData>> GetHandlers(string eventKey);
+        Task<IEnumerable<HandlerData<TEvent>>> GetAllHandlers();
+        Task<IEnumerable<HandlerData<TEvent>>> GetHandlers(string eventKey);
         void Clear();
     }
 }

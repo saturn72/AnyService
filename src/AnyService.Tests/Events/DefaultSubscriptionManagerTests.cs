@@ -18,9 +18,9 @@ namespace AnyService.Tests.Events
                 expValue = 777;
             var ek = "e-key";
 
-            var f = new Func<Event, IServiceProvider, Task>((e, s) => Task.Run(() => i = expValue));
-            var l = new Mock<ILogger<DefaultSubscriptionManager>>();
-            var sm = new DefaultSubscriptionManager(l.Object);
+            var f = new Func<DomainEvent, IServiceProvider, Task>((e, s) => Task.Run(() => i = expValue));
+            var l = new Mock<ILogger<DefaultSubscriptionManager<DomainEvent>>>();
+            var sm = new DefaultSubscriptionManager<DomainEvent>(l.Object);
 
             var h = await sm.GetHandlers(ek);
             h.ShouldBeNull();
@@ -34,7 +34,7 @@ namespace AnyService.Tests.Events
             
             await sm.Unsubscribe(hId);
             hds = await sm.GetHandlers(ek);
-            hds.ShouldBeNull();
+            hds.Count().ShouldBe(0);
         }
     }
 }
