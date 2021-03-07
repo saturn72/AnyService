@@ -29,13 +29,12 @@ namespace AnyService.Events.RabbitMQ
             IServiceProvider serviceProvider,
             ISubscriptionManager<IntegrationEvent> subscriptionManager,
             RabbitMqConfig config,
-            ILogger<RabbitMqCrossDomainEventBus> logger,
-            int retryCount = 5
+            ILogger<RabbitMqCrossDomainEventBus> logger
             )
         {
             _persistentConnection = persistentConnection ?? throw new ArgumentNullException(nameof(persistentConnection));
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _subscriptionManager = subscriptionManager ?? throw new ArgumentNullException(nameof(subscriptionManager));
+            _subscriptionManager = subscriptionManager;
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _consumerChannel = CreateConsumerChannel();
@@ -58,10 +57,6 @@ namespace AnyService.Events.RabbitMQ
         }
         public async Task Publish(string @namespace, string eventKey, IntegrationEvent @event)
         {
-            var handlersData = await _subscriptionManager.GetHandlers(@namespace, eventKey);
-            if (handlersData.IsNullOrEmpty())
-                return;
-
             TryConnect();
             var policy = Policy.Handle<BrokerUnreachableException>()
                 .Or<SocketException>()
