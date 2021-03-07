@@ -10,7 +10,11 @@ namespace AnyService.Core.Tests.Events
         [Fact]
         public void Event_InitAllFields()
         {
-            var e = new IntegrationEvent();
+            var route = "test";
+            var e = new IntegrationEvent(route);
+
+            e.Route.ShouldBe(route);
+
             e.Id.ShouldNotBeNullOrWhiteSpace();
             e.Id.ShouldNotBeNullOrEmpty();
 

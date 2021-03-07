@@ -2,8 +2,9 @@
 {
     public class RabbitMqConfig
     {
-        public string BrokerName { get; set; }
-        public string QueueName { get; set; }
+        public string IncomingExchange { get; set; }
+        public string OutgoingExchange { get; set; }
+        public string IncomingQueueName { get; set; }
         public int RetryCount { get; set; }
         public string HostName { get; set; }
         public int Port { get; set; }

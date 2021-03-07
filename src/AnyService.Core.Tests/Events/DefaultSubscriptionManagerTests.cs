@@ -18,9 +18,9 @@ namespace AnyService.Tests.Events
                 expValue = 777;
             var ek = "e-key";
 
-            var f = new Func<DomainEvent, IServiceProvider, Task>((e, s) => Task.Run(() => i = expValue));
-            var l = new Mock<ILogger<DefaultSubscriptionManager<DomainEvent>>>();
-            var sm = new DefaultSubscriptionManager<DomainEvent>(l.Object);
+            var f = new Func<IntegrationEvent, IServiceProvider, Task>((e, s) => Task.Run(() => i = expValue));
+            var l = new Mock<ILogger<DefaultSubscriptionManager<IntegrationEvent>>>();
+            var sm = new DefaultSubscriptionManager<IntegrationEvent>(l.Object);
 
             var h = await sm.GetHandlers("default", ek);
             h.ShouldBeNull();

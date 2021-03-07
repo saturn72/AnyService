@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace AnyService.Events.RabbitMQ
 {
 
-    public class RabbitMqCrossDomainEventBus : ICrossDomainEventBus, IDisposable
+    public class RabbitMqCrossDomainEventPublisherSubscriber : ICrossDomainEventPublisher, ICrossDomainEventSubscriber, IDisposable
     {
         const int DefaultTasksTimeout = 60000;
 
@@ -21,15 +21,15 @@ namespace AnyService.Events.RabbitMQ
         private readonly IServiceProvider _serviceProvider;
         private readonly ISubscriptionManager<IntegrationEvent> _subscriptionManager;
         private readonly RabbitMqConfig _config;
-        private readonly ILogger<RabbitMqCrossDomainEventBus> _logger;
+        private readonly ILogger<RabbitMqCrossDomainEventPublisherSubscriber> _logger;
         private IModel _consumerChannel;
 
-        public RabbitMqCrossDomainEventBus(
+        public RabbitMqCrossDomainEventPublisherSubscriber(
             IRabbitMQPersistentConnection persistentConnection,
             IServiceProvider serviceProvider,
             ISubscriptionManager<IntegrationEvent> subscriptionManager,
             RabbitMqConfig config,
-            ILogger<RabbitMqCrossDomainEventBus> logger
+            ILogger<RabbitMqCrossDomainEventPublisherSubscriber> logger
             )
         {
             _persistentConnection = persistentConnection ?? throw new ArgumentNullException(nameof(persistentConnection));
@@ -44,14 +44,14 @@ namespace AnyService.Events.RabbitMQ
         {
             TryConnect();
             using var channel = _persistentConnection.CreateModel();
-            channel.QueueUnbind(queue: _config.QueueName,
-                exchange: _config.BrokerName,
+            channel.QueueUnbind(queue: _config.IncomingQueueName,
+                exchange: _config.IncomingExchange,
                 routingKey: handlerId);
 
             var allHandlers = await _subscriptionManager.GetAllHandlers();
             if (allHandlers.IsNullOrEmpty())
             {
-                _config.QueueName = string.Empty;
+                _config.IncomingQueueName = string.Empty;
                 _consumerChannel.Close();
             }
         }
@@ -60,7 +60,7 @@ namespace AnyService.Events.RabbitMQ
             TryConnect();
             var policy = Policy.Handle<BrokerUnreachableException>()
                 .Or<SocketException>()
-                .WaitAndRetry(_config.RetryCount, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
+                .WaitAndRetryAsync(_config.RetryCount, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
                 {
                     _logger.LogWarning(ex, "Could not publish event: {EventId} after {Timeout}s ({ExceptionMessage})", @event.Id, $"{time.TotalSeconds:n1}", ex.Message);
                 });
@@ -70,22 +70,22 @@ namespace AnyService.Events.RabbitMQ
             using var channel = _persistentConnection.CreateModel();
             _logger.LogDebug("Declaring RabbitMQ exchange to publish event: {EventId}", @event.Id);
 
-            channel.ExchangeDeclare(exchange: _config.BrokerName, type: "direct");
+            channel.ExchangeDeclare(exchange: _config.OutgoingExchange, type: "direct");
 
             var message = @event.ToJsonString();
             var body = Encoding.UTF8.GetBytes(message);
 
-            policy.Execute(() =>
+            await policy.ExecuteAsync(() =>
             {
                 var properties = channel.CreateBasicProperties();
                 properties.DeliveryMode = 2; // persistent
                 _logger.LogDebug("Publishing event to RabbitMQ: {EventId}", @event.Id);
-                channel.BasicPublish(
-                    exchange: _config.BrokerName,
-                    routingKey: eventKey,
+                return Task.Run(() => channel.BasicPublish(
+                    exchange: _config.OutgoingExchange,
+                    routingKey: "", // $"{@namespace}/{eventKey}",
                     mandatory: true,
                     basicProperties: properties,
-                    body: body);
+                    body: body));
             });
         }
         public async Task<string> Subscribe(string @namespace, string eventKey, Func<IntegrationEvent, IServiceProvider, Task> handler, string name)
@@ -97,9 +97,10 @@ namespace AnyService.Events.RabbitMQ
             {
                 TryConnect();
                 using var channel = _persistentConnection.CreateModel();
-                channel.QueueBind(queue: _config.QueueName,
-                                  exchange: _config.BrokerName,
-                                  routingKey: eventKey);
+                channel.QueueBind(
+                    queue: _config.IncomingQueueName,
+                    exchange: _config.IncomingExchange,
+                    routingKey: $"{@namespace}/{eventKey}");
                 StartBasicConsume();
             }
             return handlerId;
@@ -130,7 +131,7 @@ namespace AnyService.Events.RabbitMQ
                 consumer.Received += Consumer_Received;
 
                 _consumerChannel.BasicConsume(
-                    queue: _config.QueueName,
+                    queue: _config.IncomingQueueName,
                     autoAck: false,
                     consumer: consumer);
             }
@@ -169,13 +170,10 @@ namespace AnyService.Events.RabbitMQ
         {
             TryConnect();
             _logger.LogTrace("Creating RabbitMQ consumer channel");
-
             var channel = _persistentConnection.CreateModel();
-
-            channel.ExchangeDeclare(exchange: _config.BrokerName,
+            channel.ExchangeDeclare(exchange: _config.IncomingExchange,
                                     type: "direct");
-
-            channel.QueueDeclare(queue: _config.QueueName,
+            channel.QueueDeclare(queue: _config.IncomingQueueName ?? "",
                                  durable: true,
                                  exclusive: false,
                                  autoDelete: false,
@@ -214,8 +212,7 @@ namespace AnyService.Events.RabbitMQ
         }
         public void Dispose()
         {
-            if (_consumerChannel != null)
-                _consumerChannel.Dispose();
+            _consumerChannel?.Dispose();
             _subscriptionManager.Clear();
         }
     }
