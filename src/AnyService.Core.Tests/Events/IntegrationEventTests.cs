@@ -5,7 +5,7 @@ using Xunit;
 
 namespace AnyService.Core.Tests.Events
 {
-    public class EventTests
+    public class IntegrationEventTests
     {
         [Fact]
         public void Event_InitAllFields()

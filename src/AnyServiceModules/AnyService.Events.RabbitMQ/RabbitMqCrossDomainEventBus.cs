@@ -56,9 +56,9 @@ namespace AnyService.Events.RabbitMQ
                 _consumerChannel.Close();
             }
         }
-        public async Task Publish(string eventKey, IntegrationEvent @event)
+        public async Task Publish(string @namespace, string eventKey, IntegrationEvent @event)
         {
-            var handlersData = await _subscriptionManager.GetHandlers(eventKey);
+            var handlersData = await _subscriptionManager.GetHandlers(@namespace, eventKey);
             if (handlersData.IsNullOrEmpty())
                 return;
 
@@ -93,11 +93,11 @@ namespace AnyService.Events.RabbitMQ
                     body: body);
             });
         }
-        public async Task<string> Subscribe(string eventKey, Func<IntegrationEvent, IServiceProvider, Task> handler, string name)
+        public async Task<string> Subscribe(string @namespace, string eventKey, Func<IntegrationEvent, IServiceProvider, Task> handler, string name)
         {
             _logger.LogDebug("Subscribing event handler for {EventKey} with {Name}", eventKey, name);
 
-            var handlerId = await _subscriptionManager.Subscribe(eventKey, handler, name);
+            var handlerId = await _subscriptionManager.Subscribe(@namespace, eventKey, handler, name);
             if (handlerId.HasValue())
             {
                 TryConnect();
@@ -147,23 +147,23 @@ namespace AnyService.Events.RabbitMQ
 
         private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
         {
-            var eventName = eventArgs.RoutingKey;
-            var message = Encoding.UTF8.GetString(eventArgs.Body.Span);
+            var keyArr = eventArgs.RoutingKey.Split("/");
+            var @namespace = keyArr[0];
+            var eventKey = keyArr[1];
 
+            var message = Encoding.UTF8.GetString(eventArgs.Body.Span);
             try
             {
                 if (message.ToLowerInvariant().Contains("throw-fake-exception"))
                 {
                     throw new InvalidOperationException($"Fake exception requested: \"{message}\"");
                 }
-
-                await ProcessEvent(eventName, message);
+                await ProcessEvent(@namespace, eventKey, message);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "----- ERROR Processing message \"{Message}\"", message);
             }
-
             // Even on exception we take the message off the queue.
             // in a REAL WORLD app this should be handled with a Dead Letter Exchange (DLX). 
             // For more information see: https://www.rabbitmq.com/dlx.html
@@ -198,10 +198,10 @@ namespace AnyService.Events.RabbitMQ
             return channel;
         }
 
-        private async Task ProcessEvent(string eventKey, string message)
+        private async Task ProcessEvent(string @namespace, string eventKey, string message)
         {
             _logger.LogTrace("Processing RabbitMQ event: {EventKey}", eventKey);
-            var handlerDatas = await _subscriptionManager.GetHandlers(eventKey);
+            var handlerDatas = await _subscriptionManager.GetHandlers(@namespace, eventKey);
             if (handlerDatas.IsNullOrEmpty())
             {
                 _logger.LogWarning("No subscription for RabbitMQ event: {EventName}", eventKey);

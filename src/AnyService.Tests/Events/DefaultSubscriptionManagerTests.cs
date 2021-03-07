@@ -22,18 +22,18 @@ namespace AnyService.Tests.Events
             var l = new Mock<ILogger<DefaultSubscriptionManager<DomainEvent>>>();
             var sm = new DefaultSubscriptionManager<DomainEvent>(l.Object);
 
-            var h = await sm.GetHandlers(ek);
+            var h = await sm.GetHandlers("default", ek);
             h.ShouldBeNull();
-            var hId = await sm.Subscribe(ek, f, "test");
+            var hId = await sm.Subscribe("default", ek, f, "test");
             hId.ShouldNotBeNullOrEmpty();
 
-            var hds = await sm.GetHandlers(ek);
+            var hds = await sm.GetHandlers("default", ek);
             hds.Count().ShouldBe(1);
             await hds.First().Handler(null, null);
             i.ShouldBe(expValue);
             
             await sm.Unsubscribe(hId);
-            hds = await sm.GetHandlers(ek);
+            hds = await sm.GetHandlers("default", ek);
             hds.Count().ShouldBe(0);
         }
     }

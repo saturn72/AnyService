@@ -44,10 +44,10 @@ namespace AnyService.Tests.Events
             });
 
             var sm = new Mock<ISubscriptionManager<DomainEvent>>();
-            sm.Setup(s => s.GetHandlers(It.Is<string>(str => str == ek)))
+            sm.Setup(s => s.GetHandlers(It.IsAny<string>(), It.Is<string>(str => str == ek)))
                 .ReturnsAsync(new[]
                 {
-                    new HandlerData<DomainEvent>
+                    new HandlerData<DomainEvent>("default", ek)
                     {
                         Handler = handler
                     }

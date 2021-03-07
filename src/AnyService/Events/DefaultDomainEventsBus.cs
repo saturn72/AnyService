@@ -9,24 +9,29 @@ namespace AnyService.Events
 {
     public class DefaultDomainEventsBus : IDomainEventBus
     {
+        private const string DefaultNamespaceConst = "default";
         private const int TaskExecutionTimeout = 60000;
         private readonly ISubscriptionManager<DomainEvent> _subscriptionManager;
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<DefaultDomainEventsBus> _logger;
+        private readonly string _defaultNamespace;
+
         public DefaultDomainEventsBus(
             ISubscriptionManager<DomainEvent> subscriptionManager,
             IServiceProvider serviceProvider,
-            ILogger<DefaultDomainEventsBus> logger)
+            ILogger<DefaultDomainEventsBus> logger,
+            string defaultNamespace = DefaultNamespaceConst)
         {
             _subscriptionManager = subscriptionManager;
             _serviceProvider = serviceProvider;
             _logger = logger;
+            _defaultNamespace = defaultNamespace;
         }
         public async Task Publish(string eventKey, DomainEvent @event)
         {
             _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event with key: {eventKey}");
 
-            var handlers = await _subscriptionManager.GetHandlers(eventKey);
+            var handlers = await _subscriptionManager.GetHandlers(_defaultNamespace, eventKey);
             if (handlers.IsNullOrEmpty())
                 return;
 
@@ -34,14 +39,14 @@ namespace AnyService.Events
             using var scope = _serviceProvider.CreateScope();
             foreach (var h in handlers)
             {
-                _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event to handler named {h.Name}");
+                _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event to handler named {h.Alias}");
                 tasks.Add(h.Handler(@event, scope.ServiceProvider));
             }
             if (!Task.WaitAll(tasks.ToArray(), TaskExecutionTimeout))
                 _logger.LogDebug($"Not all tasks finished execution within given timout ({TaskExecutionTimeout})");
         }
         public Task<string> Subscribe(string eventKey, Func<DomainEvent, IServiceProvider, Task> handler, string name) =>
-            _subscriptionManager.Subscribe(eventKey, handler, name);
+            _subscriptionManager.Subscribe(_defaultNamespace, eventKey, handler, name);
         public Task Unsubscribe(string handlerId) => _subscriptionManager.Unsubscribe(handlerId);
     }
 }
