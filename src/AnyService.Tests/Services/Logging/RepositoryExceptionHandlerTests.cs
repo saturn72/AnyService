@@ -78,8 +78,7 @@ namespace AnyService.Tests.Services.Logging
 
             sp.Setup(p => p.GetService(typeof(ILogRecordManager))).Returns(lm.Object);
 
-            var reh = new RepositoryExceptionHandler(sp.Object);
-            await reh.InsertRecord(ded);
+            await RepositoryExceptionHandler.InsertRecord(ded, sp.Object);
             lm.Verify(r => r.InsertLogRecord(It.Is<LogRecord>(lRec =>
                 lRec.Level == LogRecordLevel.Error &&
                 lRec.ClientId == wc.CurrentClientId &&

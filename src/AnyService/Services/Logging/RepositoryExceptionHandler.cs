@@ -8,7 +8,7 @@ namespace AnyService.Services.Logging
 {
     public class RepositoryExceptionHandler
     {
-        public Func<DomainEvent, IServiceProvider, Task> InsertRecord => (evt, services) =>
+        public static Func<DomainEvent, IServiceProvider, Task> InsertRecord => (evt, services) =>
         {
             var lr = evt.Data.GetPropertyValueByName<LogRecord>("logRecord");
             if (lr == null) return Task.CompletedTask;

@@ -66,9 +66,9 @@ jobs:
       # - name: Pack anyservice.litedb nuget package
       #   working-directory: ./src
       #   run: dotnet pack ./AnyServiceModules/LiteDb/AnyService.LiteDb/AnyService.LiteDb.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
-      # - name: Pack anyservice.events.rabbitmq nuget package
-      #   working-directory: ./src
-      #   run: dotnet pack ./AnyServiceModules/AnyService.Events.RabbitMQ/AnyService.Events.RabbitMQ.csproj --configuration Release --output ./nupkg --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
+      - name: Pack anyservice.events.rabbitmq nuget package
+        working-directory: ./src
+        run: dotnet pack ./AnyServiceModules/AnyService.Events.RabbitMQ/AnyService.Events.RabbitMQ.csproj --configuration Release --output ./nupkg --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       - name: Push packages to nuget
         working-directory: ./src/nupkg
         run: dotnet nuget push *.nupkg --api-key $nuget_api_key --source https://api.nuget.org/v3/index.json

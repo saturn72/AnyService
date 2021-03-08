@@ -9,8 +9,6 @@ namespace AnyService.Events.RabbitMQ
     {
         public void Configure(IServiceCollection services, IConfiguration configuration, string sectionName = "rabbitMq")
         {
-
-
             var rabbitMqConfig = new RabbitMqConfig();
             configuration.GetSection(sectionName).Bind(rabbitMqConfig);
             if (!rabbitMqConfig.OutgoingExchange.HasValue())
