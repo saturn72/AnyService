@@ -12,11 +12,18 @@ namespace AnyService.Events.RabbitMQ
         {
             var rabbitMqConfig = new RabbitMqConfig();
             configuration.GetSection(sectionName).Bind(rabbitMqConfig);
+
             if (!rabbitMqConfig.OutgoingExchange.HasValue())
                 throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.OutgoingExchange)}");
 
+            if (!rabbitMqConfig.OutgoingExchangeType.HasValue())
+                throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.OutgoingExchangeType)}");
+
             if (!rabbitMqConfig.IncomingExchange.HasValue())
                 throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.IncomingExchange)}");
+            
+            if (!rabbitMqConfig.IncomingExchangeType.HasValue())
+                throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.IncomingExchangeType)}");
 
             if (!rabbitMqConfig.IncomingQueueName.HasValue())
                 throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.IncomingQueueName)}");

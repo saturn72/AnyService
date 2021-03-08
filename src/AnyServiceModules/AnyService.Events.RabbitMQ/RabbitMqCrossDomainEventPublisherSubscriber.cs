@@ -70,7 +70,7 @@ namespace AnyService.Events.RabbitMQ
             using var channel = _persistentConnection.CreateModel();
             _logger.LogDebug("Declaring RabbitMQ exchange to publish event: {EventId}", @event.Id);
 
-            channel.ExchangeDeclare(exchange: _config.OutgoingExchange, type: "direct");
+            channel.ExchangeDeclare(exchange: _config.OutgoingExchange, type: _config.OutgoingExchangeType);
 
             var message = @event.ToJsonString();
             var body = Encoding.UTF8.GetBytes(message);
@@ -172,7 +172,7 @@ namespace AnyService.Events.RabbitMQ
             _logger.LogTrace("Creating RabbitMQ consumer channel");
             var channel = _persistentConnection.CreateModel();
             channel.ExchangeDeclare(exchange: _config.IncomingExchange,
-                                    type: "direct");
+                                    type: _config.IncomingExchangeType);
             channel.QueueDeclare(queue: _config.IncomingQueueName ?? "",
                                  durable: true,
                                  exclusive: false,
