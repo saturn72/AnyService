@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using System;
 using RabbitMQ.Client;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace AnyService.Events.RabbitMQ
 {
@@ -49,6 +50,7 @@ namespace AnyService.Events.RabbitMQ
             services.AddSingleton<IRabbitMQPersistentConnection, DefaultRabbitMQPersistentConnection>();
             services.AddSingleton<ICrossDomainEventPublisher, RabbitMqCrossDomainEventPublisherSubscriber>();
             services.AddSingleton<ICrossDomainEventSubscriber, RabbitMqCrossDomainEventPublisherSubscriber>();
+            services.TryAddSingleton<ISubscriptionManager<IntegrationEvent>, DefaultSubscriptionManager<IntegrationEvent>>();
         }
     }
 }
