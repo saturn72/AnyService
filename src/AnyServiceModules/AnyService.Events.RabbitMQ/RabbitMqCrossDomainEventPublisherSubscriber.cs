@@ -82,7 +82,7 @@ namespace AnyService.Events.RabbitMQ
                 _logger.LogDebug("Publishing event to RabbitMQ: {EventId}", @event.Id);
                 return Task.Run(() => channel.BasicPublish(
                     exchange: _config.OutgoingExchange,
-                    routingKey: "", // $"{@namespace}/{eventKey}",
+                    routingKey: @event.Route,
                     mandatory: true,
                     basicProperties: properties,
                     body: body));
@@ -93,16 +93,15 @@ namespace AnyService.Events.RabbitMQ
             _logger.LogDebug("Subscribing event handler for {EventKey} with {Name}", eventKey, name);
 
             var handlerId = await _subscriptionManager.Subscribe(@namespace, eventKey, handler, name);
-            if (handlerId.HasValue())
-            {
-                TryConnect();
-                using var channel = _persistentConnection.CreateModel();
-                channel.QueueBind(
-                    queue: _config.IncomingQueueName,
-                    exchange: _config.IncomingExchange,
-                    routingKey: $"{@namespace}/{eventKey}");
-                StartBasicConsume();
-            }
+            if (!handlerId.HasValue())
+                throw new InvalidOperationException("Failed to subscribe handler");
+            TryConnect();
+            using var channel = _persistentConnection.CreateModel();
+            channel.QueueBind(
+                queue: _config.IncomingQueueName,
+                exchange: _config.IncomingExchange,
+                routingKey: $"{@namespace}/{eventKey}");
+            StartBasicConsume();
             return handlerId;
         }
         private void TryConnect()

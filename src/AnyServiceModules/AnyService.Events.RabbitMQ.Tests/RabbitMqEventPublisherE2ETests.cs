@@ -28,11 +28,11 @@ namespace AnyService.Events.RabbitMQ.Tests
 
             var config = new RabbitMqConfig
             {
-                OutgoingExchange = "to-pump-ex",
-                OutgoingExchangeType = "direct",
-                IncomingExchange = "to-avosetgo-online",
-                IncomingExchangeType = "direct",
-                IncomingQueueName = "from-avosetgo-online",
+                OutgoingExchange = "out-test-ex",
+                OutgoingExchangeType = "fanout",
+                IncomingExchange = "in-test-ex",
+                IncomingExchangeType = "fanout",
+                IncomingQueueName = "in-test-queue",
                 RetryCount = 5,
                 HostName = "localhost",
                 Port = 5672,
