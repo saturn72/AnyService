@@ -12,7 +12,7 @@ namespace AnyService.Core.Tests.Events
         {
             var e = new IntegrationEvent("route");
             e.Expiration = 1;
-            Thread.Sleep(2);
+            Thread.Sleep(1100);
             IntegrationEventExtensions.Expired(e).ShouldBeTrue();
         }
         [Fact]
