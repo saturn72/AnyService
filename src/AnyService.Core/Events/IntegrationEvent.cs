@@ -13,6 +13,7 @@ namespace AnyService.Events
         public string Route { get; }
         public string Id { get; }
         public DateTime PublishedOnUtc { get; }
+        public int? Expiration { get; set; }
         public object Data { get; set; }
     }
 }
