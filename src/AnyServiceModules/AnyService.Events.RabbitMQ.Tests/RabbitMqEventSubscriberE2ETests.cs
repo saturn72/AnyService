@@ -21,7 +21,9 @@ namespace AnyService.Events.RabbitMQ.Tests
             var config = new RabbitMqConfig
             {
                 OutgoingExchange = "to-pump",
+                OutgoingExchangeType = "direct",
                 IncomingExchange = "to-avosetgo-online",
+                IncomingExchangeType = "direct",
                 IncomingQueueName = "to-avosetgo-online-queue",
                 RetryCount = 5,
                 HostName = "localhost",
