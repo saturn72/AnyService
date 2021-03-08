@@ -8,22 +8,12 @@ namespace AnyService.Services.Logging
 {
     public class RepositoryExceptionHandler
     {
-        #region fields
-        private readonly IServiceProvider _serviceProvider;
-        #endregion
-        #region ctor
-        public RepositoryExceptionHandler(IServiceProvider serviceProvider)
+        public Func<DomainEvent, IServiceProvider, Task> InsertRecord => (evt, services) =>
         {
-            _serviceProvider = serviceProvider;
-        }
-        #endregion
-        public Func<DomainEvent, Task> InsertRecord => ded =>
-        {
-            var lr = ded.Data.GetPropertyValueByName<LogRecord>("logRecord");
+            var lr = evt.Data.GetPropertyValueByName<LogRecord>("logRecord");
             if (lr == null) return Task.CompletedTask;
 
-            var logManager = _serviceProvider.GetService<ILogRecordManager>();
-            return logManager.InsertLogRecord(lr);
+            return services.GetService<ILogRecordManager>().InsertLogRecord(lr);
         };
     }
 }
