@@ -131,7 +131,7 @@ namespace AnyService.EntityFramework
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"{nameof(BulkInsert)} Exception was thrown: {ex.Message}");
-                return null;
+                throw ex;
             }
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(BulkInsert)} Bulk operation ended");
             return inserted;
