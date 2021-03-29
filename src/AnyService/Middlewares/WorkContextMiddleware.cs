@@ -49,12 +49,13 @@ namespace AnyService.Middlewares
             if (!await HttpContextToWorkContext(httpContext, workContext))
                 return;
             workContext.TraceId = Activity.Current?.TraceId.ToString();
+            workContext.RequestInfo = ToRequestInfo(httpContext);
 
             var ecr = GetEntityConfigRecordByRoute(httpContext.Request.Path);
             if (ecr != null && !ecr.Equals(default))
             {
                 workContext.CurrentEntityConfigRecord = ecr;
-                workContext.RequestInfo = ToRequestInfo(httpContext, ecr);
+                workContext.RequestInfo.RequesteeId = GetRequesteeId(ecr.EndpointSettings.Route, workContext.RequestInfo.Path);
                 if (!MethodActive(workContext))
                 {
                     httpContext.Response.StatusCode = StatusCodes.Status405MethodNotAllowed;
@@ -128,7 +129,7 @@ namespace AnyService.Middlewares
                     $"Entity is not found in anyservice's configured {nameof(RouteMaps)}. Path used: {path}. If this is not expected, please verify entity was configured when calling {nameof(ServiceCollectionExtensions.AddAnyService)} method.");
             return res;
         }
-        private RequestInfo ToRequestInfo(HttpContext httpContext, EntityConfigRecord ecr)
+        private RequestInfo ToRequestInfo(HttpContext httpContext)
         {
             var path = httpContext.Request.Path.ToString();
             _logger.LogDebug(LoggingEvents.WorkContext, $"Parse httpRequestInfo from route: {path}");
@@ -136,8 +137,6 @@ namespace AnyService.Middlewares
             {
                 Path = path,
                 Method = httpContext.Request.Method,
-                RequesteeId = GetRequesteeId(ecr.EndpointSettings.Route, path),
-
             };
             reqInfo.Parameters["httprequestqueryheaders"] = httpContext.Request.Headers;
             var query = httpContext.Request.Query?.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)).ToArray();
