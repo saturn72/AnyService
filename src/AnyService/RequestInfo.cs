@@ -19,10 +19,5 @@ namespace AnyService
             get => GetParameterOrDefault<string>(nameof(RequesteeId));
             set => SetParameter(nameof(RequesteeId), value);
         }
-        public IEnumerable<string> Headers
-        {
-            get => GetParameterOrDefault<IEnumerable<string>>(nameof(Headers));
-            set => SetParameter(nameof(Headers), value);
-        }
     }
 }
