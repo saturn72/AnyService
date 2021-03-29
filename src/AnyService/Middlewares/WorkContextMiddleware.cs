@@ -137,8 +137,13 @@ namespace AnyService.Middlewares
                 Path = path,
                 Method = httpContext.Request.Method,
                 RequesteeId = GetRequesteeId(ecr.EndpointSettings.Route, path),
-                Parameters = httpContext.Request.Query?.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)).ToArray()
+
             };
+            reqInfo.Parameters["httprequestqueryheaders"] = httpContext.Request.Headers;
+            var query = httpContext.Request.Query?.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)).ToArray();
+            if (!query.IsNullOrEmpty())
+                reqInfo.Parameters["httprequestquery"] = query;
+
             _logger.LogDebug(LoggingEvents.WorkContext, $"Parsed requestInfo: {reqInfo.ToJsonString()}");
             return reqInfo;
         }
