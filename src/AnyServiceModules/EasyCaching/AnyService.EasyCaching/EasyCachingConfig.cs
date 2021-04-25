@@ -1,13 +1,10 @@
-﻿namespace AnyService.EasyCaching
+﻿using System.ComponentModel;
+
+namespace AnyService.EasyCaching
 {
     public class EasyCachingConfig
     {
-        public EasyCachingConfig()
-        {
-            DefaultCachingTimeInSeconds = 10 * 60;
-            ProviderName = "default";
-        }
-        public uint DefaultCachingTimeInSeconds { get; set; }
-        public string ProviderName { get; set; }
+        [DefaultValue(600)]
+        public uint DefaultCachingTimeInSeconds { get; set; } = 600;
     }
 }
