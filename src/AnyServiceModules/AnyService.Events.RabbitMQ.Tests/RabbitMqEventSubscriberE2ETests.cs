@@ -20,13 +20,13 @@ namespace AnyService.Events.RabbitMQ.Tests
 
             var config = new RabbitMqConfig
             {
-                OutgoingExchange = "out-test-ex",
+                OutgoingExchange = "in-test-ex", //publish to same ex and q
                 OutgoingExchangeType = "fanout",
                 IncomingExchange = "in-test-ex",
                 IncomingExchangeType = "fanout",
                 IncomingQueueName = "in-test-queue",
                 RetryCount = 5,
-                HostName = "localhost",
+                HostName = "qcorerabbit.westeurope.cloudapp.azure.com",//"localhost",
                 Port = 5672,
             };
             var cf = new ConnectionFactory
@@ -58,14 +58,16 @@ namespace AnyService.Events.RabbitMQ.Tests
             var ns = "test-ns";
             var ek = "test-key";
             await eb.Subscribe(ns, ek, f, "f-name");
-            var evt = new IntegrationEvent(ns + "/" + ek) { Data = expData };
-            PublishEvent(evt, config, pcon);
+            var evt = new IntegrationEvent(ns ,ek) { Data = expData };
+            await eb.Publish(evt);
+            //PublishEvent(evt, config, pcon);
             await Task.Delay(500);
             i.ShouldBe(expData);
         }
 
         private void PublishEvent(IntegrationEvent evt, RabbitMqConfig config, IRabbitMQPersistentConnection persistentConnection)
         {
+            
             using var channel = persistentConnection.CreateModel();
             var message = evt.ToJsonString();
             var body = Encoding.UTF8.GetBytes(message);
@@ -74,7 +76,7 @@ namespace AnyService.Events.RabbitMQ.Tests
             properties.DeliveryMode = 2; // persistent
             channel.BasicPublish(
                 exchange: config.IncomingExchange,
-                routingKey: evt.Route,
+                routingKey: $"{evt.Namespace}/{evt.EventKey}",
                 mandatory: true,
                 basicProperties: properties,
                 body: body);

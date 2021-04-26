@@ -98,6 +98,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return f;
             });
 
+            services.AddSingleton<ICrossDomainEventPublisher, CrossDomainEventPublishManager>();
             services.TryAddSingleton(config);
             services.TryAddScoped(sp => sp.GetService<WorkContext>().CurrentEntityConfigRecord?.AuditSettings ?? config.AuditSettings);
             services.TryAddScoped(typeof(ICrudService<>), typeof(CrudService<>));

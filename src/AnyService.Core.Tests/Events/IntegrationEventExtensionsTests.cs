@@ -10,7 +10,7 @@ namespace AnyService.Core.Tests.Events
         [Fact]
         public void Expired_Returns_True()
         {
-            var e = new IntegrationEvent("route");
+            var e = new IntegrationEvent("route", "ek");
             e.Expiration = 1;
             Thread.Sleep(1100);
             IntegrationEventExtensions.Expired(e).ShouldBeTrue();
@@ -18,14 +18,14 @@ namespace AnyService.Core.Tests.Events
         [Fact]
         public void Expired_Returns_False_OnUnlimitedEvent()
         {
-            var e = new IntegrationEvent("route");
+            var e = new IntegrationEvent("route", "ek");
             IntegrationEventExtensions.Expired(e).ShouldBeFalse();
 
         }
         [Fact]
         public void Expired_Returns_False_ExpirationEvent()
         {
-            var e = new IntegrationEvent("route");
+            var e = new IntegrationEvent("route", "ek");
             e.Expiration = 10;
             Thread.Sleep(1);
             IntegrationEventExtensions.Expired(e).ShouldBeFalse();

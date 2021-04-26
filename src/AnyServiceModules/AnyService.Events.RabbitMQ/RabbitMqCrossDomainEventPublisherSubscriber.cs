@@ -40,13 +40,13 @@ namespace AnyService.Events.RabbitMQ
             _consumerChannel = CreateConsumerChannel();
         }
 
-        private async Task OnHandlerRemoved(string handlerId)
+        private async Task OnHandlerRemoved(string @namespace, string eventKey)
         {
             TryConnect();
             using var channel = _persistentConnection.CreateModel();
             channel.QueueUnbind(queue: _config.IncomingQueueName,
                 exchange: _config.IncomingExchange,
-                routingKey: handlerId);
+                routingKey: $"{@namespace}/{eventKey}");
 
             var allHandlers = await _subscriptionManager.GetAllHandlers();
             if (allHandlers.IsNullOrEmpty())
@@ -55,7 +55,7 @@ namespace AnyService.Events.RabbitMQ
                 _consumerChannel.Close();
             }
         }
-        public async Task Publish(string @namespace, string eventKey, IntegrationEvent @event)
+        public async Task Publish(IntegrationEvent @event)
         {
             TryConnect();
             var policy = Policy.Handle<BrokerUnreachableException>()
@@ -65,8 +65,7 @@ namespace AnyService.Events.RabbitMQ
                     _logger.LogWarning(ex, "Could not publish event: {EventId} after {Timeout}s ({ExceptionMessage})", @event.Id, $"{time.TotalSeconds:n1}", ex.Message);
                 });
 
-            _logger.LogDebug("Creating RabbitMQ channel to publish event: {EventId} ({EventName})", @event.Id, eventKey);
-
+            _logger.LogDebug("Creating RabbitMQ channel to publish event: {namespace} {EventId} ({EventName})", @event.Namespace, @event.Id, @event.EventKey);
             using var channel = _persistentConnection.CreateModel();
             _logger.LogDebug("Declaring RabbitMQ exchange to publish event: {EventId}", @event.Id);
 
@@ -82,17 +81,17 @@ namespace AnyService.Events.RabbitMQ
                 _logger.LogDebug("Publishing event to RabbitMQ: {EventId}", @event.Id);
                 return Task.Run(() => channel.BasicPublish(
                     exchange: _config.OutgoingExchange,
-                    routingKey: @event.Route,
+                    routingKey: $"{@event.Namespace}/{@event.EventKey}",
                     mandatory: true,
                     basicProperties: properties,
                     body: body));
             });
         }
-        public async Task<string> Subscribe(string @namespace, string eventKey, Func<IntegrationEvent, IServiceProvider, Task> handler, string name)
+        public async Task<string> Subscribe(string @namespace, string eventKey, Func<IntegrationEvent, IServiceProvider, Task> handler, string alias)
         {
-            _logger.LogDebug("Subscribing event handler for {EventKey} with {Name}", eventKey, name);
+            _logger.LogDebug("Subscribing event handler for {EventKey} with {Name}", eventKey, alias);
 
-            var handlerId = await _subscriptionManager.Subscribe(@namespace, eventKey, handler, name);
+            var handlerId = await _subscriptionManager.Subscribe(@namespace, eventKey, handler, alias);
             if (!handlerId.HasValue())
                 throw new InvalidOperationException("Failed to subscribe handler");
             TryConnect();
@@ -109,16 +108,14 @@ namespace AnyService.Events.RabbitMQ
             if (!_persistentConnection.IsConnected)
                 _persistentConnection.TryConnect();
         }
-
         public async Task Unsubscribe(string handlerId)
         {
             _logger.LogInformation("Unsubscribing from event {handlerId}", handlerId);
+            var h = await _subscriptionManager.GetByHandlerId(handlerId);
             await _subscriptionManager.Unsubscribe(handlerId);
             if (handlerId.HasValue())
-                _ = OnHandlerRemoved(handlerId);
+                _ = OnHandlerRemoved(h.Namespace, h.EventKey);
         }
-
-
         private void StartBasicConsume()
         {
             _logger.LogTrace("Starting RabbitMQ basic consume");

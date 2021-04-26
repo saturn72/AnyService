@@ -34,7 +34,7 @@ namespace AnyService.Events.RabbitMQ.Tests
                 IncomingExchangeType = "fanout",
                 IncomingQueueName = "in-test-queue",
                 RetryCount = 5,
-                HostName = "localhost",
+                HostName = "qcorerabbit.westeurope.cloudapp.azure.com",
                 Port = 5672,
             };
             var cf = new ConnectionFactory
@@ -58,15 +58,15 @@ namespace AnyService.Events.RabbitMQ.Tests
             //register consumer to recieve message
             var connection = cf.CreateConnection();
             var consumer = RecieveIncomingMessage(connection, config);
-            var ie = new IntegrationEvent("test/route")
+            var ie = new IntegrationEvent("test", "route")
             {
                 Data = expData,
             };
             //publish event
-            await eb.Publish("default", "event-key", ie);
+            await eb.Publish(ie);
             await Task.Delay(500);
             _incomingMessage.ShouldContain(ie.Id);
-            _incomingMessage.ShouldContain(ie.Route);
+            _incomingMessage.ShouldContain(ie.Namespace);
             _incomingMessage.ShouldContain(expData);
         }
 

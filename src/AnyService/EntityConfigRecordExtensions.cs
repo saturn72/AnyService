@@ -12,7 +12,7 @@ namespace AnyService
         /// <param name="records">All records</param>
         /// <param name="type">Types to search</param>
         /// <returns>matched EntityConfigRecord} or default</returns>
-        public static EntityConfigRecord FirstOrDefault(this IEnumerable<EntityConfigRecord> records, Type type) => records.FirstOrDefault(r => r.Type == type);
+        public static EntityConfigRecord FirstOrDefault(this IEnumerable<EntityConfigRecord> records, Type type) => records?.FirstOrDefault(r => r.Type == type);
 
 
         /// <summary>
@@ -29,6 +29,6 @@ namespace AnyService
         /// <param name="records">All records</param>
         /// <param name="type">Types to search</param>
         /// <returns>IEnumerable of EntityConfigRecords</returns>
-        public static IEnumerable<EntityConfigRecord> All(this IEnumerable<EntityConfigRecord> records, Type type) => records.Where(r => r.Type == type);
+        public static IEnumerable<EntityConfigRecord> All(this IEnumerable<EntityConfigRecord> records, Type type) => records?.Where(r => r.Type == type);
     }
 }

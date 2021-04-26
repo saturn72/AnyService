@@ -65,9 +65,18 @@ namespace AnyService.Events
         }
         public Task<IEnumerable<HandlerData<TEvent>>> GetAllHandlers()
         {
-            var allEventKeys = _namespaceHandlers?.SelectMany(x => x.Value).SelectMany(y => y.Value);
-            return Task.FromResult(allEventKeys);
+            var allHandlers = _namespaceHandlers?.SelectMany(x => x.Value).SelectMany(y => y.Value);
+            return Task.FromResult(allHandlers);
         }
         public void Clear() => _namespaceHandlers.Clear();
+
+        public Task<HandlerData<TEvent>> GetByHandlerId(string handlerId)
+        {
+            var handler = _namespaceHandlers?
+                .SelectMany(x => x.Value)?
+                .SelectMany(y => y.Value)?
+                .FirstOrDefault(h => h.HandlerId == handlerId);
+            return Task.FromResult(handler);
+        }
     }
 }

@@ -9,13 +9,12 @@ namespace AnyService.Services.Audit
 {
     public static class AuditManagerExtensions
     {
-        private static IEnumerable<EntityConfigRecord> EntityConfigRecords = new List<EntityConfigRecord>();
+        private static readonly List<EntityConfigRecord> EntityConfigRecords = new List<EntityConfigRecord>();
         private static readonly ConcurrentDictionary<Type, string> EntityTypesNames = new ConcurrentDictionary<Type, string>();
         public static void AddEntityConfigRecords(IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
-            var ecrs = EntityConfigRecords.ToList();
-            ecrs.AddRange(entityConfigRecords);
-            EntityConfigRecords = ecrs;
+            if (!entityConfigRecords.IsNullOrEmpty())
+                EntityConfigRecords.AddRange(entityConfigRecords);
         }
         public static Task InsertCreateRecords(this IAuditManager auditHelper, IEnumerable<IEntity> entities, WorkContext workContext, object context)
         {
@@ -33,7 +32,7 @@ namespace AnyService.Services.Audit
             var ar = new AuditRecord
             {
                 EntityId = before.Id,
-                EntityName = GeIEntityName(before.GetType()),
+                EntityName = GetEntityName(before.GetType()),
                 AuditRecordType = AuditRecordTypes.UPDATE,
                 Data = entity.ToJsonString(),
                 Context = context.ToJsonString(),
@@ -58,7 +57,7 @@ namespace AnyService.Services.Audit
             return entities.Select(e => new AuditRecord
             {
                 EntityId = e.Id,
-                EntityName = GeIEntityName(e.GetType()),
+                EntityName = GetEntityName(e.GetType()),
                 AuditRecordType = auditRecordType,
                 Data = e.ToJsonString(),
                 Context = (context ?? e).ToJsonString(),
@@ -67,12 +66,13 @@ namespace AnyService.Services.Audit
                 ClientId = workContext.CurrentClientId,
             });
         }
-        private static string GeIEntityName(Type entityType)
+        private static string GetEntityName(Type entityType)
         {
             if (EntityTypesNames.TryGetValue(entityType, out string value))
                 return value;
 
-            EntityTypesNames.TryAdd(entityType, EntityConfigRecords.First(entityType).Name);
+            value = EntityConfigRecords.First(entityType).Name;
+            EntityTypesNames.TryAdd(entityType, value);
             return EntityTypesNames[entityType];
         }
     }

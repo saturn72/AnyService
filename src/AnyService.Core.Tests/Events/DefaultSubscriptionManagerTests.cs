@@ -22,16 +22,26 @@ namespace AnyService.Tests.Events
             var l = new Mock<ILogger<DefaultSubscriptionManager<IntegrationEvent>>>();
             var sm = new DefaultSubscriptionManager<IntegrationEvent>(l.Object);
 
-            var h = await sm.GetHandlers("default", ek);
-            h.ShouldBeNull();
+            var handlers = await sm.GetHandlers("default", ek);
+            handlers.ShouldBeNull();
             var hId = await sm.Subscribe("default", ek, f, "test");
+            hId.ShouldNotBeNullOrEmpty();
+
+            var h = await sm.GetByHandlerId(hId);
+            h.ShouldNotBeNull();
+
+            await sm.Unsubscribe(hId);
+            h = await sm.GetByHandlerId(hId);
+            h.ShouldBeNull();
+
+            hId = await sm.Subscribe("default", ek, f, "test");
             hId.ShouldNotBeNullOrEmpty();
 
             var hds = await sm.GetHandlers("default", ek);
             hds.Count().ShouldBe(1);
             await hds.First().Handler(null, null);
             i.ShouldBe(expValue);
-            
+
             await sm.Unsubscribe(hId);
             hds = await sm.GetHandlers("default", ek);
             hds.Count().ShouldBe(0);

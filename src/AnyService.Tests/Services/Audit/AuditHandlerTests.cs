@@ -227,13 +227,12 @@ namespace AnyService.Tests.Services.Audit
             var am = new Mock<IAuditManager>();
             sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
             var h = new AuditHandler(sp.Object);
-
-            EventDataObject before = new EventDataObject
+            EventDataObject before = new()
             {
                 Id = "123",
                 Value = "data"
             },
-            after = new EventDataObject
+            after = new()
             {
                 Id = "123",
                 Value = "data2"
@@ -258,11 +257,6 @@ namespace AnyService.Tests.Services.Audit
                Times.Once);
         }
 
-        private bool VerifyPayload(object obj, EventDataObject before, EventDataObject after)
-        {
-            var o = (obj as EntityUpdatedDomainEvent).Data as EntityUpdatedDomainEvent.EntityUpdatedEventData;
-            return o.Before == before && o.After == after;
-        }
         [Fact]
         public async Task DeleteHandler_SingleEntityDeleted()
         {
