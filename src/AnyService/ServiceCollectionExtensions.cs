@@ -87,7 +87,6 @@ namespace Microsoft.Extensions.DependencyInjection
                   }
               });
         }
-
         private static void RegisterDependencies(IServiceCollection services, AnyServiceConfig config)
         {
             services.TryAddSingleton<IdGeneratorFactory>(sp =>
@@ -98,7 +97,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return f;
             });
 
-            services.AddSingleton<ICrossDomainEventPublisher, CrossDomainEventPublishManager>();
+            services.AddSingleton<CrossDomainEventPublishManager>();
             services.TryAddSingleton(config);
             services.TryAddScoped(sp => sp.GetService<WorkContext>().CurrentEntityConfigRecord?.AuditSettings ?? config.AuditSettings);
             services.TryAddScoped(typeof(ICrudService<>), typeof(CrudService<>));
