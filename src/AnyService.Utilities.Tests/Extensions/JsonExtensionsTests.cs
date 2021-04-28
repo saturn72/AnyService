@@ -42,9 +42,9 @@ namespace AnyService.Utilities.Tests.Extensions
             var jsonstring = JsonSerializer.Serialize(o);
             using var jDoc = JsonDocument.Parse(jsonstring);
             var root = jDoc.RootElement;
-            root.GetValue(expDateTime.GetType(), "DateTime").ShouldBe(expDateTime);
-            root.GetValue(expDateTimeOffset.GetType(), "DateTimeOffset").ShouldBe(expDateTimeOffset);
-            root.GetValue(expGuid.GetType(), "Guid").ShouldBe(expGuid);
+            root.GetValueOrDefault(expDateTime.GetType(), "DateTime").ShouldBe(expDateTime);
+            root.GetValueOrDefault(expDateTimeOffset.GetType(), "DateTimeOffset").ShouldBe(expDateTimeOffset);
+            root.GetValueOrDefault(expGuid.GetType(), "Guid").ShouldBe(expGuid);
         }
 
         [Theory]
@@ -83,7 +83,7 @@ namespace AnyService.Utilities.Tests.Extensions
             var jsonstring = JsonSerializer.Serialize(o);
             using var jDoc = JsonDocument.Parse(jsonstring);
             var root = jDoc.RootElement;
-            root.GetValue(type, propertyName).ShouldBe(expValue);
+            root.GetValueOrDefault(type, propertyName).ShouldBe(expValue);
         }
 
         #region FirstElementOrDefault

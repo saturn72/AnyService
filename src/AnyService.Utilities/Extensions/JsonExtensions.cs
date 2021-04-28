@@ -36,13 +36,14 @@ namespace System.Text.Json
             {typeof(uint), je => je.GetUInt32()},
             {typeof(ulong), je => je.GetUInt64()},
         };
-        public static T GetValue<T>(this JsonElement jsonElement, string propertyName)
+        public static T GetValueOrDefault<T>(this JsonElement jsonElement, string propertyName)
         {
-            return (T)GetValue(jsonElement, typeof(T), propertyName);
+            return (T)GetValueOrDefault(jsonElement, typeof(T), propertyName);
         }
-        public static object GetValue(this JsonElement jsonElement, Type type, string propertyName)
+        public static object GetValueOrDefault(this JsonElement jsonElement, Type type, string propertyName)
         {
-            if (!jsonElement.TryGetProperty(propertyName, out JsonElement value))
+            if (!jsonElement.TryGetProperty(propertyName, out JsonElement value) ||
+                value.ValueKind == JsonValueKind.Null)
                 return default;
             return JsonValueConvert[type](value);
         }
