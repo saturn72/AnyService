@@ -162,6 +162,15 @@ namespace AnyService.Utilities.Tests
             ObjectExtensionsFunctions.GetPropertyValueOrDefaultByName<MyTestClass>(tc, "TestClass").ShouldBe(tc.TestClass);
         }
         #endregion
+        #region ToArratytring
+        [Fact]
+        public void ToJsonArrayString()
+        {
+            var b = new byte[] { 1, 2, 3, 4, 5 };
+            var r = b.ToJsonArrayString();
+            r.ShouldBe("[1, 2, 3, 4, 5]");
+        }
+        #endregion
         #region ToJsonString
         [Fact]
         public void ToJsonString()

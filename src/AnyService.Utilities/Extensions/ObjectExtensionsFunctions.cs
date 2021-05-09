@@ -78,6 +78,7 @@ namespace System
             return pi != null ? (T)pi.GetValue(obj) : default;
         }
         public static string ToJsonString(this object obj) => JsonSerializer.Serialize(obj, JsonSerializerOptions);
+        public static string ToJsonArrayString(this IEnumerable<byte> bytes) => $"[{string.Join(", ", bytes.ToArray())}]";
         public static T DeepClone<T>(this T source) => source.ToJsonString().ToObject<T>();
     }
 }
