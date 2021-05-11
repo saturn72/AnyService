@@ -19,7 +19,7 @@ namespace AnyService.Core.Tests.Events
                 log.Object);
 
             var evt = new IntegrationEvent("ns", "ek");
-            await pm.Publish(evt);
+            await pm.PublishToAll(evt);
             publisher1.Verify(p => p.Publish(It.Is<IntegrationEvent>(e => e == evt)), Times.Once);
             publisher2.Verify(p => p.Publish(It.Is<IntegrationEvent>(e => e == evt)), Times.Once);
         }
