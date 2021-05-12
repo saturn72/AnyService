@@ -54,6 +54,7 @@ namespace AnyService.Events.RabbitMQ
                 UserName = username,
                 Password = password,
             });
+            services.TryAddSingleton<ICrossDomainEventPublishManager, CrossDomainEventPublishManager>();
             services.AddSingleton<IRabbitMQPersistentConnection, DefaultRabbitMQPersistentConnection>();
             services.AddSingleton<ICrossDomainEventPublisher, RabbitMqCrossDomainEventPublisherSubscriber>();
             services.AddSingleton<ICrossDomainEventSubscriber, RabbitMqCrossDomainEventPublisherSubscriber>();
