@@ -24,7 +24,13 @@ namespace AnyService.Events.RabbitMQ.Tests
                 OutgoingExchangeType = "fanout",
                 IncomingExchange = "in-test-ex",
                 IncomingExchangeType = "fanout",
-                IncomingQueueName = "in-test-queue",
+                Queues = new[]
+                {
+                    new QueueConfig
+                    {
+                        Name = "in-test-queue",
+                    },
+                },
                 RetryCount = 5,
                 HostName = "qcorerabbit.westeurope.cloudapp.azure.com",//"localhost",
                 Port = 5672,
@@ -39,7 +45,7 @@ namespace AnyService.Events.RabbitMQ.Tests
             };
 
             var pconLogger = new Mock<ILogger<DefaultRabbitMQPersistentConnection>>();
-            var pcon = new DefaultRabbitMQPersistentConnection(cf, config, pconLogger.Object);
+            var pCon = new DefaultRabbitMQPersistentConnection(cf, config, pconLogger.Object);
             var services = new ServiceCollection();
             var sp = services.BuildServiceProvider();
 
@@ -47,7 +53,7 @@ namespace AnyService.Events.RabbitMQ.Tests
             var sm = new DefaultSubscriptionManager<IntegrationEvent>(smLog.Object);
 
             var ebLog = new Mock<ILogger<RabbitMqCrossDomainEventPublisherSubscriber>>();
-            var eb = new RabbitMqCrossDomainEventPublisherSubscriber(pcon, sp, sm, config, ebLog.Object);
+            var eb = new RabbitMqCrossDomainEventPublisherSubscriber(pCon, pCon, sp, sm, config, ebLog.Object);
 
             var i = "init-data";
             var f = new Func<IntegrationEvent, IServiceProvider, Task>((evt, services) =>
@@ -58,7 +64,7 @@ namespace AnyService.Events.RabbitMQ.Tests
             var ns = "test-ns";
             var ek = "test-key";
             await eb.Subscribe(ns, ek, f, "f-name");
-            var evt = new IntegrationEvent(ns ,ek) { Data = expData };
+            var evt = new IntegrationEvent(ns, ek) { Data = expData };
             await eb.Publish(evt);
             //PublishEvent(evt, config, pcon);
             await Task.Delay(500);
@@ -67,7 +73,7 @@ namespace AnyService.Events.RabbitMQ.Tests
 
         private void PublishEvent(IntegrationEvent evt, RabbitMqConfig config, IRabbitMQPersistentConnection persistentConnection)
         {
-            
+
             using var channel = persistentConnection.CreateModel();
             var message = evt.ToJsonString();
             var body = Encoding.UTF8.GetBytes(message);

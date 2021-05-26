@@ -6,6 +6,7 @@ using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -42,27 +43,31 @@ namespace AnyService.Events.RabbitMQ
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            _publisherChannel = _publisherPersistentConnection.CreateModel();
+            _publisherChannel = CreatePublisherChannel();
             _consumerChannel = CreateConsumerChannel();
         }
 
         private async Task OnHandlerRemoved(string @namespace, string eventKey)
         {
+            _logger.LogDebug($"Remove handler for: {@namespace}, with {eventKey}");
             TryConnect(_consumerPersistentConnection);
-            _consumerChannel.QueueUnbind(
-                queue: _config.IncomingQueue.Name,
-                exchange: _config.IncomingExchange,
-                routingKey: $"{@namespace}/{eventKey}");
+            var routingKey = $"{@namespace}/{eventKey}";
+            var qNames = _config.Queues.Select(q => q.Name);
+            _logger.LogDebug($"Unbind queues {qNames.ToJsonString()}, from exchange: {_config.IncomingExchange}, with routing key: {routingKey}");
+
+            foreach (var qn in qNames)
+                _consumerChannel.QueueUnbind(
+                    queue: qn,
+                    exchange: _config.IncomingExchange,
+                    routingKey: routingKey);
 
             var allHandlers = await _subscriptionManager.GetAllHandlers();
             if (allHandlers.IsNullOrEmpty())
-            {
-                _config.IncomingQueue.Name = string.Empty;
                 _consumerChannel.Close();
-            }
         }
         public async Task Publish(IntegrationEvent @event)
         {
+            _logger.LogDebug("Publishing event: {namespace} {EventId} ({EventName}) {EventJson}", @event.Namespace, @event.Id, @event.EventKey, @event.ToJsonString());
             TryConnect(_publisherPersistentConnection);
             var policy = Policy.Handle<BrokerUnreachableException>()
                 .Or<SocketException>()
@@ -70,10 +75,6 @@ namespace AnyService.Events.RabbitMQ
                 {
                     _logger.LogWarning(ex, "Could not publish event: {EventId} after {Timeout}s ({ExceptionMessage})", @event.Id, $"{time.TotalSeconds:n1}", ex.Message);
                 });
-
-            _logger.LogDebug("Creating RabbitMQ channel to publish event: {namespace} {EventId} ({EventName})", @event.Namespace, @event.Id, @event.EventKey);
-            _logger.LogDebug("Declaring RabbitMQ exchange to publish event: {EventId}", @event.Id);
-
             _publisherChannel.ExchangeDeclare(exchange: _config.OutgoingExchange, type: _config.OutgoingExchangeType);
 
             var message = @event.ToJsonString();
@@ -100,17 +101,23 @@ namespace AnyService.Events.RabbitMQ
             if (!handlerId.HasValue())
                 throw new InvalidOperationException("Failed to subscribe handler");
             TryConnect(_consumerPersistentConnection);
-            _consumerChannel.QueueBind(
-                queue: _config.IncomingQueue.Name,
-                exchange: _config.IncomingExchange,
-                routingKey: $"{@namespace}/{eventKey}");
+            var qNames = _config.Queues.Select(q => q.Name);
+
+            foreach (var qn in qNames)
+                _consumerChannel.QueueBind(
+                    queue: qn,
+                    exchange: _config.IncomingExchange,
+                    routingKey: $"{@namespace}/{eventKey}");
             StartBasicConsume();
             return handlerId;
         }
         private void TryConnect(IRabbitMQPersistentConnection persistentConnection)
         {
             if (!persistentConnection.IsConnected)
+            {
+                _logger.LogDebug("Try reconnect...");
                 persistentConnection.TryConnect();
+            }
         }
         public async Task Unsubscribe(string handlerId)
         {
@@ -129,33 +136,30 @@ namespace AnyService.Events.RabbitMQ
                 var consumer = new AsyncEventingBasicConsumer(_consumerChannel);
 
                 consumer.Received += Consumer_Received;
-
-                _consumerChannel.BasicConsume(
-                    queue: _config.IncomingQueue.Name,
-                    autoAck: _config.IncomingQueue.AutoAck,
-                    consumer: consumer,
-                    exclusive: _config.IncomingQueue.Exclusive,
-                    arguments: _config.IncomingQueue.Arguments);
+                foreach (var q in _config.Queues)
+                    _consumerChannel.BasicConsume(
+                        queue: q.Name,
+                        autoAck: q.AutoAck,
+                        consumer: consumer,
+                        exclusive: q.Exclusive,
+                        arguments: q.Arguments);
             }
             else
             {
-                _logger.LogError("StartBasicConsume can't call on _consumerChannel == null");
+                _logger.LogError($"{nameof(StartBasicConsume)} can't call on _consumerChannel == null");
             }
         }
 
         private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
         {
+            _logger.LogDebug($"{nameof(Consumer_Received)}");
             var keyArr = eventArgs.RoutingKey.Split("/");
             var @namespace = keyArr[0];
             var eventKey = keyArr[1];
-
+            _logger.LogDebug($"{nameof(Consumer_Received)}: {nameof(eventArgs.RoutingKey)}: {eventArgs.RoutingKey}, {nameof(@namespace)}: {@namespace}, {nameof(eventKey)}: {eventKey}");
             var message = Encoding.UTF8.GetString(eventArgs.Body.Span);
             try
             {
-                if (message.ToLowerInvariant().Contains("throw-fake-exception"))
-                {
-                    throw new InvalidOperationException($"Fake exception requested: \"{message}\"");
-                }
                 await ProcessEvent(@namespace, eventKey, message);
             }
             catch (Exception ex)
@@ -167,32 +171,47 @@ namespace AnyService.Events.RabbitMQ
             // For more information see: https://www.rabbitmq.com/dlx.html
             _consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
         }
+        private IModel CreatePublisherChannel()
+        {
+            TryConnect(_publisherPersistentConnection);
+            _logger.LogTrace("Creating RabbitMQ publisher channel");
+            var channel = _consumerPersistentConnection.CreateModel();
 
+            channel.CallbackException += (sender, ea) =>
+            {
+                _logger.LogWarning(ea.Exception, "Recreating RabbitMQ publisher channel");
+
+                channel.Dispose();
+                channel = CreatePublisherChannel();
+                StartBasicConsume();
+            };
+
+            return channel;
+        }
         private IModel CreateConsumerChannel()
         {
             TryConnect(_consumerPersistentConnection);
             _logger.LogTrace("Creating RabbitMQ consumer channel");
-            _consumerChannel = _consumerPersistentConnection.CreateModel();
-            _consumerChannel.ExchangeDeclare(exchange: _config.IncomingExchange,
+            var channel = _consumerPersistentConnection.CreateModel();
+            channel.ExchangeDeclare(exchange: _config.IncomingExchange,
                                     type: _config.IncomingExchangeType);
-            _consumerChannel.QueueDeclare(queue: _config.IncomingQueue.Name ?? "",
-                                 durable: _config.IncomingQueue.Durable,
-                                 exclusive: _config.IncomingQueue.Exclusive,
-                                 autoDelete: _config.IncomingQueue.AutoDelete,
-                                 arguments: _config.IncomingQueue.Arguments);
+            foreach (var q in _config.Queues)
+                channel.QueueDeclare(queue: q.Name ?? "",
+                                     durable: q.Durable,
+                                     exclusive: q.Exclusive,
+                                     autoDelete: q.AutoDelete,
+                                     arguments: q.Arguments);
 
-            _consumerChannel.CallbackException += (sender, ea) =>
+            channel.CallbackException += (sender, ea) =>
             {
                 _logger.LogWarning(ea.Exception, "Recreating RabbitMQ consumer channel");
 
-                _consumerChannel.Dispose();
-                _consumerChannel = CreateConsumerChannel();
+                channel.Dispose();
+                channel = CreateConsumerChannel();
                 StartBasicConsume();
             };
-
-            return _consumerChannel;
+            return channel;
         }
-
         private async Task ProcessEvent(string @namespace, string eventKey, string message)
         {
             _logger.LogTrace("Processing RabbitMQ event: {EventKey}", eventKey);

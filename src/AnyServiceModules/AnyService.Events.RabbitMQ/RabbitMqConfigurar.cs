@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using RabbitMQ.Client;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using System.Collections.Generic;
 
 namespace AnyService.Events.RabbitMQ
 {
@@ -24,9 +25,6 @@ namespace AnyService.Events.RabbitMQ
 
             if (!rabbitMqConfig.IncomingExchangeType.HasValue())
                 throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.IncomingExchangeType)}");
-
-            if (rabbitMqConfig.IncomingQueue?.Name.HasValue() == false)
-                throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.IncomingQueue)}:{nameof(RabbitMqConfig.IncomingQueue.Name)}");
 
             if (!rabbitMqConfig.HostName.HasValue())
                 throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.HostName)}");

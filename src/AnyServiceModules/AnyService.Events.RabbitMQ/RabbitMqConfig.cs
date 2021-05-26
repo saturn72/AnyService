@@ -16,19 +16,19 @@ namespace AnyService.Events.RabbitMQ
         public string OutgoingExchange { get; set; }
         [DefaultValue("direct")]
         public string OutgoingExchangeType { get; set; } = "direct";
-        public QueueConfig IncomingQueue { get; set; }
-        public class QueueConfig
-        {
-            public IDictionary<string, object> Arguments { get; set; }
-            [DefaultValue(false)]
-            public bool AutoAck { get; set; }
-            [DefaultValue(false)]
-            public bool AutoDelete { get; set; }
-            [DefaultValue(false)]
-            public bool Durable { get; set; }
-            [DefaultValue(false)]
-            public bool Exclusive { get; set; }
-            public string Name { get; set; }
-        }
+        public QueueConfig[] Queues { get; set; }
+    }
+    public class QueueConfig
+    {
+        public IDictionary<string, object> Arguments { get; set; }
+        [DefaultValue(false)]
+        public bool AutoAck { get; set; }
+        [DefaultValue(false)]
+        public bool AutoDelete { get; set; }
+        [DefaultValue(false)]
+        public bool Durable { get; set; }
+        [DefaultValue(false)]
+        public bool Exclusive { get; set; }
+        public string Name { get; set; }
     }
 }

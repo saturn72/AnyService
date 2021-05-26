@@ -32,7 +32,13 @@ namespace AnyService.Events.RabbitMQ.Tests
                 OutgoingExchangeType = "fanout",
                 IncomingExchange = "in-test-ex",
                 IncomingExchangeType = "fanout",
-                IncomingQueueName = "in-test-queue",
+                Queues = new[]
+                { 
+                    new QueueConfig
+                    {
+                        Name = "in-test-queue",
+                    },
+                },
                 RetryCount = 5,
                 HostName = "qcorerabbit.westeurope.cloudapp.azure.com",
                 Port = 5672,
@@ -53,7 +59,7 @@ namespace AnyService.Events.RabbitMQ.Tests
             var sp = services.BuildServiceProvider();
 
             var ebLog = new Mock<ILogger<RabbitMqCrossDomainEventPublisherSubscriber>>();
-            var eb = new RabbitMqCrossDomainEventPublisherSubscriber(pcon, sp, null, config, ebLog.Object);
+            var eb = new RabbitMqCrossDomainEventPublisherSubscriber(pcon, pcon, sp, null, config, ebLog.Object);
 
             //register consumer to recieve message
             var connection = cf.CreateConnection();
