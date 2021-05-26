@@ -23,8 +23,8 @@ namespace AnyService.Events.RabbitMQ
         private readonly RabbitMqConfig _config;
         private readonly ILogger<RabbitMqCrossDomainEventPublisherSubscriber> _logger;
         private readonly IRabbitMQPersistentConnection _publisherPersistentConnection;
-        private readonly IModel _publisherChannel;
         private readonly IRabbitMQPersistentConnection _consumerPersistentConnection;
+        private IModel _publisherChannel;
         private IModel _consumerChannel;
 
         public RabbitMqCrossDomainEventPublisherSubscriber(
@@ -75,11 +75,11 @@ namespace AnyService.Events.RabbitMQ
                 {
                     _logger.LogWarning(ex, "Could not publish event: {EventId} after {Timeout}s ({ExceptionMessage})", @event.Id, $"{time.TotalSeconds:n1}", ex.Message);
                 });
-            _publisherChannel.ExchangeDeclare(exchange: _config.OutgoingExchange, type: _config.OutgoingExchangeType);
+
+            //_publisherChannel.ExchangeDeclarePassive(exchange: _config.OutgoingExchange);
 
             var message = @event.ToJsonString();
             var body = Encoding.UTF8.GetBytes(message);
-
             await policy.ExecuteAsync(() =>
             {
                 var properties = _publisherChannel.CreateBasicProperties();
@@ -182,8 +182,7 @@ namespace AnyService.Events.RabbitMQ
                 _logger.LogWarning(ea.Exception, "Recreating RabbitMQ publisher channel");
 
                 channel.Dispose();
-                channel = CreatePublisherChannel();
-                StartBasicConsume();
+                _publisherChannel = CreatePublisherChannel();
             };
 
             return channel;
@@ -192,25 +191,25 @@ namespace AnyService.Events.RabbitMQ
         {
             TryConnect(_consumerPersistentConnection);
             _logger.LogTrace("Creating RabbitMQ consumer channel");
-            var channel = _consumerPersistentConnection.CreateModel();
-            channel.ExchangeDeclare(exchange: _config.IncomingExchange,
+            _consumerChannel = _consumerPersistentConnection.CreateModel();
+            _consumerChannel.ExchangeDeclare(exchange: _config.IncomingExchange,
                                     type: _config.IncomingExchangeType);
             foreach (var q in _config.Queues)
-                channel.QueueDeclare(queue: q.Name ?? "",
+                _consumerChannel.QueueDeclare(queue: q.Name ?? "",
                                      durable: q.Durable,
                                      exclusive: q.Exclusive,
                                      autoDelete: q.AutoDelete,
                                      arguments: q.Arguments);
 
-            channel.CallbackException += (sender, ea) =>
+            _consumerChannel.CallbackException += (sender, ea) =>
             {
                 _logger.LogWarning(ea.Exception, "Recreating RabbitMQ consumer channel");
 
-                channel.Dispose();
-                channel = CreateConsumerChannel();
+                _consumerChannel.Dispose();
+                _consumerChannel = CreateConsumerChannel();
                 StartBasicConsume();
             };
-            return channel;
+            return _consumerChannel;
         }
         private async Task ProcessEvent(string @namespace, string eventKey, string message)
         {

@@ -29,15 +29,13 @@ namespace AnyService.Events.RabbitMQ.Tests
             var config = new RabbitMqConfig
             {
                 OutgoingExchange = "out-test-ex",
-                OutgoingExchangeType = "fanout",
                 IncomingExchange = "in-test-ex",
                 IncomingExchangeType = "fanout",
-                Queues = new[]
-                { 
+                Queues = new[]{
                     new QueueConfig
-                    {
-                        Name = "in-test-queue",
-                    },
+                {
+                    Name = "in-test-queue",
+                },
                 },
                 RetryCount = 5,
                 HostName = "qcorerabbit.westeurope.cloudapp.azure.com",
@@ -80,6 +78,7 @@ namespace AnyService.Events.RabbitMQ.Tests
         {
             _consumerChannel = connection.CreateModel();
 
+            _consumerChannel.ExchangeDeclare(config.OutgoingExchange, "fanout");
             var queueName = _consumerChannel.QueueDeclare().QueueName;
             _consumerChannel.QueueBind(queue: queueName,
                               exchange: config.OutgoingExchange,

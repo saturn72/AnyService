@@ -17,9 +17,6 @@ namespace AnyService.Events.RabbitMQ
             if (!rabbitMqConfig.OutgoingExchange.HasValue())
                 throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.OutgoingExchange)}");
 
-            if (!rabbitMqConfig.OutgoingExchangeType.HasValue())
-                throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.OutgoingExchangeType)}");
-
             if (!rabbitMqConfig.IncomingExchange.HasValue())
                 throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.IncomingExchange)}");
 

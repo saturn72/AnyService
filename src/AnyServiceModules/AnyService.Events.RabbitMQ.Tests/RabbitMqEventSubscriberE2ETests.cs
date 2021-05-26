@@ -21,7 +21,6 @@ namespace AnyService.Events.RabbitMQ.Tests
             var config = new RabbitMqConfig
             {
                 OutgoingExchange = "in-test-ex", //publish to same ex and q
-                OutgoingExchangeType = "fanout",
                 IncomingExchange = "in-test-ex",
                 IncomingExchangeType = "fanout",
                 Queues = new[]

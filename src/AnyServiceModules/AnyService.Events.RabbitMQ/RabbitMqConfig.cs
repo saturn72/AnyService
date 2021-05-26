@@ -14,8 +14,6 @@ namespace AnyService.Events.RabbitMQ
         [DefaultValue("direct")]
         public string IncomingExchangeType { get; set; } = "direct";
         public string OutgoingExchange { get; set; }
-        [DefaultValue("direct")]
-        public string OutgoingExchangeType { get; set; } = "direct";
         public QueueConfig[] Queues { get; set; }
     }
     public class QueueConfig
