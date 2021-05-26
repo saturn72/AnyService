@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Polly;
-using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
@@ -17,8 +16,7 @@ namespace AnyService.Events.RabbitMQ
         private readonly ILogger<DefaultRabbitMQPersistentConnection> _logger;
         IConnection _connection;
         bool _disposed;
-
-        object sync_root = new object();
+        readonly object sync_root = new object();
 
         public DefaultRabbitMQPersistentConnection(
             IConnectionFactory connectionFactory, 

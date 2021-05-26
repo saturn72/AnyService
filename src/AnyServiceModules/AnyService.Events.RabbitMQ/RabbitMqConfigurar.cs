@@ -21,12 +21,12 @@ namespace AnyService.Events.RabbitMQ
 
             if (!rabbitMqConfig.IncomingExchange.HasValue())
                 throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.IncomingExchange)}");
-            
+
             if (!rabbitMqConfig.IncomingExchangeType.HasValue())
                 throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.IncomingExchangeType)}");
 
-            if (!rabbitMqConfig.IncomingQueueName.HasValue())
-                throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.IncomingQueueName)}");
+            if (rabbitMqConfig.IncomingQueue?.Name.HasValue() == false)
+                throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.IncomingQueue)}:{nameof(RabbitMqConfig.IncomingQueue.Name)}");
 
             if (!rabbitMqConfig.HostName.HasValue())
                 throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.HostName)}");
@@ -45,7 +45,7 @@ namespace AnyService.Events.RabbitMQ
             var password = configuration[sectionName + ":password"];
             if (!password.HasValue())
                 throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(password)}");
-            
+
             services.AddSingleton<IConnectionFactory>(sp => new ConnectionFactory
             {
                 HostName = rabbitMqConfig.HostName,

@@ -1,20 +1,34 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace AnyService.Events.RabbitMQ
 {
     public class RabbitMqConfig
     {
-        public string IncomingExchange { get; set; }
-        [DefaultValue("direct")]
-        public string IncomingExchangeType { get; set; } = "direct";
-        public string IncomingQueueName { get; set; }
-        public string OutgoingExchange { get; set; }
-        [DefaultValue("direct")]
-        public string OutgoingExchangeType { get; set; } = "direct";
         [DefaultValue(5)]
         public int RetryCount { get; set; } = 5;
         public string HostName { get; set; }
         [DefaultValue(5672)]
         public int Port { get; set; } = 5672;
+        public string IncomingExchange { get; set; }
+        [DefaultValue("direct")]
+        public string IncomingExchangeType { get; set; } = "direct";
+        public string OutgoingExchange { get; set; }
+        [DefaultValue("direct")]
+        public string OutgoingExchangeType { get; set; } = "direct";
+        public QueueConfig IncomingQueue { get; set; }
+        public class QueueConfig
+        {
+            public IDictionary<string, object> Arguments { get; set; }
+            [DefaultValue(false)]
+            public bool AutoAck { get; set; }
+            [DefaultValue(false)]
+            public bool AutoDelete { get; set; }
+            [DefaultValue(false)]
+            public bool Durable { get; set; }
+            [DefaultValue(false)]
+            public bool Exclusive { get; set; }
+            public string Name { get; set; }
+        }
     }
 }
