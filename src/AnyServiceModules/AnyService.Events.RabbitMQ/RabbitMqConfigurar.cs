@@ -29,19 +29,20 @@ namespace AnyService.Events.RabbitMQ
             services.AddSingleton(rabbitMqConfig);
 
             var username = configuration[sectionName + ":username"];
-            if (!username.HasValue())
-                throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(username)}");
             var password = configuration[sectionName + ":password"];
-            if (!password.HasValue())
-                throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(password)}");
-
-            services.AddSingleton<IConnectionFactory>(sp => new ConnectionFactory
+            services.AddSingleton<IConnectionFactory>(sp =>
             {
-                HostName = rabbitMqConfig.HostName,
-                Port = rabbitMqConfig.Port,
-                DispatchConsumersAsync = true,
-                UserName = username,
-                Password = password,
+                var cf = new ConnectionFactory
+                {
+                    HostName = rabbitMqConfig.HostName,
+                    Port = rabbitMqConfig.Port,
+                    DispatchConsumersAsync = true,
+                };
+                if (username.HasValue())
+                    cf.UserName = username;
+                if (password.HasValue())
+                    cf.Password = password;
+                return cf;
             });
             services.TryAddSingleton<ICrossDomainEventPublishManager, CrossDomainEventPublishManager>();
             services.AddSingleton<IRabbitMQPersistentConnection, DefaultRabbitMQPersistentConnection>();
