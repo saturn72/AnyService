@@ -4,25 +4,25 @@ namespace AnyService.Events
 {
     public class IntegrationEvent
     {
-        public IntegrationEvent(string @namespace, string eventKey)
+        public IntegrationEvent(string exchange, string routingKey)
         {
-            Namespace = @namespace;
-            EventKey = eventKey;
+            Exchange = exchange;
+            RoutingKey = routingKey;
             ReferenceId = Guid.NewGuid().ToString();
             Id = Guid.NewGuid().ToString();
             PublishedOnUtc = DateTime.UtcNow;
         }
-        public string Namespace { get; }
-        public string EventKey { get; }
+        public string Exchange { get; }
+        public string RoutingKey { get; }
         public string ReferenceId { get; private set; }
         public string Id { get; }
         public DateTime PublishedOnUtc { get; private set; }
         public int? Expiration { get; set; }
         public object Data { get; set; }
 
-        public IntegrationEvent Clone(string newNamespace, string newEventKey)
+        public IntegrationEvent Clone(string newExchange, string newRoutingKey)
         {
-            return new IntegrationEvent(newNamespace, newEventKey)
+            return new IntegrationEvent(newExchange, newRoutingKey)
             {
                 ReferenceId = ReferenceId,
                 PublishedOnUtc = PublishedOnUtc,
@@ -32,7 +32,7 @@ namespace AnyService.Events
         }
         public IntegrationEvent Clone()
         {
-            return new IntegrationEvent(Namespace, EventKey)
+            return new IntegrationEvent(Exchange, RoutingKey)
             {
                 PublishedOnUtc = PublishedOnUtc,
                 Expiration = Expiration,

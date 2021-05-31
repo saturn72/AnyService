@@ -45,26 +45,23 @@ namespace AnyService.Events.RabbitMQ.Tests
                 i = expData;
                 return Task.CompletedTask;
             });
-            var ns = "test-ns";
-            var ek = "test-key";
-            await eb.Subscribe(ns, ek, f, "f-name");
-            var evt = new IntegrationEvent(ns, ek) { Data = expData };
+            var ex = config.Incoming.Queues[0].Exchange;
+            var rk = config.Incoming.Queues[0].RoutingKey;
+
+            await eb.Subscribe(ex, rk, f, "f-name");
+            var evt = new IntegrationEvent(ex, rk) { Data = expData };
             await eb.Publish(evt);
             //PublishEvent(evt, config, pcon);
             await Task.Delay(500);
             i.ShouldBe(expData);
         }
-        public static IEnumerable<object[]> ConsumeIncomingMessage_DATA => new[]
+        private static readonly RabbitMqConfig cfg = new RabbitMqConfig
         {
-            new object[]
+            Outgoing = new[] { new ExchangeConfig { Name = "in-test-ex" } },
+            Incoming = new ChannelConfig
             {
-                new Func<RabbitMqConfig>(() => new RabbitMqConfig
-                {
-                    Outgoing = new[] { new ExchangeConfig { Name = "in-test-ex" } },
-                    Incoming = new ChannelConfig
-                    {
-                        Exchanges = new[] { new ExchangeConfig { Name = "in-test-ex", Type = "fanout", }, },
-                        Queues = new[]
+                Exchanges = new[] { new ExchangeConfig { Name = "in-test-ex", Type = "fanout", }, },
+                Queues = new[]
                         {
                             new QueueConfig
                             {
@@ -72,27 +69,25 @@ namespace AnyService.Events.RabbitMQ.Tests
                                 Exchange = "in-test-ex"
                             },
                         },
-                    },
-                    RetryCount = 5,
-                    HostName = "qcorerabbit.westeurope.cloudapp.azure.com",
-                    Port = 5672,
-                })
+            },
+            RetryCount = 5,
+            HostName = "qcorerabbit.westeurope.cloudapp.azure.com",
+
+            Port = 5672,
+        };
+        public static IEnumerable<object[]> ConsumeIncomingMessage_DATA => new[]
+        {
+            new object[]
+            {
+                new Func<RabbitMqConfig>(() => cfg)
             },
             new object[]
             {
                 new Func<RabbitMqConfig>(() =>
                 {
-                    var json = @"{
-                    ""outgoing"":[{ ""name"":""in-test-ex"" }],
-                    ""incoming"":{
-                        ""exchanges"":[{ ""name"":""in-test-ex"", ""type"":""fanout""}],
-                        ""queues"":[{""name"":""in-test-queue"", ""exchange"":""in-test-ex""}]
-                    },
-                    ""retryCount"":5,
-                    ""hostName"": ""qcorerabbit.westeurope.cloudapp.azure.com"",
-                    ""port"":5672
-                    }";
-                return JsonSerializer.Deserialize<RabbitMqConfig>(json);
+                    var json = JsonSerializer.Serialize(cfg);
+                    var c = JsonSerializer.Deserialize<RabbitMqConfig>(json);
+                    return c;
                 })
             }
         };

@@ -72,7 +72,7 @@ namespace AnyService.Events.RabbitMQ
         }
         public async Task Publish(IntegrationEvent @event)
         {
-            _logger.LogDebug("Publishing event: {namespace} {EventId} ({EventName}) {EventJson}", @event.Namespace, @event.Id, @event.EventKey, @event.ToJsonString());
+            _logger.LogDebug("Publishing event: {namespace} {EventId} ({EventName}) {EventJson}", @event.Exchange, @event.Id, @event.RoutingKey, @event.ToJsonString());
             TryConnect(_publisherPersistentConnection);
             var policy = Policy.Handle<BrokerUnreachableException>()
                 .Or<SocketException>()
@@ -91,35 +91,22 @@ namespace AnyService.Events.RabbitMQ
                 properties.DeliveryMode = 2; // persistent
                 _logger.LogDebug("Publishing event to RabbitMQ: {EventId}", @event.Id);
                 return Task.Run(() =>
-                {
-                    foreach (var ex in _config.Outgoing)
-                        Task.Run(() => _publisherChannel.BasicPublish(
-                                exchange: ex.Name,
-                                routingKey: $"{@event.Namespace}/{@event.EventKey}",
+                    _publisherChannel.BasicPublish(
+                                exchange: @event.Exchange,
+                                routingKey: @event.RoutingKey ?? string.Empty,
                                 mandatory: true,
                                 basicProperties: properties,
                                 body: body));
-                });
             });
         }
-        public async Task<string> Subscribe(string @namespace, string eventKey, Func<IntegrationEvent, IServiceProvider, Task> handler, string alias)
+        public async Task<string> Subscribe(string exchange, string routingKey, Func<IntegrationEvent, IServiceProvider, Task> handlerSink, string alias)
         {
-            _logger.LogDebug("Subscribing event handler for {EventKey} with {Name}", eventKey, alias);
+            _logger.LogDebug("Subscribing event handler for {EventKey} with {Name}", routingKey, alias);
 
-            var handlerId = await _subscriptionManager.Subscribe(@namespace, eventKey, handler, alias);
+            var handlerId = await _subscriptionManager.Subscribe(exchange, routingKey, handlerSink, alias);
             if (!handlerId.HasValue())
                 throw new InvalidOperationException("Failed to subscribe handler");
-            TryConnect(_consumerPersistentConnection);
 
-            var qs = _config.Incoming.Queues;
-            if (!qs.IsNullOrEmpty())
-            {
-                foreach (var q in qs)
-                    _consumerChannel.QueueBind(
-                        queue: q.Name,
-                        exchange: q.Exchange,
-                        routingKey: $"{@namespace}/{eventKey}");
-            }
             StartBasicConsume();
             return handlerId;
         }
@@ -165,18 +152,16 @@ namespace AnyService.Events.RabbitMQ
                 _logger.LogError($"{nameof(StartBasicConsume)} can't call on _consumerChannel == null");
             }
         }
-
         private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
         {
             _logger.LogDebug($"{nameof(Consumer_Received)}");
-            var keyArr = eventArgs.RoutingKey.Split("/");
-            var @namespace = keyArr[0];
-            var eventKey = keyArr[1];
-            _logger.LogDebug($"{nameof(Consumer_Received)}: {nameof(eventArgs.RoutingKey)}: {eventArgs.RoutingKey}, {nameof(@namespace)}: {@namespace}, {nameof(eventKey)}: {eventKey}");
+            var exchange = eventArgs.Exchange;
+            var routingKey = eventArgs.RoutingKey;
+            _logger.LogDebug($"{nameof(Consumer_Received)}: {nameof(eventArgs.Exchange)}: {exchange}, {nameof(eventArgs.RoutingKey)}: {routingKey}");
             var message = Encoding.UTF8.GetString(eventArgs.Body.Span);
             try
             {
-                await ProcessEvent(@namespace, eventKey, message);
+                await ProcessEvent(exchange, routingKey, message);
             }
             catch (Exception ex)
             {
@@ -221,13 +206,19 @@ namespace AnyService.Events.RabbitMQ
             if (!qs.IsNullOrEmpty())
             {
                 foreach (var q in qs)
+                {
                     _consumerChannel.QueueDeclare(queue: q.Name ?? "",
                                          durable: q.Durable,
                                          exclusive: q.Exclusive,
                                          autoDelete: q.AutoDelete,
                                          arguments: q.Arguments);
-            }
 
+                    _consumerChannel.QueueBind(
+                        exchange: q.Exchange,
+                        queue: q.Name,
+                        routingKey: q.RoutingKey ?? string.Empty);
+                }
+            }
             _consumerChannel.CallbackException += (sender, ea) =>
             {
                 _logger.LogWarning(ea.Exception, "Recreating RabbitMQ consumer channel");
@@ -238,13 +229,13 @@ namespace AnyService.Events.RabbitMQ
             };
             return _consumerChannel;
         }
-        private async Task ProcessEvent(string @namespace, string eventKey, string message)
+        private async Task ProcessEvent(string exchange, string routingKey, string message)
         {
-            _logger.LogTrace("Processing RabbitMQ event: {EventKey}", eventKey);
-            var handlerDatas = await _subscriptionManager.GetHandlers(@namespace, eventKey);
+            _logger.LogTrace("Processing RabbitMQ event: {EventKey}", routingKey);
+            var handlerDatas = await _subscriptionManager.GetHandlers(exchange, routingKey);
             if (handlerDatas.IsNullOrEmpty())
             {
-                _logger.LogWarning("No subscription for RabbitMQ event: {EventName}", eventKey);
+                _logger.LogWarning("No subscription for RabbitMQ event: {EventName}", routingKey);
                 return;
             }
             var tasks = new List<Task>();

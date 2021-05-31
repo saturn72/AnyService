@@ -14,7 +14,7 @@ namespace AnyService.Core.Tests.Events
             var ek = "k";
             var e = new IntegrationEvent(ns, ek);
 
-            e.Namespace.ShouldBe(ns);
+            e.Exchange.ShouldBe(ns);
 
             e.Id.ShouldNotBeNullOrWhiteSpace();
             e.Id.ShouldNotBeNullOrEmpty();
@@ -32,8 +32,8 @@ namespace AnyService.Core.Tests.Events
             var e = new IntegrationEvent(ns, ek);
             var k = e.Clone(newNs, newEk);
             k.GetHashCode().ShouldNotBe(e.GetHashCode());
-            k.Namespace.ShouldBe(newNs);
-            k.EventKey.ShouldBe(newEk);
+            k.Exchange.ShouldBe(newNs);
+            k.RoutingKey.ShouldBe(newEk);
             k.ReferenceId.ShouldBe(e.ReferenceId);
             k.Id.ShouldNotBe(e.Id);
 
@@ -48,8 +48,8 @@ namespace AnyService.Core.Tests.Events
             var e = new IntegrationEvent(ns, ek);
             var k = e.Clone();
             k.GetHashCode().ShouldNotBe(e.GetHashCode());
-            k.Namespace.ShouldBe(e.Namespace);
-            k.EventKey.ShouldBe(e.EventKey);
+            k.Exchange.ShouldBe(e.Exchange);
+            k.RoutingKey.ShouldBe(e.RoutingKey);
             k.Id.ShouldNotBe(e.Id);
 
             k.Data.ShouldBe(e.Data);
