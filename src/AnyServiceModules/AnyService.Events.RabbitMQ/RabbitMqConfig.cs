@@ -20,6 +20,7 @@ namespace AnyService.Events.RabbitMQ
     }
     public class ExchangeConfig
     {
+        public string Key { get; set; }
         public IDictionary<string, object> Arguments { get; set; }
         public string Name { get; set; }
         [DefaultValue("direct")]

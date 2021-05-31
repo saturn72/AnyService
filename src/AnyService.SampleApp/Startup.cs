@@ -40,7 +40,7 @@ namespace AnyService.SampleApp
 
             var anyServiceConfig = new AnyServiceConfigurar().Configure(services);
             new AutoMapperServicesConfigurar().Configure(anyServiceConfig);
-
+            new Events.RabbitMQ.RabbitMqConfigurar().Configure(services, Configuration);
             ConfigureEntityFramework(services);
             ConfigureCaching(services);
         }

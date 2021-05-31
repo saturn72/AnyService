@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AnyService.Core\AnyService.Core.csproj" />
+    <ProjectReference Include="..\AnyServiceModules\AnyService.Events.RabbitMQ\AnyService.Events.RabbitMQ.csproj" />
     <ProjectReference Include="..\AnyServiceModules\EasyCaching\AnyService.EasyCaching\AnyService.EasyCaching.csproj" />
     <ProjectReference Include="..\AnyService\AnyService.csproj" />
     <ProjectReference Include="..\AnyServiceModules\EntityFramework\AnyService.EntityFramework\AnyService.EntityFramework.csproj" />
