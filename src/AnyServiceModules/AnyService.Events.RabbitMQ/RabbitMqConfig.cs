@@ -10,11 +10,24 @@ namespace AnyService.Events.RabbitMQ
         public string HostName { get; set; }
         [DefaultValue(5672)]
         public int Port { get; set; } = 5672;
-        public string IncomingExchange { get; set; }
-        [DefaultValue("direct")]
-        public string IncomingExchangeType { get; set; } = "direct";
-        public string OutgoingExchange { get; set; }
+        public ChannelConfig Incoming { get; set; }
+        public ExchangeConfig[] Outgoing { get; set; }
+    }
+    public class ChannelConfig
+    {
+        public ExchangeConfig[] Exchanges { get; set; }
         public QueueConfig[] Queues { get; set; }
+    }
+    public class ExchangeConfig
+    {
+        public IDictionary<string, object> Arguments { get; set; }
+        public string Name { get; set; }
+        [DefaultValue("direct")]
+        public string Type { get; set; }
+        [DefaultValue(false)]
+        public bool AutoDelete { get; set; }
+        [DefaultValue(false)]
+        public bool Durable { get; set; }
     }
     public class QueueConfig
     {
@@ -28,5 +41,6 @@ namespace AnyService.Events.RabbitMQ
         [DefaultValue(false)]
         public bool Exclusive { get; set; }
         public string Name { get; set; }
+        public string Exchange { get; set; }
     }
 }

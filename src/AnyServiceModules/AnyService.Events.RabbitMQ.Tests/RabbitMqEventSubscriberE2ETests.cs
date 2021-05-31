@@ -4,7 +4,8 @@ using Moq;
 using RabbitMQ.Client;
 using Shouldly;
 using System;
-using System.Text;
+using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -12,28 +13,12 @@ namespace AnyService.Events.RabbitMQ.Tests
 {
     public class RabbitMqEventSubscriberE2ETests
     {
-        [Fact]
-        public async Task ConsumeIncomingMessage()
+        [Theory]
+        [MemberData(nameof(ConsumeIncomingMessage_DATA))]
+        public async Task ConsumeIncomingMessage(Func<RabbitMqConfig> func)
         {
-
             var expData = "this is data";
-
-            var config = new RabbitMqConfig
-            {
-                OutgoingExchange = "in-test-ex", //publish to same ex and q
-                IncomingExchange = "in-test-ex",
-                IncomingExchangeType = "fanout",
-                Queues = new[]
-                {
-                    new QueueConfig
-                    {
-                        Name = "in-test-queue",
-                    },
-                },
-                RetryCount = 5,
-                HostName = "qcorerabbit.westeurope.cloudapp.azure.com",//"localhost",
-                Port = 5672,
-            };
+            var config = func();
             var cf = new ConnectionFactory
             {
                 HostName = config.HostName,
@@ -69,22 +54,47 @@ namespace AnyService.Events.RabbitMQ.Tests
             await Task.Delay(500);
             i.ShouldBe(expData);
         }
-
-        private void PublishEvent(IntegrationEvent evt, RabbitMqConfig config, IRabbitMQPersistentConnection persistentConnection)
+        public static IEnumerable<object[]> ConsumeIncomingMessage_DATA => new[]
         {
-
-            using var channel = persistentConnection.CreateModel();
-            var message = evt.ToJsonString();
-            var body = Encoding.UTF8.GetBytes(message);
-
-            var properties = channel.CreateBasicProperties();
-            properties.DeliveryMode = 2; // persistent
-            channel.BasicPublish(
-                exchange: config.IncomingExchange,
-                routingKey: $"{evt.Namespace}/{evt.EventKey}",
-                mandatory: true,
-                basicProperties: properties,
-                body: body);
-        }
+            new object[]
+            {
+                new Func<RabbitMqConfig>(() => new RabbitMqConfig
+                {
+                    Outgoing = new[] { new ExchangeConfig { Name = "in-test-ex" } },
+                    Incoming = new ChannelConfig
+                    {
+                        Exchanges = new[] { new ExchangeConfig { Name = "in-test-ex", Type = "fanout", }, },
+                        Queues = new[]
+                        {
+                            new QueueConfig
+                            {
+                                Name = "in-test-queue",
+                                Exchange = "in-test-ex"
+                            },
+                        },
+                    },
+                    RetryCount = 5,
+                    HostName = "qcorerabbit.westeurope.cloudapp.azure.com",
+                    Port = 5672,
+                })
+            },
+            new object[]
+            {
+                new Func<RabbitMqConfig>(() =>
+                {
+                    var json = @"{
+                    ""outgoing"":[{ ""name"":""in-test-ex"" }],
+                    ""incoming"":{
+                        ""exchanges"":[{ ""name"":""in-test-ex"", ""type"":""fanout""}],
+                        ""queues"":[{""name"":""in-test-queue"", ""exchange"":""in-test-ex""}]
+                    },
+                    ""retryCount"":5,
+                    ""hostName"": ""qcorerabbit.westeurope.cloudapp.azure.com"",
+                    ""port"":5672
+                    }";
+                return JsonSerializer.Deserialize<RabbitMqConfig>(json);
+                })
+            }
+        };
     }
 }

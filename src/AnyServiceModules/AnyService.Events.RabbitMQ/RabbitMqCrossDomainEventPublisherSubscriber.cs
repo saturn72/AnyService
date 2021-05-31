@@ -52,15 +52,20 @@ namespace AnyService.Events.RabbitMQ
             _logger.LogDebug($"Remove handler for: {@namespace}, with {eventKey}");
             TryConnect(_consumerPersistentConnection);
             var routingKey = $"{@namespace}/{eventKey}";
-            var qNames = _config.Queues.Select(q => q.Name);
-            _logger.LogDebug($"Unbind queues {qNames.ToJsonString()}, from exchange: {_config.IncomingExchange}, with routing key: {routingKey}");
 
-            foreach (var qn in qNames)
-                _consumerChannel.QueueUnbind(
-                    queue: qn,
-                    exchange: _config.IncomingExchange,
-                    routingKey: routingKey);
-
+            var qs = _config.Incoming.Queues;
+            if (!qs.IsNullOrEmpty())
+            {
+                foreach (var q in qs)
+                {
+                    _logger.LogDebug($"Unbind queues {q.Name}, from exchange: {q.Exchange}, with routing key: {routingKey}");
+                    _consumerChannel.QueueUnbind(
+                        queue: q.Name,
+                        exchange: q.Exchange,
+                        routingKey: routingKey,
+                        arguments: q.Arguments);
+                }
+            }
             var allHandlers = await _subscriptionManager.GetAllHandlers();
             if (allHandlers.IsNullOrEmpty())
                 _consumerChannel.Close();
@@ -85,12 +90,16 @@ namespace AnyService.Events.RabbitMQ
                 var properties = _publisherChannel.CreateBasicProperties();
                 properties.DeliveryMode = 2; // persistent
                 _logger.LogDebug("Publishing event to RabbitMQ: {EventId}", @event.Id);
-                return Task.Run(() => _publisherChannel.BasicPublish(
-                    exchange: _config.OutgoingExchange,
-                    routingKey: $"{@event.Namespace}/{@event.EventKey}",
-                    mandatory: true,
-                    basicProperties: properties,
-                    body: body));
+                return Task.Run(() =>
+                {
+                    foreach (var ex in _config.Outgoing)
+                        Task.Run(() => _publisherChannel.BasicPublish(
+                                exchange: ex.Name,
+                                routingKey: $"{@event.Namespace}/{@event.EventKey}",
+                                mandatory: true,
+                                basicProperties: properties,
+                                body: body));
+                });
             });
         }
         public async Task<string> Subscribe(string @namespace, string eventKey, Func<IntegrationEvent, IServiceProvider, Task> handler, string alias)
@@ -101,13 +110,16 @@ namespace AnyService.Events.RabbitMQ
             if (!handlerId.HasValue())
                 throw new InvalidOperationException("Failed to subscribe handler");
             TryConnect(_consumerPersistentConnection);
-            var qNames = _config.Queues.Select(q => q.Name);
 
-            foreach (var qn in qNames)
-                _consumerChannel.QueueBind(
-                    queue: qn,
-                    exchange: _config.IncomingExchange,
-                    routingKey: $"{@namespace}/{eventKey}");
+            var qs = _config.Incoming.Queues;
+            if (!qs.IsNullOrEmpty())
+            {
+                foreach (var q in qs)
+                    _consumerChannel.QueueBind(
+                        queue: q.Name,
+                        exchange: q.Exchange,
+                        routingKey: $"{@namespace}/{eventKey}");
+            }
             StartBasicConsume();
             return handlerId;
         }
@@ -136,13 +148,17 @@ namespace AnyService.Events.RabbitMQ
                 var consumer = new AsyncEventingBasicConsumer(_consumerChannel);
 
                 consumer.Received += Consumer_Received;
-                foreach (var q in _config.Queues)
-                    _consumerChannel.BasicConsume(
-                        queue: q.Name,
-                        autoAck: q.AutoAck,
-                        consumer: consumer,
-                        exclusive: q.Exclusive,
-                        arguments: q.Arguments);
+                var qs = _config.Incoming.Queues;
+                if (!qs.IsNullOrEmpty())
+                {
+                    foreach (var q in qs)
+                        _consumerChannel.BasicConsume(
+                            queue: q.Name,
+                            autoAck: q.AutoAck,
+                            consumer: consumer,
+                            exclusive: q.Exclusive,
+                            arguments: q.Arguments);
+                }
             }
             else
             {
@@ -192,14 +208,25 @@ namespace AnyService.Events.RabbitMQ
             TryConnect(_consumerPersistentConnection);
             _logger.LogTrace("Creating RabbitMQ consumer channel");
             _consumerChannel = _consumerPersistentConnection.CreateModel();
-            _consumerChannel.ExchangeDeclare(exchange: _config.IncomingExchange,
-                                    type: _config.IncomingExchangeType);
-            foreach (var q in _config.Queues)
-                _consumerChannel.QueueDeclare(queue: q.Name ?? "",
-                                     durable: q.Durable,
-                                     exclusive: q.Exclusive,
-                                     autoDelete: q.AutoDelete,
-                                     arguments: q.Arguments);
+
+            foreach (var ex in _config.Incoming.Exchanges)
+                _consumerChannel.ExchangeDeclare(
+                    exchange: ex.Name,
+                    type: ex.Type,
+                    durable: ex.Durable,
+                    autoDelete: ex.AutoDelete,
+                    arguments: ex.Arguments);
+
+            var qs = _config.Incoming.Queues;
+            if (!qs.IsNullOrEmpty())
+            {
+                foreach (var q in qs)
+                    _consumerChannel.QueueDeclare(queue: q.Name ?? "",
+                                         durable: q.Durable,
+                                         exclusive: q.Exclusive,
+                                         autoDelete: q.AutoDelete,
+                                         arguments: q.Arguments);
+            }
 
             _consumerChannel.CallbackException += (sender, ea) =>
             {

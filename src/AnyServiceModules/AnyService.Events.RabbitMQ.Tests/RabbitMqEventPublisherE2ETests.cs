@@ -5,7 +5,9 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -21,26 +23,13 @@ namespace AnyService.Events.RabbitMQ.Tests
             _consumerChannel?.Dispose();
         }
 
-        [Fact]
-        public async Task PublishToExchange()
+        [Theory]
+        [MemberData(nameof(PublishToExchange_DATA))]
+        public async Task PublishToExchange(Func<RabbitMqConfig> func)
         {
             var expData = "this is data";
 
-            var config = new RabbitMqConfig
-            {
-                OutgoingExchange = "out-test-ex",
-                IncomingExchange = "in-test-ex",
-                IncomingExchangeType = "fanout",
-                Queues = new[]{
-                    new QueueConfig
-                {
-                    Name = "in-test-queue",
-                },
-                },
-                RetryCount = 5,
-                HostName = "qcorerabbit.westeurope.cloudapp.azure.com",
-                Port = 5672,
-            };
+            var config = func();
             var cf = new ConnectionFactory
             {
                 HostName = config.HostName,
@@ -78,10 +67,10 @@ namespace AnyService.Events.RabbitMQ.Tests
         {
             _consumerChannel = connection.CreateModel();
 
-            _consumerChannel.ExchangeDeclare(config.OutgoingExchange, "fanout");
+            _consumerChannel.ExchangeDeclare(config.Outgoing[0].Name, "fanout");
             var queueName = _consumerChannel.QueueDeclare().QueueName;
             _consumerChannel.QueueBind(queue: queueName,
-                              exchange: config.OutgoingExchange,
+                              exchange: config.Outgoing[0].Name,
                               routingKey: "");
 
 
@@ -98,5 +87,48 @@ namespace AnyService.Events.RabbitMQ.Tests
 
             return consumer;
         }
+        public static IEnumerable<object[]> PublishToExchange_DATA => new[]
+      {
+            new object[]
+            {
+                new Func<RabbitMqConfig>(() => new RabbitMqConfig
+                {
+                    Outgoing = new[] { new ExchangeConfig { Name = "out-test-ex" } },
+                    Incoming = new ChannelConfig
+                    {
+                        Exchanges = new[] { new ExchangeConfig { Name = "in-test-ex", Type = "fanout", }, },
+                        Queues = new[]
+                        {
+                            new QueueConfig
+                            {
+                                Name = "in-test-queue",
+                                Exchange = "in-test-ex"
+                            },
+                        },
+                    },
+                    RetryCount = 5,
+                    HostName = "qcorerabbit.westeurope.cloudapp.azure.com",
+                    Port = 5672,
+                })
+            },
+            new object[]
+            {
+                new Func<RabbitMqConfig>(() =>
+                {
+                    var json = @"{
+                        ""outgoing"":[{ ""name"":""out-test-ex"" }],
+                        ""incoming"":{
+                            ""exchanges"":[{ ""name"":""in-test-ex"", ""type"":""fanout""}],
+                            ""queues"":[{""name"":""in-test-queue"", ""exchange"":""in-test-ex""}]
+                        },
+                        ""retryCount"":5,
+                        ""hostName"": ""qcorerabbit.westeurope.cloudapp.azure.com"",
+                        ""port"":5672
+                        }";
+                    return JsonSerializer.Deserialize<RabbitMqConfig>(json);
+                })
+            }
+        };
+
     }
 }
