@@ -44,7 +44,6 @@ namespace AnyService.SampleApp
             ConfigureEntityFramework(services);
             ConfigureCaching(services);
         }
-
         private void ConfigureCaching(IServiceCollection services)
         {
             var easycachingconfig = new EasyCachingConfig();

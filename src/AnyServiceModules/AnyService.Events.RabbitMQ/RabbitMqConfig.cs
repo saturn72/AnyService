@@ -7,9 +7,17 @@ namespace AnyService.Events.RabbitMQ
     {
         [DefaultValue(5)]
         public int RetryCount { get; set; } = 5;
+        /// <summary>
+        /// specifies host name. Will be used if endpoints is empty
+        /// </summary>
+        [DefaultValue("localhost")]
         public string HostName { get; set; }
         [DefaultValue(5672)]
         public int Port { get; set; } = 5672;
+        /// <summary>
+        /// Specifies list of rabbit-mq endpoint.
+        /// </summary>
+        public string[] Endpoints { get; set; }
         public ChannelConfig Incoming { get; set; }
         public ExchangeConfig[] Outgoing { get; set; }
     }

@@ -16,8 +16,6 @@ namespace AnyService.Events.RabbitMQ
 
     public class RabbitMqCrossDomainEventPublisherSubscriber : ICrossDomainEventPublisher, ICrossDomainEventSubscriber, IDisposable
     {
-        const int DefaultTasksTimeout = 60000;
-
         private readonly IServiceProvider _services;
         private readonly ISubscriptionManager<IntegrationEvent> _subscriptionManager;
         private readonly RabbitMqConfig _config;
@@ -238,15 +236,14 @@ namespace AnyService.Events.RabbitMQ
                 _logger.LogWarning("No subscription for RabbitMQ event: {EventName}", routingKey);
                 return;
             }
-            var tasks = new List<Task>();
+
+            await Task.Yield();
             using var scope = _services.CreateScope();
             foreach (var hd in handlerDatas)
             {
                 var @event = message.ToObject<IntegrationEvent>();
-                tasks.Add(hd.Handler(@event, scope.ServiceProvider));
-                await Task.Yield();
+                _ = hd.Handler(@event, scope.ServiceProvider);
             }
-            Task.WaitAll(tasks.ToArray(), DefaultTasksTimeout);
         }
         public void Dispose()
         {

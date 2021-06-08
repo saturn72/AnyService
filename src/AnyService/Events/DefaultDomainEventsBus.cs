@@ -12,18 +12,18 @@ namespace AnyService.Events
         private const string DefaultNamespaceConst = "default";
         private const int TaskExecutionTimeout = 60000;
         private readonly ISubscriptionManager<DomainEvent> _subscriptionManager;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceProvider _services;
         private readonly ILogger<DefaultDomainEventsBus> _logger;
         private readonly string _defaultNamespace;
 
         public DefaultDomainEventsBus(
             ISubscriptionManager<DomainEvent> subscriptionManager,
-            IServiceProvider serviceProvider,
+            IServiceProvider services,
             ILogger<DefaultDomainEventsBus> logger,
             string defaultNamespace = DefaultNamespaceConst)
         {
             _subscriptionManager = subscriptionManager;
-            _serviceProvider = serviceProvider;
+            _services = services;
             _logger = logger;
             _defaultNamespace = defaultNamespace;
         }
@@ -35,8 +35,9 @@ namespace AnyService.Events
             if (handlers.IsNullOrEmpty())
                 return;
 
+            await Task.Yield();
             var tasks = new List<Task>();
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = _services.CreateScope();
             foreach (var h in handlers)
             {
                 _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event to handler named {h.Alias}");

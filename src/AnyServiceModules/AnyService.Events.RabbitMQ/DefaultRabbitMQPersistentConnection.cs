@@ -4,6 +4,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 
@@ -19,7 +20,7 @@ namespace AnyService.Events.RabbitMQ
         readonly object sync_root = new object();
 
         public DefaultRabbitMQPersistentConnection(
-            IConnectionFactory connectionFactory, 
+            IConnectionFactory connectionFactory,
             RabbitMqConfig config,
             ILogger<DefaultRabbitMQPersistentConnection> logger)
         {
@@ -78,8 +79,9 @@ namespace AnyService.Events.RabbitMQ
 
                 policy.Execute(() =>
                 {
-                    _connection = _connectionFactory
-                          .CreateConnection();
+                    _connection = _config.Endpoints.IsNullOrEmpty() ? 
+                        _connectionFactory.CreateConnection() : 
+                        _connectionFactory.CreateConnection(_config.Endpoints);
                 });
 
                 if (IsConnected)
