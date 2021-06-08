@@ -156,6 +156,7 @@ namespace AnyService.Events.RabbitMQ
             var exchange = eventArgs.Exchange;
             var routingKey = eventArgs.RoutingKey;
             _logger.LogDebug($"{nameof(Consumer_Received)}: {nameof(eventArgs.Exchange)}: {exchange}, {nameof(eventArgs.RoutingKey)}: {routingKey}");
+
             var message = Encoding.UTF8.GetString(eventArgs.Body.Span);
             try
             {
@@ -169,6 +170,7 @@ namespace AnyService.Events.RabbitMQ
             // in a REAL WORLD app this should be handled with a Dead Letter Exchange (DLX). 
             // For more information see: https://www.rabbitmq.com/dlx.html
             _consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
+            await Task.Yield();
         }
         private IModel CreatePublisherChannel()
         {
@@ -236,7 +238,6 @@ namespace AnyService.Events.RabbitMQ
                 _logger.LogWarning("No subscription for RabbitMQ event: {EventName}", routingKey);
                 return;
             }
-
             await Task.Yield();
             using var scope = _services.CreateScope();
             foreach (var hd in handlerDatas)
