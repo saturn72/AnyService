@@ -31,6 +31,7 @@ namespace AnyService.Events.RabbitMQ
         public string Key { get; set; }
         public IDictionary<string, object> Arguments { get; set; }
         public string Name { get; set; }
+        public string RoutingKey { get; set; }
         [DefaultValue("direct")]
         public string Type { get; set; }
         [DefaultValue(false)]
