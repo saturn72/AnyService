@@ -1,8 +1,11 @@
-﻿namespace AnyService.Audity
+﻿using System.ComponentModel;
+
+namespace AnyService.Audity
 {
     public class AuditSettings
     {
-        public bool Disabled { get; set; }
+        [DefaultValue(true)]
+        public bool Disabled { get; set; } = true;
         public AuditRules AuditRules { get; set; }
     }
 }

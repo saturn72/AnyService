@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using AnyService.Audity;
 using AnyService.Controllers;
 using AnyService.Services;
@@ -13,19 +14,6 @@ namespace AnyService
         private string _errorEventKey;
         public AnyServiceConfig()
         {
-            MaxMultipartBoundaryLength = 50;
-            ErrorEventKey = LoggingEvents.UnexpectedException.Name;
-            MaxValueCount = 25;
-            DefaultPaginationSettings = new PaginationSettings
-            {
-                DefaultOrderBy = nameof(IEntity.Id),
-                DefaultOffset = 0,
-                DefaultPageSize = 50,
-                DefaultSortOrder = PaginationSettings.Asc,
-            };
-            FilterFactoryType = typeof(DefaultFilterFactory);
-            ModelPrepararType = typeof(DummyModelPreparar<>);
-            ServiceResponseMapperType = typeof(DataOnlyServiceResponseMapper);
             AuditSettings = new AuditSettings
             {
                 AuditRules = new AuditRules
@@ -36,20 +24,17 @@ namespace AnyService
                     AuditDelete = true,
                 }
             };
-
-            UseLogRecordEndpoint = true;
-            UseErrorEndpointForExceptionHandling = true;
-            MapperName = "default";
+            DefaultPaginationSettings = new PaginationSettings();
+            ErrorEventKey = LoggingEvents.UnexpectedSystemExceptionName;
         }
+        /// <summary>
+        /// Gets or sets the sudit config for the entity
+        /// </summary>
+        public AuditSettings AuditSettings { get; set; }
+        public PaginationSettings DefaultPaginationSettings { get; set; }
         public IEnumerable<EntityConfigRecord> EntityConfigRecords { get; set; }
 
-        /// <summary>
-        /// Gets or sets value indicating whether anyservice manages user permission on entity. 
-        /// default value = true
-        /// </summary>
-        /// <value></value>
-        public bool ManageEntityPermissions { get; set; } = true;
-        public int MaxMultipartBoundaryLength { get; set; }
+        [DefaultValue(LoggingEvents.UnexpectedSystemExceptionName)]
         public string ErrorEventKey
         {
             get => _errorEventKey;
@@ -59,25 +44,35 @@ namespace AnyService
                 ErrorController.ErrorEventKey = _errorEventKey;
             }
         }
-        public int MaxValueCount { get; set; }
-        public PaginationSettings DefaultPaginationSettings { get; set; }
         /// <summary>
         /// type of filter factory old reserved queries for GetAll operation
         /// MUST inherit from IFilterFactory
         /// </summary>
         /// <value></value>
-        public Type FilterFactoryType { get; set; }
-        public Type ModelPrepararType { get; set; }
-        public Type ServiceResponseMapperType { get; set; }
+        [DefaultValue(typeof(DefaultFilterFactory))]
+        public Type FilterFactoryType { get; set; } = typeof(DefaultFilterFactory);
         /// <summary>
-        /// Gets or sets the sudit config for the entity
+        /// Gets or sets value indicating whether anyservice manages user permission on entity. 
+        /// default value = true
         /// </summary>
-        public AuditSettings AuditSettings { get; set; }
-        public bool UseLogRecordEndpoint { get; set; }
-        public bool UseErrorEndpointForExceptionHandling { get; set; }
+        /// <value></value>
+        public bool ManageEntityPermissions { get; set; } = true;
         /// <summary>
         /// sets the default mapper name
         /// </summary>
-        public string MapperName { get; set; }
+        [DefaultValue("default")]
+        public string MapperName { get; set; } = "default";
+        [DefaultValue(50)]
+        public int MaxMultipartBoundaryLength { get; set; } = 50;
+        [DefaultValue(25)]
+        public int MaxValueCount { get; set; } = 25;
+        [DefaultValue(typeof(DummyModelPreparar<>))]
+        public Type ModelPrepararType { get; set; } = typeof(DummyModelPreparar<>);
+        [DefaultValue(typeof(DataOnlyServiceResponseMapper))]
+        public Type ServiceResponseMapperType { get; set; } = typeof(DataOnlyServiceResponseMapper);
+        [DefaultValue(true)]
+        public bool UseErrorEndpointForExceptionHandling { get; set; } = true;
+        [DefaultValue(true)]
+        public bool UseLogRecordEndpoint { get; set; } = true;
     }
 }

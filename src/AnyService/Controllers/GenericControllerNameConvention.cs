@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,19 +12,25 @@ namespace AnyService.Controllers
     {
         private static IEnumerable<Type> GenericControllerTypes = new[] { typeof(GenericController<,>), typeof(GenericParentController<>) };
         private static Func<IEnumerable<EntityConfigRecord>> _entityConfigRecordsResolver;
+        private static ILogger<GenericControllerNameConvention> _logger;
+
         public static void Init(IServiceProvider serviceProvider)
         {
-            _entityConfigRecordsResolver = () =>
+            _entityConfigRecordsResolver ??= () =>
             {
                 using var scope = serviceProvider.CreateScope();
                 return scope.ServiceProvider.GetService<IEnumerable<EntityConfigRecord>>();
             };
+            _logger ??= serviceProvider.GetService<ILogger<GenericControllerNameConvention>>();
         }
         public void Apply(ControllerModel controller)
         {
             var genericTypeDefinition = controller.ControllerType.GetGenericTypeDefinition();
             if (!GenericControllerTypes.Contains(genericTypeDefinition))
+            {
+                _logger.LogDebug($"Failed to locate {nameof(ControllerModel)} in anyservice registery");
                 return;
+            }
 
             var controllerModelType = controller.ControllerType.GenericTypeArguments[0];
             var ecrs = _entityConfigRecordsResolver();
@@ -32,7 +39,12 @@ namespace AnyService.Controllers
                 e.EndpointSettings.ControllerType == controller.ControllerType);
 
             foreach (var ecr in matchEcrs)
-                controller.ControllerName = ecr.EndpointSettings.Route.Value ?? controllerModelType.Name;
+            {
+                var match = ecr.EndpointSettings.Route.Value ?? controllerModelType.Name;
+                controller.ControllerName = match;
+                _logger.LogDebug($"Found matched controller with route: {match}");
+
+            }
         }
     }
 }

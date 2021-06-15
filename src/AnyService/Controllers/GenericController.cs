@@ -40,14 +40,13 @@ namespace AnyService.Controllers
         #endregion
         #region ctor
         public GenericController(
-            IServiceProvider serviceProvider, AnyServiceConfig config,
-            IServiceResponseMapper serviceResponseMapper, WorkContext workContext,
+            IServiceProvider services,
             ILogger<GenericController<TModel, TDomainObject>> logger)
         {
-            _crudService = serviceProvider.GetService<ICrudService<TDomainObject>>();
-            _config = config;
-            _serviceResponseMapper = serviceResponseMapper;
-            _workContext = workContext;
+            _crudService = services.GetService<ICrudService<TDomainObject>>();
+            _config = services.GetService<AnyServiceConfig>();
+            _serviceResponseMapper = services.GetService<IServiceResponseMapper>();
+            _workContext = services.GetService<WorkContext>();
             _logger = logger;
 
             _curTypeName = _workContext.CurrentEntityConfigRecord.Name;
