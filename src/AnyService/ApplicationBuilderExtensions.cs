@@ -14,11 +14,26 @@ using AnyService.Audity;
 using AnyService.Services.Audit;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using AnyService.Infrastructure;
+using Microsoft.Extensions.Logging;
+using System.Text;
 
 namespace AnyService
 {
     public static class ApplicationBuilderExtensions
     {
+        public static void LogAnyServiceEndpoints<TStartup>(
+            this IApplicationBuilder app,
+            LogLevel logLevel = LogLevel.Debug)
+        {
+            var sb = new StringBuilder();
+            var ecrs = app.ApplicationServices.GetService<IEnumerable<EntityConfigRecord>>();
+            sb.AppendLine("List of active generic controllers endpoints:");
+            foreach (var e in ecrs)
+                sb.AppendLine(e.EndpointSettings.Route);
+
+            var log = app.ApplicationServices.GetService<ILogger<TStartup>>();
+            log.Log(logLevel, sb.ToString());
+        }
         public static IApplicationBuilder UseAnyService(
             this IApplicationBuilder app,
             bool useWorkContextMiddleware = true,
@@ -41,7 +56,7 @@ namespace AnyService
             if (useWorkContextMiddleware) app.UseMiddleware<WorkContextMiddleware>();
             if (useAuthorizationMiddleware) app.UseMiddleware<DefaultAuthorizationMiddleware>();
 
-            if (logExceptions) 
+            if (logExceptions)
                 SubscribeLogExceptionHandler(eventBus, entityConfigRecords);
             SubscribeAuditHandler(appServices, eventBus, entityConfigRecords);
 
@@ -73,7 +88,6 @@ namespace AnyService
                 ecr.EndpointSettings.PropertiesProjectionMap = projMap;
             }
         }
-
         private static void SubscribeAuditHandler(IServiceProvider sp, IDomainEventBus eventBus, IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
             var auditHandler = new AuditHandler(sp);
@@ -96,7 +110,7 @@ namespace AnyService
         }
 
         private static void SubscribeLogExceptionHandler(
-            IDomainEventBus eventBus, 
+            IDomainEventBus eventBus,
             IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
             var handlers = new ExceptionsLoggingEventHandlers();

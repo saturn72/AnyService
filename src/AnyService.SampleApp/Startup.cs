@@ -11,7 +11,6 @@ using AnyService.Services;
 using Microsoft.EntityFrameworkCore;
 using AnyService.EntityFramework;
 using AnyService.Middlewares;
-using AnyService.Endpoints;
 using AnyService.SampleApp.Hubs;
 using Microsoft.AspNetCore.Http;
 using AnyService.SampleApp.Configurars;
@@ -66,6 +65,7 @@ namespace AnyService.SampleApp
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.LogAnyServiceEndpoints<Startup>();
             var config = app.ApplicationServices.GetRequiredService<AnyServiceConfig>();
             if (config.UseErrorEndpointForExceptionHandling)
                 app.UseExceptionHandler("/__error");

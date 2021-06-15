@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 
-namespace AnyService.Endpoints
+namespace AnyService
 {
     public static class EndpointRouteBuilderExtensions
     {
