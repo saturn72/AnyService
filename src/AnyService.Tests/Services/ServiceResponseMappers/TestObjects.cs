@@ -23,6 +23,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
         static MappingTest()
         {
             var mf = new DefaultMapperFactory();
+            var sc = new Mock<IServiceCollection>();
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(IMapperFactory))).Returns(mf);
             
@@ -38,7 +39,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 .Returns(serviceScopeFactory.Object);
             ServiceProviderMock = sp;
 
-            MappingExtensions.AddConfiguration("default", cfg =>
+            MappingExtensions.AddConfiguration(sc.Object, "default", cfg =>
             {
                 cfg.CreateMap<TestClass1, TestClass2>()
                     .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.Id.ToString()));

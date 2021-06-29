@@ -22,7 +22,7 @@ namespace AnyService.E2E
             {
                 builder.ConfigureTestServices(services =>
                 {
-                    MappingExtensions.AddConfiguration("default",
+                    MappingExtensions.AddConfiguration(services, "default",
                         cfg =>
                         {
                             cfg.CreateMap<Category, CategoryModel>()
