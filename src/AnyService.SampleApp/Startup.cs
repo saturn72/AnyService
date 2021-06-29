@@ -38,7 +38,7 @@ namespace AnyService.SampleApp
             services.AddAuthorization();
 
             var anyServiceConfig = new AnyServiceConfigurar().Configure(services);
-            new AutoMapperServicesConfigurar().Configure(anyServiceConfig);
+            new AutoMapperServicesConfigurar().Configure(services, anyServiceConfig);
             new Events.RabbitMQ.RabbitMqConfigurar().Configure(services, Configuration);
             ConfigureEntityFramework(services);
             ConfigureCaching(services);

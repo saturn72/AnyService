@@ -38,14 +38,15 @@ namespace Microsoft.Extensions.DependencyInjection
             NormalizeConfiguration(config);
             RegisterDependencies(services, config);
 
-            AddDefaultMapping(config.MapperName);
-            AddEntityConfigRecordsMappings(config.MapperName, config.EntityConfigRecords);
+            AddDefaultMapping(services, config.MapperName);
+            AddEntityConfigRecordsMappings(services, config.MapperName, config.EntityConfigRecords);
             AuditManagerExtensions.AddEntityConfigRecords(config.EntityConfigRecords);
             return services;
         }
-        private static void AddDefaultMapping(string mapperName)
+        private static void AddDefaultMapping(IServiceCollection services, string mapperName)
         {
             MappingExtensions.AddConfiguration(
+                services, 
                 mapperName,
                 cfg =>
                 {
@@ -65,9 +66,12 @@ namespace Microsoft.Extensions.DependencyInjection
                     cfg.CreateMap(typeof(ServiceResponse<>), typeof(ServiceResponse<>));
                 });
         }
-        private static void AddEntityConfigRecordsMappings(string mapperName, IEnumerable<EntityConfigRecord> entityConfigRecords)
+        private static void AddEntityConfigRecordsMappings(
+            IServiceCollection services, 
+            string mapperName, 
+            IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
-            MappingExtensions.AddConfiguration(mapperName, cfg =>
+            MappingExtensions.AddConfiguration(services, mapperName, cfg =>
               {
                   foreach (var r in entityConfigRecords)
                   {
@@ -109,8 +113,6 @@ namespace Microsoft.Extensions.DependencyInjection
             foreach (var m in mappers)
                 services.TryAddSingleton(m);
 
-            //mapper factory
-            services.TryAddSingleton<IMapperFactory, DefaultMapperFactory>();
             //validator factory
             var validatorTypes = config.EntityConfigRecords.Select(t => t.CrudValidatorType).ToArray();
             foreach (var vType in validatorTypes)

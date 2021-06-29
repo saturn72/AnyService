@@ -1,6 +1,7 @@
 ﻿using AnyService.Infrastructure;
 using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Collections.Concurrent;
 
@@ -26,8 +27,10 @@ namespace AnyService
                 _mapperFactory.AddMapper(mc.Key, mapperConfig.CreateMapper());
             }
         }
-        public static void AddConfiguration(string mapperName, Action<IMapperConfigurationExpression> configuration, bool deleteExists = false)
+        public static void AddConfiguration(IServiceCollection services, string mapperName, Action<IMapperConfigurationExpression> configuration, bool deleteExists = false)
         {
+            //mapper factory
+            services.TryAddSingleton<IMapperFactory, DefaultMapperFactory>();
             var exist = _mapperConfigurations.ContainsKey(mapperName);
             var cfg = deleteExists || !exist ?
                 configuration :
