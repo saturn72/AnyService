@@ -3,11 +3,11 @@
 		<TargetFramework>net5.0</TargetFramework>
 		<IsPackable>true</IsPackable>
 		<PackageId>anyservice</PackageId>
-		<Version>1.1.129-Preview</Version>
+		<Version>1.1.130-Preview</Version>
 		<Authors>roi@saturn72.com</Authors>
 		<Company>saturn technologies</Company>
 		<PackageProjectUrl>https://github.com/saturn72/anyservice</PackageProjectUrl>
-		<LangVersion>8.0</LangVersion>
+		<LangVersion>9.0</LangVersion>
 		<OutputType>Library</OutputType>
 		<RepositoryUrl>https://github.com/saturn72/anyservice</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>

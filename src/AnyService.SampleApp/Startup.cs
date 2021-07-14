@@ -67,8 +67,9 @@ namespace AnyService.SampleApp
         {
             app.LogAnyServiceEndpoints<Startup>();
             var config = app.ApplicationServices.GetRequiredService<AnyServiceConfig>();
-            if (config.UseErrorEndpointForExceptionHandling)
+            if (config.OutputErrorOnNonDevelopementEnv)
                 app.UseExceptionHandler("/__error");
+
             app.UseHsts();
             app.UseHttpsRedirection();
             app.UseAuthentication();

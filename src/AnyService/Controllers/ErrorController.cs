@@ -2,8 +2,10 @@
 using AnyService.Logging;
 using AnyService.Services;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -18,18 +20,31 @@ namespace AnyService.Controllers
         public static string ErrorEventKey { get; internal set; }
         private readonly WorkContext _workContext;
         private readonly IDomainEventBus _eventBus;
+        private readonly AnyServiceConfig _config;
         private readonly ILogger<ErrorController> _logger;
+        private static Func<IExceptionHandlerPathFeature, IActionResult> ProblemResolver;
         #endregion
         #region ctor
         public ErrorController(
             WorkContext workContext,
             IDomainEventBus eventBus,
+            AnyServiceConfig config,
+            IWebHostEnvironment env,
             ILogger<ErrorController> logger
             )
         {
             _workContext = workContext;
             _eventBus = eventBus;
+            _config = config;
             _logger = logger;
+            ProblemResolver ??= env.IsDevelopment() || config.OutputErrorOnNonDevelopementEnv ?
+                ehpf => Problem(
+                detail: ehpf.Error.StackTrace,
+                instance: ehpf.Path,
+                statusCode: StatusCodes.Status500InternalServerError,
+                title: ehpf.Error.Message
+                ) :
+                ehpf => Problem();
         }
         #endregion
         public IActionResult Error()
@@ -37,12 +52,7 @@ namespace AnyService.Controllers
             var ehpf = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
             PublishErrorDetails(ehpf);
 
-            return Problem(
-                detail: ehpf.Error.StackTrace,
-                instance: ehpf.Path,
-                statusCode: StatusCodes.Status500InternalServerError,
-                title: ehpf.Error.Message
-                );
+            return ProblemResolver(ehpf);
         }
 
         private void PublishErrorDetails(IExceptionHandlerPathFeature ehpf)

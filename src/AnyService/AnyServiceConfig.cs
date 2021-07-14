@@ -70,8 +70,8 @@ namespace AnyService
         public Type ModelPrepararType { get; set; } = typeof(DummyModelPreparar<>);
         [DefaultValue(typeof(DataOnlyServiceResponseMapper))]
         public Type ServiceResponseMapperType { get; set; } = typeof(DataOnlyServiceResponseMapper);
-        [DefaultValue(true)]
-        public bool UseErrorEndpointForExceptionHandling { get; set; } = true;
+        [DefaultValue(false)]
+        public bool OutputErrorOnNonDevelopementEnv { get; set; }
         [DefaultValue(true)]
         public bool UseLogRecordEndpoint { get; set; } = true;
     }

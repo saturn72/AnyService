@@ -29,7 +29,7 @@ namespace AnyService.Tests
             c.AuditSettings.AuditRules.AuditUpdate.ShouldBeTrue();
             c.AuditSettings.AuditRules.AuditDelete.ShouldBeTrue();
             c.ErrorEventKey.ShouldBe(LoggingEvents.UnexpectedException.Name);
-            c.UseErrorEndpointForExceptionHandling.ShouldBeTrue();
+            c.OutputErrorOnNonDevelopementEnv.ShouldBeFalse();
             c.UseLogRecordEndpoint.ShouldBeTrue();
             c.MapperName.ShouldBe("default");
         }
