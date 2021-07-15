@@ -55,9 +55,9 @@ namespace AnyService.EntityFramework
         {
             if (pagination == null || pagination.QueryFunc == null)
                 throw new ArgumentNullException(nameof(pagination));
-            _logger.LogDebug(EfRepositoryEventIds.Read, "Get all with pagination: " + pagination.QueryOrFilter ?? pagination.QueryFunc.ToString());
+            _logger.LogDebug(EfRepositoryEventIds.Read, $"{nameof(GetAll)} with pagination: " + pagination.QueryOrFilter ?? pagination.QueryFunc.ToString());
             pagination.Total = _collection.Where(pagination.QueryFunc).Count();
-            _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll set total to: " + pagination.Total);
+            _logger.LogDebug(EfRepositoryEventIds.Read, $"{nameof(GetAll)} set total to: " + pagination.Total);
 
             var q = pagination.IncludeNested ? IncludeNavigations(_collection) : _collection;
             var isDesc = pagination.SortOrder == PaginationSettings.Desc;
@@ -65,7 +65,7 @@ namespace AnyService.EntityFramework
             q = q.OrderBy(orderByPropertyName, isDesc)
                 .Where(pagination.QueryFunc).AsQueryable();
 
-            q = pagination.Offset == 0 ?
+            q = pagination.Offset == default ?
                q.Take(pagination.PageSize) :
                q.Skip(pagination.Offset).Take(pagination.PageSize);
 
@@ -75,13 +75,13 @@ namespace AnyService.EntityFramework
                 var selector = $"new {{ {toProject} }}";
                 q = q.Select<TDbModel>(selector).ToDynamicArray<TDbModel>().AsQueryable();
             }
+            
+            var pageData = await q.ToArrayAsync();
+            _logger.LogDebug(EfRepositoryEventIds.Read, $"{nameof(GetAll)} {pageData} = {pageData.ToJsonString()}");
+            DetachEntities(q);
 
-            var page = q.ToArray();
-            _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll Detaching entities");
-            await DetachEntities(q);
-
-            _logger.LogDebug(EfRepositoryEventIds.Read, "GetAll total entities in page: " + page.Count());
-            return page;
+            _logger.LogDebug(EfRepositoryEventIds.Read, $"{nameof(GetAll)} total entities in page: " + pageData.Count());
+            return pageData;
         }
         private static string GetOrderByProperty(string propertyName)
         {
@@ -96,7 +96,7 @@ namespace AnyService.EntityFramework
             var entity = await GetEntityById_Internal(id);
             if (entity == null)
                 return null;
-            await DetachEntities(new[] { entity });
+            DetachEntities(new[] { entity });
             _logger.LogDebug(EfRepositoryEventIds.Read, $"{nameof(GetById)} result = {entity.ToJsonString()}");
             return entity;
         }
@@ -105,7 +105,7 @@ namespace AnyService.EntityFramework
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(Insert)} with entity = {entity.ToJsonString()}");
             await _dbContext.Set<TDbModel>().AddAsync(entity);
             await _dbContext.SaveChangesAsync();
-            await DetachEntities(new[] { entity });
+            DetachEntities(new[] { entity });
             _logger.LogDebug(EfRepositoryEventIds.Create, $"{nameof(Insert)} result = {entity.ToJsonString()}");
             return entity;
         }
@@ -161,7 +161,7 @@ namespace AnyService.EntityFramework
             }
             _dbContext.Update(dbEntity);
             await _dbContext.SaveChangesAsync();
-            await DetachEntities(new[] { dbEntity });
+            DetachEntities(new[] { dbEntity });
             _logger.LogDebug(EfRepositoryEventIds.Update, $"{nameof(Update)} result = {entity.ToJsonString()}");
             return dbEntity;
         }
@@ -202,7 +202,7 @@ namespace AnyService.EntityFramework
                 var allDbEntries = set.Where(e => allIds.Contains(e.Id));
                 if (allDbEntries.IsNullOrEmpty())
                     return;
-                await DetachEntities(allDbEntries);
+                DetachEntities(allDbEntries);
 
                 foreach (var b in batch)
                 {
@@ -241,17 +241,15 @@ namespace AnyService.EntityFramework
             var query = _collection.Where(x => x.Id.Equals(id));
             return await IncludeNavigations(query).FirstOrDefaultAsync();
         }
-        private Task DetachEntities(IEnumerable<TDbModel> entities)
+        private void DetachEntities(IEnumerable<TDbModel> entities)
         {
-            return Task.Run(() =>
+            _logger.LogDebug(EfRepositoryEventIds.Read, $"{nameof(DetachEntities)} Detaching entities");
+            foreach (var e in entities)
             {
-                foreach (var e in entities)
-                {
-                    _dbContext.Entry(e).State = EntityState.Detached;
-                    foreach (var col in _dbContext.Entry(e).Collections)
-                        col.EntityEntry.State = EntityState.Detached;
-                }
-            });
+                _dbContext.Entry(e).State = EntityState.Detached;
+                foreach (var col in _dbContext.Entry(e).Collections)
+                    col.EntityEntry.State = EntityState.Detached;
+            }
         }
         private static readonly ConcurrentDictionary<Type, IEnumerable<string>> NavigationPropertyNames
             = new ConcurrentDictionary<Type, IEnumerable<string>>();

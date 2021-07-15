@@ -151,10 +151,10 @@ namespace AnyService.Services
             if ((pagination = await NormalizePagination(pagination)) == null)
                 return SetServiceResponse(serviceResponse, ServiceResult.BadOrMissingData, LoggingEvents.BusinessLogicFlow, "Missing query data");
 
-            Logger.LogDebug(LoggingEvents.Repository, "Get all from repository using paginate = " + pagination);
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, "Get all from repository using paginate = " + pagination);
             var wrapper = new ServiceResponseWrapper(new ServiceResponse<IEnumerable<TEntity>>());
             var data = await Repository.Query(r => r.GetAll(pagination), wrapper);
-            Logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data}");
+            Logger.LogDebug(LoggingEvents.BusinessLogicFlow, $"Repository response: {data.ToJsonString()}");
 
             if (IsNotFoundOrBadOrMissingDataOrError(wrapper, CurrentEntityConfigRecord.EventKeys.Read, pagination))
             {
@@ -165,7 +165,7 @@ namespace AnyService.Services
                 return serviceResponse;
             }
 
-            pagination.Data = data ?? new TEntity[] { };
+            pagination.Data = data ?? Array.Empty<TEntity>();
             if (serviceResponse.Result == ServiceResult.NotSet)
             {
                 serviceResponse.Payload = pagination;
