@@ -168,7 +168,7 @@ namespace AnyService.Controllers
             var pagination = ToPagination(orderBy, offset, toBeProject, pageSize, withNavProps, sortOrder, query);
             var srvRes = await _crudService.GetAll(pagination);
             _logger.LogDebug(LoggingEvents.Controller,
-                $"Get all public service result: '{srvRes.Result}', message: '{srvRes.Message}', {nameof(ServiceResponse.TraceId)}: '{srvRes.TraceId}', data: '{pagination.Data.ToJsonString()}'");
+                $"{nameof(GetAll)} service result: '{srvRes.Result}', message: '{srvRes.Message}', {nameof(ServiceResponse.TraceId)}: '{srvRes.TraceId}', data: '{pagination.Data.ToJsonString()}'");
 
             return ToPaginationActionResult(srvRes, dataOnly, toBeProject);
         }

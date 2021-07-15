@@ -7,7 +7,7 @@ namespace AnyService.EntityFramework
 {
     public class EfRepository<TDbModel> : EfGenericRepository<TDbModel, string>,
         IRepository<TDbModel>
-        where TDbModel : class, IDbModel<string>
+        where TDbModel : class, IDbRecord<string>
     {
         public EfRepository(
             DbContext dbContext,

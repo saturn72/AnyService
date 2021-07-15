@@ -1,8 +1,8 @@
 namespace AnyService
 {
-    public interface IEntity : IDbModel<string>
+    public interface IEntity : IDbRecord<string>
     { }
-    public interface IDbModel<TId>
+    public interface IDbRecord<TId>
     {
         TId Id { get; set; }
     }

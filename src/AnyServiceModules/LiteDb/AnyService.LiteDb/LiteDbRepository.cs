@@ -9,7 +9,7 @@ using LiteDB;
 namespace AnyService.LiteDb
 {
     public class LiteDbRepository<TEntity> :
-        IRepository<TEntity> where TEntity : IDbModel<string>
+        IRepository<TEntity> where TEntity : IDbRecord<string>
     {
         private readonly string _dbName;
 

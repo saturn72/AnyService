@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace AnyService.Services
 {
-    public interface IGenericRepository<TDbModel, TId> where TDbModel : IDbModel<TId>
+    public interface IGenericRepository<TDbModel, TId> where TDbModel : IDbRecord<TId>
     {
         Task<IQueryable<TDbModel>> Collection { get; }
         Task<TDbModel> Insert(TDbModel entity);
@@ -22,7 +22,7 @@ namespace AnyService.Services
         Task<TDbModel> Delete(TDbModel entity);
     }
     public interface IRepository<TDbModel> : IGenericRepository<TDbModel, string>
-        where TDbModel : IDbModel<string>
+        where TDbModel : IDbRecord<string>
     {
     }
 }
