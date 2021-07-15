@@ -45,8 +45,10 @@ namespace Microsoft.Extensions.DependencyInjection
         }
         private static void AddDefaultMapping(IServiceCollection services, string mapperName)
         {
+            //mapper factory
+            services.TryAddSingleton<IMapperFactory, DefaultMapperFactory>();
+
             MappingExtensions.AddConfiguration(
-                services, 
                 mapperName,
                 cfg =>
                 {
@@ -71,7 +73,7 @@ namespace Microsoft.Extensions.DependencyInjection
             string mapperName, 
             IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
-            MappingExtensions.AddConfiguration(services, mapperName, cfg =>
+            MappingExtensions.AddConfiguration(mapperName, cfg =>
               {
                   foreach (var r in entityConfigRecords)
                   {

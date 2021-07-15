@@ -39,7 +39,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
                 .Returns(serviceScopeFactory.Object);
             ServiceProviderMock = sp;
 
-            MappingExtensions.AddConfiguration(sc, "default", cfg =>
+            MappingExtensions.AddConfiguration("default", cfg =>
             {
                 cfg.CreateMap<TestClass1, TestClass2>()
                     .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.Id.ToString()));

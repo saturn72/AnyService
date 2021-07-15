@@ -38,7 +38,7 @@ namespace AnyService.SampleApp
             services.AddAuthorization();
 
             var anyServiceConfig = new AnyServiceConfigurar().Configure(services);
-            new AutoMapperServicesConfigurar().Configure(services, anyServiceConfig);
+            new AutoMapperServicesConfigurar().Configure(anyServiceConfig);
             new Events.RabbitMQ.RabbitMqConfigurar().Configure(services, Configuration);
             ConfigureEntityFramework(services);
             ConfigureCaching(services);
@@ -67,8 +67,7 @@ namespace AnyService.SampleApp
         {
             app.LogAnyServiceEndpoints<Startup>();
             var config = app.ApplicationServices.GetRequiredService<AnyServiceConfig>();
-            if (config.OutputErrorOnNonDevelopementEnv)
-                app.UseExceptionHandler("/__error");
+            app.UseExceptionHandler("/__error");
 
             app.UseHsts();
             app.UseHttpsRedirection();

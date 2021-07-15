@@ -41,27 +41,30 @@ namespace AnyService
             bool logExceptions = true,
             bool usePermissionMiddleware = true)
         {
-            var appServices = app.ApplicationServices;
+            var services = app.ApplicationServices;
 
-            using var scope = appServices.CreateScope();
+            using var scope = services.CreateScope();
             var apm = scope.ServiceProvider.GetRequiredService<ApplicationPartManager>();
-            apm.FeatureProviders.Add(new GenericControllerFeatureProvider(appServices));
+            apm.FeatureProviders.Add(new GenericControllerFeatureProvider(services));
 
-            InitializeServices(appServices);
+            InitializeServices(services);
             NormlizeProjectionMaps(scope.ServiceProvider);
+            //validate was registered
+            var mf = services.GetRequiredService<IMapperFactory>();
+
             var cm = scope.ServiceProvider.GetRequiredService<ICacheManager>();
             var entityConfigRecords = scope.ServiceProvider.GetRequiredService<IEnumerable<EntityConfigRecord>>();
-            var eventBus = appServices.GetRequiredService<IDomainEventBus>();
+            var eventBus = services.GetRequiredService<IDomainEventBus>();
 
             if (useWorkContextMiddleware) app.UseMiddleware<WorkContextMiddleware>();
             if (useAuthorizationMiddleware) app.UseMiddleware<DefaultAuthorizationMiddleware>();
 
             if (logExceptions)
                 SubscribeLogExceptionHandler(eventBus, entityConfigRecords);
-            SubscribeAuditHandler(appServices, eventBus, entityConfigRecords);
+            SubscribeAuditHandler(services, eventBus, entityConfigRecords);
 
             if (usePermissionMiddleware)
-                AddPermissionComponents(app, appServices, eventBus, entityConfigRecords);
+                AddPermissionComponents(app, services, eventBus, entityConfigRecords);
             return app;
         }
 
