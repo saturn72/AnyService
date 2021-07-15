@@ -16,8 +16,6 @@ namespace AnyService.LiteDb
         public LiteDbRepository(string dbName)
         {
             _dbName = dbName;
-
-
         }
         public Task<IQueryable<TEntity>> Collection => Task.FromResult(LiteDbUtility.Collection<TEntity>(_dbName));
 
