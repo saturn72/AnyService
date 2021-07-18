@@ -86,6 +86,8 @@ namespace AnyService.Events.RabbitMQ
             await policy.ExecuteAsync(() =>
             {
                 var properties = _publisherChannel.CreateBasicProperties();
+                if (@event.Expiration != default) //update expiration
+                    properties.Expiration = @event.Expiration.ToString();
                 properties.DeliveryMode = 2; // persistent
                 _logger.LogDebug("Publishing event to RabbitMQ: {EventId}", @event.Id);
                 return Task.Run(() =>

@@ -4,19 +4,23 @@ namespace AnyService.Events
 {
     public class IntegrationEvent
     {
-        public IntegrationEvent(string exchange, string routingKey)
+        public IntegrationEvent(string exchange, string routingKey, int? expiration = null)
         {
             Exchange = exchange;
             RoutingKey = routingKey;
             ReferenceId = Guid.NewGuid().ToString();
             Id = Guid.NewGuid().ToString();
             PublishedOnUtc = DateTime.UtcNow;
+            Expiration = expiration;
         }
         public string Exchange { get; }
         public string RoutingKey { get; }
         public string ReferenceId { get; private set; }
         public string Id { get; }
         public DateTime PublishedOnUtc { get; private set; }
+        /// <summary>
+        /// Gets or sets the expiration of the message in milisecs
+        /// </summary>
         public int? Expiration { get; set; }
         public object Data { get; set; }
 
@@ -36,7 +40,7 @@ namespace AnyService.Events
             {
                 PublishedOnUtc = PublishedOnUtc,
                 Expiration = Expiration,
-                Data = Data
+                Data = Data,
             };
         }
     }
