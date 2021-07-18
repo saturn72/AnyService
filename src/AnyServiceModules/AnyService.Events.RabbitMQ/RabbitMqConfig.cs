@@ -38,6 +38,7 @@ namespace AnyService.Events.RabbitMQ
         public bool AutoDelete { get; set; }
         [DefaultValue(false)]
         public bool Durable { get; set; }
+        public int? Expiration { get; set; }
     }
     public class QueueConfig
     {
