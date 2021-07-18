@@ -211,8 +211,8 @@ namespace AnyService.Events.RabbitMQ
                 {
                     if (q.Arguments.ContainsKey("x-message-ttl"))
                     {
-                        var ttl = q.Arguments["x-message-ttl"];
-                        q.Arguments["x-message-ttl"] = (int)ttl;
+                        var ttl = q.Arguments["x-message-ttl"].ToString();
+                        q.Arguments["x-message-ttl"] = int.Parse(ttl);
                     }
                     _consumerChannel.QueueDeclare(queue: q.Name ?? "",
                                          durable: q.Durable,
