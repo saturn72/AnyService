@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<PackageId>AnyService.LiteDb</PackageId>
-		<Version>1.0.17-Preview</Version>
+		<Version>1.0.18</Version>
 		<Authors>roi@saturn72.com</Authors>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Company>saturn technologies</Company>
