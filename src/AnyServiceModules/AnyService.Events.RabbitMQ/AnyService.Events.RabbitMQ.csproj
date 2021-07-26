@@ -6,6 +6,7 @@
 		<Version>1.0.18-Preview</Version>
 		<Authors>roi@saturn72.com</Authors>
 		<Company>saturn technologies</Company>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 	</PropertyGroup>
 
 	<ItemGroup>

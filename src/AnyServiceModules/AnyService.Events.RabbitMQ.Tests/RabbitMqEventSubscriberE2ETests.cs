@@ -66,8 +66,11 @@ namespace AnyService.Events.RabbitMQ.Tests
                             new QueueConfig
                             {
                                 Name = "in-test-queue",
-                                Exchange = "in-test-ex"
-                            },
+                                Exchange = "in-test-ex",
+                                Arguments = new Dictionary<string, object> {
+                                    ["x-message-ttl"] = "10000"
+                                },
+                            }
                         },
             },
             RetryCount = 5,

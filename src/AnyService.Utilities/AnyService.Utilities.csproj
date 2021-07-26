@@ -2,8 +2,10 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<PackageId>AnyService.Utilities</PackageId>
-		<Version>1.0.16-Preview</Version>
+		<Version>1.0.17</Version>
 		<Authors>roi@saturn72.com</Authors>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Description>Utility library for general usage in .net</Description>
 		<Company>saturn technologies</Company>
 	</PropertyGroup>
 	<ItemGroup>

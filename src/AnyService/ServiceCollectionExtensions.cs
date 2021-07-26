@@ -43,7 +43,7 @@ namespace Microsoft.Extensions.DependencyInjection
             AuditManagerExtensions.AddEntityConfigRecords(config.EntityConfigRecords);
             return services;
         }
-        private static void AddDefaultMapping(IServiceCollection services, string mapperName)
+        public static void AddDefaultMapping(this IServiceCollection services, string mapperName)
         {
             //mapper factory
             services.TryAddSingleton<IMapperFactory, DefaultMapperFactory>();

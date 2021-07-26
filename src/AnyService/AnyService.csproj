@@ -7,6 +7,10 @@
 		<Authors>roi@saturn72.com</Authors>
 		<Company>saturn technologies</Company>
 		<PackageProjectUrl>https://github.com/saturn72/anyservice</PackageProjectUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Description>
+			`AnyService`'s asp.net core based framework that makes it easy to deploy RESTful web services <i>FAST!!</i>
+		</Description>
 		<LangVersion>9.0</LangVersion>
 		<OutputType>Library</OutputType>
 		<RepositoryUrl>https://github.com/saturn72/anyservice</RepositoryUrl>
