@@ -25,9 +25,10 @@ namespace AnyService.Core.Tests.Events
         [Fact]
         public void Expired_Returns_False_ExpirationEvent()
         {
-            var e = new IntegrationEvent("route", "ek");
-            e.Expiration = 10;
-            Thread.Sleep(1);
+            var e = new IntegrationEvent("route", "ek")
+            {
+                Expiration = 10
+            };
             IntegrationEventExtensions.Expired(e).ShouldBeFalse();
         }
     }
