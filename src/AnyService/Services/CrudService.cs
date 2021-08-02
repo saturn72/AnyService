@@ -73,7 +73,8 @@ namespace AnyService.Services
             await ModelPreparar.PrepareForCreate(entity);
 
             Logger.LogDebug(LoggingEvents.Repository, $"Insert entity to repository");
-            if (CurrentEntityConfigRecord.Metadata.IsSoftDeleted) (entity as ISoftDelete).Deleted = false;
+            if (CurrentEntityConfigRecord.Metadata.IsSoftDeleted) 
+                (entity as ISoftDelete).Deleted = false;
 
             var wrapper = new ServiceResponseWrapper(serviceResponse);
             var dbData = await Repository.Command(r => r.Insert(entity), wrapper);

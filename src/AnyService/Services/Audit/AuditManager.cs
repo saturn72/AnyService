@@ -1,5 +1,6 @@
 ﻿using AnyService.Audity;
 using AnyService.Events;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ namespace AnyService.Services.Audit
         private readonly IRepository<AuditRecord> _repository;
         private readonly AuditSettings _auditSettings;
         private readonly IDomainEventBus _eventBus;
+        private readonly ISystemClock _systemClock;
         private readonly ILogger<AuditManager> _logger;
         private static readonly IEnumerable<string> FaultedServiceResult = new[] { ServiceResult.BadOrMissingData, ServiceResult.Error, ServiceResult.NotFound };
         private static EventKeyRecord EventKeys;
@@ -26,12 +28,14 @@ namespace AnyService.Services.Audit
             AuditSettings auditConfig,
             IEnumerable<EntityConfigRecord> entityConfigRecords,
             IDomainEventBus eventBus,
+            ISystemClock systemClock,
             ILogger<AuditManager> logger
             )
         {
             _repository = repository;
             _auditSettings = auditConfig;
             _eventBus = eventBus;
+            _systemClock = systemClock;
             _logger = logger;
 
             EventKeys ??= entityConfigRecords.First(typeof(AuditRecord)).EventKeys;
@@ -49,7 +53,7 @@ namespace AnyService.Services.Audit
             _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data?.ToJsonString()}");
             var wSrvRes = wrapper.ServiceResponse;
             var isFault = FaultedServiceResult.Contains(wSrvRes.Result);
-            pagination.Data = isFault ? data : (data ?? new AuditRecord[] { });
+            pagination.Data = isFault ? data : (data ?? Array.Empty<AuditRecord>());
             var serviceResponse = new ServiceResponse<AuditPagination>
             {
                 Payload = pagination,
@@ -77,7 +81,7 @@ namespace AnyService.Services.Audit
             var toUtcQuery = pagination.ToUtc != null ?
                 new Func<AuditRecord, bool>(c =>
                 {
-                    DateTime.TryParse(c.CreatedOnUtc, out DateTime value);
+                    _ = DateTime.TryParse(c.CreatedOnUtc, out DateTime value);
                     return value.ToUniversalTime() <= pagination.ToUtc;
                 }) : null;
             var q = auditRecordIds.AndAlso(
@@ -100,15 +104,14 @@ namespace AnyService.Services.Audit
         public async virtual Task<IEnumerable<AuditRecord>> Insert(IEnumerable<AuditRecord> records)
         {
             var toInsert = records?.Where(r => ShouldAudit(r.AuditRecordType));
-            if (toInsert.IsNullOrEmpty()) return new AuditRecord[] { };
+            if (toInsert.IsNullOrEmpty()) return Array.Empty<AuditRecord>();
 
             foreach (var item in toInsert)
                 item.CreatedOnUtc = DateTime.UtcNow.ToIso8601();
             var res = await _repository.BulkInsert(toInsert);
-            _eventBus.Publish(EventKeys.Create, new DomainEvent { Data = res });
+            _ = _eventBus.Publish(EventKeys.Create, new DomainEvent { Data = res });
             return res;
         }
-
         private bool ShouldAudit(string auditRecordType)
         {
             return

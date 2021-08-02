@@ -9,12 +9,9 @@ using Xunit;
 using AnyService.Services.FileStorage;
 using AnyService.Services;
 using Microsoft.Extensions.Logging;
-using AnyService.Utilities;
 using AnyService.Services.Preparars;
-using AnyService.Services.Audit;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using System.Reflection;
 
 namespace AnyService.Tests.Services
 {
@@ -143,7 +140,7 @@ namespace AnyService.Tests.Services
      Times.Once); mp.Verify(a => a.PrepareForCreate(It.Is<AuditableTestEntity>(e => e == model)), Times.Once);
         }
         [Fact]
-        public async Task Create_Pass()
+        public async Task Create_Passes()
         {
             var model = new AuditableTestEntity();
             var repo = new Mock<IRepository<AuditableTestEntity>>();

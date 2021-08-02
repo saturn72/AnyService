@@ -33,7 +33,7 @@ namespace AnyService.Tests.Services.Audit
             {
                 new EntityConfigRecord{Type = typeof(AuditRecord), EventKeys = new EventKeyRecord("c", "r", "u", "d")}
             };
-            var am = new AuditManager(null, aSettings, ecrs, null, null);
+            var am = new AuditManager(null, aSettings, ecrs, null, null, null);
             var res = await am.Insert(records);
             res.ShouldBeEmpty();
         }
@@ -78,7 +78,7 @@ namespace AnyService.Tests.Services.Audit
                 AuditRecordType = AuditRecordTypes.CREATE,
                 Data = data.ToJsonString(),
             };
-            var am = new AuditManager(repo.Object, aSettings, ecrs, eb.Object, logger.Object);
+            var am = new AuditManager(repo.Object, aSettings, ecrs, eb.Object, null, logger.Object);
             var res = await am.Insert(new[] { ar });
             res.ShouldNotBeNull();
 
@@ -98,7 +98,7 @@ namespace AnyService.Tests.Services.Audit
                 new EntityConfigRecord{Type = typeof(AuditRecord), EventKeys = new EventKeyRecord("c", "r", "u", "d")}
             };
             var logger = new Mock<ILogger<AuditManager>>();
-            var aSrv = new AuditManager(repo.Object, aConfig, ecrs, null, logger.Object);
+            var aSrv = new AuditManager(repo.Object, aConfig, ecrs, null, null, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Error);
         }
@@ -114,7 +114,7 @@ namespace AnyService.Tests.Services.Audit
                 new EntityConfigRecord{Type = typeof(AuditRecord), EventKeys = new EventKeyRecord("c", "r", "u", "d")}
             };
             var logger = new Mock<ILogger<AuditManager>>();
-            var aSrv = new AuditManager(repo.Object, aConfig, ecrs, null, logger.Object);
+            var aSrv = new AuditManager(repo.Object, aConfig, ecrs, null, null, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Ok);
             srvRes.Payload.Data.ShouldBeEmpty();
@@ -136,7 +136,7 @@ namespace AnyService.Tests.Services.Audit
                 new EntityConfigRecord{Type = typeof(AuditRecord), EventKeys = new EventKeyRecord("c", "r", "u", "d")}
             };
             var logger = new Mock<ILogger<AuditManager>>();
-            var aSrv = new AuditManager(repo.Object, aConfig, ecrs, null, logger.Object);
+            var aSrv = new AuditManager(repo.Object, aConfig, ecrs, null, null, logger.Object);
             var srvRes = await aSrv.GetAll(new AuditPagination());
             srvRes.Result.ShouldBe(ServiceResult.Ok);
             srvRes.Payload.Data.ShouldBe(repoData);
@@ -283,7 +283,7 @@ namespace AnyService.Tests.Services.Audit
             {
                 new EntityConfigRecord{Type = typeof(AuditRecord), EventKeys = new EventKeyRecord("c", "r", "u", "d")}
             };
-            public TestAuditManager() : base(null, null, ecrs, null, null)
+            public TestAuditManager() : base(null, null, ecrs, null, null, null)
             {
             }
             public Func<AuditRecord, bool> QueryBuilder(AuditPagination pagination) => BuildAuditPaginationQuery(pagination);

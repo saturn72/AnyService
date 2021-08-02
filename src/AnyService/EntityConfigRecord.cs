@@ -65,10 +65,6 @@ namespace AnyService
         public PaginationSettings PaginationSettings { get; set; }
         public Type FilterFactoryType { get; set; }
         public Type ModelPrepararType { get; set; }
-        /// <summary>
-        /// Gets or sets the audit rules for the entity
-        /// </summary>
-        public AuditRules AuditRules { get; set; }
         internal AuditSettings AuditSettings { get; set; }
         internal DomainEntityMetadata Metadata { get; private set; }
     }

@@ -69,8 +69,8 @@ namespace Microsoft.Extensions.DependencyInjection
                 });
         }
         private static void AddEntityConfigRecordsMappings(
-            IServiceCollection services, 
-            string mapperName, 
+            IServiceCollection services,
+            string mapperName,
             IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
             MappingExtensions.AddConfiguration(mapperName, cfg =>
@@ -205,7 +205,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 ecr.FilterFactoryType ??= config.FilterFactoryType;
                 ecr.ModelPrepararType ??= config.ModelPrepararType;
 
-                ecr.AuditSettings = NormalizeAudity(ecr, config.AuditSettings);
+                ecr.AuditSettings ??= config.AuditSettings ?? new AuditSettings { Disabled = true };
                 ecr.EndpointSettings = NormalizeEndpointSettings(ecr, config);
                 if (ecr.CrudValidatorType != null)
                 {
@@ -309,24 +309,6 @@ namespace Microsoft.Extensions.DependencyInjection
                 typeof(GenericParentController<>).MakeGenericType(mapToType) :
                 typeof(GenericController<,>).MakeGenericType(mapToType, entityType);
         }
-        private static AuditSettings NormalizeAudity(EntityConfigRecord ecr, AuditSettings auditSettings)
-        {
-            if (auditSettings.Disabled)
-                return new AuditSettings
-                {
-                    Disabled = true,
-                    AuditRules = new AuditRules()
-                };
-
-            return ecr.AuditRules == null ?
-                auditSettings :
-                new AuditSettings
-                {
-                    Disabled = auditSettings.Disabled,
-                    AuditRules = ecr.AuditRules,
-                };
-        }
-
         private static void ValidateType<TService>(Type type)
         {
             if (type != null && !typeof(TService).IsAssignableFrom(type))
