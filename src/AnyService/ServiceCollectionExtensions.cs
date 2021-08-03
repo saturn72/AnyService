@@ -166,7 +166,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 return sp.GetService(mt) as IServiceResponseMapper;
             });
 
-            var auditManagerType = config.AuditSettings.Disabled ?
+            var auditManagerType = config.AuditSettings.Disabled && config.EntityConfigRecords.All(e => !e.AuditSettings.Disabled)?
                 typeof(DummyAuditManager) :
                 typeof(AuditManager);
 
