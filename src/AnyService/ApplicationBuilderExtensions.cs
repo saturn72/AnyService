@@ -93,23 +93,23 @@ namespace AnyService
         }
         private static void SubscribeAuditHandler(IServiceProvider sp, IDomainEventBus eventBus, IEnumerable<EntityConfigRecord> entityConfigRecords)
         {
-            var auditHandler = new AuditHandler(sp);
+            var handler = sp.GetRequiredService<AuditHandler>();
 
-            var creatables = entityConfigRecords.Where(ecr => ecr.Type.IsOfType<ICreatableAudit>() && !ecr.AuditSettings.Disabled && ecr.AuditSettings.AuditRules.AuditCreate).ToArray();
+            var creatables = entityConfigRecords.Where(ecr => ecr.Type.IsOfType<ICreatableAudit>() && ecr.AuditSettings.Enabled && ecr.AuditSettings.AuditRules.AuditCreate).ToArray();
             foreach (var ca in creatables)
-                eventBus.Subscribe(ca.EventKeys.Create, auditHandler.CreateEventHandler, $"{ca.Name.ToLower()}-creatable-audit-handler");
+                eventBus.Subscribe(ca.EventKeys.Create, handler.CreateEventHandler, $"{ca.Name.ToLower()}-creatable-audit-handler");
 
-            var readables = entityConfigRecords.Where(ecr => ecr.Type.IsOfType<IReadableAudit>() && !ecr.AuditSettings.Disabled && ecr.AuditSettings.AuditRules.AuditRead).ToArray();
+            var readables = entityConfigRecords.Where(ecr => ecr.Type.IsOfType<IReadableAudit>() && ecr.AuditSettings.Enabled && ecr.AuditSettings.AuditRules.AuditRead).ToArray();
             foreach (var ca in readables)
-                eventBus.Subscribe(ca.EventKeys.Read, auditHandler.ReadEventHandler, $"{ca.Name.ToLower()}-read-audit-handler");
+                eventBus.Subscribe(ca.EventKeys.Read, handler.ReadEventHandler, $"{ca.Name.ToLower()}-read-audit-handler");
 
-            var updatables = entityConfigRecords.Where(ecr => ecr.Type.IsOfType<IUpdatableAudit>() && !ecr.AuditSettings.Disabled && ecr.AuditSettings.AuditRules.AuditUpdate).ToArray();
+            var updatables = entityConfigRecords.Where(ecr => ecr.Type.IsOfType<IUpdatableAudit>() && ecr.AuditSettings.Enabled && ecr.AuditSettings.AuditRules.AuditUpdate).ToArray();
             foreach (var ca in updatables)
-                eventBus.Subscribe(ca.EventKeys.Update, auditHandler.UpdateEventHandler, $"{ca.Name.ToLower()}-updatable-audit-handler");
+                eventBus.Subscribe(ca.EventKeys.Update, handler.UpdateEventHandler, $"{ca.Name.ToLower()}-updatable-audit-handler");
 
-            var deletables = entityConfigRecords.Where(ecr => ecr.Type.IsOfType<IDeletableAudit>() && !ecr.AuditSettings.Disabled && ecr.AuditSettings.AuditRules.AuditDelete).ToArray();
+            var deletables = entityConfigRecords.Where(ecr => ecr.Type.IsOfType<IDeletableAudit>() && ecr.AuditSettings.Enabled && ecr.AuditSettings.AuditRules.AuditDelete).ToArray();
             foreach (var ca in deletables)
-                eventBus.Subscribe(ca.EventKeys.Delete, auditHandler.DeleteEventHandler, $"{ca.Name.ToLower()}-deletable-audit-handler");
+                eventBus.Subscribe(ca.EventKeys.Delete, handler.DeleteEventHandler, $"{ca.Name.ToLower()}-deletable-audit-handler");
         }
 
         private static void SubscribeLogExceptionHandler(

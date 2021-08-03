@@ -1,5 +1,4 @@
-﻿using AutoMapper.Configuration.Annotations;
-using Shouldly;
+﻿using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +14,7 @@ namespace AnyService.Tests
                 {
                     Name = "name-1",
                     Type = typeof(string),
+                    EntityKey = "n"
                 },new EntityConfigRecord
                 {
                     Name = "name-2",
@@ -24,23 +24,32 @@ namespace AnyService.Tests
         [Fact]
         public void FirstOrDefault_ReturnsDefault()
         {
-            _records.FirstOrDefault(typeof(int)).ShouldBeNull();            
+            _records.FirstOrDefault(typeof(int)).ShouldBeNull();
         }
         [Fact]
         public void FirstOrDefault_ReturnsInstance()
         {
             _records.FirstOrDefault(typeof(string)).Name.ShouldBe("name-1");
         }
-
         [Fact]
-        public void First_Throws()
+        public void First_ByType_Throws()
         {
             Should.Throw<InvalidOperationException>(() => _records.First(typeof(int)));
         }
         [Fact]
-        public void First_ReturnsInstance()
+        public void First_ByType_ReturnsInstance()
         {
             _records.First(typeof(string)).Name.ShouldBe("name-1");
+        }
+        [Fact]
+        public void First_ByString_Throws()
+        {
+            Should.Throw<InvalidOperationException>(() => _records.First("int"));
+        }
+        [Fact]
+        public void First_ByString_ReturnsInstance()
+        {
+            _records.First("name-1").Name.ShouldBe("name-1");
         }
         [Fact]
         public void All_returnsEmptyArray()
@@ -50,7 +59,7 @@ namespace AnyService.Tests
         [Fact]
         public void All_returnsAll()
         {
-            var a = _records.All(typeof(string ));
+            var a = _records.All(typeof(string));
             a.Count().ShouldBe(2);
             a.ElementAt(0).Name.ShouldBe("name-1");
             a.ElementAt(1).Name.ShouldBe("name-2");

@@ -35,6 +35,7 @@ namespace Microsoft.Extensions.DependencyInjection
         }
         public static IServiceCollection AddAnyService(this IServiceCollection services, AnyServiceConfig config)
         {
+            config.AuditSettings ??= new AuditSettings();
             NormalizeConfiguration(config);
             RegisterDependencies(services, config);
 
@@ -152,12 +153,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 //var ecrm = sp.GetService<EntityConfigRecordManager>();
                 return wc.CurrentEntityConfigRecord.EventKeys;
             });
-            services.AddScoped(sp =>
-            {
-                var wc = sp.GetService<WorkContext>();
-                var ct = wc.CurrentType;
-                return wc.CurrentEntityConfigRecord.PermissionRecord;
-            });
+            services.AddScoped(sp => sp.GetService<WorkContext>().CurrentEntityConfigRecord.PermissionRecord);
 
             services.TryAddScoped(sp =>
             {
@@ -166,11 +162,8 @@ namespace Microsoft.Extensions.DependencyInjection
                 return sp.GetService(mt) as IServiceResponseMapper;
             });
 
-            var auditManagerType = config.AuditSettings.Disabled && config.EntityConfigRecords.All(e => !e.AuditSettings.Disabled)?
-                typeof(DummyAuditManager) :
-                typeof(AuditManager);
-
-            services.TryAddTransient(typeof(IAuditManager), auditManagerType);
+            services.TryAddSingleton<AuditHandler>();
+            services.TryAddSingleton<IAuditManager, AuditManager>();
             services.TryAddSingleton<IDomainEventBus, DefaultDomainEventsBus>();
             services.TryAddSingleton<ISubscriptionManager<DomainEvent>, DefaultSubscriptionManager<DomainEvent>>();
             services.TryAddSingleton<ISubscriptionManager<IntegrationEvent>, DefaultSubscriptionManager<IntegrationEvent>>();
@@ -205,7 +198,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 ecr.FilterFactoryType ??= config.FilterFactoryType;
                 ecr.ModelPrepararType ??= config.ModelPrepararType;
 
-                ecr.AuditSettings ??= (config.AuditSettings ?? new AuditSettings { Disabled = true });
+                ecr.AuditSettings ??= config.AuditSettings;
                 ecr.EndpointSettings = NormalizeEndpointSettings(ecr, config);
                 if (ecr.CrudValidatorType != null)
                 {
@@ -225,7 +218,7 @@ namespace Microsoft.Extensions.DependencyInjection
         private static void AddAnyServiceControllers(AnyServiceConfig config)
         {
             var list = new List<EntityConfigRecord>(config.EntityConfigRecords);
-            if (!config.AuditSettings.Disabled)
+            if (config.AuditSettings.Enabled)
             {
                 list.Add(new EntityConfigRecord
                 {

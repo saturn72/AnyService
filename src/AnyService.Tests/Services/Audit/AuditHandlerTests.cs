@@ -34,11 +34,9 @@ namespace AnyService.Tests.Services.Audit
         [Fact]
         public async Task CreatedHandler_SingleEntityCreated()
         {
-            var logger = new Mock<ILogger<AuditHandler>>();
-            var sp = MockServiceProvider(logger);
+            var log = new Mock<ILogger<AuditHandler>>();
             var am = new Mock<IAuditManager>();
-            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
-            var h = new AuditHandler(sp.Object);
+            var h = new AuditHandler(am.Object, log.Object);
 
             var o = new EventDataObject
             {
@@ -66,11 +64,9 @@ namespace AnyService.Tests.Services.Audit
         [Fact]
         public async Task CreatedHandler_BulkCreated()
         {
-            var logger = new Mock<ILogger<AuditHandler>>();
-            var sp = MockServiceProvider(logger);
+            var log = new Mock<ILogger<AuditHandler>>();
             var am = new Mock<IAuditManager>();
-            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
-            var h = new AuditHandler(sp.Object);
+            var h = new AuditHandler(am.Object, log.Object);
 
             var o0 = new EventDataObject
             {
@@ -107,12 +103,9 @@ namespace AnyService.Tests.Services.Audit
         [Fact]
         public async Task ReadHandler_Single()
         {
-            var logger = new Mock<ILogger<AuditHandler>>();
-            var sp = MockServiceProvider(logger);
+            var log = new Mock<ILogger<AuditHandler>>();
             var am = new Mock<IAuditManager>();
-            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
-            var h = new AuditHandler(sp.Object);
-
+            var h = new AuditHandler(am.Object, log.Object);
             var o = new EventDataObject
             {
                 Id = "123",
@@ -139,11 +132,9 @@ namespace AnyService.Tests.Services.Audit
         [Fact]
         public async Task ReadHandler_Pagination()
         {
-            var logger = new Mock<ILogger<AuditHandler>>();
-            var sp = MockServiceProvider(logger);
+            var log = new Mock<ILogger<AuditHandler>>();
             var am = new Mock<IAuditManager>();
-            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
-            var h = new AuditHandler(sp.Object);
+            var h = new AuditHandler(am.Object, log.Object);
 
             var o0 = new EventDataObject
             {
@@ -183,11 +174,9 @@ namespace AnyService.Tests.Services.Audit
         [Fact]
         public async Task UpdateHandler_DomainEntity()
         {
-            var logger = new Mock<ILogger<AuditHandler>>();
-            var sp = MockServiceProvider(logger);
+            var log = new Mock<ILogger<AuditHandler>>();
             var am = new Mock<IAuditManager>();
-            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
-            var h = new AuditHandler(sp.Object);
+            var h = new AuditHandler(am.Object, log.Object);
 
             var before = new EventDataObject
             {
@@ -222,11 +211,9 @@ namespace AnyService.Tests.Services.Audit
         [Fact]
         public async Task UpdateHandler_EntityUpdatedEventData()
         {
-            var logger = new Mock<ILogger<AuditHandler>>();
-            var sp = MockServiceProvider(logger);
+            var log = new Mock<ILogger<AuditHandler>>();
             var am = new Mock<IAuditManager>();
-            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
-            var h = new AuditHandler(sp.Object);
+            var h = new AuditHandler(am.Object, log.Object);
             EventDataObject before = new()
             {
                 Id = "123",
@@ -260,11 +247,9 @@ namespace AnyService.Tests.Services.Audit
         [Fact]
         public async Task DeleteHandler_SingleEntityDeleted()
         {
-            var logger = new Mock<ILogger<AuditHandler>>();
-            var sp = MockServiceProvider(logger);
+            var log = new Mock<ILogger<AuditHandler>>();
             var am = new Mock<IAuditManager>();
-            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
-            var h = new AuditHandler(sp.Object);
+            var h = new AuditHandler(am.Object, log.Object);
 
             var o = new EventDataObject
             {
@@ -293,11 +278,9 @@ namespace AnyService.Tests.Services.Audit
         [Fact]
         public async Task DeletedHandler_BulkDeleted()
         {
-            var logger = new Mock<ILogger<AuditHandler>>();
-            var sp = MockServiceProvider(logger);
+            var log = new Mock<ILogger<AuditHandler>>();
             var am = new Mock<IAuditManager>();
-            sp.Setup(s => s.GetService(typeof(IAuditManager))).Returns(am.Object);
-            var h = new AuditHandler(sp.Object);
+            var h = new AuditHandler(am.Object, log.Object);
 
             var o0 = new EventDataObject
             {

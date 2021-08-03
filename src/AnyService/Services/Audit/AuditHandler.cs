@@ -1,5 +1,4 @@
 ﻿using AnyService.Events;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -9,11 +8,14 @@ namespace AnyService.Services.Audit
 {
     public class AuditHandler
     {
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IAuditManager _auditManager;
+        private readonly ILogger<AuditHandler> _logger;
 
-        public AuditHandler(IServiceProvider serviceProvider)
+        public AuditHandler(IAuditManager auditManager,
+            ILogger<AuditHandler> logger)
         {
-            _serviceProvider = serviceProvider;
+            _auditManager = auditManager;
+            _logger = logger;
         }
         public Func<DomainEvent, IServiceProvider, Task> CreateEventHandler => (de, services) =>
         {
@@ -62,12 +64,9 @@ namespace AnyService.Services.Audit
 
         private async Task InsertAuditRecord(Func<IAuditManager, Task> action, string entityJson)
         {
-            using var scope = _serviceProvider.CreateScope();
-            var logger = scope.ServiceProvider.GetService<ILogger<AuditHandler>>();
-            logger.LogInformation($"Start insertion of audit record. entity = {entityJson}");
-            var am = scope.ServiceProvider.GetService<IAuditManager>();
-            await action(am);
-            logger.LogDebug($"End insertion of audit record.");
+            _logger.LogInformation($"Start insertion of audit record. entity = {entityJson}");
+            await action(_auditManager);
+            _logger.LogDebug($"End insertion of audit record.");
         }
     }
 }

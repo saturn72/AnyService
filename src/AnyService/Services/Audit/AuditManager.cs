@@ -13,32 +13,28 @@ namespace AnyService.Services.Audit
     {
         #region Fields
         private readonly IRepository<AuditRecord> _repository;
-        private readonly AuditSettings _auditSettings;
         private readonly IDomainEventBus _eventBus;
         private readonly ISystemClock _systemClock;
         private readonly ILogger<AuditManager> _logger;
-        private static readonly IEnumerable<string> FaultedServiceResult = new[] { ServiceResult.BadOrMissingData, ServiceResult.Error, ServiceResult.NotFound };
-        private static EventKeyRecord EventKeys;
-
+        private readonly IEnumerable<EntityConfigRecord> _entityConfigRecords;
+        private readonly EventKeyRecord _auditEventKeys;
+        private readonly IEnumerable<string> _faultedServiceResult = new[] { ServiceResult.BadOrMissingData, ServiceResult.Error, ServiceResult.NotFound };
         #endregion
-
         #region ctor
         public AuditManager(
             IRepository<AuditRecord> repository,
-            AuditSettings auditConfig,
             IEnumerable<EntityConfigRecord> entityConfigRecords,
             IDomainEventBus eventBus,
             ISystemClock systemClock,
-            ILogger<AuditManager> logger
-            )
+            ILogger<AuditManager> logger)
         {
             _repository = repository;
-            _auditSettings = auditConfig;
             _eventBus = eventBus;
             _systemClock = systemClock;
-            _logger = logger;
+            _entityConfigRecords = entityConfigRecords;
+            _auditEventKeys = entityConfigRecords.First(typeof(AuditRecord)).EventKeys;
 
-            EventKeys ??= entityConfigRecords.First(typeof(AuditRecord)).EventKeys;
+            _logger = logger;
         }
         #endregion
         public async virtual Task<ServiceResponse<AuditPagination>> GetAll(AuditPagination pagination)
@@ -52,7 +48,7 @@ namespace AnyService.Services.Audit
             var data = await _repository.Query(r => r.GetAll(pagination), wrapper);
             _logger.LogDebug(LoggingEvents.Repository, $"Repository response: {data?.ToJsonString()}");
             var wSrvRes = wrapper.ServiceResponse;
-            var isFault = FaultedServiceResult.Contains(wSrvRes.Result);
+            var isFault = _faultedServiceResult.Contains(wSrvRes.Result);
             pagination.Data = isFault ? data : (data ?? Array.Empty<AuditRecord>());
             var serviceResponse = new ServiceResponse<AuditPagination>
             {
@@ -103,23 +99,24 @@ namespace AnyService.Services.Audit
         }
         public async virtual Task<IEnumerable<AuditRecord>> Insert(IEnumerable<AuditRecord> records)
         {
-            var toInsert = records?.Where(r => ShouldAudit(r.AuditRecordType));
+            var toInsert = records?.Where(ShouldAudit).ToArray();
             if (toInsert.IsNullOrEmpty()) return Array.Empty<AuditRecord>();
 
             foreach (var item in toInsert)
-                item.CreatedOnUtc = DateTime.UtcNow.ToIso8601();
+                item.CreatedOnUtc = _systemClock.UtcNow.ToIso8601();
             var res = await _repository.BulkInsert(toInsert);
-            _ = _eventBus.Publish(EventKeys.Create, new DomainEvent { Data = res });
+            _ = _eventBus.Publish(_auditEventKeys.Create, new DomainEvent { Data = res });
             return res;
         }
-        private bool ShouldAudit(string auditRecordType)
+        private bool ShouldAudit(AuditRecord record)
         {
-            return
-                (auditRecordType == AuditRecordTypes.CREATE && _auditSettings.AuditRules.AuditCreate) ||
-                (auditRecordType == AuditRecordTypes.READ && _auditSettings.AuditRules.AuditRead) ||
-                (auditRecordType == AuditRecordTypes.UPDATE && _auditSettings.AuditRules.AuditUpdate) ||
-                (auditRecordType == AuditRecordTypes.DELETE && _auditSettings.AuditRules.AuditDelete) ||
-                false;
+            var auditRecordType = record.AuditRecordType;
+            var auditSettings = _entityConfigRecords.First(record.EntityName).AuditSettings;
+            return auditSettings.Enabled && (
+                (auditRecordType == AuditRecordTypes.CREATE && auditSettings.AuditRules.AuditCreate) ||
+                (auditRecordType == AuditRecordTypes.READ && auditSettings.AuditRules.AuditRead) ||
+                (auditRecordType == AuditRecordTypes.UPDATE && auditSettings.AuditRules.AuditUpdate) ||
+                (auditRecordType == AuditRecordTypes.DELETE && auditSettings.AuditRules.AuditDelete));
         }
     }
 }

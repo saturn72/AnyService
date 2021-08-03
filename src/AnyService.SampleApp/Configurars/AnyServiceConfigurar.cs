@@ -17,7 +17,7 @@ namespace AnyService.SampleApp.Configurars
             {
                 AuditSettings = new AuditSettings
                 {
-                    Disabled = false,
+                    Enabled = true,
                     AuditRules = new AuditRules
                     {
                         AuditCreate = true,

@@ -4,8 +4,8 @@ namespace AnyService.Audity
 {
     public class AuditSettings
     {
-        [DefaultValue(true)]
-        public bool Disabled { get; set; } = true;
+        [DefaultValue(false)]
+        public bool Enabled { get; set; }
         public AuditRules AuditRules { get; set; }
     }
 }
