@@ -205,7 +205,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 ecr.FilterFactoryType ??= config.FilterFactoryType;
                 ecr.ModelPrepararType ??= config.ModelPrepararType;
 
-                ecr.AuditSettings ??= config.AuditSettings ?? new AuditSettings { Disabled = true };
+                ecr.AuditSettings ??= (config.AuditSettings ?? new AuditSettings { Disabled = true });
                 ecr.EndpointSettings = NormalizeEndpointSettings(ecr, config);
                 if (ecr.CrudValidatorType != null)
                 {
