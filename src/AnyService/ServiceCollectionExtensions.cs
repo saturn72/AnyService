@@ -218,7 +218,7 @@ namespace Microsoft.Extensions.DependencyInjection
         private static void AddAnyServiceControllers(AnyServiceConfig config)
         {
             var list = new List<EntityConfigRecord>(config.EntityConfigRecords);
-            if (config.AuditSettings.Enabled)
+            if (config.AuditSettings.Enabled || config.EntityConfigRecords.Any(e => e.AuditSettings.Enabled))
             {
                 list.Add(new EntityConfigRecord
                 {
