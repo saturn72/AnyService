@@ -33,7 +33,7 @@ namespace AnyService.Events.RabbitMQ
         public string Name { get; set; }
         public string RoutingKey { get; set; }
         [DefaultValue("direct")]
-        public string Type { get; set; }
+        public string Type { get; set; } = "direct";
         [DefaultValue(false)]
         public bool AutoDelete { get; set; }
         [DefaultValue(false)]

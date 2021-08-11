@@ -206,7 +206,7 @@ namespace AnyService.Events.RabbitMQ
                     durable: ex.Durable,
                     autoDelete: ex.AutoDelete,
                     arguments: ex.Arguments);
-                _logger.LogTrace($"Exchange declared: {nameof(ex.Name)} = {ex.Name}, {nameof(ex.Type)} = {ex.Type}, {nameof(ex.Durable)} = {ex.Durable}, {nameof(ex.AutoDelete)} = {ex.AutoDelete}, {nameof(ex.Arguments)} = {ex.Arguments.ToJsonString()}");
+                _logger.LogTrace($"Exchange declared: {nameof(ex.Name)} = {ex.Name}, {nameof(ex.Type)} = {ex.Type}, {nameof(ex.Durable)} = {ex.Durable}, {nameof(ex.AutoDelete)} = {ex.AutoDelete}, {nameof(ex.Arguments)} = {ex.Arguments?.ToJsonString() ?? ""}");
 
             }
 
@@ -218,7 +218,7 @@ namespace AnyService.Events.RabbitMQ
                 {
                     _logger.LogTrace("Declaring queue: {Queue}", q.Name);
 
-                    if (q.Arguments.ContainsKey("x-message-ttl"))
+                    if (q.Arguments?.ContainsKey("x-message-ttl") == true)
                     {
                         var ttl = q.Arguments["x-message-ttl"].ToString();
                         q.Arguments["x-message-ttl"] = int.Parse(ttl);
@@ -230,8 +230,8 @@ namespace AnyService.Events.RabbitMQ
                                          exclusive: q.Exclusive,
                                          autoDelete: q.AutoDelete,
                                          arguments: q.Arguments);
-                    _logger.LogTrace($"Queue declared: {nameof(q.Name)} = {q.Name}, {nameof(q.Durable)} = {q.Durable}, {nameof(q.Exclusive)} = {q.Exclusive}, {nameof(q.AutoDelete)} = {q.AutoDelete}, {nameof(q.Arguments)} = {q.Arguments.ToJsonString()}");
-                    
+                    _logger.LogTrace($"Queue declared: {nameof(q.Name)} = {q.Name}, {nameof(q.Durable)} = {q.Durable}, {nameof(q.Exclusive)} = {q.Exclusive}, {nameof(q.AutoDelete)} = {q.AutoDelete}, {nameof(q.Arguments)} = {q.Arguments?.ToJsonString() ?? ""}");
+
                     q.RoutingKey ??= string.Empty;
                     _consumerChannel.QueueBind(
                         exchange: q.Exchange,
