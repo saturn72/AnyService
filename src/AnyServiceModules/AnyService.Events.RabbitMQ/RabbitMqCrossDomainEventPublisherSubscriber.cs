@@ -195,35 +195,49 @@ namespace AnyService.Events.RabbitMQ
             TryConnect(_consumerPersistentConnection);
             _logger.LogTrace("Creating RabbitMQ consumer channel");
             _consumerChannel = _consumerPersistentConnection.CreateModel();
+            _logger.LogTrace("Consumer channel created successfully");
 
             foreach (var ex in _config.Incoming.Exchanges)
+            {
+                _logger.LogTrace("Declaring exchange {Exchange}", ex);
                 _consumerChannel.ExchangeDeclare(
                     exchange: ex.Name,
                     type: ex.Type,
                     durable: ex.Durable,
                     autoDelete: ex.AutoDelete,
                     arguments: ex.Arguments);
+                _logger.LogTrace($"Exchange declared: {nameof(ex.Name)} = {ex.Name}, {nameof(ex.Type)} = {ex.Type}, {nameof(ex.Durable)} = {ex.Durable}, {nameof(ex.AutoDelete)} = {ex.AutoDelete}, {nameof(ex.Arguments)} = {ex.Arguments.ToJsonString()}");
+
+            }
 
             var qs = _config.Incoming.Queues;
             if (!qs.IsNullOrEmpty())
             {
+                _logger.LogTrace("Declaring queues");
                 foreach (var q in qs)
                 {
+                    _logger.LogTrace("Declaring queue: {Queue}", q.Name);
+
                     if (q.Arguments.ContainsKey("x-message-ttl"))
                     {
                         var ttl = q.Arguments["x-message-ttl"].ToString();
                         q.Arguments["x-message-ttl"] = int.Parse(ttl);
+                        _logger.LogTrace("Added: 'x-message-ttl' = {ttl} to queue's argumants", ttl);
                     }
+
                     _consumerChannel.QueueDeclare(queue: q.Name ?? "",
                                          durable: q.Durable,
                                          exclusive: q.Exclusive,
                                          autoDelete: q.AutoDelete,
                                          arguments: q.Arguments);
-
+                    _logger.LogTrace($"Queue declared: {nameof(q.Name)} = {q.Name}, {nameof(q.Durable)} = {q.Durable}, {nameof(q.Exclusive)} = {q.Exclusive}, {nameof(q.AutoDelete)} = {q.AutoDelete}, {nameof(q.Arguments)} = {q.Arguments.ToJsonString()}");
+                    
+                    q.RoutingKey ??= string.Empty;
                     _consumerChannel.QueueBind(
                         exchange: q.Exchange,
                         queue: q.Name,
-                        routingKey: q.RoutingKey ?? string.Empty);
+                        routingKey: q.RoutingKey);
+                    _logger.LogTrace("Queue {qName} was binded to Exchange {qExchange} with RoutingKey = {qRoutingKey}", q.Name, q.Exchange, q.RoutingKey);
                 }
             }
             _consumerChannel.CallbackException += (sender, ea) =>
