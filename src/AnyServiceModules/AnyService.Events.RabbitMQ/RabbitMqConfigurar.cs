@@ -4,6 +4,7 @@ using System;
 using RabbitMQ.Client;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 
 namespace AnyService.Events.RabbitMQ
 {
@@ -45,7 +46,16 @@ namespace AnyService.Events.RabbitMQ
                 return cf;
             });
             services.TryAddSingleton<ICrossDomainEventPublishManager, CrossDomainEventPublishManager>();
-            services.AddSingleton<IRabbitMQPersistentConnection, DefaultRabbitMQPersistentConnection>();
+            services.AddSingleton<IRabbitMQPersistentConnection>(sp =>
+            {
+                var cfg = sp.GetService<RabbitMqConfig>();
+                var lf = sp.GetService<ILoggerFactory>();
+                return new DefaultRabbitMQPersistentConnection(
+                    sp.GetService<IConnectionFactory>(),
+                    lf.CreateLogger<DefaultRabbitMQPersistentConnection>(),
+                    cfg.Endpoints,
+                    cfg.RetryCount);
+            });
             services.AddSingleton<ICrossDomainEventPublisher, RabbitMqCrossDomainEventPublisherSubscriber>();
             services.AddSingleton<ICrossDomainEventSubscriber, RabbitMqCrossDomainEventPublisherSubscriber>();
             services.TryAddSingleton<ISubscriptionManager<IntegrationEvent>, DefaultSubscriptionManager<IntegrationEvent>>();

@@ -252,11 +252,11 @@ namespace AnyService.Events.RabbitMQ
         }
         private async Task ProcessEvent(string exchange, string routingKey, string message)
         {
-            _logger.LogTrace("Processing RabbitMQ event: {EventKey}", routingKey);
+            _logger.LogTrace("Processing RabbitMQ event: {exchange}/{routingKey}", exchange, routingKey);
             var handlerDatas = await _subscriptionManager.GetHandlers(exchange, routingKey);
             if (handlerDatas.IsNullOrEmpty())
             {
-                _logger.LogWarning("No subscription for RabbitMQ event: {EventName}", routingKey);
+                _logger.LogWarning("No subscription for RabbitMQ event: {exchange}/{routingKey}", exchange, routingKey);
                 return;
             }
             await Task.Yield();

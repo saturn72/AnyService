@@ -41,7 +41,7 @@ namespace AnyService.Events.RabbitMQ.Tests
 
 
             var pconLogger = new Mock<ILogger<DefaultRabbitMQPersistentConnection>>();
-            var pcon = new DefaultRabbitMQPersistentConnection(cf, config, pconLogger.Object);
+            var pcon = new DefaultRabbitMQPersistentConnection(cf, pconLogger.Object);
             var services = new ServiceCollection();
             var sp = services.BuildServiceProvider();
 

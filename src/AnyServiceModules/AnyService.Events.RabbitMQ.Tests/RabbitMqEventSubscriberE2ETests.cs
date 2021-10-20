@@ -29,7 +29,7 @@ namespace AnyService.Events.RabbitMQ.Tests
             };
 
             var pconLogger = new Mock<ILogger<DefaultRabbitMQPersistentConnection>>();
-            var pCon = new DefaultRabbitMQPersistentConnection(cf, config, pconLogger.Object);
+            var pCon = new DefaultRabbitMQPersistentConnection(cf, pconLogger.Object);
             var services = new ServiceCollection();
             var sp = services.BuildServiceProvider();
 

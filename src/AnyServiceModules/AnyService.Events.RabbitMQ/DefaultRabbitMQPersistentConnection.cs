@@ -6,6 +6,7 @@ using RabbitMQ.Client.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 
 namespace AnyService.Events.RabbitMQ
@@ -13,19 +14,24 @@ namespace AnyService.Events.RabbitMQ
     public class DefaultRabbitMQPersistentConnection : IRabbitMQPersistentConnection
     {
         private readonly IConnectionFactory _connectionFactory;
-        private readonly RabbitMqConfig _config;
         private readonly ILogger<DefaultRabbitMQPersistentConnection> _logger;
+        private readonly List<string> _endpoints;
+        private readonly int _retryCount;
         IConnection _connection;
         bool _disposed;
         readonly object sync_root = new object();
 
         public DefaultRabbitMQPersistentConnection(
             IConnectionFactory connectionFactory,
-            RabbitMqConfig config,
-            ILogger<DefaultRabbitMQPersistentConnection> logger)
+            ILogger<DefaultRabbitMQPersistentConnection> logger,
+            IEnumerable<string> endpoints = null,
+            int retryCount = 5)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-            _config = config;
+            _endpoints = new List<string>();
+            if (endpoints.Any()) _endpoints.AddRange(endpoints);
+
+            _retryCount = retryCount;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -71,7 +77,7 @@ namespace AnyService.Events.RabbitMQ
             {
                 var policy = Policy.Handle<SocketException>()
                     .Or<BrokerUnreachableException>()
-                    .WaitAndRetry(_config.RetryCount, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
+                    .WaitAndRetry(_retryCount, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
                     {
                         _logger.LogWarning(ex, "RabbitMQ Client could not connect after {TimeOut}s ({ExceptionMessage})", $"{time.TotalSeconds:n1}", ex.Message);
                     }
@@ -79,9 +85,9 @@ namespace AnyService.Events.RabbitMQ
 
                 policy.Execute(() =>
                 {
-                    _connection = _config.Endpoints.IsNullOrEmpty() ? 
-                        _connectionFactory.CreateConnection() : 
-                        _connectionFactory.CreateConnection(_config.Endpoints);
+                    _connection = _endpoints.IsNullOrEmpty() ?
+                        _connectionFactory.CreateConnection() :
+                        _connectionFactory.CreateConnection(_endpoints);
                 });
 
                 if (IsConnected)
