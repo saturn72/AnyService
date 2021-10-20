@@ -6,7 +6,6 @@ using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,7 +17,7 @@ namespace AnyService.Events.RabbitMQ
     {
         private readonly IServiceProvider _services;
         private readonly ISubscriptionManager<IntegrationEvent> _subscriptionManager;
-        private readonly RabbitMqConfig _config;
+        private readonly RabbitMqOptions _config;
         private readonly ILogger<RabbitMqCrossDomainEventPublisherSubscriber> _logger;
         private readonly IRabbitMQPersistentConnection _publisherPersistentConnection;
         private readonly IRabbitMQPersistentConnection _consumerPersistentConnection;
@@ -30,7 +29,7 @@ namespace AnyService.Events.RabbitMQ
             IRabbitMQPersistentConnection consumerPersistentConnection,
             IServiceProvider services,
             ISubscriptionManager<IntegrationEvent> subscriptionManager,
-            RabbitMqConfig config,
+            RabbitMqOptions config,
             ILogger<RabbitMqCrossDomainEventPublisherSubscriber> logger
             )
         {

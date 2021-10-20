@@ -3,8 +3,10 @@ using System.ComponentModel;
 
 namespace AnyService.Events.RabbitMQ
 {
-    public class RabbitMqConfig
+    public class RabbitMqOptions
     {
+        public const string RabbitMq = "rabbitMq";
+
         [DefaultValue(5)]
         public int RetryCount { get; set; } = 5;
         /// <summary>

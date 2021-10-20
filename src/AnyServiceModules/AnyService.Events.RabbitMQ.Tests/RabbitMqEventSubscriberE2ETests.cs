@@ -15,7 +15,7 @@ namespace AnyService.Events.RabbitMQ.Tests
     {
         [Theory]
         [MemberData(nameof(ConsumeIncomingMessage_DATA))]
-        public async Task ConsumeIncomingMessage(Func<RabbitMqConfig> func)
+        public async Task ConsumeIncomingMessage(Func<RabbitMqOptions> func)
         {
             var expData = "this is data";
             var config = func();
@@ -55,7 +55,7 @@ namespace AnyService.Events.RabbitMQ.Tests
             await Task.Delay(500);
             i.ShouldBe(expData);
         }
-        private static readonly RabbitMqConfig cfg = new RabbitMqConfig
+        private static readonly RabbitMqOptions cfg = new RabbitMqOptions
         {
             Outgoing = new[] { new ExchangeConfig { Name = "in-test-ex" } },
             Incoming = new ChannelConfig
@@ -82,14 +82,14 @@ namespace AnyService.Events.RabbitMQ.Tests
         {
             new object[]
             {
-                new Func<RabbitMqConfig>(() => cfg)
+                new Func<RabbitMqOptions>(() => cfg)
             },
             new object[]
             {
-                new Func<RabbitMqConfig>(() =>
+                new Func<RabbitMqOptions>(() =>
                 {
                     var json = JsonSerializer.Serialize(cfg);
-                    var c = JsonSerializer.Deserialize<RabbitMqConfig>(json);
+                    var c = JsonSerializer.Deserialize<RabbitMqOptions>(json);
                     return c;
                 })
             }

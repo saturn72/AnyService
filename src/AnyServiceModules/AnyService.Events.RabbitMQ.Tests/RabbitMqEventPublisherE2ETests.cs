@@ -25,7 +25,7 @@ namespace AnyService.Events.RabbitMQ.Tests
 
         [Theory]
         [MemberData(nameof(PublishToExchange_DATA))]
-        public async Task PublishToExchange(Func<RabbitMqConfig> func)
+        public async Task PublishToExchange(Func<RabbitMqOptions> func)
         {
             var expData = "this is data";
 
@@ -63,7 +63,7 @@ namespace AnyService.Events.RabbitMQ.Tests
             _incomingMessage.ShouldContain(expData);
         }
 
-        private AsyncEventingBasicConsumer RecieveIncomingMessage(IConnection connection, RabbitMqConfig config)
+        private AsyncEventingBasicConsumer RecieveIncomingMessage(IConnection connection, RabbitMqOptions config)
         {
             _consumerChannel = connection.CreateModel();
 
@@ -88,7 +88,7 @@ namespace AnyService.Events.RabbitMQ.Tests
 
             return consumer;
         }
-        private static RabbitMqConfig cfg = new RabbitMqConfig
+        private static RabbitMqOptions cfg = new RabbitMqOptions
         {
             Outgoing = new[] { new ExchangeConfig { Name = "out-test-ex" } },
             Incoming = new ChannelConfig
@@ -111,14 +111,14 @@ namespace AnyService.Events.RabbitMQ.Tests
       {
             new object[]
             {
-                new Func<RabbitMqConfig>(() => cfg)
+                new Func<RabbitMqOptions>(() => cfg)
             },
             new object[]
             {
-                 new Func<RabbitMqConfig>(() =>
+                 new Func<RabbitMqOptions>(() =>
                  {
                     var json = JsonSerializer.Serialize(cfg);
-                    var c = JsonSerializer.Deserialize<RabbitMqConfig>(json);
+                    var c = JsonSerializer.Deserialize<RabbitMqOptions>(json);
                     return c;
                 })
             }

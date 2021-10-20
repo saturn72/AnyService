@@ -12,22 +12,23 @@ namespace AnyService.Events.RabbitMQ
     {
         public void Configure(IServiceCollection services, IConfiguration configuration, string sectionName = "rabbitMq")
         {
-            var rabbitMqConfig = new RabbitMqConfig();
-            configuration.GetSection(sectionName).Bind(rabbitMqConfig);
+            var rabbitMqOptions = new RabbitMqOptions();
+            configuration.GetSection(sectionName)
+                .Bind(rabbitMqOptions);
 
-            if ((rabbitMqConfig.Incoming?.Exchanges).IsNullOrEmpty())
-                throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify incoming exchanges {nameof(RabbitMqConfig.Incoming)}");
+            if ((rabbitMqOptions.Incoming?.Exchanges).IsNullOrEmpty())
+                throw new ArgumentNullException($"{nameof(rabbitMqOptions)} - Please specify incoming exchanges {nameof(rabbitMqOptions.Incoming)}");
 
-            if (!rabbitMqConfig.HostName.HasValue())
-                throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.HostName)}");
+            if (!rabbitMqOptions.HostName.HasValue())
+                throw new ArgumentNullException($"{nameof(rabbitMqOptions)} - Please specify {nameof(rabbitMqOptions.HostName)}");
 
-            if (rabbitMqConfig.Port < 0)
-                throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.Port)} for host");
+            if (rabbitMqOptions.Port < 0)
+                throw new ArgumentNullException($"{nameof(rabbitMqOptions)} - Please specify {nameof(rabbitMqOptions.Port)} for host");
 
-            if (rabbitMqConfig.RetryCount <= 0)
-                throw new ArgumentNullException($"{nameof(RabbitMqConfig)} - Please specify {nameof(RabbitMqConfig.RetryCount)} for send message retry");
+            if (rabbitMqOptions.RetryCount <= 0)
+                throw new ArgumentNullException($"{nameof(rabbitMqOptions)} - Please specify {nameof(rabbitMqOptions.RetryCount)} for send message retry");
 
-            services.AddSingleton(rabbitMqConfig);
+            services.AddSingleton(rabbitMqOptions);
 
             var username = configuration[sectionName + ":username"];
             var password = configuration[sectionName + ":password"];
@@ -35,8 +36,8 @@ namespace AnyService.Events.RabbitMQ
             {
                 var cf = new ConnectionFactory
                 {
-                    HostName = rabbitMqConfig.HostName,
-                    Port = rabbitMqConfig.Port,
+                    HostName = rabbitMqOptions.HostName,
+                    Port = rabbitMqOptions.Port,
                     DispatchConsumersAsync = true,
                 };
                 if (username.HasValue())
@@ -48,7 +49,7 @@ namespace AnyService.Events.RabbitMQ
             services.TryAddSingleton<ICrossDomainEventPublishManager, CrossDomainEventPublishManager>();
             services.AddSingleton<IRabbitMQPersistentConnection>(sp =>
             {
-                var cfg = sp.GetService<RabbitMqConfig>();
+                var cfg = sp.GetService<RabbitMqOptions>();
                 var lf = sp.GetService<ILoggerFactory>();
                 return new DefaultRabbitMQPersistentConnection(
                     sp.GetService<IConnectionFactory>(),

@@ -29,7 +29,7 @@ namespace AnyService.Events.RabbitMQ
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
             _endpoints = new List<string>();
-            if (endpoints.Any()) _endpoints.AddRange(endpoints);
+            if (!endpoints.IsNullOrEmpty()) _endpoints.AddRange(endpoints);
 
             _retryCount = retryCount;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
