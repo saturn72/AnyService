@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly;
 using RabbitMQ.Client;
@@ -6,7 +7,9 @@ using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,6 +18,10 @@ namespace AnyService.Events.RabbitMQ
 
     public class RabbitMqCrossDomainEventPublisherSubscriber : ICrossDomainEventPublisher, ICrossDomainEventSubscriber, IDisposable
     {
+
+        private static IEnumerable<KeyValuePair<string, object>> RabbitMqTags;
+
+
         private readonly IServiceProvider _services;
         private readonly ISubscriptionManager<IntegrationEvent> _subscriptionManager;
         private readonly RabbitMqOptions _config;
@@ -23,6 +30,7 @@ namespace AnyService.Events.RabbitMQ
         private readonly IRabbitMQPersistentConnection _consumerPersistentConnection;
         private IModel _publisherChannel;
         private IModel _consumerChannel;
+        private readonly ActivitySource _activitySource;
 
         public RabbitMqCrossDomainEventPublisherSubscriber(
             IRabbitMQPersistentConnection publisherPersistentConnection,
@@ -42,6 +50,19 @@ namespace AnyService.Events.RabbitMQ
 
             _publisherChannel = CreatePublisherChannel();
             _consumerChannel = CreateConsumerChannel();
+
+            //https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md
+            RabbitMqTags ??= new List<KeyValuePair<string, object>>(new[]
+            {
+                new KeyValuePair<string, object>("messaging.system", "rabbitmq" ),
+                new KeyValuePair<string, object>("messaging.temp_destination", false),
+                new KeyValuePair<string, object>("messaging.protocol", "AMQP"),
+                new KeyValuePair<string, object>("messaging.url", $"{_config.HostName }:{_config.Port}"),
+            });
+            var cfg = services.GetService<IConfiguration>();
+            var name = cfg.GetValue<string>("openTelemetry:app:name") ?? Assembly.GetEntryAssembly().GetName().Name;
+            var version = cfg.GetValue<string>("openTelemetry:app:version") ?? "";
+            _activitySource = new ActivitySource(name, version);
         }
 
         private async Task OnHandlerRemoved(string @namespace, string eventKey)
@@ -78,24 +99,48 @@ namespace AnyService.Events.RabbitMQ
                     _logger.LogWarning(ex, "Could not publish event: {EventId} after {Timeout}s ({ExceptionMessage})", @event.Id, $"{time.TotalSeconds:n1}", ex.Message);
                 });
 
-            //_publisherChannel.ExchangeDeclarePassive(exchange: _config.OutgoingExchange);
+            var tags = new List<KeyValuePair<string, object>>(RabbitMqTags);
+            tags.AddRange(new[]
+           {
+                new KeyValuePair<string, object>("messaging.destination", @event.Exchange),
+                new KeyValuePair<string, object>("messaging.destination_kind", "topic"),
+                new KeyValuePair<string, object>("messaging.rabbitmq.routing_key", @event.RoutingKey ?? string.Empty),
+            });
 
             var message = @event.ToJsonString();
             var body = Encoding.UTF8.GetBytes(message);
+            tags.Add(new KeyValuePair<string, object>("messaging.message_payload_size_bytes", body.Length));
             await policy.ExecuteAsync(() =>
             {
                 var properties = _publisherChannel.CreateBasicProperties();
                 if (@event.Expiration != default) //update expiration
                     properties.Expiration = @event.Expiration.ToString();
                 properties.DeliveryMode = 2; // persistent
+                properties.Headers[OpenTelemetry.OPEN_TELEMETRY_TRACE_PARENT] = Activity.Current.ToOpenTelemetryTraceParentHeaderValue();
+
+                tags.Add(new KeyValuePair<string, object>("messaging.message_id", properties.MessageId));
+
                 _logger.LogDebug("Publishing event to RabbitMQ: {EventId}", @event.Id);
-                return Task.Run(() =>
+                using var activity = _activitySource.StartActivity(nameof(Publish), ActivityKind.Producer, Activity.Current.Context, tags: tags);
+                activity?.AddEvent(new ActivityEvent("On Before Publish Message"));
+                try
+                {
                     _publisherChannel.BasicPublish(
-                                exchange: @event.Exchange,
-                                routingKey: @event.RoutingKey ?? string.Empty,
-                                mandatory: true,
-                                basicProperties: properties,
-                                body: body));
+                           exchange: @event.Exchange,
+                           routingKey: @event.RoutingKey ?? string.Empty,
+                           mandatory: true,
+                           basicProperties: properties,
+                           body: body);
+                    activity?.AddEvent(new ActivityEvent("On After Publish Message"));
+                    activity?.SetTag("otel.status_code", "OK");
+                }
+                catch (Exception ex)
+                {
+                    activity?.SetTag("otel.status_code", "ERROR");
+                    activity?.SetTag("otel.status_description", ex.Message);
+
+                }
+                return Task.CompletedTask;
             });
         }
         public async Task<string> Subscribe(string exchange, string routingKey, Func<IntegrationEvent, IServiceProvider, Task> handlerSink, string alias)
@@ -156,12 +201,23 @@ namespace AnyService.Events.RabbitMQ
             _logger.LogDebug($"{nameof(Consumer_Received)}");
             var exchange = eventArgs.Exchange;
             var routingKey = eventArgs.RoutingKey;
-            _logger.LogDebug($"{nameof(Consumer_Received)}: {nameof(eventArgs.Exchange)}: {exchange}, {nameof(eventArgs.RoutingKey)}: {routingKey}");
+            var basicProperties = eventArgs.BasicProperties;
+            _logger.LogDebug($"{nameof(Consumer_Received)}: {nameof(eventArgs.Exchange)}: {exchange}, {nameof(eventArgs.RoutingKey)}: {routingKey},  {nameof(eventArgs.BasicProperties)}: {basicProperties},");
+
+            var tags = new List<KeyValuePair<string, object>>(RabbitMqTags);
+            tags.AddRange(new[] {
+                new KeyValuePair<string, object>("messaging.operation", "receive"),
+                new KeyValuePair<string, object>("messaging.destination", $"{exchange}/{routingKey}"),
+                new KeyValuePair<string, object>("messaging.destination_kind", "queue"),
+                new KeyValuePair<string, object>("messaging.message_id", basicProperties.MessageId),
+                new KeyValuePair<string, object>("messaging.rabbitmq.routing_key", routingKey),
+            });
 
             var message = Encoding.UTF8.GetString(eventArgs.Body.Span);
             try
             {
-                await ProcessEvent(exchange, routingKey, message);
+                tags.Add(new KeyValuePair<string, object>("messaging.message_payload_size_bytes", message.Length));
+                await ProcessEvent(exchange, routingKey, basicProperties, tags, message);
             }
             catch (Exception ex)
             {
@@ -249,22 +305,66 @@ namespace AnyService.Events.RabbitMQ
             };
             return _consumerChannel;
         }
-        private async Task ProcessEvent(string exchange, string routingKey, string message)
+        private async Task ProcessEvent(string exchange, string routingKey, IBasicProperties properties, IEnumerable<KeyValuePair<string, object>> tags, string message)
         {
+            using var activity = GetConsumerActivity(nameof(ProcessEvent), properties, tags);
+
             _logger.LogTrace("Processing RabbitMQ event: {exchange}/{routingKey}", exchange, routingKey);
             var handlerDatas = await _subscriptionManager.GetHandlers(exchange, routingKey);
             if (handlerDatas.IsNullOrEmpty())
             {
+                activity?.SetTag("otel.status_code", "UNSET");
+                activity?.SetTag("otel.status_description", $"No subscription for RabbitMQ event: {exchange}/{routingKey}");
+                activity?.SetTag("otel.status_description", $"No subscription for RabbitMQ event: {exchange}/{routingKey}");
                 _logger.LogWarning("No subscription for RabbitMQ event: {exchange}/{routingKey}", exchange, routingKey);
                 return;
             }
             await Task.Yield();
+            var spanTags = new List<KeyValuePair<string, object>>(tags);
+            var toRemove = spanTags.Find(x => x.Key == "messaging.operation");
+            spanTags.Remove(toRemove);
+            spanTags.Add(new KeyValuePair<string, object>("messaging.operation", "process"));
+
             using var scope = _services.CreateScope();
+            activity?.AddEvent(new ActivityEvent("OnBefore fire handlers"));
             foreach (var hd in handlerDatas)
             {
-                var @event = message.ToObject<IntegrationEvent>();
-                _ = hd.Handler(@event, scope.ServiceProvider);
+                using var spanActivity = GetHandlerActivity(hd.Alias, activity, spanTags);
+                try
+                {
+                    var @event = message.ToObject<IntegrationEvent>();
+                    _ = hd.Handler(@event, scope.ServiceProvider);
+                    spanActivity?.SetTag("otel.status_code", "OK");
+                }
+                catch (Exception ex)
+                {
+                    spanActivity?.SetTag("otel.status_code", "ERROR");
+                    spanActivity?.SetTag("otel.status_description", ex.Message);
+
+                }
             }
+            activity?.AddEvent(new ActivityEvent("OnAfter fire handlers"));
+            activity?.SetTag("otel.status_code", "OK");
+        }
+        private Activity GetHandlerActivity(string name, Activity parentActivity, IEnumerable<KeyValuePair<string, object>> tags)
+        {
+            var parentContext = parentActivity == default ? default : parentActivity.Context;
+            return _activitySource.StartActivity(name, ActivityKind.Internal, parentContext, tags);
+        }
+        private Activity GetConsumerActivity(string name, IBasicProperties properties, IEnumerable<KeyValuePair<string, object>> tags)
+        {
+            var ot = properties.Headers[OpenTelemetry.OPEN_TELEMETRY_TRACE_PARENT]?.ToString();
+            if (ot.HasValue())
+            {
+                var (_, traceId, parentId, traceFlags) = ot.ToTraceParent();
+                var activityTraceId = ActivityTraceId.CreateFromString(traceId);
+                var activitySpanId = ActivitySpanId.CreateFromString(parentId);
+                var parentActivityContext = new ActivityContext(activityTraceId, activitySpanId, traceFlags, isRemote: true);
+
+                return _activitySource.StartActivity(name, ActivityKind.Consumer, parentActivityContext, tags);
+            }
+            return _activitySource.StartActivity(name, ActivityKind.Consumer);
+
         }
         public void Dispose()
         {
