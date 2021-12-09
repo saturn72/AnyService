@@ -356,7 +356,7 @@ namespace AnyService.Events.RabbitMQ
             var ot = properties.Headers[TraceContext.TRACE_CONTEXT_TRACE_PARENT]?.ToString();
             if (ot.HasValue())
             {
-                var (_, traceId, parentId, traceFlags) = ot.ToTraceParent();
+                var (_, traceId, parentId, traceFlags) = ot.ParseTraceParentHeader();
                 var activityTraceId = ActivityTraceId.CreateFromString(traceId);
                 var activitySpanId = ActivitySpanId.CreateFromString(parentId);
                 var parentActivityContext = new ActivityContext(activityTraceId, activitySpanId, traceFlags, isRemote: true);
