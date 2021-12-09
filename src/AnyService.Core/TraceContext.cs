@@ -1,15 +1,10 @@
 ﻿namespace System.Diagnostics
 {
-    public static class OpenTelemetry
+    public static class TraceContext
     {
         //https://w3c.github.io/trace-context/#traceparent-header
-        public const string OPEN_TELEMETRY_TRACE_PARENT = "traceparent";
-        private const string OPEN_TELEMETRY_VERSION = "version";
-        private const string OPEN_TELEMETRY_TRACE_ID = "trace-id";
-        private const string OPEN_TELEMETRY_PARENT_SPAN_ID = "parent-id";
-        private const string OPEN_TELEMETRY_TRACE_FLAGS = "trace-flags";
-
-        public static string ToOpenTelemetryTraceParentHeaderValue(this Activity activity) => $"00-{activity.TraceId}-{activity.SpanId}-{activity.ActivityTraceFlags}";
+        public const string TRACE_CONTEXT_TRACE_PARENT = "traceparent";
+        public static string ToTraceParentHeaderValue(this Activity activity) => $"00-{activity.TraceId}-{activity.SpanId}-{activity.ActivityTraceFlags}";
         public static (string version, string traceId, string parentId, ActivityTraceFlags traceFlags) ToTraceParent(this string header)
         {
             if (!header.HasValue())
