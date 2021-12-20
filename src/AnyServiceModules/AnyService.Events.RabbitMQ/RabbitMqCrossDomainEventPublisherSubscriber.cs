@@ -116,6 +116,7 @@ namespace AnyService.Events.RabbitMQ
                     properties.Expiration = @event.Expiration.ToString();
                 properties.DeliveryMode = 2; // persistent
                 properties.Headers[TraceContextExtensions.TRACE_CONTEXT_TRACE_PARENT] = Activity.Current.TraceId.ToHexString();
+                properties.MessageId = @event.Id;
 
                 tags.Add(new KeyValuePair<string, object>("messaging.message_id", properties.MessageId));
 
