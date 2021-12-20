@@ -365,7 +365,9 @@ namespace AnyService.Events.RabbitMQ
                 !(tp = properties.Headers["traceparent"] as byte[]).IsEmpty &&
                 (ot = Encoding.UTF8.GetString(tp)).HasValue())
             {
-                var (_, traceId, spanId, traceFlags) = ot.FromTraceParentHeader();
+                _logger.LogInformation("Start process request from traceparent: ", ot);
+                var (version, traceId, spanId, traceFlags) = ot.FromTraceParentHeader();
+                _logger.LogInformation($"parse trace: {nameof(version)}: {version}, {nameof(traceId)}: {traceId}, {nameof(spanId)}: {spanId}, {nameof(traceFlags)}: {traceFlags}");
                 try
                 {
                     var activityTraceId = ActivityTraceId.CreateFromString(traceId);
