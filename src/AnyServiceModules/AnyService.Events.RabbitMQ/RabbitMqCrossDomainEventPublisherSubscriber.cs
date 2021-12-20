@@ -356,9 +356,11 @@ namespace AnyService.Events.RabbitMQ
         }
         private Activity GetConsumerActivity(string name, IBasicProperties properties, IEnumerable<KeyValuePair<string, object>> tags)
         {
-            var encoding = properties.ContentEncoding;
-            var ot = properties.Headers?[TraceContextExtensions.TRACE_CONTEXT_TRACE_PARENT]?.ToString();
-            if (ot.HasValue())
+            string ot;
+            ReadOnlySpan<byte> tp;
+            if (!properties.Headers.IsNullOrEmpty() &&
+                !(tp = properties.Headers["traceparent"] as byte[]).IsEmpty &&
+                (ot = Encoding.UTF8.GetString(tp)).HasValue())
             {
                 var (_, traceId, parentId, traceFlags) = ot.FromTraceParentHeader();
                 var activityTraceId = ActivityTraceId.CreateFromString(traceId);
@@ -368,7 +370,6 @@ namespace AnyService.Events.RabbitMQ
                 return _activitySource.StartActivity(name, ActivityKind.Consumer, parentActivityContext, tags);
             }
             return _activitySource.StartActivity(name, ActivityKind.Consumer);
-
         }
         public void Dispose()
         {
