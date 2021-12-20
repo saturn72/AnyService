@@ -12,25 +12,6 @@ namespace AnyService.Core.Tests
             TraceContextExtensions.TRACE_CONTEXT_TRACE_PARENT.ShouldBe("traceparent");
         }
         [Theory]
-        [InlineData(ActivityTraceFlags.None, "0", null, "00")]
-        [InlineData(ActivityTraceFlags.None, "0", "123", "123")]
-        [InlineData(ActivityTraceFlags.Recorded, "1", null, "00")]
-        [InlineData(ActivityTraceFlags.Recorded, "1", "123", "123")]
-        public void ToTraceParentHeaderValue(ActivityTraceFlags flags, string expFlag, string version, string expVersion)
-        {
-            //https://www.w3.org/TR/trace-context/#examples-of-http-traceparent-headers
-            string traceId = "4bf92f3577b34da6a3ce929d0e0e4736",
-                parentSpanId = "00f067aa0ba902b7";
-
-            var a = new Activity("test");
-            var atId = ActivityTraceId.CreateFromString(traceId);
-            var asId = ActivitySpanId.CreateFromString(parentSpanId);
-            a.SetParentId(atId, asId, flags);
-
-            var v = TraceContextExtensions.ToTraceParentHeaderValue(a, version);
-            v.ShouldBe($"{expVersion}-{traceId}-0000000000000000-0{expFlag}");
-        }
-        [Theory]
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]

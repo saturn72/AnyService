@@ -119,7 +119,7 @@ namespace AnyService.Events.RabbitMQ
                 {
                     properties.Headers = new Dictionary<string, object>
                     {
-                        { TraceContextExtensions.TRACE_CONTEXT_TRACE_PARENT, Activity.Current.ToTraceParentHeaderValue(_activitySource.Version) },
+                        { TraceContextExtensions.TRACE_CONTEXT_TRACE_PARENT, Activity.Current.Id },
                     };
                 }
                 properties.MessageId = @event.Id;
