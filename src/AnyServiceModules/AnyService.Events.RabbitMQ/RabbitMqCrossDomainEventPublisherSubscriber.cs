@@ -59,8 +59,8 @@ namespace AnyService.Events.RabbitMQ
                 new KeyValuePair<string, object>("messaging.url", $"{_config.HostName }:{_config.Port}"),
             });
             var cfg = services.GetService<IConfiguration>();
-            var name = cfg.GetValue<string>("openTelemetry:app:name") ?? Assembly.GetEntryAssembly().GetName().Name;
-            var version = cfg.GetValue<string>("openTelemetry:app:version") ?? "";
+            var name = cfg?.GetValue<string>("openTelemetry:app:name") ?? Assembly.GetEntryAssembly().GetName().Name;
+            var version = cfg?.GetValue<string>("openTelemetry:app:version") ?? "";
             _activitySource = new ActivitySource(name, version);
         }
 
@@ -115,10 +115,13 @@ namespace AnyService.Events.RabbitMQ
                 if (@event.Expiration != default) //update expiration
                     properties.Expiration = @event.Expiration.ToString();
                 properties.DeliveryMode = 2; // persistent
-                properties.Headers = new Dictionary<string, object>
+                if (Activity.Current != null)
                 {
-                    { TraceContextExtensions.TRACE_CONTEXT_TRACE_PARENT, Activity.Current.ToTraceParentHeaderValue(_activitySource.Version) },
-                };
+                    properties.Headers = new Dictionary<string, object>
+                    {
+                        { TraceContextExtensions.TRACE_CONTEXT_TRACE_PARENT, Activity.Current.ToTraceParentHeaderValue(_activitySource.Version) },
+                    };
+                }
                 properties.MessageId = @event.Id;
 
                 tags.Add(new KeyValuePair<string, object>("messaging.message_id", properties.MessageId));
