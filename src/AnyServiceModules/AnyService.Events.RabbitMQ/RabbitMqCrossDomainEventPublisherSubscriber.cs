@@ -362,9 +362,9 @@ namespace AnyService.Events.RabbitMQ
                 !(tp = properties.Headers["traceparent"] as byte[]).IsEmpty &&
                 (ot = Encoding.UTF8.GetString(tp)).HasValue())
             {
-                var (_, traceId, parentId, traceFlags) = ot.FromTraceParentHeader();
+                var (_, traceId, spanId, traceFlags) = ot.FromTraceParentHeader();
                 var activityTraceId = ActivityTraceId.CreateFromString(traceId);
-                var activitySpanId = ActivitySpanId.CreateFromString(parentId);
+                var activitySpanId = ActivitySpanId.CreateFromString(spanId);
                 var parentActivityContext = new ActivityContext(activityTraceId, activitySpanId, traceFlags, isRemote: true);
 
                 return _activitySource.StartActivity(name, ActivityKind.Consumer, parentActivityContext, tags);

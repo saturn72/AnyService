@@ -28,7 +28,7 @@ namespace AnyService.Core.Tests
             a.SetParentId(atId, asId, flags);
 
             var v = TraceContextExtensions.ToTraceParentHeaderValue(a, version);
-            v.ShouldBe($"{expVersion}-{traceId}-{parentSpanId}-0{expFlag}");
+            v.ShouldBe($"{expVersion}-{traceId}-0000000000000000-0{expFlag}");
         }
         [Theory]
         [InlineData(null)]
@@ -36,11 +36,11 @@ namespace AnyService.Core.Tests
         [InlineData(" ")]
         public void FromTraceParentHeader_OnNull_returnsDefault(string header)
         {
-            var (version, traceId, parentId, traceFlags) = header.FromTraceParentHeader();
+            var (version, traceId, spanId, traceFlags) = header.FromTraceParentHeader();
 
             version.ShouldBe(default);
             traceId.ShouldBe(default);
-            parentId.ShouldBe(default);
+            spanId.ShouldBe(default);
             traceFlags.ShouldBe(default);
         }
         [Fact]
@@ -48,11 +48,11 @@ namespace AnyService.Core.Tests
         {
             var v = "ver";
             var header = v;
-            var (version, traceId, parentId, traceFlags) = header.FromTraceParentHeader();
+            var (version, traceId, spanId, traceFlags) = header.FromTraceParentHeader();
 
             version.ShouldBe(v);
             traceId.ShouldBe(default);
-            parentId.ShouldBe(default);
+            spanId.ShouldBe(default);
             traceFlags.ShouldBe(default);
         }
         [Fact]
@@ -61,11 +61,11 @@ namespace AnyService.Core.Tests
             var v = "ver";
             var t = "trace";
             var header = $"{v}-{t}";
-            var (version, traceId, parentId, traceFlags) = header.FromTraceParentHeader();
+            var (version, traceId, spanId, traceFlags) = header.FromTraceParentHeader();
 
             version.ShouldBe(v);
             traceId.ShouldBe(t);
-            parentId.ShouldBe(default);
+            spanId.ShouldBe(default);
             traceFlags.ShouldBe(default);
         }
         [Fact]
@@ -73,13 +73,13 @@ namespace AnyService.Core.Tests
         {
             var v = "ver";
             var t = "trace";
-            var p = "parent";
-            var header = $"{v}-{t}-{p}";
-            var (version, traceId, parentId, traceFlags) = header.FromTraceParentHeader();
+            var s = "span";
+            var header = $"{v}-{t}-{s}";
+            var (version, traceId, spanId, traceFlags) = header.FromTraceParentHeader();
 
             version.ShouldBe(v);
             traceId.ShouldBe(t);
-            parentId.ShouldBe(p);
+            spanId.ShouldBe(s);
             traceFlags.ShouldBe(default);
         }
 
@@ -88,13 +88,13 @@ namespace AnyService.Core.Tests
         {
             var v = "ver";
             var t = "trace";
-            var p = "parent";
-            var header = $"{v}-{t}-{p}-01";
-            var (version, traceId, parentId, traceFlags) = header.FromTraceParentHeader();
+            var s = "span";
+            var header = $"{v}-{t}-{s}-01";
+            var (version, traceId, spanId, traceFlags) = header.FromTraceParentHeader();
 
             version.ShouldBe(v);
             traceId.ShouldBe(t);
-            parentId.ShouldBe(p);
+            spanId.ShouldBe(s);
             traceFlags.ShouldBe(ActivityTraceFlags.Recorded);
         }
     }
