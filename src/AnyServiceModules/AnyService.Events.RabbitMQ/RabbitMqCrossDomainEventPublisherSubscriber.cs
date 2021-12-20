@@ -117,7 +117,7 @@ namespace AnyService.Events.RabbitMQ
                 properties.DeliveryMode = 2; // persistent
                 properties.Headers = new Dictionary<string, object>
                 {
-                    { TraceContextExtensions.TRACE_CONTEXT_TRACE_PARENT, Activity.Current.TraceId.ToHexString() },
+                    { TraceContextExtensions.TRACE_CONTEXT_TRACE_PARENT, Activity.Current.ToTraceParentHeaderValue(_activitySource.Version) },
                 };
                 properties.MessageId = @event.Id;
 

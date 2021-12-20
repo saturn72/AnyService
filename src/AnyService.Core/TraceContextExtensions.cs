@@ -4,7 +4,11 @@
     {
         //https://w3c.github.io/trace-context/#traceparent-header
         public const string TRACE_CONTEXT_TRACE_PARENT = "traceparent";
-
+        public static string ToTraceParentHeaderValue(this Activity activity, string version = null)
+        {
+            if (!version.HasValue()) version = "00";
+            return $"{version}-{activity.TraceId.ToHexString()}-{activity.ParentSpanId.ToHexString()}-0{(int)activity.ActivityTraceFlags}";
+        }
         public static (string version, string traceId, string parentId, ActivityTraceFlags traceFlags) FromTraceParentHeader(this string header)
         {
             if (!header.HasValue())
