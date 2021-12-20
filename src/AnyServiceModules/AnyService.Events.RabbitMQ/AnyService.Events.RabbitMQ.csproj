@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<PackageId>AnyService.Events.RabbitMq</PackageId>
-		<Version>1.0.29.3-preview</Version>
+		<Version>1.0.29.4-preview</Version>
 		<Authors>roi@saturn72.com</Authors>
 		<Company>saturn technologies</Company>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
