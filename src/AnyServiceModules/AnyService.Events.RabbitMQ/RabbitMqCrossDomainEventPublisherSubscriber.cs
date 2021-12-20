@@ -21,7 +21,6 @@ namespace AnyService.Events.RabbitMQ
 
         private static IEnumerable<KeyValuePair<string, object>> RabbitMqTags;
 
-
         private readonly IServiceProvider _services;
         private readonly ISubscriptionManager<IntegrationEvent> _subscriptionManager;
         private readonly RabbitMqOptions _config;
@@ -116,7 +115,7 @@ namespace AnyService.Events.RabbitMQ
                 if (@event.Expiration != default) //update expiration
                     properties.Expiration = @event.Expiration.ToString();
                 properties.DeliveryMode = 2; // persistent
-                properties.Headers[TraceContext.TRACE_CONTEXT_TRACE_PARENT] = Activity.Current.ToTraceParentHeaderValue();
+                properties.Headers[TraceContextExtensions.TRACE_CONTEXT_TRACE_PARENT] = Activity.Current.TraceId.ToHexString();
 
                 tags.Add(new KeyValuePair<string, object>("messaging.message_id", properties.MessageId));
 
@@ -353,7 +352,7 @@ namespace AnyService.Events.RabbitMQ
         }
         private Activity GetConsumerActivity(string name, IBasicProperties properties, IEnumerable<KeyValuePair<string, object>> tags)
         {
-            var ot = properties.Headers[TraceContext.TRACE_CONTEXT_TRACE_PARENT]?.ToString();
+            var ot = properties.Headers[TraceContextExtensions.TRACE_CONTEXT_TRACE_PARENT]?.ToString();
             if (ot.HasValue())
             {
                 var (_, traceId, parentId, traceFlags) = ot.FromTraceParentHeader();

@@ -26,8 +26,7 @@ namespace AnyService.Services.Audit
         };
         public Func<DomainEvent, IServiceProvider, Task> ReadEventHandler => (de, services) =>
         {
-            var entity = de.Data as IEntity;
-            if (de != null && entity != null)
+            if (de != null && de.Data is IEntity entity)
                 return InsertAuditRecord(a => a.InsertReadRecords(new[] { entity }, de.WorkContext, null), entity.ToJsonString());
 
             var page = de.Data as Pagination;

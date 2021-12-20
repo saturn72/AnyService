@@ -1,10 +1,9 @@
 ﻿namespace System.Diagnostics
 {
-    public static class TraceContext
+    public static class TraceContextExtensions
     {
         //https://w3c.github.io/trace-context/#traceparent-header
         public const string TRACE_CONTEXT_TRACE_PARENT = "traceparent";
-        public static string ToTraceParentHeaderValue(this Activity activity, string version = null) =>  $"{version ??"00"}-{activity.TraceId}-{activity.ParentSpanId}-0{(int)activity.ActivityTraceFlags}";
 
         public static (string version, string traceId, string parentId, ActivityTraceFlags traceFlags) FromTraceParentHeader(this string header)
         {
