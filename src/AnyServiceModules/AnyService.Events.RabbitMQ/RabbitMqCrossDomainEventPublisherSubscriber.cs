@@ -356,6 +356,7 @@ namespace AnyService.Events.RabbitMQ
         }
         private Activity GetConsumerActivity(string name, IBasicProperties properties, IEnumerable<KeyValuePair<string, object>> tags)
         {
+            var encoding = properties.ContentEncoding;
             var ot = properties.Headers?[TraceContextExtensions.TRACE_CONTEXT_TRACE_PARENT]?.ToString();
             if (ot.HasValue())
             {
