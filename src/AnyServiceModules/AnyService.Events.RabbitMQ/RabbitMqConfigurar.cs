@@ -10,7 +10,10 @@ namespace AnyService.Events.RabbitMQ
 {
     public class RabbitMqConfigurar
     {
-        public void Configure(IServiceCollection services, IConfiguration configuration, string sectionName = "rabbitMq")
+        public RabbitMqOptions Configure(
+            IServiceCollection services, 
+            IConfiguration configuration, 
+            string sectionName = "rabbitMq")
         {
             var rabbitMqOptions = new RabbitMqOptions();
             configuration.GetSection(sectionName)
@@ -60,6 +63,8 @@ namespace AnyService.Events.RabbitMQ
             services.AddSingleton<ICrossDomainEventPublisher, RabbitMqCrossDomainEventPublisherSubscriber>();
             services.AddSingleton<ICrossDomainEventSubscriber, RabbitMqCrossDomainEventPublisherSubscriber>();
             services.TryAddSingleton<ISubscriptionManager<IntegrationEvent>, DefaultSubscriptionManager<IntegrationEvent>>();
+
+            return rabbitMqOptions;
         }
     }
 }
