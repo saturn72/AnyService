@@ -58,9 +58,9 @@ namespace AnyService.Events.RabbitMQ
                 new KeyValuePair<string, object>("messaging.protocol", "AMQP"),
                 new KeyValuePair<string, object>("messaging.url", $"{_config.HostName }:{_config.Port}"),
             });
-            var cfg = services.GetService<IConfiguration>();
-            var name = cfg?.GetValue<string>("openTelemetry:app:name") ?? Assembly.GetEntryAssembly().GetName().Name;
-            var version = cfg?.GetValue<string>("openTelemetry:app:version") ?? "";
+
+            var name = _config.AppName ?? Assembly.GetEntryAssembly().GetName().Name;
+            var version = _config.AppVersion ?? "";
             _activitySource = new ActivitySource(name, version);
         }
 

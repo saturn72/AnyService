@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace AnyService.Events.RabbitMQ
 {
-    public class RabbitMqOptions
+    public class RabbitMqOptions: IActivityOptions
     {
         public const string RabbitMq = "rabbitMq";
 
@@ -22,6 +22,8 @@ namespace AnyService.Events.RabbitMQ
         public string[] Endpoints { get; set; }
         public ChannelConfig Incoming { get; set; }
         public ExchangeConfig[] Outgoing { get; set; }
+        public string AppName { get; set; }
+        public string AppVersion { get; set; }
     }
     public class ChannelConfig
     {

@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using Xunit;
 
-namespace AnyService.Core.Tests
+namespace AnyService.Core.Tests.Diagnostics
 {
     public class TraceContextExtensionsTests
     {
