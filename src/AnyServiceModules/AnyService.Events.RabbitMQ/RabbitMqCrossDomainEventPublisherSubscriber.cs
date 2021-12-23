@@ -127,7 +127,7 @@ namespace AnyService.Events.RabbitMQ
                 tags.Add(new KeyValuePair<string, object>("messaging.message_id", properties.MessageId));
 
                 _logger.LogDebug("Publishing event to RabbitMQ: {EventId}", @event.Id);
-                using var activity = _activitySource.StartActivity(nameof(Publish), ActivityKind.Producer, Activity.Current.Context, tags: tags);
+                using var activity = startActivity(nameof(Publish), tags);
                 activity?.AddEvent(new ActivityEvent("On Before Publish Message"));
                 try
                 {
@@ -148,6 +148,18 @@ namespace AnyService.Events.RabbitMQ
                 }
                 return Task.CompletedTask;
             });
+
+            Activity startActivity(string name, IEnumerable<KeyValuePair<string, object>> tags)
+            {
+                if (Activity.Current != default)
+                    return _activitySource.StartActivity(nameof(Publish), ActivityKind.Producer, Activity.Current.Context, tags: tags);
+
+                var a = _activitySource.StartActivity(nameof(Publish), ActivityKind.Producer);
+                foreach (var t in tags)
+                    a.SetTag(t.Key, t.Value);
+
+                return a;
+            }
         }
         public async Task<string> Subscribe(string exchange, string routingKey, Func<IntegrationEvent, IServiceProvider, Task> handlerSink, string alias)
         {
