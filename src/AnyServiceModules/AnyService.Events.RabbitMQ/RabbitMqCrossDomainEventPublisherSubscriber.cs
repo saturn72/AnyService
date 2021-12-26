@@ -12,6 +12,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace AnyService.Events.RabbitMQ
 {
@@ -157,7 +158,10 @@ namespace AnyService.Events.RabbitMQ
                 var a = _activitySource.StartActivity(nameof(Publish), ActivityKind.Producer);
                 foreach (var t in tags)
                     a.SetTag(t.Key, t.Value);
-
+                    
+                activity?.SetTag("thread.id", Thread.CurrentThread.ManagedThreadId);
+                activity?.SetTag("thread.name", Thread.CurrentThread.Name);
+                
                 return a;
             }
         }
@@ -235,6 +239,8 @@ namespace AnyService.Events.RabbitMQ
             try
             {
                 tags.Add(new KeyValuePair<string, object>("messaging.message_payload_size_bytes", message.Length));
+                tags.Add("thread.id", Thread.CurrentThread.ManagedThreadId);
+                tags.Add("thread.name", Thread.CurrentThread.Name);
                 await ProcessEvent(exchange, routingKey, basicProperties, tags, message);
             }
             catch (Exception ex)
@@ -350,6 +356,8 @@ namespace AnyService.Events.RabbitMQ
                 using var spanActivity = GetHandlerActivity(hd.Alias, activity, spanTags);
                 try
                 {
+                    spanActivity?.SetTag("thread.id", Thread.CurrentThread.ManagedThreadId);
+                    spanActivity?.SetTag("thread.name", Thread.CurrentThread.Name);
                     var @event = message.ToObject<IntegrationEvent>();
                     _ = hd.Handler(@event, scope.ServiceProvider);
                     spanActivity?.SetTag("otel.status_code", "OK");
