@@ -143,6 +143,10 @@ namespace AnyService.Events.RabbitMQ
                 }
                 catch (Exception ex)
                 {
+                    activity?.SetTag("exception.type", ex.GetType().FullName);
+                    activity?.SetTag("exception.message", ex.Message);
+                    activity?.SetTag("exception.stacktrace", ex.InnerException?.ToString() ?? ex.ToString());
+                    activity?.SetTag("exception.escaped", false);
                     activity?.SetTag("otel.status_code", "ERROR");
                     activity?.SetTag("otel.status_description", ex.Message);
 
@@ -158,10 +162,10 @@ namespace AnyService.Events.RabbitMQ
                 var a = _activitySource.StartActivity(nameof(Publish), ActivityKind.Producer);
                 foreach (var t in tags)
                     a.SetTag(t.Key, t.Value);
-                    
-                activity?.SetTag("thread.id", Thread.CurrentThread.ManagedThreadId);
-                activity?.SetTag("thread.name", Thread.CurrentThread.Name);
-                
+
+                a?.SetTag("thread.id", Thread.CurrentThread.ManagedThreadId);
+                a?.SetTag("thread.name", Thread.CurrentThread.Name);
+
                 return a;
             }
         }
@@ -239,8 +243,8 @@ namespace AnyService.Events.RabbitMQ
             try
             {
                 tags.Add(new KeyValuePair<string, object>("messaging.message_payload_size_bytes", message.Length));
-                tags.Add("thread.id", Thread.CurrentThread.ManagedThreadId);
-                tags.Add("thread.name", Thread.CurrentThread.Name);
+                tags.Add(new KeyValuePair<string, object>("thread.id", Thread.CurrentThread.ManagedThreadId));
+                tags.Add(new KeyValuePair<string, object>("thread.name", Thread.CurrentThread.Name));
                 await ProcessEvent(exchange, routingKey, basicProperties, tags, message);
             }
             catch (Exception ex)
@@ -364,13 +368,17 @@ namespace AnyService.Events.RabbitMQ
                 }
                 catch (Exception ex)
                 {
+                    spanActivity?.SetTag("exception.type", ex.GetType().FullName);
+                    spanActivity?.SetTag("exception.message", ex.Message);
+                    spanActivity?.SetTag("exception.stacktrace", ex.InnerException?.ToString() ?? ex.ToString());
+                    spanActivity?.SetTag("exception.escaped", false);
                     spanActivity?.SetTag("otel.status_code", "ERROR");
                     spanActivity?.SetTag("otel.status_description", ex.Message);
 
                 }
             }
-            activity?.AddEvent(new ActivityEvent("OnAfter fire handlers"));
             activity?.SetTag("otel.status_code", "OK");
+            activity?.AddEvent(new ActivityEvent("OnAfter fire handlers"));
         }
         private Activity GetHandlerActivity(string name, Activity parentActivity, IEnumerable<KeyValuePair<string, object>> tags)
         {
