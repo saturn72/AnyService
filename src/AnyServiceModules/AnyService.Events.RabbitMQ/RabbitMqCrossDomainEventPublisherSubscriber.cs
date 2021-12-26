@@ -402,6 +402,7 @@ namespace AnyService.Events.RabbitMQ
             //clear subscriber
             _consumerChannel?.Dispose();
             _subscriptionManager.Clear();
+            _activitySource?.Dispose();
         }
     }
 }
