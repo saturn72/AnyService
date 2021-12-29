@@ -390,7 +390,7 @@ namespace AnyService.Events.RabbitMQ
             string ot;
             ReadOnlySpan<byte> tp;
             if (!properties.Headers.IsNullOrEmpty() &&
-                !(tp = properties.Headers["traceparent"] as byte[]).IsEmpty &&
+                !(tp = properties.Headers[TraceContextExtensions.TRACE_CONTEXT_TRACE_PARENT] as byte[]).IsEmpty &&
                 (ot = Encoding.UTF8.GetString(tp)).HasValue())
             {
                 _logger.LogInformation("Start process request from traceparent: ", ot);
