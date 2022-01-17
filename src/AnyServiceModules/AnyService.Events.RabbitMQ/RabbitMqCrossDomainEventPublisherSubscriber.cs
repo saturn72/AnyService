@@ -16,10 +16,8 @@ using System.Threading;
 
 namespace AnyService.Events.RabbitMQ
 {
-
     public class RabbitMqCrossDomainEventPublisherSubscriber : ICrossDomainEventPublisher, ICrossDomainEventSubscriber, IDisposable
     {
-
         private static IEnumerable<KeyValuePair<string, object>> RabbitMqTags;
 
         private readonly IServiceProvider _services;

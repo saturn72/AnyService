@@ -19,8 +19,8 @@ namespace AnyService.Events.RabbitMQ
             configuration.GetSection(sectionName)
                 .Bind(rabbitMqOptions);
 
-            if ((rabbitMqOptions.Incoming?.Exchanges).IsNullOrEmpty())
-                throw new ArgumentNullException($"{nameof(rabbitMqOptions)} - Please specify incoming exchanges {nameof(rabbitMqOptions.Incoming)}");
+            if ((rabbitMqOptions.Incoming?.Exchanges).IsNullOrEmpty() && rabbitMqOptions.Outgoing?.Length == 0)
+                throw new ArgumentNullException($"{nameof(rabbitMqOptions)} - Please specify {nameof(RabbitMqOptions.Incoming)} and/or {nameof(RabbitMqOptions.Outgoing)} exchanges");
 
             if (!rabbitMqOptions.HostName.HasValue())
                 throw new ArgumentNullException($"{nameof(rabbitMqOptions)} - Please specify {nameof(rabbitMqOptions.HostName)}");
