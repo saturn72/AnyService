@@ -54,8 +54,25 @@ jobs:
         run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
         
       - name: Publish AnyService.Utilities
-        working-directory: ./AnyService.Utilities
-        run: dotnet publish --configuration Release 
+        run: dotnet publish ./AnyService.Utilities/*.csproj --configuration Release   
+        
+      - name: Publish AnyService.Core
+        run: dotnet publish ./AnyService.Core/*.csproj --configuration Release  
+        
+      - name: Publish AnyService
+        run: dotnet publish ./AnyService/*.csproj --configuration Release  
+        
+      - name: Publish AnyService.EasyCaching
+        run: dotnet publish ./AnyServiceModules/EasyCaching/AnyService.EasyCaching/*.csproj --configuration Release  
+        
+      - name: Publish AnyService.EntityFramework
+        run: dotnet publish ./AnyServiceModules/EntityFramework/AnyService.EntityFramework/*.csproj --configuration Release
+        
+      - name: Publish AnyService.LiteDb
+        run: dotnet publish ./AnyServiceModules/LiteDb/AnyService.LiteDb/*.csproj --configuration Release
+        
+      - name: Publish AnyService.Events.RabbitMQ
+        run: dotnet publish ./AnyServiceModules/AnyService.Events.RabbitMQ/*.csproj --configuration Release
         
       - name: Upload Artifacts - AnyService.Utilities
         uses: actions/upload-artifact@v2.3.1
