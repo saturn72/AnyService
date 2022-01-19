@@ -27,7 +27,6 @@ jobs:
           dotnet-version: 5.0.x
 
       - name: Build Solution
-        working-directory: ./
         run: dotnet build --configuration Release
 
       - name: Test AnyService.Utilities
