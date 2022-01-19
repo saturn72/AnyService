@@ -7,7 +7,13 @@ on:
 
 jobs:
   continunous_delivery:
+  
     name: build, test & deploy
+    
+    defaults:
+      run:
+        working-directory: ./src
+        
     runs-on: ubuntu-latest
     steps:
       - name: Setup .NET Core
@@ -21,110 +27,110 @@ jobs:
           dotnet-version: 5.0.x
 
       - name: Build Solution
-        working-directory: ./src
+        working-directory: ./
         run: dotnet build --configuration Release
 
       - name: Test AnyService.Utilities
-        working-directory: ./src/AnyService.Utilities.Tests
+        working-directory: ./AnyService.Utilities.Tests
         run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true
                  
       - name: Test AnyService.Core.Tests
-        working-directory: ./src/AnyService.Core.Tests
+        working-directory: ./AnyService.Core.Tests
         run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*""
         
       - name: Test AnyService.Tests
-        working-directory: ./src/AnyService.Tests
+        working-directory: ./AnyService.Tests
         run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
 
       - name: Test AnyService.AnyServiceModules.EntityFrameworkTests
-        working-directory: ./src/AnyServiceModules/EntityFramework/AnyService.EntityFramework.Tests
+        working-directory: ./AnyServiceModules/EntityFramework/AnyService.EntityFramework.Tests
         run: dotnet test --verbosity normal --configuration Release --no-build --filter ""category!=sql-server"" /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*"" 
          
       - name: Test AnyService.EasyCaching.Tests
-        working-directory: ./src/AnyServiceModules/EasyCaching/AnyService.EasyCaching.Tests
+        working-directory: ./AnyServiceModules/EasyCaching/AnyService.EasyCaching.Tests
         run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
 
       - name: Test AnyService.LiteDb.Tests
-        working-directory: ./src/AnyServiceModules/LiteDb/AnyService.LiteDb.Tests
+        working-directory: ./AnyServiceModules/LiteDb/AnyService.LiteDb.Tests
         run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
         
       - name: Publish AnyService.Utilities
-        working-directory: ./src/AnyService.Utilities
+        working-directory: ./AnyService.Utilities
         run: dotnet publish --configuration Release 
         
       - name: Upload Artifacts - AnyService.Utilities
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService.Utilities
-          path: ./src/AnyService.Utilities/bin/Release/*
+          path: ./AnyService.Utilities/bin/Release/*
           if-no-files-found: error
        
       - name: Upload Artifacts - AnyService.Core
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService.Core
-          path: ./src/AnyService.Core/bin/Release/*
+          path: ./AnyService.Core/bin/Release/*
           if-no-files-found: error 
           
       - name: Upload Artifacts - AnyService
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService
-          path: ./src/AnyService/bin/Release/*
+          path: ./AnyService/bin/Release/*
           if-no-files-found: error 
           
       - name: Upload Artifacts - AnyService.EasyCaching
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService.EasyCaching
-          path: ./src/AnyServiceModules/EasyCaching/AnyService.EasyCaching/bin/Release/*
+          path: ./AnyServiceModules/EasyCaching/AnyService.EasyCaching/bin/Release/*
           if-no-files-found: error
           
       - name: Upload Artifacts - AnyService.EntityFramework
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService.EntityFramework
-          path: ./src/AnyServiceModules/EntityFramework/AnyService.EntityFramework/bin/Release/*
+          path: ./AnyServiceModules/EntityFramework/AnyService.EntityFramework/bin/Release/*
           if-no-files-found: error
           
       - name: Upload Artifacts - AnyService.LiteDb
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService.LiteDb
-          path: ./src/AnyServiceModules/LiteDb/AnyService.LiteDb/bin/Release/*
+          path: ./AnyServiceModules/LiteDb/AnyService.LiteDb/bin/Release/*
           if-no-files-found: error
           
       - name: Upload Artifacts - AnyService.Events.RabbitMQ
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService.Events.RabbitMQ
-          path: ./src/AnyServiceModules/AnyService.Events.RabbitMQ/bin/Release/*
+          path: ./AnyServiceModules/AnyService.Events.RabbitMQ/bin/Release/*
           if-no-files-found: error
      
 
       # - name: Pack AnyService.Utilities nuget package
-      #   working-directory: ./src
+      #   working-directory: ./
       #   run: dotnet pack ./AnyService.Utilities/AnyService.Utilities.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       # - name: Pack anyservice.core nuget package
-      #   working-directory: ./src
+      #   working-directory: ./
       #   run: dotnet pack ./AnyService.Core/AnyService.Core.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       # - name: Pack anyservice nuget package
-      #   working-directory: ./src
+      #   working-directory: ./
       #   run: dotnet pack ./AnyService/AnyService.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       # - name: Pack anyservice.easycaching nuget package
-      #   working-directory: ./src
+      #   working-directory: ./
       #   run: dotnet pack ./AnyServiceModules/EasyCaching/AnyService.EasyCaching/AnyService.EasyCaching.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       # - name: Pack anyservice.entityframework nuget package
-      #   working-directory: ./src
+      #   working-directory: ./
       #   run: dotnet pack ./AnyServiceModules/EntityFramework/AnyService.EntityFramework/AnyService.EntityFramework.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       # - name: Pack anyservice.litedb nuget package
-      #   working-directory: ./src
+      #   working-directory: ./
       #   run: dotnet pack ./AnyServiceModules/LiteDb/AnyService.LiteDb/AnyService.LiteDb.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       # - name: Pack anyservice.events.rabbitmq nuget package
-      #   working-directory: ./src
+      #   working-directory: ./
       #   run: dotnet pack ./AnyServiceModules/AnyService.Events.RabbitMQ/AnyService.Events.RabbitMQ.csproj --configuration Release --output ./nupkg --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       # - name: Push packages to nuget
-      #   working-directory: ./src/nupkg
+      #   working-directory: ./nupkg
       #   run: dotnet nuget push *.nupkg --api-key $nuget_api_key --source https://api.nuget.org/v3/index.json
       #   env:
       #     nuget_api_key: ${{secrets.NUGET_DEPLOY_KEY}}
