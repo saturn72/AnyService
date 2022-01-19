@@ -72,49 +72,49 @@ jobs:
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService.Utilities for publish
-          path: ./src/AnyService.Utilities/bin/Release/netstandard2.1/
+          path: ./src/AnyService.Utilities/bin/Release/netstandard2.1/publish/
           if-no-files-found: error
        
       - name: Upload Artifacts - AnyService.Core for publish
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService.Core
-          path: AnyService.Core/bin/Release/**/publish/
+          path: AnyService.Core/bin/Release/netstandard2.1/publish/
           if-no-files-found: error 
           
       - name: Upload Artifacts - AnyService for publish
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService
-          path: AnyService/bin/Release/**/publish/
+          path: AnyService/bin/Release/net5.0/publish/
           if-no-files-found: error 
           
       - name: Upload Artifacts - AnyService.EasyCaching for publish
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService.EasyCaching for publish
-          path: AnyServiceModules/EasyCaching/AnyService.EasyCaching/bin/Release/**/publish/
+          path: AnyServiceModules/EasyCaching/AnyService.EasyCaching/bin/Release/netstandard2.1/publish/
           if-no-files-found: error
           
       - name: Upload Artifacts - AnyService.EntityFramework for publish
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService.EntityFramework for publish
-          path: AnyServiceModules/EntityFramework/AnyService.EntityFramework/bin/Release/**/publish/
+          path: AnyServiceModules/EntityFramework/AnyService.EntityFramework/bin/Release/netstandard2.1/publish/
           if-no-files-found: error
           
       - name: Upload Artifacts - AnyService.LiteDb for publish
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService.LiteDb for publish
-          path: AnyServiceModules/LiteDb/AnyService.LiteDb/bin/Release/**/publish/
+          path: AnyServiceModules/LiteDb/AnyService.LiteDb/bin/Release/netstandard2.1/publish/
           if-no-files-found: error
           
       - name: Upload Artifacts - AnyService.Events.RabbitMQ for publish
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService.Events.RabbitMQ for publish
-          path: AnyServiceModules/AnyService.Events.RabbitMQ/bin/Release/**/publish/
+          path: AnyServiceModules/AnyService.Events.RabbitMQ/bin/Release/netstandard2.1/publish/
           if-no-files-found: error
      
 
