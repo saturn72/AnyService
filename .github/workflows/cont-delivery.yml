@@ -42,7 +42,7 @@ jobs:
         run: dotnet test ./AnyServiceModules/EntityFramework/AnyService.EntityFramework.Tests/AnyService.EntityFramework.Tests.csproj --verbosity normal --configuration Release --no-build --filter ""category!=sql-server"" /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*"" 
          
       - name: Test AnyService.EasyCaching.Tests
-        run: dotnet test ./AnyServiceModules/EasyCaching/AnyService.EasyCaching.Tests/AnyService.EntityFramework.Tests/AnyService.EntityFramework.Tests.csproj --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
+        run: dotnet test ./AnyServiceModules/EasyCaching/AnyService.EasyCaching.Tests/AnyService.EasyCaching.Tests.csproj --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
 
       - name: Test AnyService.LiteDb.Tests
         working-directory: AnyServiceModules/LiteDb/AnyService.LiteDb.Tests
