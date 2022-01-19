@@ -45,9 +45,8 @@ jobs:
         run: dotnet test ./AnyServiceModules/EasyCaching/AnyService.EasyCaching.Tests/AnyService.EasyCaching.Tests.csproj --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
 
       - name: Test AnyService.LiteDb.Tests
-        working-directory: AnyServiceModules/LiteDb/AnyService.LiteDb.Tests
-        run: dotnet test ./AnyServiceModules/LiteDb/AnyService.LiteDb.Tests/AnyService.LiteDb.Tests.csproj --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
-        
+        run: dotnet testt ./AnyServiceModules/LiteDb/AnyService.LiteDb.Tests/AnyService.LiteDb.Tests.csproj --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
+      
       - name: Publish AnyService.Utilities
         run: dotnet publish AnyService.Utilities/*.csproj --configuration Release   
         
