@@ -20,14 +20,14 @@ jobs:
         with:
           dotnet-version: 5.0.x
 
-      - name: Build
+      - name: Build Solution
         working-directory: ./src
         run: dotnet build --configuration Release
 
       - name: Test AnyService.Utilities
         working-directory: ./src/AnyService.Utilities.Tests
         run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true
-      
+                 
       - name: Test AnyService.Core.Tests
         working-directory: ./src/AnyService.Core.Tests
         run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*""
@@ -47,6 +47,60 @@ jobs:
       - name: Test AnyService.LiteDb.Tests
         working-directory: ./src/AnyServiceModules/LiteDb/AnyService.LiteDb.Tests
         run: dotnet test --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
+        
+      - name: Publish All
+        working-directory: ./src
+        run: dotnet publish --configuration Release 
+        
+      - name: Upload Artifacts - AnyService.Utilities
+        uses: actions/upload-artifact@v2.3.1
+        with:
+          name: AnyService.Utilities
+          path: ./src/AnyService.Utilities/bin/Release/**/Publish
+          if-no-files-found: error
+       
+      - name: Upload Artifacts - AnyService.Core
+        uses: actions/upload-artifact@v2.3.1
+        with:
+          name: AnyService.Core
+          path: ./src/AnyService.Core/bin/Release/**/Publish
+          if-no-files-found: error 
+          
+      - name: Upload Artifacts - AnyService
+        uses: actions/upload-artifact@v2.3.1
+        with:
+          name: AnyService
+          path: ./src/AnyService/bin/Release/**/Publish
+          if-no-files-found: error 
+          
+      - name: Upload Artifacts - AnyService.EasyCaching
+        uses: actions/upload-artifact@v2.3.1
+        with:
+          name: AnyService.EasyCaching
+          path: ./src/AnyServiceModules/EasyCaching/AnyService.EasyCaching/bin/Release/**/Publish
+          if-no-files-found: error
+          
+      - name: Upload Artifacts - AnyService.EntityFramework
+        uses: actions/upload-artifact@v2.3.1
+        with:
+          name: AnyService.EntityFramework
+          path: ./src/AnyServiceModules/EntityFramework/AnyService.EntityFramework/bin/Release/**/Publish
+          if-no-files-found: error
+          
+      - name: Upload Artifacts - AnyService.LiteDb
+        uses: actions/upload-artifact@v2.3.1
+        with:
+          name: AnyService.LiteDb
+          path: ./src/AnyServiceModules/LiteDb/AnyService.LiteDb/bin/Release/**/Publish
+          if-no-files-found: error
+          
+      - name: Upload Artifacts - AnyService.Events.RabbitMQ
+        uses: actions/upload-artifact@v2.3.1
+        with:
+          name: AnyService.Events.RabbitMQ
+          path: ./src/AnyServiceModules/AnyService.Events.RabbitMQ/bin/Release/**/Publish
+          if-no-files-found: error
+     
 
       # - name: Pack AnyService.Utilities nuget package
       #   working-directory: ./src
@@ -66,11 +120,11 @@ jobs:
       # - name: Pack anyservice.litedb nuget package
       #   working-directory: ./src
       #   run: dotnet pack ./AnyServiceModules/LiteDb/AnyService.LiteDb/AnyService.LiteDb.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
-      - name: Pack anyservice.events.rabbitmq nuget package
-        working-directory: ./src
-        run: dotnet pack ./AnyServiceModules/AnyService.Events.RabbitMQ/AnyService.Events.RabbitMQ.csproj --configuration Release --output ./nupkg --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
-      - name: Push packages to nuget
-        working-directory: ./src/nupkg
-        run: dotnet nuget push *.nupkg --api-key $nuget_api_key --source https://api.nuget.org/v3/index.json
-        env:
-          nuget_api_key: ${{secrets.NUGET_DEPLOY_KEY}}
+      # - name: Pack anyservice.events.rabbitmq nuget package
+      #   working-directory: ./src
+      #   run: dotnet pack ./AnyServiceModules/AnyService.Events.RabbitMQ/AnyService.Events.RabbitMQ.csproj --configuration Release --output ./nupkg --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
+      # - name: Push packages to nuget
+      #   working-directory: ./src/nupkg
+      #   run: dotnet nuget push *.nupkg --api-key $nuget_api_key --source https://api.nuget.org/v3/index.json
+      #   env:
+      #     nuget_api_key: ${{secrets.NUGET_DEPLOY_KEY}}
