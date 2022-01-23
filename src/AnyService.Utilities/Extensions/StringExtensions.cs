@@ -7,6 +7,17 @@ namespace System
 {
     public static class StringExtensions
     {
+        public static IEnumerable<string> FromDelimitedString(this string input, string delimiter)
+        {
+            if (input == default)
+                return default;
+            if (!delimiter.HasValue())
+                return new[] { input };
+
+            input = input.Trim();
+            return input.Split(delimiter, StringSplitOptions.RemoveEmptyEntries).ToList();
+        }
+
         public static string ToDelimitedString(this IEnumerable<string> source, string delimiter = "")
         {
             if (source == null)

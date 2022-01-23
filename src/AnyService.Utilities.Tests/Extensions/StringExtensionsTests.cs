@@ -1,11 +1,44 @@
 using Xunit;
 using System;
 using Shouldly;
+using System.Linq;
 
 namespace AnyService.Utilities.Tests.Extensions
 {
     public class StringExtensionsTests
     {
+        [Theory]
+        [InlineData("")]
+        [InlineData(" ")]
+        public void FromDelimitedString_ReturnsSameOnEmptyString(string str)
+        {
+            str.FromDelimitedString("dd").ShouldBe(Array.Empty<string>());
+        }
+        [Fact]
+        public void FromDelimitedString_ReturnsNullOnNullSource()
+        {
+            (null as string).FromDelimitedString("d").ShouldBeNull();
+        }
+        [Theory]
+        [InlineData("a", "a", "ssssss")]
+        [InlineData("abcd", "abcd", "")]
+        public void FromDelimitedString_SingleItemArray(string input, string output, string d)
+        {
+            var o = input.FromDelimitedString(d);
+            o.Count().ShouldBe(1);
+            o.First().ShouldBe(output);
+        }
+        [Fact]
+        public void FromDelimitedString_NotNullDelimiter()
+        {
+            var s = "a x b x c x d ";
+            var exp = new[] { "a", "b", "c", "d" };
+            var o = s.FromDelimitedString(" x ");
+            o.Count().ShouldBe(4);
+            for (var i = 0; i < o.Count(); i++)
+                exp[i].ShouldBe(o.ElementAt(i));
+        }
+
         [Fact]
         public void ToDelimitedString_ReturnsNullOnNullCollection()
         {
