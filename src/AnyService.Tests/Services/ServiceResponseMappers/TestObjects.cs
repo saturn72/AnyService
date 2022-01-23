@@ -19,7 +19,7 @@ namespace AnyService.Tests.Services.ServiceResponseMappers
 
     public abstract class MappingTest
     {
-        protected static Mock<IServiceProvider> ServiceProviderMock;
+        protected static Mock<IServiceProvider> ServiceProviderMock = default;
         static MappingTest()
         {
             var mf = new DefaultMapperFactory();

@@ -117,10 +117,9 @@ jobs:
           path: ./src/AnyServiceModules/AnyService.Events.RabbitMQ/bin/Release/netstandard2.1/publish/
           if-no-files-found: error
      
-
-      # - name: Pack AnyService.Utilities nuget package
-      #   working-directory: ./
-      #   run: dotnet pack AnyService.Utilities/AnyService.Utilities.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
+      - name: Pack AnyService.Utilities nuget package
+        working-directory: ./
+        run: dotnet pack AnyService.Utilities/AnyService.Utilities.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       # - name: Pack anyservice.core nuget package
       #   working-directory: ./
       #   run: dotnet pack AnyService.Core/AnyService.Core.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
@@ -139,8 +138,8 @@ jobs:
       # - name: Pack anyservice.events.rabbitmq nuget package
       #   working-directory: ./
       #   run: dotnet pack .nyServiceModules/AnyService.Events.RabbitMQ/AnyService.Events.RabbitMQ.csproj --configuration Release --output ./nupkg --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
-      # - name: Push packages to nuget
-      #   working-directory: ./nupkg
-      #   run: dotnet nuget push *.nupkg --api-key $nuget_api_key --source https://api.nuget.org/v3/index.json
-      #   env:
-      #     nuget_api_key: ${{secrets.NUGET_DEPLOY_KEY}}
+      - name: Push packages to nuget
+        working-directory: ./nupkg
+        run: dotnet nuget push *.nupkg --api-key $nuget_api_key --source https://api.nuget.org/v3/index.json
+        env:
+          nuget_api_key: ${{secrets.NUGET_DEPLOY_KEY}}

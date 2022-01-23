@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<PackageId>AnyService.Utilities</PackageId>
-		<Version>1.0.18</Version>
+		<Version>1.0.19</Version>
 		<Authors>roi@saturn72.com</Authors>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Description>Utility library for general usage in .net</Description>

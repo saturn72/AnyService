@@ -6,6 +6,38 @@ namespace AnyService.Utilities.Tests.Extensions
 {
     public class StringExtensionsTests
     {
+        [Fact]
+        public void ToDelimitedString_ReturnsNullOnNullCollection()
+        {
+            string[] list = null;
+            list.ToDelimitedString().ShouldBeNull();
+        }
+        [Fact]
+        public void ToDelimitedString_ReturnsEmptyStringOnEmptyCollection()
+        {
+            var list = Array.Empty<string>();
+            list.ToDelimitedString().ShouldBe(string.Empty);
+        }
+        [Fact]
+        public void ToDelimitedString_NullDelimiter()
+        {
+            var list = new[] { "a", "b", "c", "d" };
+            list.ToDelimitedString(null).ShouldBe("abcd");
+        }
+        [Fact]
+        public void ToDelimitedString_EmptyDelimiter()
+        {
+            var list = new[] { "a", "b", "c", "d" };
+            list.ToDelimitedString().ShouldBe("abcd");
+        }
+        [Theory]
+        [InlineData(" ")]
+        [InlineData(" x ")]
+        public void ToDelimitedString_NotNullDelimiter(string delimiter)
+        {
+            var list = new[] { "a", "b", "c", "d" };
+            list.ToDelimitedString(delimiter).ShouldBe("a" + delimiter + "b" + delimiter + "c" + delimiter + "d");
+        }
         [Theory]
         [InlineData(null)]
         [InlineData("")]
