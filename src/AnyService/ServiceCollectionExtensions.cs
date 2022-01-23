@@ -24,6 +24,16 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {
+        public static IServiceCollection AddSingletons<TService>(this IServiceCollection services, IEnumerable<Type> implementationTypes) =>
+            AddSingletons(services, typeof(TService), implementationTypes ?? throw new ArgumentNullException(nameof(implementationTypes)));
+        public static IServiceCollection AddSingletons(this IServiceCollection services, Type serviceType, IEnumerable<Type> implementationTypes)
+        {
+            foreach (var implType in implementationTypes ?? throw new ArgumentNullException(nameof(implementationTypes)))
+                services.AddSingleton(serviceType, implType);
+
+            return services;
+        }
+
         public static IServiceCollection AddAnyService(this IServiceCollection services,
             IEnumerable<Type> entities)
         {
