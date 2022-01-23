@@ -14,13 +14,20 @@ namespace System
 
             if (delimiter == null) delimiter = string.Empty;
 
-            if (source.Count() == 0)
+            var len = source.Count();
+            if (len == 0)
                 return string.Empty;
 
             var sb = new StringBuilder(100);
-            foreach (var element in source)
-                sb.Append(element + delimiter);
-            return sb.ToString().Trim();
+            var i = 0;
+            while (i < len - 1)
+            {
+                sb.Append(source.ElementAt(i) + delimiter);
+                i++;
+            }
+            sb.Append(source.ElementAt(i));
+
+            return sb.ToString();
         }
         public static bool HasValue(this string source)
         {

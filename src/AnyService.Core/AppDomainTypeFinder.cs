@@ -113,7 +113,7 @@ namespace AnyService
             var addedAssemblyNames = new List<string>();
 
             if (_loadBinFolderAssemblies)
-                LoadMatchingAssembliesFromPath(AppContext.BaseDirectory);
+                LoadMatchingAssembliesFromRoot();
 
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -133,7 +133,7 @@ namespace AnyService
                 Matches(assemblyFullName, AssembliesToOnlyLoadPattern);
         }
 
-        protected void LoadMatchingAssembliesFromPath(string directoryPath)
+        protected void LoadMatchingAssembliesFromRoot()
         {
             var loadedAssemblyNames = new List<string>();
             var content = _fileProvider.GetDirectoryContents(string.Empty);

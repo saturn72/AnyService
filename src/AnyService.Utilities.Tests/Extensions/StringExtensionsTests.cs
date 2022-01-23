@@ -19,6 +19,12 @@ namespace AnyService.Utilities.Tests.Extensions
             list.ToDelimitedString().ShouldBe(string.Empty);
         }
         [Fact]
+        public void ToDelimitedString_SingleItemArray()
+        {
+            var list = new[] { "a" };
+            list.ToDelimitedString(null).ShouldBe("a");
+        }
+        [Fact]
         public void ToDelimitedString_NullDelimiter()
         {
             var list = new[] { "a", "b", "c", "d" };
