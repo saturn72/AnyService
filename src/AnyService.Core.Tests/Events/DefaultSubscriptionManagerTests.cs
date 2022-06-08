@@ -27,12 +27,12 @@ namespace AnyService.Tests.Events
             var hId = await sm.Subscribe("default", ek, f, "test");
             hId.ShouldNotBeNullOrEmpty();
 
-            var h = await sm.GetByHandlerId(hId);
-            h.ShouldNotBeNull();
+            var h = await sm.GetHandlerById(new[] { hId });
+            h.ShouldNotBeEmpty();
 
             await sm.Unsubscribe(hId);
-            h = await sm.GetByHandlerId(hId);
-            h.ShouldBeNull();
+            h = await sm.GetHandlerById(new[] { hId });
+            h.ShouldBeEmpty();
 
             hId = await sm.Subscribe("default", ek, f, "test");
             hId.ShouldNotBeNullOrEmpty();
