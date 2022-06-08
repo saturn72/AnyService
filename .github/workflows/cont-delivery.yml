@@ -117,12 +117,12 @@ jobs:
           path: ./src/AnyServiceModules/AnyService.Events.RabbitMQ/bin/Release/netstandard2.1/publish/
           if-no-files-found: error
      
-      - name: pack Anyservice.Utilities nuget package
-        working-directory: ./
-        run: dotnet pack ./src/AnyService.Utilities/AnyService.Utilities.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
-      # - name: pack Anyservice.core nuget package
+      # - name: pack Anyservice.Utilities nuget package
       #   working-directory: ./
-      #   run: dotnet pack ./src/AnyService.Core/AnyService.Core.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
+      #   run: dotnet pack ./src/AnyService.Utilities/AnyService.Utilities.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
+      - name: pack Anyservice.core nuget package
+        working-directory: ./
+        run: dotnet pack ./src/AnyService.Core/AnyService.Core.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       # - name: pack Anyservice nuget package
       #   working-directory: ./
       #   run: dotnet pack ./src/AnyService/AnyService.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
@@ -135,9 +135,9 @@ jobs:
       # - name: pack Anyservice.litedb nuget package
       #   working-directory: ./
       #   run: dotnet pack ./src/AnyServiceModules/LiteDb/AnyService.LiteDb/AnyService.LiteDb.csproj --configuration Release --output ./nupkg --no-build --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
-      # - name: pack Anyservice.events.rabbitmq nuget package
-      #   working-directory: ./
-      #   run: dotnet pack .nyServiceModules/AnyService.Events.RabbitMQ/AnyService.Events.RabbitMQ.csproj --configuration Release --output ./nupkg --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
+      - name: pack Anyservice.events.rabbitmq nuget package
+        working-directory: ./
+        run: dotnet pack .nyServiceModules/AnyService.Events.RabbitMQ/AnyService.Events.RabbitMQ.csproj --configuration Release --output ./nupkg --include-symbols  --include-source -p:SymbolPackageFormat=snupkg
       - name: Push packages to nuget
         working-directory: ./nupkg
         run: dotnet nuget push *.nupkg --api-key $nuget_api_key --source https://api.nuget.org/v3/index.json
