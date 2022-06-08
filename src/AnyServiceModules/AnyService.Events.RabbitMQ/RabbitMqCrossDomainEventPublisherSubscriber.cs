@@ -429,21 +429,24 @@ namespace AnyService.Events.RabbitMQ
             if (_handlerInfos.IsNullOrEmpty())
             {
                 var ah = await _subscriptionManager.GetAllHandlers();
-                _handlerInfos = ah.Select(c => (c.Namespace, c.EventKey, c.HandlerId));
+                _handlerInfos = ah.Select(c => (c.Namespace, c.EventKey, c.HandlerId)).ToArray();
             }
-            var pattern = toPattern();
 
             return _handlerInfos
                 .Where(h => h.@namespace == @namespace)?
-                .Where(x => Regex.IsMatch(x.eventKey, pattern))?
-                .Select(x => x.handlerId) ?? Array.Empty<string>();
+                .Where(x =>
+                {
+                    var p = fromRabbitMqPattern(x.eventKey);
+                    return Regex.IsMatch(routingKey, p);
+                })?
+                .Select(x => x.handlerId).ToArray() ?? Array.Empty<string>();
 
-            string toPattern()
+            static string fromRabbitMqPattern(string eventKey)
             {
                 var sb = new StringBuilder();
-                for (var i = 0; i < routingKey.Length; i++)
+                for (var i = 0; i < eventKey.Length; i++)
                 {
-                    var ch = routingKey[i];
+                    var ch = eventKey[i];
 
                     var ta = ch switch
                     {
