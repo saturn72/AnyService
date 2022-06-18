@@ -11,7 +11,7 @@ namespace AnyService.Events
         private const string EMPTY_ROUTINGKEY_REPLACMENT_VALUE = "-**-";
         private readonly ILogger<DefaultSubscriptionManager<TEvent>> _logger;
         private readonly IDictionary<string, IDictionary<string, ICollection<HandlerData<TEvent>>>> _exchangeHandlers;
-        private object lockObj = new object();
+        private readonly object lockObj = new object();
 
         public DefaultSubscriptionManager(
             ILogger<DefaultSubscriptionManager<TEvent>> logger)

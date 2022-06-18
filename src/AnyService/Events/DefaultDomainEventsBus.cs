@@ -30,7 +30,7 @@ namespace AnyService.Events
         public async Task Publish(string eventKey, DomainEvent @event)
         {
             _logger.LogInformation(LoggingEvents.EventPublishing, $"Publishing event with key: {eventKey}");
-
+            
             var handlers = await _subscriptionManager.GetHandlers(_defaultNamespace, eventKey);
             if (handlers.IsNullOrEmpty())
                 return;
