@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly;
 using RabbitMQ.Client;
@@ -13,12 +12,15 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace AnyService.Events.RabbitMQ
 {
     public class RabbitMqCrossDomainEventPublisherSubscriber : ICrossDomainEventPublisher, ICrossDomainEventSubscriber, IDisposable
     {
         private static IEnumerable<KeyValuePair<string, object>> RabbitMqTags;
+        private IEnumerable<(string @namespace, string eventKey, string handlerId)> _handlerInfos;
 
         private readonly IServiceProvider _services;
         private readonly ISubscriptionManager<IntegrationEvent> _subscriptionManager;
@@ -176,6 +178,7 @@ namespace AnyService.Events.RabbitMQ
                 throw new InvalidOperationException("Failed to subscribe handler");
 
             StartBasicConsume();
+            _handlerInfos = null;
             return handlerId;
         }
         private void TryConnect(IRabbitMQPersistentConnection persistentConnection)
@@ -189,10 +192,16 @@ namespace AnyService.Events.RabbitMQ
         public async Task Unsubscribe(string handlerId)
         {
             _logger.LogInformation("Unsubscribing from event {handlerId}", handlerId);
-            var h = await _subscriptionManager.GetByHandlerId(handlerId);
+            if (!handlerId.HasValue())
+                return;
+
+            var hs = await _subscriptionManager.GetHandlerById(new[] { handlerId });
+            if (hs.IsNullOrEmpty()) return;
+
+            var h = hs.FirstOrDefault();
             await _subscriptionManager.Unsubscribe(handlerId);
-            if (handlerId.HasValue())
-                _ = OnHandlerRemoved(h.Namespace, h.EventKey);
+            _ = OnHandlerRemoved(h.Namespace, h.EventKey);
+            _handlerInfos = null;
         }
         private void StartBasicConsume()
         {
@@ -336,7 +345,12 @@ namespace AnyService.Events.RabbitMQ
             using var activity = GetConsumerActivity(nameof(ProcessEvent), properties, tags);
 
             _logger.LogTrace("Processing RabbitMQ event: {exchange}/{routingKey}", exchange, routingKey);
-            var handlerDatas = await _subscriptionManager.GetHandlers(exchange, routingKey);
+            var hIds = await GetMatchingHandlerIds(exchange, routingKey);
+
+            IEnumerable<HandlerData<IntegrationEvent>> handlerDatas = null;
+            if (!hIds.IsNullOrEmpty())
+                handlerDatas = await _subscriptionManager.GetHandlerById(hIds);
+
             if (handlerDatas.IsNullOrEmpty())
             {
                 activity?.SetTag("otel.status_code", "UNSET");
@@ -408,6 +422,45 @@ namespace AnyService.Events.RabbitMQ
                 }
             }
             return _activitySource.StartActivity(name, ActivityKind.Consumer);
+        }
+
+        private async Task<IEnumerable<string>> GetMatchingHandlerIds(string @namespace, string routingKey)
+        {
+            if (_handlerInfos.IsNullOrEmpty())
+            {
+                var ah = await _subscriptionManager.GetAllHandlers();
+                _handlerInfos = ah.Select(c => (c.Namespace, c.EventKey, c.HandlerId)).ToArray();
+            }
+
+            return _handlerInfos
+                .Where(h => h.@namespace == @namespace)?
+                .Where(x =>
+                {
+                    var p = fromRabbitMqPattern(x.eventKey);
+                    return Regex.IsMatch(routingKey, p);
+                })?
+                .Select(x => x.handlerId).ToArray() ?? Array.Empty<string>();
+
+            static string fromRabbitMqPattern(string eventKey)
+            {
+                var sb = new StringBuilder();
+                for (var i = 0; i < eventKey.Length; i++)
+                {
+                    var ch = eventKey[i];
+
+                    var ta = ch switch
+                    {
+                        '#' => ".*",
+                        '*' => ".*",
+                        '.' => @"\.",
+                        _ => ch.ToString(),
+                    };
+                    sb.Append(ta);
+                    if (ch == '#')
+                        break;
+                }
+                return sb.ToString();
+            }
         }
         public void Dispose()
         {

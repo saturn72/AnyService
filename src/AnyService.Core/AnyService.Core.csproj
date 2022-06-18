@@ -14,7 +14,7 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<PackageId>AnyService.Core</PackageId>
-		<Version>1.0.43</Version>
+		<Version>1.0.44</Version>
 		<Authors>roi@saturn72.com</Authors>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Description>`AnyService` Core components</Description>

@@ -77,13 +77,14 @@ namespace AnyService.Events
         }
         public void Clear() => _exchangeHandlers.Clear();
 
-        public Task<HandlerData<TEvent>> GetByHandlerId(string handlerId)
+        public Task<IEnumerable<HandlerData<TEvent>>> GetHandlerById(IEnumerable<string> handlerIds)
         {
-            var handler = _exchangeHandlers?
+            var handlers = _exchangeHandlers?
                 .SelectMany(x => x.Value)?
                 .SelectMany(y => y.Value)?
-                .FirstOrDefault(h => h.HandlerId == handlerId);
-            return Task.FromResult(handler);
+                .Where(h => handlerIds.Contains(h.HandlerId));
+
+            return Task.FromResult(handlers);
         }
     }
 }
