@@ -2,7 +2,6 @@
 
 > ## Contributors are welcome
 > Feel free to contact me directly or submit your pull request.
-
 > Thank you,
 > Roi
 
