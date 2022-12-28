@@ -31,20 +31,20 @@ jobs:
       - name: Test AnyService.Utilities
         run: dotnet test ./AnyService.Utilities.Tests/AnyService.Utilities.Tests.csproj --verbosity normal --configuration Release --no-build /p:CollectCoverage=true
 
-      - name: Test AnyService.Core.Tests
-        run: dotnet test ./AnyService.Core.Tests/AnyService.Core.Tests.csproj --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*""
+      # - name: Test AnyService.Core.Tests
+      #   run: dotnet test ./AnyService.Core.Tests/AnyService.Core.Tests.csproj --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*""
 
-      - name: Test AnyService.Tests
-        run: dotnet test ./AnyService.Tests/AnyService.Tests.csproj --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
+      # - name: Test AnyService.Tests
+      #   run: dotnet test ./AnyService.Tests/AnyService.Tests.csproj --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
 
-      - name: Test AnyService.AnyServiceModules.EntityFrameworkTests
-        run: dotnet test ./AnyServiceModules/EntityFramework/AnyService.EntityFramework.Tests/AnyService.EntityFramework.Tests.csproj --verbosity normal --configuration Release --no-build --filter ""category!=sql-server"" /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
+      # - name: Test AnyService.AnyServiceModules.EntityFrameworkTests
+      #   run: dotnet test ./AnyServiceModules/EntityFramework/AnyService.EntityFramework.Tests/AnyService.EntityFramework.Tests.csproj --verbosity normal --configuration Release --no-build --filter ""category!=sql-server"" /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
 
-      - name: Test AnyService.EasyCaching.Tests
-        run: dotnet test ./AnyServiceModules/EasyCaching/AnyService.EasyCaching.Tests/AnyService.EasyCaching.Tests.csproj --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
+      # - name: Test AnyService.EasyCaching.Tests
+      #   run: dotnet test ./AnyServiceModules/EasyCaching/AnyService.EasyCaching.Tests/AnyService.EasyCaching.Tests.csproj --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
 
-      - name: Test AnyService.LiteDb.Tests
-        run: dotnet test ./AnyServiceModules/LiteDb/AnyService.LiteDb.Tests/AnyService.LiteDb.Tests.csproj --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
+      # - name: Test AnyService.LiteDb.Tests
+      #   run: dotnet test ./AnyServiceModules/LiteDb/AnyService.LiteDb.Tests/AnyService.LiteDb.Tests.csproj --verbosity normal --configuration Release --no-build /p:CollectCoverage=true /p:Exclude=""[AnyService.Utilities]*%2c[AnyService.Core]*""
 
       - name: Publish AnyService.Utilities
         run: dotnet publish AnyService.Utilities/*.csproj --configuration Release
