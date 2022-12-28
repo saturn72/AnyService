@@ -18,12 +18,12 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: 7.0.x
 
       - name: Checkout main branch
         uses: actions/checkout@main
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: 7.0.x
 
       - name: Build Solution
         run: dotnet build --configuration Release
