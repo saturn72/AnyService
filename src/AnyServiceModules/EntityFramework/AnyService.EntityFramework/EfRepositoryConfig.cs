@@ -1,6 +1,6 @@
 ﻿namespace AnyService.EntityFramework
 {
-    public sealed class EfRepositoryConfig
+    public sealed record EfRepositoryConfig
     {
         public bool CaseSensitiveOrderBy { get; set; }
         /// <summary>

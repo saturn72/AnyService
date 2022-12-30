@@ -11,8 +11,8 @@ namespace AnyService.Events.RabbitMQ
     public class RabbitMqConfigurar
     {
         public RabbitMqOptions Configure(
-            IServiceCollection services, 
-            IConfiguration configuration, 
+            IServiceCollection services,
+            IConfiguration configuration,
             string sectionName = "rabbitMq")
         {
             var rabbitMqOptions = new RabbitMqOptions();

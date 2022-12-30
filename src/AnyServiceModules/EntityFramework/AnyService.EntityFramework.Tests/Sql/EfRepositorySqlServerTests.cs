@@ -40,7 +40,7 @@ namespace AnyService.EntityFramework.Tests.Sql
         public EfRepositorySqlServerTests()
         {
             _options = new DbContextOptionsBuilder<SqlDbContext>()
-                   .UseSqlServer(@"Data Source=.\SqlExpress;Initial Catalog=AnyService_Test_DB;Integrated Security=True")
+                   .UseSqlServer(@"Data Source=.\SqlExpress;Initial Catalog=AnyService_Test_DB;Integrated Security=True;TrustServerCertificate=Yes")
                    .Options;
 
             var sc = new ServiceCollection();

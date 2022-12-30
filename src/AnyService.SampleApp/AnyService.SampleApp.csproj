@@ -1,19 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EasyCaching.InMemory" Version="1.2.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.2" />
+    <PackageReference Include="EasyCaching.InMemory" Version="1.7.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\AnyService.Core\AnyService.Core.csproj" />
     <ProjectReference Include="..\AnyServiceModules\AnyService.Events.RabbitMQ\AnyService.Events.RabbitMQ.csproj" />
-    <ProjectReference Include="..\AnyServiceModules\EasyCaching\AnyService.EasyCaching\AnyService.EasyCaching.csproj" />
     <ProjectReference Include="..\AnyService\AnyService.csproj" />
     <ProjectReference Include="..\AnyServiceModules\EntityFramework\AnyService.EntityFramework\AnyService.EntityFramework.csproj" />
   </ItemGroup>

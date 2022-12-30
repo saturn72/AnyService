@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using AnyService.Infrastructure;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using AutoMapper.Internal;
 
 namespace AnyService
 {
@@ -82,7 +83,7 @@ namespace AnyService
                         .ToDictionary(k => k, v => v, StringComparer.InvariantCultureIgnoreCase);
                     continue;
                 }
-                var m = mapper.ConfigurationProvider.GetAllTypeMaps()
+                var m = mapper.ConfigurationProvider.Internal().GetAllTypeMaps()
                     .FirstOrDefault(x => x.SourceType == ecr.Type && x.DestinationType == ecr.EndpointSettings.MapToType);
                 var projMap = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
                 foreach (var pm in m.PropertyMaps)

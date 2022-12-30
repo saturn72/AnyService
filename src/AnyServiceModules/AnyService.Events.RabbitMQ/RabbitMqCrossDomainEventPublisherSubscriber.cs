@@ -156,10 +156,10 @@ namespace AnyService.Events.RabbitMQ
 
             Activity startActivity(IEnumerable<KeyValuePair<string, object>> tags)
             {
-                if (Activity.Current != default)
-                    return _activitySource.StartActivity(nameof(Publish), ActivityKind.Producer, Activity.Current.Context, tags: tags);
+                var a = Activity.Current != default ?
+                    _activitySource.StartActivity(nameof(Publish), ActivityKind.Producer, Activity.Current.Context, tags: tags) :
+                    _activitySource.StartActivity(nameof(Publish), ActivityKind.Producer);
 
-                var a = _activitySource.StartActivity(nameof(Publish), ActivityKind.Producer);
                 foreach (var t in tags)
                     a.SetTag(t.Key, t.Value);
 

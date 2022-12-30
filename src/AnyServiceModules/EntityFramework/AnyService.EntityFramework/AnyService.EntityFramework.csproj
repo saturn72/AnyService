@@ -1,13 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
-		<TargetFramework>netstandard2.1</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
+		<IsPackable>true</IsPackable>
 		<PackageId>AnyService.EntityFramework</PackageId>
-		<Version>1.0.36</Version>
+		<LangVersion>9.0</LangVersion>
+		<OutputType>Library</OutputType>
+		<Version>1.0.37</Version>
 		<Authors>roi@saturn72.com</Authors>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Company>saturn technologies</Company>
 		<Description>EntityFramework Core implementation of `AnyService`'s persistancy layer</Description>
+		<RepositoryUrl>https://github.com/saturn72/anyservice</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/saturn72/anyservice</PackageProjectUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -15,12 +21,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.2" />
-		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.7" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.1" />
+		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.24" />
 	</ItemGroup>
 
 	<PropertyGroup>
-		<TargetFramework>netstandard2.1</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 	</PropertyGroup>
 
 </Project>
