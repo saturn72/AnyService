@@ -1,5 +1,5 @@
-﻿using AnyService.Caching;
-using AnyService.Security;
+﻿using AnyService.Security;
+using EasyCaching.Core;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,11 +10,11 @@ namespace AnyService.Services.Security
     {
         private static readonly TimeSpan DefaultCachingTime = TimeSpan.FromMinutes(10);
         private readonly IRepository<UserPermissions> _repository;
-        private readonly ICacheManager _cacheManager;
+        private readonly IEasyCachingProvider _cache;
 
-        public PermissionManager(ICacheManager cacheManager, IRepository<UserPermissions> repository)
+        public PermissionManager(IEasyCachingProvider cache, IRepository<UserPermissions> repository)
         {
-            _cacheManager = cacheManager;
+            _cache = cache;
             _repository = repository;
         }
         private string GetCacheKey(string userId) => "user-permissions:" + userId;
@@ -23,7 +23,7 @@ namespace AnyService.Services.Security
         {
             if (!userPermissions.UserId.HasValue())
                 return null;
-            await _cacheManager.Remove(GetCacheKey(userPermissions.UserId));
+            await _cache.RemoveAsync(GetCacheKey(userPermissions.UserId));
             userPermissions.CreatedOnUtc = DateTime.UtcNow;
             return await _repository.Insert(userPermissions);
         }
@@ -32,13 +32,15 @@ namespace AnyService.Services.Security
             if (!userId.HasValue())
                 return null;
 
-            var userPermissions = await _cacheManager.Get<UserPermissions>(GetCacheKey(userId));
-            if (userPermissions == null)
+            var cv = await _cache.GetAsync<UserPermissions>(GetCacheKey(userId));
+            var userPermissions = cv.Value;
+
+            if (cv.IsNull == true || !cv.HasValue)
             {
                 var allUserPermissions = await _repository.GetAll(GetPaginationSettings(userId));
                 userPermissions = allUserPermissions?.FirstOrDefault();
                 if (userPermissions != null)
-                    await _cacheManager.Set(GetCacheKey(userId), userPermissions, DefaultCachingTime);
+                    await _cache.SetAsync(GetCacheKey(userId), userPermissions, DefaultCachingTime);
             }
             return userPermissions;
         }
@@ -53,7 +55,7 @@ namespace AnyService.Services.Security
 
             if (dbEntity == null) return null;
 
-            await _cacheManager.Remove(GetCacheKey(userPermissions.UserId));
+            await _cache.RemoveAsync(GetCacheKey(userPermissions.UserId));
             dbEntity.UpdatedOnUtc = DateTime.UtcNow;
             dbEntity.EntityPermissions = userPermissions.EntityPermissions;
 

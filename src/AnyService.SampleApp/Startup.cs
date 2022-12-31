@@ -1,10 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using AnyService.Services.FileStorage;
-using AnyService.EasyCaching;
-using AnyService.Caching;
+﻿using AnyService.Services.FileStorage;
 using Microsoft.AspNetCore.Authentication;
 using AnyService.SampleApp.Identity;
 using AnyService.Services;
@@ -12,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using AnyService.EntityFramework;
 using AnyService.Middlewares;
 using AnyService.SampleApp.Hubs;
-using Microsoft.AspNetCore.Http;
 using AnyService.SampleApp.Configurars;
 
 namespace AnyService.SampleApp
@@ -45,12 +38,7 @@ namespace AnyService.SampleApp
         }
         private void ConfigureCaching(IServiceCollection services)
         {
-            var easycachingconfig = new EasyCachingConfig();
-            Configuration.GetSection("caching").Bind(easycachingconfig);
-
-            services.AddSingleton(easycachingconfig);
             services.AddEasyCaching(options => options.UseInMemory("default"));
-            services.AddSingleton<ICacheManager, EasyCachingCacheManager>();
         }
         private void ConfigureEntityFramework(IServiceCollection services)
         {

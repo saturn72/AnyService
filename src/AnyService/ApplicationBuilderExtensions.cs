@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using AnyService.Controllers;
-using AnyService.Caching;
 using AnyService.Events;
 using AnyService.Middlewares;
 using AnyService.Services.Security;
@@ -17,6 +16,7 @@ using AnyService.Infrastructure;
 using Microsoft.Extensions.Logging;
 using System.Text;
 using AutoMapper.Internal;
+using EasyCaching.Core;
 
 namespace AnyService
 {
@@ -53,7 +53,7 @@ namespace AnyService
             //validate was registered
             var mf = services.GetRequiredService<IMapperFactory>();
 
-            var cm = scope.ServiceProvider.GetRequiredService<ICacheManager>();
+            var cm = scope.ServiceProvider.GetRequiredService<IEasyCachingProvider>();
             var entityConfigRecords = scope.ServiceProvider.GetRequiredService<IEnumerable<EntityConfigRecord>>();
             var eventBus = services.GetRequiredService<IDomainEventBus>();
 

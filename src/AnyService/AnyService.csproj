@@ -18,21 +18,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="AnyService.Events.RabbitMq" Version="1.0.35" />
-		<PackageReference Include="AutoMapper" Version="12.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
-		<PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
-		<PackageReference Include="System.Text.Json" Version="7.0.1" />
+		<ProjectReference Include="..\AnyService.Core\AnyService.Core.csproj" />
+		<ProjectReference Include="..\AnyService.Utilities\AnyService.Utilities.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\AnyService.Core\AnyService.Core.csproj" />
-		<ProjectReference Include="..\AnyService.Utilities\AnyService.Utilities.csproj" />
+	  <PackageReference Include="EasyCaching.Core" Version="1.7.0" />
 	</ItemGroup>
 
 </Project>

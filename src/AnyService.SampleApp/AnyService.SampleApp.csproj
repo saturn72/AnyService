@@ -1,19 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="EasyCaching.InMemory" Version="1.7.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\AnyService.Core\AnyService.Core.csproj" />
+		<ProjectReference Include="..\AnyServiceModules\AnyService.Events.RabbitMQ\AnyService.Events.RabbitMQ.csproj" />
+		<ProjectReference Include="..\AnyService\AnyService.csproj" />
+		<ProjectReference Include="..\AnyServiceModules\EntityFramework\AnyService.EntityFramework\AnyService.EntityFramework.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\AnyService.Core\AnyService.Core.csproj" />
-    <ProjectReference Include="..\AnyServiceModules\AnyService.Events.RabbitMQ\AnyService.Events.RabbitMQ.csproj" />
-    <ProjectReference Include="..\AnyService\AnyService.csproj" />
-    <ProjectReference Include="..\AnyServiceModules\EntityFramework\AnyService.EntityFramework\AnyService.EntityFramework.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="easycaching.inmemory" Version="1.7.0" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.1" />
+	</ItemGroup>
 
 </Project>

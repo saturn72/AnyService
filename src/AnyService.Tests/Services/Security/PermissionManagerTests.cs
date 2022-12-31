@@ -1,11 +1,13 @@
-﻿using AnyService.Caching;
-using AnyService.Security;
+﻿using AnyService.Security;
 using AnyService.Services;
 using AnyService.Services.Security;
+using EasyCaching.Core;
+using Microsoft.Extensions.Primitives;
 using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -30,8 +32,14 @@ namespace AnyService.Tests.Services.Security
         {
             var userId = "some-user";
             var expUserPermissions = new UserPermissions();
-            var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.Get<UserPermissions>(It.IsAny<string>())).ReturnsAsync(expUserPermissions);
+
+            var cm = new Mock<IEasyCachingProvider>();
+            var cv = new CacheValue<UserPermissions>(expUserPermissions, true);
+            cm.Setup(c => c.GetAsync<UserPermissions>(
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync(cv);
+
             var pm = new PermissionManager(cm.Object, null);
 
             var res = await pm.GetUserPermissions(userId);
@@ -42,8 +50,14 @@ namespace AnyService.Tests.Services.Security
         public async Task GetUserPermissions_ReturnEmptyOrReturnNullFromDb(IEnumerable<UserPermissions> data)
         {
             var userId = "some-user";
-            var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.Get<UserPermissions>(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
+
+            var cm = new Mock<IEasyCachingProvider>();
+            var cv = new CacheValue<UserPermissions>(null, false);
+            cm.Setup(c => c.GetAsync<UserPermissions>(
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync(cv);
+            
             var repo = new Mock<IRepository<UserPermissions>>();
             repo.Setup(r => r.GetAll(It.IsAny<Pagination<UserPermissions>>())).ReturnsAsync(data);
 
@@ -63,8 +77,14 @@ namespace AnyService.Tests.Services.Security
         {
             var userId = "some-user";
             var up = new UserPermissions();
-            var cm = new Mock<ICacheManager>();
-            cm.Setup(c => c.Get<UserPermissions>(It.IsAny<string>())).ReturnsAsync(null as UserPermissions);
+
+            var cm = new Mock<IEasyCachingProvider>();
+            var cv = new CacheValue<UserPermissions>(null, false);
+            cm.Setup(c => c.GetAsync<UserPermissions>(
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync(cv);
+            
             var repo = new Mock<IRepository<UserPermissions>>();
             repo.Setup(r => r.GetAll(It.IsAny<Pagination<UserPermissions>>())).ReturnsAsync(new[] { up });
 
@@ -100,7 +120,7 @@ namespace AnyService.Tests.Services.Security
         public async Task CreateUserPermissions_PersistModel()
         {
             var repo = new Mock<IRepository<UserPermissions>>();
-            var cm = new Mock<ICacheManager>();
+            var cm = new Mock<IEasyCachingProvider>();
 
             var userId = "some-user";
             var toCreate = new UserPermissions
@@ -133,7 +153,7 @@ namespace AnyService.Tests.Services.Security
         public async Task UpdateUserPermissions_EntityDoesNotExistsInDatabase(IEnumerable<UserPermissions> data)
         {
             var repo = new Mock<IRepository<UserPermissions>>();
-            var cm = new Mock<ICacheManager>();
+            var cm = new Mock<IEasyCachingProvider>();
             repo.Setup(r => r.GetAll(It.IsAny<Pagination<UserPermissions>>())).ReturnsAsync(data);
 
             var userId = "some-user";
@@ -173,7 +193,7 @@ namespace AnyService.Tests.Services.Security
             };
 
             var repo = new Mock<IRepository<UserPermissions>>();
-            var cm = new Mock<ICacheManager>();
+            var cm = new Mock<IEasyCachingProvider>();
             repo.Setup(r => r.GetAll(It.IsAny<Pagination<UserPermissions>>())).ReturnsAsync(new[] { dbEntity });
             repo.Setup(r => r.Update(It.IsAny<UserPermissions>())).ReturnsAsync(dbEntity);
 
