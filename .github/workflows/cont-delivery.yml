@@ -73,14 +73,14 @@ jobs:
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService
-          path: ./src/AnyService/bin/Release/net5.0/publish/
+          path: ./src/AnyService/bin/Release/net7.0/publish/
           if-no-files-found: error
 
       - name: Upload Artifacts - AnyService.EntityFramework for publish
         uses: actions/upload-artifact@v2.3.1
         with:
           name: AnyService.EntityFramework for publish
-          path: ./src/AnyServiceModules/EntityFramework/AnyService.EntityFramework/bin/Release/netstandard2.1/publish/
+          path: ./src/AnyServiceModules/EntityFramework/AnyService.EntityFramework/bin/Release/net7.0/publish/
           if-no-files-found: error
 
       - name: Upload Artifacts - AnyService.Events.RabbitMQ for publish
