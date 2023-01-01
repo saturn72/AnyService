@@ -2,7 +2,6 @@ using AnyService.Controllers;
 using AnyService.Services;
 using AnyService.Services.Preparars;
 using AnyService.Services.ServiceResponseMappers;
-using Shouldly;
 
 namespace AnyService.Tests
 {

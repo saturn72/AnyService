@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using AnyService.Services;
+﻿using AnyService.Services;
 using AnyService.Services.ServiceResponseMappers;
 using Microsoft.AspNetCore.Mvc;
-using Shouldly;
-using Xunit;
 
 namespace AnyService.Tests.Services.ServiceResponseMappers
 {

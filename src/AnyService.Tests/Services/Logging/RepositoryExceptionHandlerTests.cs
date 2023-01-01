@@ -1,14 +1,8 @@
 ﻿using AnyService.Events;
 using AnyService.Logging;
-using AnyService.Services;
 using AnyService.Services.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
-using Moq;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace AnyService.Tests.Services.Logging
 {

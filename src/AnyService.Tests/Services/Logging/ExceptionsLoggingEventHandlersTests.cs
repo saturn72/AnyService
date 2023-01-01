@@ -1,11 +1,8 @@
-using System;
 using AnyService.Events;
 using AnyService.Logging;
 using AnyService.Services.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Moq;
-using Xunit;
 
 namespace AnyService.Tests.Services.Logging
 {

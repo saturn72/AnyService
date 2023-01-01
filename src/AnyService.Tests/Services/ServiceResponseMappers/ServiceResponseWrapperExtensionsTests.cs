@@ -1,12 +1,6 @@
 ﻿using AnyService.Events;
 using AnyService.Services;
-using AnyService.Utilities;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
-using Shouldly;
-using System;
-using System.Linq;
-using Xunit;
 
 namespace AnyService.Tests.Services.ServiceResponseMappers
 {

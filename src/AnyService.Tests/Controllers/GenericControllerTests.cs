@@ -1,10 +1,7 @@
-using System.Linq;
 using System.Reflection;
 using AnyService.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
-using Shouldly;
-using Xunit;
 
 namespace AnyService.Tests.Controllers
 {

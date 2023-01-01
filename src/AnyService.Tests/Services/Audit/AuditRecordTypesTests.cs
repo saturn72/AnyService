@@ -1,6 +1,4 @@
 ﻿using AnyService.Services.Audit;
-using Shouldly;
-using System.Linq;
 
 namespace AnyService.Tests.Services.Audit
 {

@@ -1,8 +1,4 @@
-﻿using Shouldly;
-using System;
-using Xunit;
-
-namespace AnyService.Tests.Services.Diagnostics
+﻿namespace AnyService.Tests.Services.Diagnostics
 {
     public class DiagnosticSourceExtensionsTests
     {

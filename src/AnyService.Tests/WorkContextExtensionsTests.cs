@@ -1,9 +1,4 @@
-﻿using Shouldly;
-using System;
-using System.Collections.Generic;
-using Xunit;
-
-namespace AnyService.Tests
+﻿namespace AnyService.Tests
 {
     public class WorkContextExtensionsTests
     {

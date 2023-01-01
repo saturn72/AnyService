@@ -1,11 +1,7 @@
-using System.Threading.Tasks;
 using AnyService.Security;
 using AnyService.Middlewares;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Moq;
-using Shouldly;
-using Xunit;
 
 namespace AnyService.Tests.Middlewares
 {

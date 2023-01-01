@@ -1,6 +1,4 @@
 ﻿using AnyService.Http;
-using Shouldly;
-using Xunit;
 
 namespace AnyService.Tests.Http
 {

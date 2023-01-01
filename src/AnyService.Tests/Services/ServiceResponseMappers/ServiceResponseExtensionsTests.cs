@@ -2,12 +2,6 @@
 using AnyService.Services.ServiceResponseMappers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
-using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Xunit;
 
 namespace AnyService.Tests.Services.ServiceResponseMappers
 {

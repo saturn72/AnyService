@@ -2,13 +2,6 @@
 using AnyService.Services;
 using AnyService.Services.Logging;
 using Microsoft.Extensions.Logging;
-using Moq;
-using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace AnyService.Tests.Services.Logging
 {

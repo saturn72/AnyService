@@ -1,6 +1,4 @@
 ﻿using AnyService.Logging;
-using Shouldly;
-using Xunit;
 
 namespace AnyService.Tests.Logging
 {

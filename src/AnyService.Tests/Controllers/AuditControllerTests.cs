@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using AnyService.Audity;
 using AnyService.Controllers;
 using AnyService.Models;
@@ -13,9 +9,6 @@ using AnyService.Tests.Services.ServiceResponseMappers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Logging;
-using Moq;
-using Shouldly;
-using Xunit;
 
 namespace AnyService.Tests.Controllers
 {

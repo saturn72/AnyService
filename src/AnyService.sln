@@ -29,7 +29,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.Events.RabbitMQ"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnyService.Events.RabbitMQ.Tests", "AnyServiceModules\AnyService.Events.RabbitMQ.Tests\AnyService.Events.RabbitMQ.Tests.csproj", "{B5A6777F-B5A9-4A7D-AC63-CF222A26D3EA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.Tests2", "AnyService.Tests2\AnyService.Tests2.csproj", "{CF1BF220-8A16-4A93-B0DB-69D3F86AEC4F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnyService.Tests", "AnyService.Tests\AnyService.Tests.csproj", "{CF1BF220-8A16-4A93-B0DB-69D3F86AEC4F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

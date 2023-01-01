@@ -1,9 +1,5 @@
 ﻿using AnyService.Services.Preparars;
 using Microsoft.Extensions.Logging;
-using Moq;
-using Shouldly;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace AnyService.Tests.Services.Preparar
 {

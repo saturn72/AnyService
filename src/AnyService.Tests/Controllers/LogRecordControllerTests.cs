@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using AnyService.Controllers;
 using AnyService.Logging;
 using AnyService.Services.Logging;
@@ -9,9 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Logging;
-using Moq;
-using Shouldly;
-using Xunit;
 
 namespace AnyService.Tests.Controllers
 {

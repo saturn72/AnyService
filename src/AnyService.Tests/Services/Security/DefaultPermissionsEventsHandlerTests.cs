@@ -1,12 +1,6 @@
-using System;
-using System.Linq;
-using System.Threading;
 using AnyService.Security;
 using AnyService.Events;
 using AnyService.Services.Security;
-using Moq;
-using Xunit;
-using System.Collections.Generic;
 
 namespace AnyService.Tests.Services.Security
 {

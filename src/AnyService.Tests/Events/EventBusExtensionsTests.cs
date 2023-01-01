@@ -1,7 +1,4 @@
 ﻿using AnyService.Events;
-using Moq;
-using System;
-using Xunit;
 
 namespace AnyService.Tests.Events
 {

@@ -1,7 +1,4 @@
-﻿using Shouldly;
-using AnyService.Services;
-using Xunit;
-using System.Linq;
+﻿using AnyService.Services;
 
 namespace AnyService.Tests.Services
 {

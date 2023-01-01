@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using AnyService.Services;
-using Moq;
-using Shouldly;
-using Xunit;
 
 namespace AnyService.Tests.Services
 {

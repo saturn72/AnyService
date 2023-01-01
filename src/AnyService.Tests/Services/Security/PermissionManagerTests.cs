@@ -2,14 +2,6 @@
 using AnyService.Services;
 using AnyService.Services.Security;
 using EasyCaching.Core;
-using Microsoft.Extensions.Primitives;
-using Moq;
-using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace AnyService.Tests.Services.Security
 {

@@ -3,8 +3,6 @@ using AnyService.Infrastructure;
 using AnyService.Models;
 using AnyService.Services.Audit;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
-using System;
 
 namespace AnyService.Tests.Services.ServiceResponseMappers
 {
