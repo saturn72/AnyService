@@ -49,7 +49,7 @@ namespace AnyService.Tests.Services.Security
                 It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(cv);
-            
+
             var repo = new Mock<IRepository<UserPermissions>>();
             repo.Setup(r => r.GetAll(It.IsAny<Pagination<UserPermissions>>())).ReturnsAsync(data);
 
@@ -76,17 +76,18 @@ namespace AnyService.Tests.Services.Security
                 It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(cv);
-            
+
             var repo = new Mock<IRepository<UserPermissions>>();
             repo.Setup(r => r.GetAll(It.IsAny<Pagination<UserPermissions>>())).ReturnsAsync(new[] { up });
 
             var pm = new PermissionManager(cm.Object, repo.Object);
 
             var res = await pm.GetUserPermissions(userId);
-            cm.Verify(c => c.Set(
+            cm.Verify(c => c.SetAsync(
                     It.Is<string>(s => s.EndsWith(userId)),
                     It.Is<UserPermissions>(u => u == up),
-                    It.IsAny<TimeSpan>()),
+                    It.IsAny<TimeSpan>(),
+                    It.IsAny<CancellationToken>()),
                 Times.Once);
             res.ShouldBe(up);
         }
@@ -122,7 +123,7 @@ namespace AnyService.Tests.Services.Security
 
             var pm = new PermissionManager(cm.Object, repo.Object);
             var up = await pm.CreateUserPermissions(toCreate);
-            cm.Verify(c => c.Remove(It.Is<string>(s => s.EndsWith(userId))), Times.Once);
+            cm.Verify(c => c.RemoveAsync(It.Is<string>(s => s.EndsWith(userId)), It.IsAny<CancellationToken>()), Times.Once);
             repo.Verify(c => c.Insert(It.Is<UserPermissions>(s => s.UserId == userId)), Times.Once);
         }
         #endregion
@@ -193,7 +194,10 @@ namespace AnyService.Tests.Services.Security
             var res = await pm.UpdateUserPermissions(toUpdate);
             res.ShouldBe(dbEntity);
 
-            cm.Verify(c => c.Remove(It.Is<string>(s => s.EndsWith(userId))), Times.Once);
+            cm.Verify(c => c.RemoveAsync(
+                It.Is<string>(s => s.EndsWith(userId)),
+                It.IsAny<CancellationToken>()),
+                Times.Once);
             repo.Verify(r => r.Update(It.Is<UserPermissions>(u => u == dbEntity && u.EntityPermissions == ep)), Times.Once);
         }
         #endregion

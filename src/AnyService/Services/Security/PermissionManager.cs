@@ -23,6 +23,7 @@ namespace AnyService.Services.Security
         {
             if (!userPermissions.UserId.HasValue())
                 return null;
+
             await _cache.RemoveAsync(GetCacheKey(userPermissions.UserId));
             userPermissions.CreatedOnUtc = DateTime.UtcNow;
             return await _repository.Insert(userPermissions);
