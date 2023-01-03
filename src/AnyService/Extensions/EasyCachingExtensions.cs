@@ -18,6 +18,15 @@ namespace EasyCaching.Core
             return d.HasValue ? d.Value : default;
         }
 
+        public static async Task<T> GetValueOrDefaultAsync<T>(this IEasyCachingProvider cache,
+           string cacheKey,
+           CancellationToken cancellationToken = default)
+        {
+            var d = await cache.GetAsync<T>(cacheKey, cancellationToken);
+            return d.HasValue ? d.Value : default;
+        }
+
+
         public static async Task<IEnumerable<T>> GetValueByPrefixAsync<T>(this IEasyCachingProvider cache, string prefix, CancellationToken cancellationToken = default)
         {
             var d = await cache.GetByPrefixAsync<T>(prefix, cancellationToken);
