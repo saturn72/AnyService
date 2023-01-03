@@ -5,6 +5,36 @@ namespace AnyService.Tests.Extensions
     public class EasyCachingExtensionsTests
     {
         [Fact]
+        public async Task GetValueByPrefixAsync_ReturnsEmptyCollection_WhenEntriesNotExists()
+        {
+            var ecp = new Mock<IEasyCachingProvider>();
+            var r = await EasyCachingExtensions.GetValueByPrefixAsync<int>(
+                ecp.Object,
+                "prefix",
+                default);
+
+            r.ShouldBeEmpty();
+        }
+
+
+        [Fact]
+        public async Task GetValueByPrefixAsync_ReturnsValues()
+        {
+            var ecp = new Mock<IEasyCachingProvider>();
+            ecp.Setup(e => e.GetByPrefixAsync<int>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Dictionary<string, CacheValue<int>>
+                {
+                    { "prefix-1", new CacheValue<int>(1, true) }
+                });
+            var r = await EasyCachingExtensions.GetValueByPrefixAsync<int>(
+                ecp.Object,
+                "prefix",
+                default);
+
+            r.Count().ShouldBe(1);
+        }
+
+        [Fact]
         public async Task GetValueOrDefaultAsync_ReturnsDefaultValue_WhenKeyNotExists()
         {
             var ecp = new Mock<IEasyCachingProvider>();

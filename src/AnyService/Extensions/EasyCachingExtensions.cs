@@ -1,10 +1,19 @@
-﻿using System.Threading;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EasyCaching.Core
 {
     public static class EasyCachingExtensions
     {
+        public static async Task<IEnumerable<T>> GetValueByPrefixAsync<T>(this IEasyCachingProvider cache, string prefix, CancellationToken cancellationToken = default)
+        {
+            var d = await cache.GetByPrefixAsync<T>(prefix, cancellationToken);
+            return d?.Select(c => c.Value.Value) ?? Array.Empty<T>();
+        }
+
         public static async Task<T> GetDefaultAsync<T>(this IEasyCachingProvider cache, string cacheKey, T defaultValue = default, CancellationToken cancellationToken = default)
         {
             var cv = await cache.GetAsync<T>(cacheKey, cancellationToken);
