@@ -8,6 +8,16 @@ namespace EasyCaching.Core
 {
     public static class EasyCachingExtensions
     {
+        public static async Task<T> GetValueAsync<T>(this IEasyCachingProvider cache,
+            string cacheKey,
+            Func<Task<T>> dataRetriever,
+            TimeSpan expiration,
+            CancellationToken cancellationToken = default)
+        {
+            var d = await cache.GetAsync(cacheKey, dataRetriever, expiration, cancellationToken);
+            return d.HasValue ? d.Value : default;
+        }
+
         public static async Task<IEnumerable<T>> GetValueByPrefixAsync<T>(this IEasyCachingProvider cache, string prefix, CancellationToken cancellationToken = default)
         {
             var d = await cache.GetByPrefixAsync<T>(prefix, cancellationToken);
