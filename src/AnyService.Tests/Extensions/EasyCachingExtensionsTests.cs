@@ -86,7 +86,7 @@ namespace AnyService.Tests.Extensions
         {
             var ecp = new Mock<IEasyCachingProvider>();
 
-            var (b, v) = await EasyCachingExtensions.TryGetAsync<int>(
+            var (b, v) = await EasyCachingExtensions.TryGetValueAsync<int>(
                 ecp.Object,
                 "not-exists",
                 default);
@@ -103,7 +103,7 @@ namespace AnyService.Tests.Extensions
             ecp.Setup(e => e.GetAsync<int>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CacheValue<int>(x, false));
 
-            var (b, v) = await EasyCachingExtensions.TryGetAsync<int>(
+            var (b, v) = await EasyCachingExtensions.TryGetValueAsync<int>(
                 ecp.Object,
                 "not-exists",
                 default);
@@ -120,7 +120,7 @@ namespace AnyService.Tests.Extensions
             ecp.Setup(e => e.GetAsync<int>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CacheValue<int>(x, true));
 
-            var (b, v) = await EasyCachingExtensions.TryGetAsync<int>(
+            var (b, v) = await EasyCachingExtensions.TryGetValueAsync<int>(
                 ecp.Object,
                 "not-exists",
                 default);
