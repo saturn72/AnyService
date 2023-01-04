@@ -160,12 +160,14 @@ namespace AnyService.Events.RabbitMQ
                     _activitySource.StartActivity(nameof(Publish), ActivityKind.Producer, Activity.Current.Context, tags: tags) :
                     _activitySource.StartActivity(nameof(Publish), ActivityKind.Producer);
 
-                foreach (var t in tags)
-                    a.SetTag(t.Key, t.Value);
+                if (a != default)
+                {
+                    foreach (var t in tags)
+                        a.SetTag(t.Key, t.Value);
 
-                a?.SetTag("thread.id", Thread.CurrentThread.ManagedThreadId);
-                a?.SetTag("thread.name", Thread.CurrentThread.Name);
-
+                    a.SetTag("thread.id", Thread.CurrentThread.ManagedThreadId);
+                    a.SetTag("thread.name", Thread.CurrentThread.Name);
+                }
                 return a;
             }
         }
