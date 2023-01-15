@@ -38,7 +38,7 @@ namespace AnyService.SampleApp
         }
         private void ConfigureCaching(IServiceCollection services)
         {
-            services.AddEasyCaching(options => options.UseInMemory("default"));
+            services.AddDistributedMemoryCache();
         }
         private void ConfigureEntityFramework(IServiceCollection services)
         {

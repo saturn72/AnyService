@@ -3,7 +3,7 @@
 		<TargetFramework>net7.0</TargetFramework>
 		<IsPackable>true</IsPackable>
 		<PackageId>anyservice</PackageId>
-		<Version>1.1.149</Version>
+		<Version>1.1.150</Version>
 		<Authors>roi@saturn72.com</Authors>
 		<Company>saturn technologies</Company>
 		<PackageProjectUrl>https://github.com/saturn72/anyservice</PackageProjectUrl>
@@ -24,7 +24,6 @@
 
 	<ItemGroup>
 	  <PackageReference Include="AutoMapper" Version="12.0.0" />
-	  <PackageReference Include="EasyCaching.Core" Version="1.7.0" />
 	</ItemGroup>
 
 </Project>

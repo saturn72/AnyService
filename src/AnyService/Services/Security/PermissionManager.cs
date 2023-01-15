@@ -1,5 +1,5 @@
 ﻿using AnyService.Security;
-using EasyCaching.Core;
+using Microsoft.Extensions.Caching.Distributed;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,9 +10,9 @@ namespace AnyService.Services.Security
     {
         private static readonly TimeSpan DefaultCachingTime = TimeSpan.FromMinutes(10);
         private readonly IRepository<UserPermissions> _repository;
-        private readonly IEasyCachingProvider _cache;
+        private readonly IDistributedCache _cache;
 
-        public PermissionManager(IEasyCachingProvider cache, IRepository<UserPermissions> repository)
+        public PermissionManager(IDistributedCache cache, IRepository<UserPermissions> repository)
         {
             _cache = cache;
             _repository = repository;
@@ -33,17 +33,14 @@ namespace AnyService.Services.Security
             if (!userId.HasValue())
                 return null;
 
-            var cv = await _cache.GetAsync<UserPermissions>(GetCacheKey(userId));
-            var userPermissions = cv.Value;
+            var key = GetCacheKey(userId);
 
-            if (cv.IsNull == true || !cv.HasValue)
+            return await _cache.GetAsync<UserPermissions>(key, getPermissionRecord, DefaultCachingTime);
+            async Task<UserPermissions> getPermissionRecord()
             {
                 var allUserPermissions = await _repository.GetAll(GetPaginationSettings(userId));
-                userPermissions = allUserPermissions?.FirstOrDefault();
-                if (userPermissions != null)
-                    await _cache.SetAsync(GetCacheKey(userId), userPermissions, DefaultCachingTime);
+                return allUserPermissions?.FirstOrDefault();
             }
-            return userPermissions;
         }
 
         public async Task<UserPermissions> UpdateUserPermissions(UserPermissions userPermissions)

@@ -143,13 +143,14 @@ namespace AnyService.Events.RabbitMQ
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to send message to exchange");
+
                     activity?.SetTag("exception.type", ex.GetType().FullName);
                     activity?.SetTag("exception.message", ex.Message);
                     activity?.SetTag("exception.stacktrace", ex.InnerException?.ToString() ?? ex.ToString());
                     activity?.SetTag("exception.escaped", false);
                     activity?.SetTag("otel.status_code", "ERROR");
                     activity?.SetTag("otel.status_description", ex.Message);
-
                 }
                 return Task.CompletedTask;
             });
